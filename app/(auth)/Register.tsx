@@ -1,11 +1,12 @@
 import React from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
+import PhoneInput from "@/components/PhoneCustomInput";
 import Button from "@/components/Button";
 import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
 import { router } from "expo-router";
 
-const Registration = () => {
+const Register = () => {
   return (
     <View style={styles.Container}>
       <Image
@@ -15,12 +16,20 @@ const Registration = () => {
       <Text style={styles.PageTitle}>Registration</Text>
       <View style={styles.Row}>
         <Text style={styles.Col1}>Already have an account?</Text>
-        <Text style={styles.Col2}> Login here.</Text>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/(auth)/Login",
+            });
+          }}
+        >
+          <Text style={styles.Col2}> Login here.</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.InputContainer}>
         <Input inputMode="text" placeholder="Full Name"></Input>
         <Input inputMode="email" placeholder="Email address"></Input>
-        <Input inputMode="tel" placeholder="Phone Number"></Input>
+        <PhoneInput></PhoneInput>
         <Input inputMode="password" placeholder="Create Password"></Input>
         <Input inputMode="password" placeholder="Confirm Password"></Input>
       </View>
@@ -28,7 +37,7 @@ const Registration = () => {
         title="Register"
         onPress={() => {
           router.push({
-            pathname: "/(auth)/Registration",
+            pathname: "/(auth)/Verification",
           });
         }}
       />
@@ -65,7 +74,7 @@ const Registration = () => {
   );
 };
 
-export default Registration;
+export default Register;
 
 const styles = StyleSheet.create({
   Container: {
@@ -101,6 +110,7 @@ const styles = StyleSheet.create({
   Col2: {
     color: "#FBF6FA",
     fontWeight: "600",
+    // cursor: "pointer",
   },
   InputContainer: {
     paddingVertical: 24,

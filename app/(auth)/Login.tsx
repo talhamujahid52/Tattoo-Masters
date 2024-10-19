@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
@@ -15,20 +15,30 @@ const Login = () => {
       <Text style={styles.PageTitle}>Login</Text>
       <View style={styles.Row}>
         <Text style={styles.Col1}>Don’t have an account?</Text>
-        <Text style={styles.Col2}> Register here.</Text>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/(auth)/Register",
+            });
+          }}
+        >
+          <Text style={styles.Col2}> Register here.</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.InputContainer}>
         <Input inputMode="email" placeholder="Email address"></Input>
         <Input inputMode="password" placeholder="Password"></Input>
       </View>
       <View style={styles.ForgotPasswordContainer}>
-        <Text style={styles.Col2}>Forgot password?</Text>
+        <TouchableOpacity>
+          <Text style={styles.Col2}>Forgot password?</Text>
+        </TouchableOpacity>
       </View>
       <Button
         title="Login"
         onPress={() => {
           router.push({
-            pathname: "/(auth)/Registration",
+            pathname: "/(auth)/Register",
           });
         }}
       />
