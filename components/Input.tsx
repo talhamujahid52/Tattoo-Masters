@@ -1,6 +1,6 @@
 import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
-import { MaterialIcons } from "@expo/vector-icons"; // Example icon library
+import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
 
 interface InputProps {
   placeholder?: string;
@@ -24,12 +24,7 @@ const Input = ({
   return (
     <View style={styles.container}>
       {leftIcon && (
-        <MaterialIcons
-          name={leftIcon}
-          size={24}
-          color="white"
-          style={styles.icon}
-        />
+        <Ionicons name={leftIcon} size={24} color="white" style={styles.icon} />
       )}
       <TextInput
         style={styles.input}
@@ -57,12 +52,14 @@ const Input = ({
         </TouchableOpacity>
       ) : (
         rightIcon && (
-          <MaterialIcons
-            name={rightIcon}
-            size={24}
-            color="white"
-            style={styles.icon}
-          />
+          <TouchableOpacity>
+            <MaterialIcons
+              name={rightIcon}
+              size={24}
+              color="white"
+              style={styles.icon}
+            />
+          </TouchableOpacity>
         )
       )}
     </View>
