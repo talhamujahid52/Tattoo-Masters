@@ -1,6 +1,6 @@
 import Button from "@/components/Button";
 import React from "react";
-import { StyleSheet, View, Image, Text } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import OnboardingComponent from "@/components/OnboardingComponent";

@@ -1,10 +1,11 @@
 import React from "react";
-import { Text, Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { SwiperFlatList } from "react-native-swiper-flatlist";
+import Text from "./Text";
 
-const colors = ["tomato", "thistle", "skyblue", "teal"];
+const { width } = Dimensions.get("window");
 
-const App = () => (
+const OnboardingComponent = () => (
   <View style={styles.container}>
     <SwiperFlatList
       index={0}
@@ -30,8 +31,12 @@ const App = () => (
               justifyContent: "center",
             }}
           >
-            <Text style={styles.whiteText}>Find the best </Text>
-            <Text style={styles.coloredText}>tattoo artist</Text>
+            <Text size="h1" weight="light" color="#fbf6fa">
+              Find the best{" "}
+            </Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              tattoo artist{" "}
+            </Text>
           </View>
           <View
             style={{
@@ -40,10 +45,19 @@ const App = () => (
               justifyContent: "center",
             }}
           >
-            <Text style={styles.whiteText}>for your next </Text>
-            <Text style={styles.coloredText}>tattoo!</Text>
+            <Text size="h1" weight="light" color="#fbf6fa">
+              for your next{" "}
+            </Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              tattoo!
+            </Text>
           </View>
-          <Text style={[styles.searchArtistsWorldwide,{paddingHorizontal:5}]}>
+          <Text
+            size="p"
+            weight="normal"
+            color="#d0d0d0"
+            style={styles.paragraphStyle}
+          >
             Search artists worldwide and find the one who can fulfill your
             wildest idea.
           </Text>
@@ -58,8 +72,12 @@ const App = () => (
               justifyContent: "center",
             }}
           >
-            <Text style={styles.whiteText}>Search for </Text>
-            <Text style={styles.coloredText}>ideas,</Text>
+            <Text size="h1" weight="light" color="#fbf6fa">
+              Search for{" "}
+            </Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              ideas,
+            </Text>
           </View>
           <View
             style={{
@@ -68,15 +86,36 @@ const App = () => (
               justifyContent: "center",
             }}
           >
-            <Text style={styles.coloredText}>tattoos</Text>
-            <Text style={styles.whiteText}> and </Text>
-            <Text style={styles.coloredText}>styles!</Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              tattoos
+            </Text>
+            <Text size="h1" weight="light" color="#fbf6fa">
+              {" "}
+              and{" "}
+            </Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              styles!
+            </Text>
           </View>
-          <Text style={styles.searchArtistsWorldwide}>
+          <Text
+            size="p"
+            weight="normal"
+            color="#d0d0d0"
+            style={{
+              textAlign: "center",
+              marginTop: 16,
+              paddingHorizontal: 16,
+            }}
+          >
             Scroll through artists and their portfolios. Get ideas, get inspired
             and get inked!
           </Text>
-          <Text style={styles.searchArtistsWorldwide}>
+          <Text
+            size="p"
+            weight="normal"
+            color="#d0d0d0"
+            style={{ textAlign: "center", marginTop: 16 }}
+          >
             Contact your favorite artist directly on the app.
           </Text>
         </View>
@@ -90,32 +129,46 @@ const App = () => (
               justifyContent: "center",
             }}
           >
-            <Text style={styles.whiteText}>Are you an </Text>
-            <Text style={styles.coloredText}>artist?</Text>
+            <Text size="h1" weight="light" color="#fbf6fa">
+              Are you an{" "}
+            </Text>
+            <Text size="h1" weight="light" color="#FFD982">
+              artist?
+            </Text>
           </View>
-          <Text style={styles.searchArtistsWorldwide}>
+          <Text
+            size="p"
+            weight="normal"
+            color="#d0d0d0"
+            style={styles.paragraphStyle}
+          >
             Make your own profile, publish your work and let customers find you.
           </Text>
-          <Text style={styles.searchArtistsWorldwide}>
-            Join and become a{" "}
-            <Text style={{ color: "#FFD982" }}>Tattoo Master!</Text>
-          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            <Text
+              size="p"
+              weight="normal"
+              color="#d0d0d0"
+              style={styles.paragraphStyle}
+            >
+              Join and become a
+            </Text>
+            <Text
+              size="p"
+              weight="normal"
+              color="#FFD982"
+              style={styles.paragraphStyle}
+            >
+              Tattoo Master!
+            </Text>
+          </View>
         </View>
       </View>
     </SwiperFlatList>
   </View>
 );
 
-const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
-  //   container: {
-  //     backgroundColor: "transparent",
-  //     height: 220,
-  //     position: "absolute",
-  //     top: "59%",
-  //     right: "auto",
-  //     zIndex: 1,
-  //   },
   container: {
     backgroundColor: "transparent",
     height: "85%",
@@ -125,7 +178,7 @@ const styles = StyleSheet.create({
   },
   alignmentContainer: {
     height: 220,
-    paddingHorizontal:25,
+    paddingHorizontal: 25,
     display: "flex",
     justifyContent: "center",
   },
@@ -133,24 +186,11 @@ const styles = StyleSheet.create({
     width,
     justifyContent: "flex-end",
   },
-  whiteText: {
-    color: "#fbf6fa",
-    fontSize: 32,
-    fontWeight: "300",
-  },
-  coloredText: {
-    color: "#FFD982",
-    fontSize: 32,
-    fontWeight: "300",
-  },
-  searchArtistsWorldwide: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "400",
-    color: "#d0d0d0",
+  paragraphStyle: {
     textAlign: "center",
     marginTop: 16,
+    paddingHorizontal: 5,
   },
 });
 
-export default App;
+export default OnboardingComponent;

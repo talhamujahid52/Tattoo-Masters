@@ -1,9 +1,10 @@
 import React from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import PhoneInput from "@/components/PhoneCustomInput";
 import Button from "@/components/Button";
 import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
+import Text from "@/components/Text";
 import { router } from "expo-router";
 
 const Register = () => {
@@ -15,7 +16,9 @@ const Register = () => {
       />
       <Text style={styles.PageTitle}>Registration</Text>
       <View style={styles.Row}>
-        <Text style={styles.Col1}>Already have an account?</Text>
+        <Text size="p" weight="normal" color="#A7A7A7">
+          Already have an account?
+        </Text>
         <TouchableOpacity
           onPress={() => {
             router.push({
@@ -23,7 +26,10 @@ const Register = () => {
             });
           }}
         >
-          <Text style={styles.Col2}> Login here.</Text>
+          <Text size="p" weight="semibold" color="#FBF6FA">
+            {" "}
+            Login here.
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.InputContainer}>
@@ -43,7 +49,9 @@ const Register = () => {
       />
       <View style={styles.SpacerContainer}>
         <View style={styles.Spacer}></View>
-        <Text style={styles.SpacerText}>Or continue with</Text>
+        <Text size="p" weight="normal" color="#A7A7A7">
+          Or continue with
+        </Text>
         <View style={styles.Spacer}></View>
       </View>
       <View style={styles.ThirdPartyButtonsContainer}>
@@ -61,13 +69,20 @@ const Register = () => {
         />
       </View>
       <View style={styles.BottomText}>
-        <Text style={styles.TermsofServiceText}>
+        <Text size="small" weight="normal" color="#828282">
           By clicking continue, you agree to our
         </Text>
         <View style={styles.TermsOfServiceContainer}>
-          <Text style={styles.HighlitedText}>Terms of Service</Text>
-          <Text style={styles.TermsofServiceText}> and </Text>
-          <Text style={styles.HighlitedText}>Privacy Policy</Text>
+          <Text size="small" weight="normal" color="#FBF6FA">
+            Terms of Service
+          </Text>
+          <Text size="small" weight="normal" color="#828282">
+            {" "}
+            and{" "}
+          </Text>
+          <Text size="small" weight="normal" color="#FBF6FA">
+            Privacy Policy
+          </Text>
         </View>
       </View>
     </View>
@@ -81,7 +96,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     backgroundColor: "#000",
-    // justifyContent: "center",
     alignItems: "center",
     paddingTop: 50,
   },
@@ -103,15 +117,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20.8,
   },
-  Col1: {
-    color: "#A7A7A7",
-    fontWeight: "400",
-  },
-  Col2: {
-    color: "#FBF6FA",
-    fontWeight: "600",
-    // cursor: "pointer",
-  },
   InputContainer: {
     paddingVertical: 24,
     display: "flex",
@@ -126,12 +131,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 16,
     gap: 8,
-  },
-  SpacerText: {
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 20.8,
-    color: "#A7A7A7",
   },
   Spacer: {
     width: 102,
@@ -150,17 +149,5 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: "center",
-  },
-  HighlitedText: {
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 14.32,
-    color: "#FBF6FA",
-  },
-  TermsofServiceText: {
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 14.32,
-    color: "#828282",
   },
 });

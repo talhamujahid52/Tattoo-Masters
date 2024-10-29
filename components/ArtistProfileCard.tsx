@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
+import Text from "./Text";
 import React from "react";
 
 const ArtistProfileCard = () => {
@@ -23,11 +24,18 @@ const ArtistProfileCard = () => {
           source={require("../assets/images/star.png")}
           style={{ height: 16, width: 16, resizeMode: "contain" }}
         />
-        <Text style={styles.RatingText}> 4.8 (129)</Text>
+        <Text size="small" weight="normal" color="#FBF6FA">
+          {" "}
+          4.8 (129)
+        </Text>
         <View style={styles.SeparatorDot}></View>
-        <Text style={styles.RatingText}>Phuket</Text>
+        <Text size="small" weight="normal" color="#FBF6FA">
+          Phuket
+        </Text>
       </View>
-      <Text style={styles.ArtistName}>Martin Luis</Text>
+      <Text size="large" weight="medium" color="#FFFFFF">
+        Martin Luis
+      </Text>
     </View>
   );
 };
@@ -41,12 +49,6 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-  },
-  RatingText: {
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 14.32,
-    color: "#FBF6FA",
   },
   SeparatorDot: {
     height: 3,

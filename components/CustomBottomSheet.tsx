@@ -1,13 +1,8 @@
 // CustomBottomSheet.tsx
 import React, { useRef, useCallback } from "react";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import {
-  StyleSheet,
-  Text,
-  Image,
-  Button,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, Image, TouchableOpacity } from "react-native";
+import Text from "./Text";
 
 interface CustomBottomSheetProps {
   isVisible: boolean;
@@ -52,14 +47,24 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
           style={styles.Logo}
           source={require("../assets/images/logo.png")}
         />
-        <Text style={styles.Description}>
+        <Text
+          size="p"
+          weight="normal"
+          color="#A7A7A7"
+          style={styles.Description}
+        >
           To use this feature of Tattoo Masters, you need to login or register.
         </Text>
         <Image
           style={styles.usersImage}
           source={require("../assets/images/users.png")}
         />
-        <Text style={styles.Description2}>
+        <Text
+          size="medium"
+          weight="normal"
+          color="#A7A7A7"
+          style={styles.Description2}
+        >
           Over 5,000 tattoo artists to search from.
         </Text>
         <TouchableOpacity>
@@ -74,9 +79,7 @@ export default CustomBottomSheet;
 
 const styles = StyleSheet.create({
   contentContainer: {
-    // flex: 1,
     alignItems: "center",
-    // justifyContent: "center",
     backgroundColor: "#000000",
   },
   Logo: {
@@ -86,10 +89,6 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   Description: {
-    fontSize: 16,
-    fontWeight: "400",
-    lineHeight: 20.8,
-    color: "#A7A7A7",
     textAlign: "center",
     marginHorizontal: 50,
   },

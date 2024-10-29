@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Image, StatusBar } from "react-native";
+import { StyleSheet, View, Image, StatusBar } from "react-native";
+import Text from "@/components/Text";
 import React, { useRef, useCallback, useState } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";

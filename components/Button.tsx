@@ -2,14 +2,14 @@ import React from "react";
 import {
   GestureResponderEvent,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { RadialGradient } from "react-native-gradients";
+import Text from "./Text";
 
 interface ButtonProps {
-  title: string; 
+  title: string;
   onPress?: (event: GestureResponderEvent) => void;
 }
 
@@ -30,7 +30,9 @@ const Button = ({ title = "Let's go", onPress }: ButtonProps) => {
           colorList={colorList}
         />
       </View>
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text size="h4" weight="semibold">
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -41,7 +43,7 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 30,
     overflow: "hidden",
-    justifyContent: "center", 
+    justifyContent: "center",
     alignItems: "center",
   },
   gradientContainer: {
@@ -51,13 +53,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 30,
-  },
-  buttonText: {
-    color: "#000",
-    fontWeight: "600",
-    fontSize: 17,
-    lineHeight: 20.29,
-    textAlign: "center",
   },
 });
 

@@ -1,13 +1,7 @@
 import React from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  FlatList,
-  Dimensions,
-} from "react-native";
+import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Input from "@/components/Input";
+import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 
 interface Artist {
@@ -27,15 +21,8 @@ const Search: React.FC = () => {
   }));
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000" }}>
-      <View
-        style={{
-          paddingHorizontal: 16,
-          borderBottomWidth: 0.33,
-          paddingBottom: 11,
-          borderColor: "#FFFFFF56",
-        }}
-      >
+    <View style={styles.container}>
+      <View style={styles.inputHeaderContainer}>
         <Input
           inputMode="text"
           placeholder="Search for artists and studios"
@@ -43,8 +30,15 @@ const Search: React.FC = () => {
           rightIcon={"cancel"}
         />
       </View>
-      <View style={{ paddingHorizontal: 16 }}>
-        <Text style={styles.Heading}>Artists near you</Text>
+      <View style={styles.searchView}>
+        <Text
+          size="h4"
+          weight="semibold"
+          color="#A7A7A7"
+          style={styles.Heading}
+        >
+          Artists near you
+        </Text>
         <FlatList
           data={artists}
           renderItem={({ item, index }) => (
@@ -71,16 +65,20 @@ const Search: React.FC = () => {
 export default Search;
 
 const styles = StyleSheet.create({
-  Heading: {
-    fontSize: 17,
-    fontWeight: "600",
-    lineHeight: 20.29,
-    color: "#A7A7A7",
-    marginVertical: 16,
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
   },
-  separator: {
-    backgroundColor: "#256728",
-    height: 10,
-    width: 10,
+  inputHeaderContainer: {
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.33,
+    paddingBottom: 11,
+    borderColor: "#FFFFFF56",
+  },
+  searchView: {
+    paddingHorizontal: 16,
+  },
+  Heading: {
+    marginVertical: 16,
   },
 });

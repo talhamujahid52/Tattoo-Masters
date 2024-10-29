@@ -2,11 +2,10 @@ import React from "react";
 import {
   GestureResponderEvent,
   StyleSheet,
-  Text,
   TouchableOpacity,
   Image,
-  View,
 } from "react-native";
+import Text from "./Text";
 
 interface ButtonProps {
   title: string;
@@ -18,7 +17,9 @@ const ThirdPartyButton = ({ title = "Google", icon, onPress }: ButtonProps) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.button}>
       <Image style={styles.Image} source={icon} />
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text size="p" weight="normal" color="#FBF6FA">
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -40,12 +41,6 @@ const styles = StyleSheet.create({
   Image: {
     height: 20,
     width: 20,
-  },
-  buttonText: {
-    color: "#FBF6FA",
-    fontWeight: "400",
-    fontSize: 16,
-    lineHeight: 20.8,
   },
 });
 

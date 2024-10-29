@@ -1,43 +1,38 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import OtpInput from "@/components/OtpInput";
+import Text from "@/components/Text";
 import { router } from "expo-router";
 
 const Verification = () => {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#000",
-        padding: 24,
-      }}
-    >
+    <View style={styles.container}>
       <Image
         style={styles.image}
         source={require("../../assets/images/chat.png")}
       />
-      <Text style={styles.title}>Enter Verification Code</Text>
-      <Text
-        style={[
-          styles.description,
-          { marginHorizontal: 24, textAlign: "center", marginBottom: 16 },
-        ]}
-      >
+      <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
+        Enter Verification Code
+      </Text>
+      <Text size="p" weight="normal" color="#A7A7A7" style={styles.description}>
         We have sent a 5 digit verification code to your phone number.
       </Text>
 
-      <View style={{ display: "flex", flexDirection: "row", marginBottom: 24 }}>
-        <Text style={styles.phoneNumberStyle}>+92 349 5099 049</Text>
+      <View style={styles.phoneNumberContainer}>
+        <Text size="p" weight="normal" color="#FBF6FA">
+          +92 349 5099 049
+        </Text>
         <TouchableOpacity>
-          <Text style={styles.changeButtonStyle}> Change</Text>
+          <Text size="h4" weight="semibold" color="#DAB769">
+            {" "}
+            Change
+          </Text>
         </TouchableOpacity>
       </View>
 
       <OtpInput />
 
-      <View style={{ display: "flex", flexDirection: "row", marginTop: 24 }}>
+      <View style={styles.resendContainer}>
         <TouchableOpacity
           onPress={() => {
             router.push({
@@ -45,9 +40,14 @@ const Verification = () => {
             });
           }}
         >
-          <Text style={styles.phoneNumberStyle}>Resend</Text>
+          <Text size="p" weight="normal" color="#FBF6FA">
+            Resend
+          </Text>
         </TouchableOpacity>
-        <Text style={styles.description}> in 24 seconds</Text>
+        <Text size="p" weight="normal" color="#A7A7A7">
+          {" "}
+          in 24 seconds
+        </Text>
       </View>
     </View>
   );
@@ -56,37 +56,33 @@ const Verification = () => {
 export default Verification;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+    padding: 24,
+  },
   image: { height: 34, width: 34, resizeMode: "contain" },
   title: {
-    fontWeight: "500",
-    fontSize: 24,
-    lineHeight: 28.64,
-    color: "#FBF6FA",
     marginBottom: 10,
     marginTop: 24,
   },
   description: {
-    fontWeight: "400",
-    fontSize: 16,
-    lineHeight: 20.8,
-    color: "#A7A7A7",
+    marginHorizontal: 24,
+    textAlign: "center",
+    marginBottom: 16,
   },
-  phoneNumberStyle: {
-    fontWeight: "400",
-    fontSize: 16,
-    lineHeight: 20.8,
-    color: "#FBF6FA",
+  phoneNumberContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
   },
-  changeButtonStyle: {
-    fontWeight: "600",
-    fontSize: 17,
-    lineHeight: 22.1,
-    color: "#DAB769",
-  },
-  resendButtonStyle: {
-    fontWeight: "400",
-    fontSize: 17,
-    lineHeight: 22.1,
-    color: "#FBF6FA",
+  resendContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 24,
   },
 });

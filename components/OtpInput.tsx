@@ -2,10 +2,8 @@ import React, { useState, useRef } from "react";
 import {
   View,
   TextInput,
-  Button,
   ActivityIndicator,
   StyleSheet,
-  Text,
   Alert,
 } from "react-native";
 
