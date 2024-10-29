@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jonas.tattoomasters"
+      "bundleIdentifier": "com.djn.tattoomasters"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.jonas.tattoomasters"
+      "package": "com.djn.tattoomasters"
     },
     "web": {
       "bundler": "metro",
