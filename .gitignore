@@ -22,9 +22,6 @@ DerivedData
 project.xcworkspace
 **/.xcode.env.local
 
-/android
-/ios
-
 # Gradle
 /build/
 /packages/rn-tester/build
