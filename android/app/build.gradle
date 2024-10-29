@@ -110,9 +110,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.jonas.tattoomasters'
+    namespace 'com.djn.tattoomasters'
     defaultConfig {
-        applicationId 'com.jonas.tattoomasters'
+        applicationId 'com.djn.tattoomasters'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

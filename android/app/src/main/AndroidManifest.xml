@@ -25,7 +25,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
-        <data android:scheme="com.jonas.tattoomasters"/>
+        <data android:scheme="com.djn.tattoomasters"/>
         <data android:scheme="exp+tattoo-masters"/>
       </intent-filter>
     </activity>
