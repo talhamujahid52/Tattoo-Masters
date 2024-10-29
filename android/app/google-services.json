@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:828691216515:android:d1556b4449ebf989a983b6",
+        "mobilesdk_app_id": "1:828691216515:android:23d3ee7a06856bdaa983b6",
         "android_client_info": {
-          "package_name": "com.jonas.tattoomasters"
+          "package_name": "com.djn.tattoomasters"
         }
       },
       "oauth_client": [],
