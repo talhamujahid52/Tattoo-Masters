@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "828691216515",
+    "project_id": "tattoo-masters-48277",
+    "storage_bucket": "tattoo-masters-48277.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:828691216515:android:23d3ee7a06856bdaa983b6",
+        "android_client_info": {
+          "package_name": "com.djn.tattoomasters"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiTGlxSmQvKoYpcj2nzZRKWHx6ND8_1xE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
