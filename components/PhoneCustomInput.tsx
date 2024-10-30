@@ -1,18 +1,34 @@
 import { StyleSheet } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PhoneInput, { ICountry } from "react-native-international-phone-number";
 
-const PhoneCustomInput = () => {
+interface PhoneCustomInputProps {
+  value: string;
+  onChange: (phoneNumber: string, countryCode: string) => void; // Change to accept country code
+}
+
+const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
+  value,
+  onChange,
+}) => {
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [inputValue, setInputValue] = useState<string>("");
 
-  function handleInputValue(phoneNumber: string) {
-    setInputValue(phoneNumber);
-  }
+  // Update input value when parent changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
-  function handleSelectedCountry(country: ICountry) {
+  const handleInputValue = (phoneNumber: string) => {
+    setInputValue(phoneNumber);
+    const countryCode = selectedCountry ? selectedCountry.callingCode : ""; // Get the country code
+    onChange(phoneNumber, countryCode); // Pass both phone number and country code
+  };
+
+  const handleSelectedCountry = (country: ICountry) => {
     setSelectedCountry(country);
-  }
+  };
+
   return (
     <PhoneInput
       phoneInputStyles={{

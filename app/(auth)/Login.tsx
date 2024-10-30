@@ -1,12 +1,67 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
 import { router } from "expo-router";
 import Text from "@/components/Text";
+import auth from "@react-native-firebase/auth";
 
 const Login = () => {
+  const [email, setEmail] = useState<string>(""); // State for email input
+  const [password, setPassword] = useState<string>(""); // State for password input
+  const [emailError, setEmailError] = useState<string>(""); // State for email error
+
+  const validateEmail = (input: string): boolean => {
+    // Basic email validation regex
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(input);
+  };
+
+  const handleEmailChange = (input: string) => {
+    setEmail(input);
+    if (!validateEmail(input)) {
+      setEmailError("Please enter a valid email address.");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handleLoginClick = async () => {
+    if (emailError) return; // Prevent login if there's an email error
+
+    try {
+      const userCredential = await auth().signInWithEmailAndPassword(
+        email,
+        password
+      ); // Use user input for login
+      const user = userCredential.user;
+
+      // Check if the email is verified
+      if (user.emailVerified) {
+        router.push({
+          pathname: "/(bottomTabs)/Home",
+        });
+        console.log("User signed in!");
+      } else {
+        alert("Please verify your email before logging in.");
+        console.log("Email is not verified.");
+        await auth().signOut(); // Optionally sign out the user
+      }
+    } catch (error: any) {
+      if (error.code === "auth/user-not-found") {
+        alert("No user found with this email!");
+        console.log("No user found with this email!");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password!");
+        console.log("Incorrect password!");
+      } else {
+        alert(error.message); // Display a general error message
+        console.error(error);
+      }
+    }
+  };
+
   return (
     <View style={styles.Container}>
       <Image
@@ -34,8 +89,28 @@ const Login = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.InputContainer}>
-        <Input inputMode="email" placeholder="Email address"></Input>
-        <Input inputMode="password" placeholder="Password"></Input>
+        <Input
+          inputMode="email"
+          placeholder="Email address"
+          value={email}
+          onChangeText={handleEmailChange} // Update email state on change with validation
+        />
+        {emailError ? (
+          <Text
+            size="small"
+            weight="medium"
+            color="#FFD982"
+            style={styles.errorText}
+          >
+            {emailError}
+          </Text> // Show error message
+        ) : null}
+        <Input
+          inputMode="password"
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword} // Update password state on change
+        />
       </View>
       <View style={styles.ForgotPasswordContainer}>
         <TouchableOpacity>
@@ -47,10 +122,11 @@ const Login = () => {
       <Button
         title="Login"
         onPress={() => {
-          router.push({
-            pathname: "/(auth)/Register",
-          });
-        }}
+          handleLoginClick();
+          // router.push({
+          //   pathname: "/(auth)/Register",
+          // });
+        }} // Call handleLoginClick directly
       />
       <View style={styles.SpacerContainer}>
         <View style={styles.Spacer}></View>
@@ -123,6 +199,10 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     rowGap: 16,
   },
+  errorText: {
+    marginHorizontal: 20,
+    marginTop: -10,
+  },
   ForgotPasswordContainer: {
     paddingTop: 8,
     paddingBottom: 24,
@@ -131,12 +211,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "flex-end",
-  },
-  ForgotPassword: {
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 15.51,
-    color: "#FBF6FA",
   },
   SpacerContainer: {
     height: 21,
@@ -147,7 +221,6 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     gap: 8,
   },
-
   Spacer: {
     width: 102,
     height: 1,

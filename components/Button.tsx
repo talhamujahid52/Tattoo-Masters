@@ -53,6 +53,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: 30,
+    backgroundColor: "#927639",
   },
 });
 
