@@ -6,6 +6,12 @@ import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
 import { router } from "expo-router";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+
+GoogleSignin.configure({
+  webClientId:
+    "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
+});
 
 const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
@@ -59,6 +65,30 @@ const Login = () => {
         alert(error.message); // Display a general error message
         console.error(error);
       }
+    }
+  };
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo: any = await GoogleSignin.signIn();
+      console.log("User Info:", userInfo);
+
+      const idToken: string = userInfo.data.idToken as string;
+      if (!idToken) {
+        const accessToken: string = userInfo.accessToken as string;
+        const googleCredential = auth.GoogleAuthProvider.credential(
+          null,
+          accessToken
+        );
+        await auth().signInWithCredential(googleCredential);
+      } else {
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+        await auth().signInWithCredential(googleCredential);
+      }
+
+      console.log("User signed in!");
+    } catch (error) {
+      console.error("Google Sign-In error:", error);
     }
   };
 
@@ -139,6 +169,9 @@ const Login = () => {
         <ThirdPartyButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
+          onPress={() => {
+            signInWithGoogle();
+          }}
         />
         <ThirdPartyButton
           title="X"
