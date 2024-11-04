@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:828691216515:android:23d3ee7a06856bdaa983b6",
+        "mobilesdk_app_id": "1:828691216515:android:befcf9e1bae34abba983b6",
         "android_client_info": {
-          "package_name": "com.djn.tattoomasters"
+          "package_name": "com.ddjn.tattoomasters"
         }
       },
       "oauth_client": [
         {
-          "client_id": "828691216515-3kmrfm9ahilfacgj9qbui9ji9pv0rdkp.apps.googleusercontent.com",
+          "client_id": "828691216515-m9i9nab4oai43o2kcdh92f84rjjfp8e8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.djn.tattoomasters",
+            "package_name": "com.ddjn.tattoomasters",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
@@ -42,7 +42,7 @@
               "client_id": "828691216515-84g3cq78pgv6ahc1noir7vef64oats0f.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.djn.tattoomasters"
+                "bundle_id": "com.ddjn.tattoomasters"
               }
             }
           ]
