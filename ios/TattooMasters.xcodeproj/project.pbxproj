@@ -386,7 +386,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.djn.tattoomasters";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ddjn.tattoomasters";
 				PRODUCT_NAME = "TattooMasters";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "TattooMasters/TattooMasters-Bridging-Header.h";
@@ -423,7 +423,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.djn.tattoomasters";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ddjn.tattoomasters";
 				PRODUCT_NAME = "TattooMasters";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "TattooMasters/TattooMasters-Bridging-Header.h";
