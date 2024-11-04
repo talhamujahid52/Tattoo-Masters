@@ -1,4 +1,4 @@
-package com.djn.tattoomasters
+package com.ddjn.tattoomasters
 
 import android.os.Build
 import android.os.Bundle

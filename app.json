@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Tattoo-Masters",
-    "slug": "Tattoo-Masters",
+    "name": "Tattoo Masters",
+    "slug": "Tattoo Masters",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.djn.tattoomasters"
+      "bundleIdentifier": "com.ddjn.tattoomasters"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.djn.tattoomasters"
+      "package": "com.ddjn.tattoomasters"
     },
     "web": {
       "bundler": "metro",
