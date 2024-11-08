@@ -14,7 +14,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ddjn.tattoomasters"
+      "bundleIdentifier": "com.ddjn.tattoomasters",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.828691216515-n0t5t1ifeo19pio4f01chppf42k73639"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
