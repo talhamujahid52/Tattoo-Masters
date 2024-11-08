@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "828691216515",
+    "project_id": "tattoo-masters-48277",
+    "storage_bucket": "tattoo-masters-48277.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:828691216515:android:befcf9e1bae34abba983b6",
+        "android_client_info": {
+          "package_name": "com.ddjn.tattoomasters"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "828691216515-m9i9nab4oai43o2kcdh92f84rjjfp8e8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ddjn.tattoomasters",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiTGlxSmQvKoYpcj2nzZRKWHx6ND8_1xE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "828691216515-84g3cq78pgv6ahc1noir7vef64oats0f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ddjn.tattoomasters"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
