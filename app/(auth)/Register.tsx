@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import PhoneInput from "@/components/PhoneCustomInput";
@@ -6,8 +6,67 @@ import Button from "@/components/Button";
 import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
 import Text from "@/components/Text";
 import { router } from "expo-router";
+import auth from "@react-native-firebase/auth";
 
-const Register = () => {
+const Register: React.FC = () => {
+  const [fullName, setFullName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+
+  const formatPhoneNumber = (): string => {
+    // Combine the country code and phone number
+    return `${countryCode ? `${countryCode}` : ""} ${phone}`.trim();
+  };
+
+  const validateEmail = (email: string) => {
+    const regex = /\S+@\S+\.\S+/;
+    return regex.test(email);
+  };
+
+  const handleRegister = async () => {
+    const fullPhoneNumber = formatPhoneNumber();
+
+    console.log("Full Name:", fullName);
+    console.log("Email:", email);
+    console.log("countryCode :", countryCode); // Log formatted phone number
+    console.log("phone :", phone); // Log formatted phone number
+
+    console.log("Phone Number:", fullPhoneNumber); // Log formatted phone number
+    console.log("Password:", password);
+    console.log("Confirm Password:", confirmPassword);
+
+    if (!validateEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password
+      );
+      await userCredential.user.sendEmailVerification();
+      // Handle successful registration, e.g., navigate to verification
+      router.push({ pathname: "/(auth)/Verification" });
+
+      alert("Verification email sent. Please check your inbox.");
+    } catch (error: any) {
+      // Assert the error type to 'any'
+      if (error && error.code && error.message) {
+        alert(error.message); // Use the error message from Firebase
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
+
   return (
     <View style={styles.Container}>
       <Image
@@ -20,11 +79,7 @@ const Register = () => {
           Already have an account?
         </Text>
         <TouchableOpacity
-          onPress={() => {
-            router.push({
-              pathname: "/(auth)/Login",
-            });
-          }}
+          onPress={() => router.push({ pathname: "/(auth)/Login" })}
         >
           <Text size="p" weight="semibold" color="#FBF6FA">
             {" "}
@@ -33,24 +88,44 @@ const Register = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.InputContainer}>
-        <Input inputMode="text" placeholder="Full Name"></Input>
-        <Input inputMode="email" placeholder="Email address"></Input>
-        <PhoneInput></PhoneInput>
-        <Input inputMode="password" placeholder="Create Password"></Input>
-        <Input inputMode="password" placeholder="Confirm Password"></Input>
+        <Input
+          inputMode="text"
+          placeholder="Full Name"
+          value={fullName}
+          onChangeText={setFullName}
+        />
+        <Input
+          inputMode="email"
+          placeholder="Email address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <PhoneInput
+          value={phone}
+          onChange={(phoneNumber, code) => {
+            setPhone(phoneNumber);
+            setCountryCode(code); // Capture country code
+          }}
+        />
+        <Input
+          inputMode="password"
+          placeholder="Create Password"
+          value={password}
+          onChangeText={setPassword}
+        />
+        <Input
+          inputMode="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
       </View>
-      <Button
-        title="Register"
-        onPress={() => {
-          router.push({
-            pathname: "/(auth)/Verification",
-          });
-        }}
-      />
+      <Button title="Register" onPress={handleRegister} />
       <View style={styles.SpacerContainer}>
         <View style={styles.Spacer}></View>
         <Text size="p" weight="normal" color="#A7A7A7">
-          Or continue with
+          {" "}
+          Or continue with{" "}
         </Text>
         <View style={styles.Spacer}></View>
       </View>
@@ -70,7 +145,8 @@ const Register = () => {
       </View>
       <View style={styles.BottomText}>
         <Text size="small" weight="normal" color="#828282">
-          By clicking continue, you agree to our
+          {" "}
+          By clicking continue, you agree to our{" "}
         </Text>
         <View style={styles.TermsOfServiceContainer}>
           <Text size="small" weight="normal" color="#FBF6FA">

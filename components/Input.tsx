@@ -4,6 +4,7 @@ import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon li
 
 interface InputProps {
   placeholder?: string;
+  value?: string; // Added value prop
   onChangeText?: (text: string) => void;
   leftIcon?: any;
   rightIcon?: any;
@@ -12,6 +13,7 @@ interface InputProps {
 
 const Input = ({
   placeholder = "Type here...", // Default placeholder
+  value = "", // Default value
   onChangeText,
   leftIcon,
   rightIcon,
@@ -21,6 +23,7 @@ const Input = ({
   const togglePasswordVisibility = () => {
     setIsPasswordVisible((prev) => !prev);
   };
+
   return (
     <View style={styles.container}>
       {leftIcon && (
@@ -30,6 +33,7 @@ const Input = ({
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor="#A29F93"
+        value={value} // Set the value prop
         onChangeText={onChangeText}
         selectionColor="#A29F93"
         secureTextEntry={inputMode === "password" && !isPasswordVisible}

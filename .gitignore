@@ -21,7 +21,6 @@ DerivedData
 *.xcuserstate
 project.xcworkspace
 **/.xcode.env.local
-
 # Gradle
 /build/
 /packages/rn-tester/build
@@ -77,7 +76,7 @@ package-lock.json
 
 # OS X
 .DS_Store
-
+*.aab
 # Test generated files
 *.js.meta
 

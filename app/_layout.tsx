@@ -5,9 +5,12 @@ import {
   BottomSheetView,
   BottomSheetModalProvider,
 } from "@gorhom/bottom-sheet";
+
+import { StatusBar } from "expo-status-bar";
 export default function RootLayout() {
   return (
     <>
+      <StatusBar style="light" />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <Stack screenOptions={{ headerShown: false }}>
