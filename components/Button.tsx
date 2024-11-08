@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// import { RadialGradient } from "react-native-gradients";
+import { RadialGradient } from "react-native-gradients";
 import Text from "./Text";
 
 interface ButtonProps {
@@ -22,13 +22,13 @@ const Button = ({ title = "Let's go", onPress }: ButtonProps) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.button}>
       <View style={styles.gradientContainer}>
-        {/* <RadialGradient */}
-        {/*   x="53.8%" // Center position (horizontal) */}
-        {/*   y="50%" // Center position (vertical) */}
-        {/*   rx="46.2%" // Horizontal radius */}
-        {/*   ry="307.19%" // Vertical radius */}
-        {/*   colorList={colorList} */}
-        {/* /> */}
+        <RadialGradient
+          x="53.8%" // Center position (horizontal)
+          y="50%" // Center position (vertical)
+          rx="46.2%" // Horizontal radius
+          ry="307.19%" // Vertical radius
+          colorList={colorList}
+        />
       </View>
       <Text size="h4" weight="semibold">
         {title}

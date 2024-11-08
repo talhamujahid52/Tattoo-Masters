@@ -2,8 +2,9 @@ import Button from "@/components/Button";
 import React from "react";
 import { StyleSheet, View, Image } from "react-native";
 import { router } from "expo-router";
-// import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";
 import OnboardingComponent from "@/components/OnboardingComponent";
+import { StatusBar } from "expo-status-bar";
 
 const Welcome = () => {
   return (
@@ -20,11 +21,11 @@ const Welcome = () => {
         style={styles.backgroundImage}
         resizeMode="cover"
       />
-      {/* <LinearGradient */}
-      {/*   style={styles.gradientOverlay} */}
-      {/*   locations={[0, 0.17, 0.89]} */}
-      {/*   colors={["rgba(25, 25, 23, 0.2)", "rgba(25, 25, 23, 0.3)", "#171715"]} */}
-      {/* /> */}
+      <LinearGradient
+        style={styles.gradientOverlay}
+        locations={[0, 0.17, 0.89]}
+        colors={["rgba(25, 25, 23, 0.2)", "rgba(25, 25, 23, 0.3)", "#171715"]}
+      />
       <Image
         source={require("../../assets/images/logo.png")}
         style={styles.logo}
