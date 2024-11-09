@@ -34,6 +34,10 @@ const Login = () => {
   };
 
   const handleLoginClick = async () => {
+    if (!email || !password) {
+      alert("Both email and password are required.");
+      return;
+    }
     if (emailError) return; // Prevent login if there's an email error
 
     try {
@@ -63,7 +67,7 @@ const Login = () => {
         console.log("Incorrect password!");
       } else {
         alert(error.message); // Display a general error message
-        console.error(error);
+        console.log(error);
       }
     }
   };
@@ -85,10 +89,13 @@ const Login = () => {
         const googleCredential = auth.GoogleAuthProvider.credential(idToken);
         await auth().signInWithCredential(googleCredential);
       }
-
+      router.push({
+        pathname: "/(bottomTabs)/Home",
+      });
       console.log("User signed in!");
     } catch (error) {
-      console.error("Google Sign-In error:", error);
+      alert(error);
+      console.log("Google Sign-In error:", error);
     }
   };
 
@@ -153,10 +160,7 @@ const Login = () => {
         title="Login"
         onPress={() => {
           handleLoginClick();
-          // router.push({
-          //   pathname: "/(auth)/Register",
-          // });
-        }} // Call handleLoginClick directly
+        }}
       />
       <View style={styles.SpacerContainer}>
         <View style={styles.Spacer}></View>
@@ -174,12 +178,13 @@ const Login = () => {
           }}
         />
         <ThirdPartyButton
-          title="X"
-          icon={require("../../assets/images/X.png")}
-        />
-        <ThirdPartyButton
-          title="Apple ID"
-          icon={require("../../assets/images/Apple.png")}
+          title="Facebook"
+          icon={require("../../assets/images/facebook.png")}
+          onPress={() => {
+            alert(
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+            );
+          }}
         />
       </View>
       <View style={styles.BottomText}>
@@ -260,9 +265,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E6E6",
   },
   ThirdPartyButtonsContainer: {
+    width: "100%",
     display: "flex",
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
   },
   BottomText: {
     marginTop: 24,
