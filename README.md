@@ -20,13 +20,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 3. Build command (iOS)
 
    ```bash
-    npx expo build --platform ios --local
+    npx eas build --platform ios --local
    ```
    
 4. Build command (Android)
 
    ```bash
-    npx expo build --platform android --local
+    npx eas build --platform android --local
    ```
 
 5. Prebuild command to push expo changes to native ios and android folders

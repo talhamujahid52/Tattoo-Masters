@@ -15,7 +15,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ddjn.tattoomasters",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "LSMinimumSystemVersion": "12.0.0",
+        "ITSAppUsesNonExemptEncryption": false,
+        "aps-environment": "production"
+      }
     },
     "android": {
       "googleServicesFile": "./google-services.json",
