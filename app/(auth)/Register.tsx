@@ -135,12 +135,13 @@ const Register: React.FC = () => {
           icon={require("../../assets/images/Google.png")}
         />
         <ThirdPartyButton
-          title="X"
-          icon={require("../../assets/images/X.png")}
-        />
-        <ThirdPartyButton
-          title="Apple ID"
-          icon={require("../../assets/images/Apple.png")}
+          title="Facebook"
+          icon={require("../../assets/images/facebook.png")}
+          onPress={() => {
+            alert(
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+            );
+          }}
         />
       </View>
       <View style={styles.BottomText}>
@@ -214,9 +215,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E6E6",
   },
   ThirdPartyButtonsContainer: {
+    width: "100%",
     display: "flex",
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
   },
   BottomText: {
     marginTop: 24,

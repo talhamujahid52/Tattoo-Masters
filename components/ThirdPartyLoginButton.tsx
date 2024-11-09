@@ -26,13 +26,12 @@ const ThirdPartyButton = ({ title = "Google", icon, onPress }: ButtonProps) => {
 
 const styles = StyleSheet.create({
   button: {
+    flex: 0.48,
     display: "flex",
     flexDirection: "row",
     gap: 8,
     height: 50,
-    width: 110,
     borderRadius: 30,
-    paddingHorizontal: 16,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -41,6 +40,7 @@ const styles = StyleSheet.create({
   Image: {
     height: 20,
     width: 20,
+    resizeMode: "contain",
   },
 });
 
