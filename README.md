@@ -23,7 +23,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
     npx expo build --platform ios --local
    ```
    
-4. Build command (iOS)
+4. Build command (Android)
 
    ```bash
     npx expo build --platform android --local
