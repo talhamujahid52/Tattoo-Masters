@@ -1,53 +1,15 @@
-import React, { useRef, useCallback } from "react";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { StyleSheet, Image, TouchableOpacity } from "react-native";
-import Text from "./Text";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import React from "react";
 import { router } from "expo-router";
+import Text from "../Text";
 
-interface CustomBottomSheetProps {
-  isVisible: boolean;
-  onDismiss: () => void;
-}
-
-const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
-  isVisible,
-  onDismiss,
-}) => {
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  const handleSheetChanges = useCallback(
-    (index: number) => {
-      if (index === -1) {
-        onDismiss();
-      }
-    },
-    [onDismiss]
-  );
-
-  React.useEffect(() => {
-    if (isVisible) {
-      bottomSheetModalRef.current?.present();
-    } else {
-      bottomSheetModalRef.current?.dismiss();
-    }
-  }, [isVisible]);
-
+const LoginBottomSheet = () => {
   return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      onChange={handleSheetChanges}
-      index={0}
-      handleStyle={{
-        backgroundColor: "#000000",
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
-      }}
-      handleIndicatorStyle={{ backgroundColor: "#838383" }}
-    >
-      <BottomSheetView style={styles.contentContainer}>
+    <>
+      <View style={styles.contentContainer}>
         <Image
           style={styles.Logo}
-          source={require("../assets/images/logo.png")}
+          source={require("../../assets/images/logo.png")}
         />
         <Text
           size="p"
@@ -59,7 +21,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         </Text>
         <Image
           style={styles.usersImage}
-          source={require("../assets/images/users.png")}
+          source={require("../../assets/images/users.png")}
         />
         <Text
           size="medium"
@@ -72,7 +34,6 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         <TouchableOpacity
           style={styles.LoginOrRegisterButton}
           onPress={() => {
-            onDismiss();
             router.push({
               pathname: "/(auth)/Login",
             });
@@ -82,12 +43,12 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
             Login or register
           </Text>
         </TouchableOpacity>
-      </BottomSheetView>
-    </BottomSheetModal>
+      </View>
+    </>
   );
 };
 
-export default CustomBottomSheet;
+export default LoginBottomSheet;
 
 const styles = StyleSheet.create({
   contentContainer: {

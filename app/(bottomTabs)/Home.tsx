@@ -23,6 +23,7 @@ const Home = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
       <FlatList
         data={Array.from({ length: 5 }, (_, index) => ({
           id: index.toString(),

@@ -1,32 +1,21 @@
-import { StyleSheet, View, Image, StatusBar } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  StatusBar,
+  TouchableOpacity,
+} from "react-native";
 import Text from "@/components/Text";
 import React, { useRef, useCallback, useState } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import CustomBottomSheet from "@/components/CustomBottomSheet";
+import useBottomSheet from "@/hooks/useBottomSheet";
+import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
+import { DrawerToggleButton } from "@react-navigation/drawer";
 
 const BottomTabsLayout = () => {
   const unreadMessages = 17;
-  // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  // const handlePresentModalPress = useCallback(() => {
-  //   bottomSheetModalRef.current?.present();
-  // }, []);
-
-  // const handleSheetChanges = useCallback((index: number) => {
-  //   console.log("handleSheetChanges", index);
-  // }, []);
-
-  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-
-  const handlePresentModalPress = useCallback(() => {
-    setBottomSheetVisible(true);
-  }, []);
-
-  const handleDismiss = useCallback(() => {
-    setBottomSheetVisible(false);
-  }, []);
+  const { BottomSheet, show, hide } = useBottomSheet();
 
   return (
     <>
@@ -90,6 +79,7 @@ const BottomTabsLayout = () => {
               ) : (
                 <Ionicons name="map-outline" size={24} color="#838383" />
               ),
+            headerShown: false,
           }}
         />
         <Tabs.Screen
@@ -98,7 +88,7 @@ const BottomTabsLayout = () => {
             title: "",
             tabBarIcon: ({ focused }) => (
               <Ionicons
-                onPress={handlePresentModalPress}
+                onPress={() => show()}
                 name={focused ? "heart-sharp" : "heart-outline"}
                 size={24}
                 color={focused ? "#fff" : "#838383"}
@@ -127,10 +117,7 @@ const BottomTabsLayout = () => {
           }}
         />
       </Tabs>
-      <CustomBottomSheet
-        isVisible={isBottomSheetVisible}
-        onDismiss={handleDismiss}
-      />
+      <BottomSheet InsideComponent={<LoginBottomSheet />} />
     </>
   );
 };
