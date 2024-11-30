@@ -7,6 +7,9 @@ import { router } from "expo-router";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { signInWithEmailAndPassword } from "@/utils/firebase/userFunctions";
+import { setUser } from "@/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
 
 GoogleSignin.configure({
   webClientId:
@@ -17,7 +20,7 @@ const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
   const [password, setPassword] = useState<string>(""); // State for password input
   const [emailError, setEmailError] = useState<string>(""); // State for email error
-
+  const dispatch = useDispatch();
   const validateEmail = (input: string): boolean => {
     // Basic email validation regex
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,10 +44,8 @@ const Login = () => {
     if (emailError) return; // Prevent login if there's an email error
 
     try {
-      const userCredential = await auth().signInWithEmailAndPassword(
-        email,
-        password
-      ); // Use user input for login
+      const userCredential = await signInWithEmailAndPassword(email, password); // Use user input for login
+      dispatch(setUser(userCredential.user));
       const user = userCredential.user;
 
       // Check if the email is verified
@@ -82,7 +83,7 @@ const Login = () => {
         const accessToken: string = userInfo.accessToken as string;
         const googleCredential = auth.GoogleAuthProvider.credential(
           null,
-          accessToken
+          accessToken,
         );
         await auth().signInWithCredential(googleCredential);
       } else {
@@ -120,7 +121,6 @@ const Login = () => {
           }}
         >
           <Text size="p" weight="semibold" color="#FBF6FA">
-            {" "}
             Register here.
           </Text>
         </TouchableOpacity>
@@ -182,7 +182,7 @@ const Login = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
             );
           }}
         />

@@ -7,6 +7,10 @@ import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
 import Text from "@/components/Text";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
+import { createUserWithEmailAndPassword } from "@/utils/firebase/userFunctions";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/redux/slices/userSlice";
+import { AppDispatch } from "@/redux/store";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -15,7 +19,7 @@ const Register: React.FC = () => {
   const [countryCode, setCountryCode] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-
+  const dispatch = useDispatch<AppDispatch>();
   const formatPhoneNumber = (): string => {
     // Combine the country code and phone number
     return `${countryCode ? `${countryCode}` : ""} ${phone}`.trim();
@@ -48,10 +52,11 @@ const Register: React.FC = () => {
     }
 
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(
+      const userCredential = await createUserWithEmailAndPassword(
         email,
-        password
+        password,
       );
+      dispatch(setUser(userCredential.user));
       await userCredential.user.sendEmailVerification();
       // Handle successful registration, e.g., navigate to verification
       router.push({ pathname: "/(auth)/Verification" });
@@ -82,7 +87,6 @@ const Register: React.FC = () => {
           onPress={() => router.push({ pathname: "/(auth)/Login" })}
         >
           <Text size="p" weight="semibold" color="#FBF6FA">
-            {" "}
             Login here.
           </Text>
         </TouchableOpacity>
@@ -91,6 +95,8 @@ const Register: React.FC = () => {
         <Input
           inputMode="text"
           placeholder="Full Name"
+          isNameField
+          textInputProps={{ autoCorrect: false }}
           value={fullName}
           onChangeText={setFullName}
         />
@@ -139,14 +145,13 @@ const Register: React.FC = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
             );
           }}
         />
       </View>
       <View style={styles.BottomText}>
         <Text size="small" weight="normal" color="#828282">
-          {" "}
           By clicking continue, you agree to our{" "}
         </Text>
         <View style={styles.TermsOfServiceContainer}>

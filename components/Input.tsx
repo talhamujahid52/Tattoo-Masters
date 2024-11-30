@@ -1,5 +1,11 @@
-import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  TextInputProps,
+} from "react-native";
+import React, { useMemo, useState } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
 
 interface InputProps {
@@ -9,6 +15,8 @@ interface InputProps {
   leftIcon?: any;
   rightIcon?: any;
   inputMode: "text" | "email" | "password" | "tel";
+  isNameField?: boolean;
+  textInputProps?: TextInputProps;
 }
 
 const Input = ({
@@ -18,8 +26,25 @@ const Input = ({
   leftIcon,
   rightIcon,
   inputMode = "text", // Default input mode
+  textInputProps,
+  isNameField,
 }: InputProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const shouldAutoCap = useMemo(() => {
+    switch (inputMode) {
+      case "email":
+      case "tel":
+      case "password":
+        return "none";
+      case "text":
+        if (isNameField) {
+          return "words";
+        }
+        return undefined;
+    }
+  }, [inputMode]);
+
   const togglePasswordVisibility = () => {
     setIsPasswordVisible((prev) => !prev);
   };
@@ -30,6 +55,7 @@ const Input = ({
         <Ionicons name={leftIcon} size={24} color="white" style={styles.icon} />
       )}
       <TextInput
+        {...textInputProps}
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor="#A29F93"
@@ -37,12 +63,14 @@ const Input = ({
         onChangeText={onChangeText}
         selectionColor="#A29F93"
         secureTextEntry={inputMode === "password" && !isPasswordVisible}
+        inputMode={inputMode === "email" ? "email" : "text"}
+        autoCapitalize={shouldAutoCap}
         keyboardType={
           inputMode === "email"
             ? "email-address"
             : inputMode === "tel"
-            ? "phone-pad"
-            : "default"
+              ? "phone-pad"
+              : "default"
         }
       />
       {inputMode === "password" ? (

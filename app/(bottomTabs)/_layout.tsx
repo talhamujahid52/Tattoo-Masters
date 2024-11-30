@@ -1,25 +1,16 @@
 import { StyleSheet, View, Image, StatusBar } from "react-native";
 import Text from "@/components/Text";
-import React, { useRef, useCallback, useState } from "react";
-import { Tabs } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import CustomBottomSheet from "@/components/CustomBottomSheet";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 const BottomTabsLayout = () => {
   const unreadMessages = 17;
-  // const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  // const handlePresentModalPress = useCallback(() => {
-  //   bottomSheetModalRef.current?.present();
-  // }, []);
-
-  // const handleSheetChanges = useCallback((index: number) => {
-  //   console.log("handleSheetChanges", index);
-  // }, []);
-
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-
+  const router = useRouter();
   const handlePresentModalPress = useCallback(() => {
     setBottomSheetVisible(true);
   }, []);
@@ -27,6 +18,13 @@ const BottomTabsLayout = () => {
   const handleDismiss = useCallback(() => {
     setBottomSheetVisible(false);
   }, []);
+  const userId = useSelector((state: RootState) => state.user.user?.uid);
+
+  useEffect(() => {
+    if (!userId) {
+      router.replace("/(auth)/Welcome");
+    }
+  }, [userId]);
 
   return (
     <>
@@ -44,6 +42,7 @@ const BottomTabsLayout = () => {
           name="Home"
           options={{
             title: "",
+
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <Ionicons name="home-sharp" size={24} color="#fff" />
