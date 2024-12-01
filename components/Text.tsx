@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { Text as RNText, TextStyle } from "react-native";
 
 interface TextProps {
-  size?: "h1" | "h2" | "h3" | "h4" | "p" | "small" | "medium" | "large";
+  size?: "h1" | "h2" | "h3" | "h4" | "p" | "small" | "medium" | "large"| "profileName";
   weight?: "normal" | "bold" | "bolder" | "light" | "medium" | "semibold";
   color?: string;
   font?: string; // Optional if you want to specify custom fonts
@@ -29,6 +29,7 @@ const Text: FC<TextProps> = ({
     large: 14,
     medium: 13,
     small: 12,
+    profileName:20
   };
 
   // Define a weight mapping
