@@ -13,7 +13,7 @@ interface ButtonProps {
   onPress?: (event: GestureResponderEvent) => void;
 }
 
-const ThirdPartyButton = ({ title = "Google", icon, onPress }: ButtonProps) => {
+const ThirdPartyLoginButton = ({ title = "Google", icon, onPress }: ButtonProps) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.button}>
       <Image style={styles.Image} source={icon} />
@@ -44,4 +44,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ThirdPartyButton;
+export default ThirdPartyLoginButton;
