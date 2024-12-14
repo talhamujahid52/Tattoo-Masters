@@ -52,7 +52,15 @@
             "useFrameworks": "static"
           }
         }
+      ],
+      [
+        "./plugin/iosAppDelegatePlugin.js"
+      ],
+      [
+        "./plugin/androidGoogleMapsApiPlugin.js",
+        { "apiKey": "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k" }
       ]
+      
     ],
     "experiments": {
       "typedRoutes": true
