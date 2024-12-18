@@ -1,3 +1,4 @@
+import { normalize } from "@/utils/helperFunctions";
 import React, { FC } from "react";
 import { Text as RNText, TextStyle } from "react-native";
 
@@ -21,14 +22,14 @@ const Text: FC<TextProps> = ({
 }) => {
   // Define the size mapping
   const sizeMap: Record<string, number> = {
-    h1: 32,
-    h2: 28,
-    h3: 24,
-    h4: 17,
-    p: 16,
-    large: 14,
-    medium: 13,
-    small: 12,
+    h1: normalize(32),
+    h2: normalize(28),
+    h3: normalize(24),
+    h4: normalize(17),
+    p: normalize(16),
+    large: normalize(14),
+    medium: normalize(13),
+    small: normalize(12),
   };
 
   // Define a weight mapping

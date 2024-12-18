@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import React, { useMemo, useState } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
+import { normalize } from "@/utils/helperFunctions";
 
 interface InputProps {
   placeholder?: string;
@@ -113,9 +114,9 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: "100%",
-    fontSize: 16,
+    fontSize: normalize(16),
     fontWeight: "400",
-    lineHeight: 20.28,
+    lineHeight: normalize(20.28),
     padding: 10,
     color: "white",
   },
