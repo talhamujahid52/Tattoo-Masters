@@ -10,7 +10,7 @@ import { RootState } from "@/redux/store";
 const BottomTabsLayout = () => {
   const unreadMessages = 17;
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
   const handlePresentModalPress = useCallback(() => {
     setBottomSheetVisible(true);
   }, []);
@@ -18,13 +18,14 @@ const BottomTabsLayout = () => {
   const handleDismiss = useCallback(() => {
     setBottomSheetVisible(false);
   }, []);
-  const userId = useSelector((state: RootState) => state.user.user?.uid);
+  // const userId = useSelector((state: RootState) => state.user.user?.uid);
 
-  useEffect(() => {
-    if (!userId) {
-      router.replace("/(auth)/Welcome");
-    }
-  }, [userId]);
+  // useEffect(() => {
+  //   console.log("user", userId);
+  //   if (!userId) {
+  //     router.replace("/(auth)/Welcome");
+  //   }
+  // }, [userId]);
 
   return (
     <>

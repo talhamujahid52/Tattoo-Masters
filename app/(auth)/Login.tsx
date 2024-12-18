@@ -50,9 +50,9 @@ const Login = () => {
 
       // Check if the email is verified
       if (user.emailVerified) {
-        router.push({
-          pathname: "/(bottomTabs)/Home",
-        });
+        // router.push({
+        //   pathname: "/(bottomTabs)/Home",
+        // });
         console.log("User signed in!");
       } else {
         alert("Please verify your email before logging in.");

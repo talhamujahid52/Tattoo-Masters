@@ -1,10 +1,14 @@
 import { StyleSheet, TouchableOpacity, View, FlatList } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import React from "react";
+import React, { useEffect } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
+import auth from "@react-native-firebase/auth";
 
 const Home = () => {
+  // useEffect(() => {
+  //   auth().signOut();
+  // }, []);
   return (
     <View style={styles.container}>
       <Input
