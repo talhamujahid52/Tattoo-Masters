@@ -1,8 +1,8 @@
-// CustomBottomSheet.tsx
 import React, { useRef, useCallback } from "react";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { StyleSheet, Image, TouchableOpacity } from "react-native";
 import Text from "./Text";
+import { router } from "expo-router";
 
 interface CustomBottomSheetProps {
   isVisible: boolean;
@@ -37,9 +37,11 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
       ref={bottomSheetModalRef}
       onChange={handleSheetChanges}
       index={0}
-      snapPoints={["100%"]}
-      style={{ backgroundColor: "#000" }}
-      handleStyle={{ backgroundColor: "#000000d0" }}
+      handleStyle={{
+        backgroundColor: "#000000",
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15,
+      }}
       handleIndicatorStyle={{ backgroundColor: "#838383" }}
     >
       <BottomSheetView style={styles.contentContainer}>
@@ -67,8 +69,18 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         >
           Over 5,000 tattoo artists to search from.
         </Text>
-        <TouchableOpacity>
-          <Text>Login or register</Text>
+        <TouchableOpacity
+          style={styles.LoginOrRegisterButton}
+          onPress={() => {
+            onDismiss();
+            router.push({
+              pathname: "/(auth)/Login",
+            });
+          }}
+        >
+          <Text size="h4" weight="medium" color="#DAB769">
+            Login or register
+          </Text>
         </TouchableOpacity>
       </BottomSheetView>
     </BottomSheetModal>
@@ -80,13 +92,13 @@ export default CustomBottomSheet;
 const styles = StyleSheet.create({
   contentContainer: {
     alignItems: "center",
+    paddingHorizontal: 16,
     backgroundColor: "#000000",
   },
   Logo: {
     height: 250,
     width: 250,
     resizeMode: "contain",
-    backgroundColor: "green",
   },
   Description: {
     textAlign: "center",
@@ -105,5 +117,16 @@ const styles = StyleSheet.create({
     lineHeight: 15.51,
     color: "#A7A7A7",
     textAlign: "center",
+  },
+  LoginOrRegisterButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 50,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#A291AA",
+    borderRadius: 30,
+    marginVertical: 24,
   },
 });

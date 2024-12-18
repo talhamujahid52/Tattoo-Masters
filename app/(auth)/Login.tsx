@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
+import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";
 import { router } from "expo-router";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
@@ -169,15 +169,15 @@ const Login = () => {
         </Text>
         <View style={styles.Spacer}></View>
       </View>
-      <View style={styles.ThirdPartyButtonsContainer}>
-        <ThirdPartyButton
+      <View style={styles.ThirdPartyLoginButtonsContainer}>
+        <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
           onPress={() => {
             signInWithGoogle();
           }}
         />
-        <ThirdPartyButton
+        <ThirdPartyLoginButton
           title="Facebook"
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E6E6E6",
   },
-  ThirdPartyButtonsContainer: {
+  ThirdPartyLoginButtonsContainer: {
     width: "100%",
     display: "flex",
     flexDirection: "row",

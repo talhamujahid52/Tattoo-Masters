@@ -8,6 +8,8 @@ import { persistor, store } from "@/redux/store";
 import AppNavigator from "./AppNavigator";
 
 export default function RootLayout() {
+  const router = useRouter();
+
   return (
     <>
       <Provider store={store}>

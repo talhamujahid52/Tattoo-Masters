@@ -18,6 +18,7 @@ interface InputProps {
   inputMode: "text" | "email" | "password" | "tel";
   isNameField?: boolean;
   textInputProps?: TextInputProps;
+  backgroundColour?: string;
 }
 
 const Input = ({
@@ -27,6 +28,7 @@ const Input = ({
   leftIcon,
   rightIcon,
   inputMode = "text", // Default input mode
+  backgroundColour = "#FFFFFF1A",
   textInputProps,
   isNameField,
 }: InputProps) => {
@@ -51,7 +53,7 @@ const Input = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: backgroundColour }]}>
       {leftIcon && (
         <Ionicons name={leftIcon} size={24} color="white" style={styles.icon} />
       )}

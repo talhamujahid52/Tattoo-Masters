@@ -3,7 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Input from "@/components/Input";
 import PhoneInput from "@/components/PhoneCustomInput";
 import Button from "@/components/Button";
-import ThirdPartyButton from "@/components/ThirdPartyLoginButton";
+import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";
 import Text from "@/components/Text";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
@@ -135,12 +135,12 @@ const Register: React.FC = () => {
         </Text>
         <View style={styles.Spacer}></View>
       </View>
-      <View style={styles.ThirdPartyButtonsContainer}>
-        <ThirdPartyButton
+      <View style={styles.ThirdPartyLoginButtonsContainer}>
+        <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
         />
-        <ThirdPartyButton
+        <ThirdPartyLoginButton
           title="Facebook"
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E6E6E6",
   },
-  ThirdPartyButtonsContainer: {
+  ThirdPartyLoginButtonsContainer: {
     width: "100%",
     display: "flex",
     flexDirection: "row",
