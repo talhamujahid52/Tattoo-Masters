@@ -6,9 +6,12 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/redux/store";
 import AppNavigator from "./AppNavigator";
+import { SplashScreen } from "expo-router";
+// import { useRouter } from "expo-router";
 
+SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
-  const router = useRouter();
+  // const router = useRouter();
 
   return (
     <>

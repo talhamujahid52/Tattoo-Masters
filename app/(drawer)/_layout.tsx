@@ -9,6 +9,8 @@ import {
 import Text from "@/components/Text";
 import React from "react";
 import { useRouter } from "expo-router";
+
+import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface CustomDrawerContentProps {
   isArtist: boolean;
@@ -242,7 +244,12 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          onPress={() => {
+            auth().signOut();
+          }}
+          style={styles.logoutButton}
+        >
           <Image
             style={styles.icon}
             source={require("../../assets/images/logout.png")}

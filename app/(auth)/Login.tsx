@@ -90,9 +90,6 @@ const Login = () => {
         const googleCredential = auth.GoogleAuthProvider.credential(idToken);
         await auth().signInWithCredential(googleCredential);
       }
-      router.push({
-        pathname: "/(bottomTabs)/Home",
-      });
       console.log("User signed in!");
     } catch (error) {
       alert(error);
