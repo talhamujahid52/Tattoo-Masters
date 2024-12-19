@@ -113,7 +113,7 @@ const Login = () => {
       </Text>
       <View style={styles.Row}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          Don’t have an account?
+          Don’t have an account?{" "}
         </Text>
         <TouchableOpacity
           onPress={() => {
