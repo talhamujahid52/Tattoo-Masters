@@ -22,7 +22,7 @@ DerivedData
 project.xcworkspace
 **/.xcode.env.local
 .expo/devices.json
-.expo/
+.expo/prebuild/cached-packages.json
 # Gradle
 /build/
 /packages/rn-tester/build
