@@ -218,6 +218,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
+    minHeight: "100%",
   },
   Logo: {
     height: 250,

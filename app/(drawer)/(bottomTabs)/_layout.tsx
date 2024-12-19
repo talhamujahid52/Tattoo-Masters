@@ -75,6 +75,7 @@ const BottomTabsLayout = () => {
             ),
             headerRight: () => (
               <TouchableOpacity
+                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
                 onPress={() => {
                   navigation.dispatch(DrawerActions.toggleDrawer());
                 }}

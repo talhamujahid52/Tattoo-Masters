@@ -10,20 +10,24 @@ import {
 import Text from "@/components/Text";
 import React from "react";
 import { ErrorBoundaryProps, useRouter } from "expo-router";
-
+import { Dimensions } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface CustomDrawerContentProps {
   isArtist: boolean;
 }
-
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   return (
     <ScrollView
-      contentContainerStyle={{ minHeight: "100%" }}
+      contentContainerStyle={{
+        minHeight: SCREEN_HEIGHT - insets.top - 20,
+        paddingBottom: insets.bottom + 20,
+        justifyContent: "space-between",
+      }}
       style={{
         flex: 1,
         marginTop: insets.top + 20,
@@ -90,119 +94,121 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
           <View style={styles.seprator}></View>
         </View>
       )}
-      <Text size="medium" weight="semibold" color="#A7A7A7">
-        SETTINGS
-      </Text>
-      <View style={styles.drawerItemList}>
-        <TouchableOpacity
-          onPress={() => {
-            router.push({
-              pathname: "/artist/EditProfile",
-            });
-          }}
-          style={styles.drawerItem}
-        >
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/person_edit.png")}
-          />
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Edit Profile
-          </Text>
-        </TouchableOpacity>
-        {isArtist && (
-          <TouchableOpacity style={styles.drawerItem}>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/add_photo_alternate.png")}
-            />
-            <Text size="h4" weight="normal" color="#FBF6FA">
-              Add tattoo
-            </Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={() => {
-            router.push({
-              pathname: "/(auth)/ChangePassword",
-            });
-          }}
-          style={styles.drawerItem}
-        >
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/lock.png")}
-          />
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Change password
-          </Text>
-        </TouchableOpacity>
-        {isArtist && (
+      <View>
+        <Text size="medium" weight="semibold" color="#A7A7A7">
+          SETTINGS
+        </Text>
+        <View style={styles.drawerItemList}>
           <TouchableOpacity
             onPress={() => {
               router.push({
-                pathname: "/(auth)/ReviewPassword",
+                pathname: "/artist/EditProfile",
               });
             }}
             style={styles.drawerItem}
           >
             <Image
               style={styles.icon}
-              source={require("../../assets/images/lock_person.png")}
+              source={require("../../assets/images/person_edit.png")}
             />
             <Text size="h4" weight="normal" color="#FBF6FA">
-              Change review password
+              Edit Profile
             </Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.drawerItem}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/notifications.png")}
-          />
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Notifications
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.seprator}></View>
-      <View>
-        <TouchableOpacity style={styles.drawerItem}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/support_agent.png")}
-          />
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Help and Support
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.drawerItem}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/feedback.png")}
-          />
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Feedback
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.seprator}></View>
-      <TouchableOpacity
-        onPress={() => {
-          router.push({
-            pathname: "/(auth)/DeleteAccount",
-          });
-        }}
-      >
-        <Text
-          size="medium"
-          weight="semibold"
-          color="#A7A7A7"
-          style={{ textDecorationLine: "underline" }}
+          {isArtist && (
+            <TouchableOpacity style={styles.drawerItem}>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/add_photo_alternate.png")}
+              />
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                Add tattoo
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              router.push({
+                pathname: "/(auth)/ChangePassword",
+              });
+            }}
+            style={styles.drawerItem}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/lock.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Change password
+            </Text>
+          </TouchableOpacity>
+          {isArtist && (
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/(auth)/ReviewPassword",
+                });
+              }}
+              style={styles.drawerItem}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/lock_person.png")}
+              />
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                Change review password
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.drawerItem}>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/notifications.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Notifications
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.seprator}></View>
+        <View>
+          <TouchableOpacity style={styles.drawerItem}>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/support_agent.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Help and Support
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.drawerItem}>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/feedback.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Feedback
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.seprator}></View>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/(auth)/DeleteAccount",
+            });
+          }}
         >
-          Delete Account
-        </Text>
-      </TouchableOpacity>
+          <Text
+            size="medium"
+            weight="semibold"
+            color="#A7A7A7"
+            style={{ textDecorationLine: "underline" }}
+          >
+            Delete Account
+          </Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.registerArtistContainer}>
         {!isArtist && (
           <TouchableOpacity
