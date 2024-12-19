@@ -7,21 +7,25 @@ import {
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
 
 const Home = () => {
-  // useEffect(() => {
-  //   auth().signOut();
-  // }, []);
+  const [searchText, setSearchText] = useState("");
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: 30 }}
+      style={styles.container}
+    >
       <Input
+        value={searchText}
         inputMode="text"
         placeholder="Search for ideas"
         leftIcon={"search"}
-        rightIcon={"cancel"}
+        onChangeText={(text) => setSearchText(text)}
+        rightIcon={searchText !== "" && "cancel"}
+        rightIconOnPress={() => setSearchText("")}
       ></Input>
       <View style={styles.flatlistHeadingContainer}>
         <Text size="h4" weight="semibold" color="#FBF6FA">

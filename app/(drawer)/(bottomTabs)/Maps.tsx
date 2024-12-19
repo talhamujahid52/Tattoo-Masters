@@ -5,13 +5,14 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
-  Text,
   Image,
 } from "react-native";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
+import Text from "@/components/Text";
+import { ErrorBoundaryProps } from "expo-router";
 
 const FullScreenMapWithSearch: React.FC = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
@@ -187,17 +188,17 @@ const FullScreenMapWithSearch: React.FC = () => {
       </View>
 
       {/* Map View */}
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        customMapStyle={googleDarkModeStyle}
-        region={region} // Dynamically update region based on search
-        mapType="terrain"
-        showsMyLocationButton
-        zoomEnabled
-      >
-        <Marker coordinate={region} title="Location" />
-      </MapView>
+      {/* <MapView */}
+      {/*   provider={PROVIDER_GOOGLE} */}
+      {/*   style={styles.map} */}
+      {/*   customMapStyle={googleDarkModeStyle} */}
+      {/*   region={region} // Dynamically update region based on search */}
+      {/*   mapType="terrain" */}
+      {/*   showsMyLocationButton */}
+      {/*   zoomEnabled */}
+      {/* > */}
+      {/*   <Marker coordinate={region} title="Location" /> */}
+      {/* </MapView> */}
     </View>
   );
 };

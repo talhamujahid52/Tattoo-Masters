@@ -5,10 +5,11 @@ import {
   View,
   Image,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import Text from "@/components/Text";
 import React from "react";
-import { useRouter } from "expo-router";
+import { ErrorBoundaryProps, useRouter } from "expo-router";
 
 import auth from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,10 +22,11 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
   const router = useRouter();
 
   return (
-    <View
+    <ScrollView
+      contentContainerStyle={{ minHeight: "100%" }}
       style={{
-        height: "90%",
-        marginTop: insets.top,
+        flex: 1,
+        marginTop: insets.top + 20,
       }}
     >
       {isArtist ? (
@@ -201,7 +203,7 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
           Delete Account
         </Text>
       </TouchableOpacity>
-      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
+      <View style={styles.registerArtistContainer}>
         {!isArtist && (
           <TouchableOpacity
             onPress={() => {
@@ -259,7 +261,7 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -339,6 +341,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     paddingVertical: 12,
+  },
+  registerArtistContainer: {
+    marginTop: "20%",
   },
   registerArtist: {
     height: 132,

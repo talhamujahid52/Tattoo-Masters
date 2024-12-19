@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";
@@ -10,6 +11,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { signInWithEmailAndPassword } from "@/utils/firebase/userFunctions";
 import { setUser } from "@/redux/slices/userSlice";
 import { useDispatch } from "react-redux";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 GoogleSignin.configure({
   webClientId:
@@ -18,6 +20,7 @@ GoogleSignin.configure({
 
 const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
+  const insets = useSafeAreaInsets();
   const [password, setPassword] = useState<string>(""); // State for password input
   const [emailError, setEmailError] = useState<string>(""); // State for email error
   const dispatch = useDispatch();
@@ -98,7 +101,9 @@ const Login = () => {
   };
 
   return (
-    <View style={styles.Container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={[styles.Container, { paddingTop: insets.top }]}
+    >
       <Image
         style={styles.Logo}
         source={require("../../assets/images/logo.png")}
@@ -201,7 +206,7 @@ const Login = () => {
           </Text>
         </View>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -209,7 +214,6 @@ export default Login;
 
 const styles = StyleSheet.create({
   Container: {
-    flex: 1,
     paddingHorizontal: 24,
     backgroundColor: "#000",
     justifyContent: "center",
@@ -221,7 +225,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   PageTitle: {
-    marginTop: 24,
+    marginTop: "2%",
   },
   Row: {
     paddingTop: 8,

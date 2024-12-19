@@ -19,6 +19,7 @@ interface InputProps {
   isNameField?: boolean;
   textInputProps?: TextInputProps;
   backgroundColour?: string;
+  rightIconOnPress?: () => void;
 }
 
 const Input = ({
@@ -27,6 +28,7 @@ const Input = ({
   onChangeText,
   leftIcon,
   rightIcon,
+  rightIconOnPress,
   inputMode = "text", // Default input mode
   backgroundColour = "#FFFFFF1A",
   textInputProps,
@@ -87,7 +89,7 @@ const Input = ({
         </TouchableOpacity>
       ) : (
         rightIcon && (
-          <TouchableOpacity>
+          <TouchableOpacity onPress={rightIconOnPress}>
             <MaterialIcons
               name={rightIcon}
               size={24}

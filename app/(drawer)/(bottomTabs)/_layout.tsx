@@ -13,13 +13,14 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import { DrawerToggleButton } from "@react-navigation/drawer";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BottomTabsLayout = () => {
   const unreadMessages = 17;
   const router = useRouter();
   const navigation = useNavigation();
   const { BottomSheet, show, hide } = useBottomSheet();
-
+  const insets = useSafeAreaInsets();
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -28,7 +29,8 @@ const BottomTabsLayout = () => {
           tabBarStyle: {
             backgroundColor: "#000000",
             borderColor: "#FFFFFF26",
-            height: 90,
+            borderTopWidth: 0,
+            height: 54 + insets.bottom,
           },
         }}
       >
@@ -52,6 +54,7 @@ const BottomTabsLayout = () => {
               ),
             headerStyle: {
               backgroundColor: "#000",
+              borderBottomWidth: 0,
             },
             headerLeftContainerStyle: {
               paddingLeft: 16,
@@ -63,7 +66,11 @@ const BottomTabsLayout = () => {
               <Image
                 source={require("../../../assets/images/tattoo masters.png")}
                 resizeMode="cover"
-                style={{ height: 27, width: 180 }}
+                style={{
+                  height: 27,
+                  marginTop: 10,
+                  width: 180,
+                }}
               />
             ),
             headerRight: () => (

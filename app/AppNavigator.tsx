@@ -56,7 +56,6 @@ const AppNavigator = () => {
             contentStyle: { backgroundColor: "#000" },
           }}
         >
-          <Stack.Screen name="(bottomTabs)" />
           <Stack.Screen options={{ animation: "fade" }} name="(auth)/Welcome" />
           <Stack.Screen name="(auth)/Login" />
           <Stack.Screen name="(auth)/Register" />
