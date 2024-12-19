@@ -1,12 +1,18 @@
 import Button from "@/components/Button";
-import React from "react";
-import { StyleSheet, View, Image } from "react-native";
-import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Dimensions, StyleSheet, View, Image } from "react-native";
+import { Redirect, SplashScreen, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import OnboardingComponent from "@/components/OnboardingComponent";
 import { StatusBar } from "expo-status-bar";
-
+import { useDispatch, useSelector } from "react-redux";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { AppDispatch, RootState } from "@/redux/store";
+import { setUser } from "@/redux/slices/userSlice";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 const Welcome = () => {
+  const insets = useSafeAreaInsets();
   return (
     <View
       style={{
@@ -32,12 +38,12 @@ const Welcome = () => {
         resizeMode="cover"
       />
       <OnboardingComponent />
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, { bottom: insets.bottom + 25 }]}>
         <Button
           title="Let's go"
           onPress={() => {
             router.push({
-              pathname: "/Home",
+              pathname: "/Login",
             });
           }}
         />
@@ -66,7 +72,7 @@ const styles = StyleSheet.create({
     width: 253,
     height: 218,
     position: "absolute",
-    top: "34%",
+    top: SCREEN_HEIGHT * 0.2,
     right: "auto",
     zIndex: 1,
   },
@@ -75,7 +81,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
     width: "100%",
     position: "absolute",
-    bottom: 50,
   },
   textContainer: {
     position: "absolute",
