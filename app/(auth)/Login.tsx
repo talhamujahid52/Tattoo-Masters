@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";
@@ -7,6 +8,10 @@ import { router } from "expo-router";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { signInWithEmailAndPassword } from "@/utils/firebase/userFunctions";
+import { setUser } from "@/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 GoogleSignin.configure({
   webClientId:
@@ -15,9 +20,10 @@ GoogleSignin.configure({
 
 const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
+  const insets = useSafeAreaInsets();
   const [password, setPassword] = useState<string>(""); // State for password input
   const [emailError, setEmailError] = useState<string>(""); // State for email error
-
+  const dispatch = useDispatch();
   const validateEmail = (input: string): boolean => {
     // Basic email validation regex
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,17 +47,15 @@ const Login = () => {
     if (emailError) return; // Prevent login if there's an email error
 
     try {
-      const userCredential = await auth().signInWithEmailAndPassword(
-        email,
-        password
-      ); // Use user input for login
+      const userCredential = await signInWithEmailAndPassword(email, password); // Use user input for login
+      dispatch(setUser(userCredential.user));
       const user = userCredential.user;
 
       // Check if the email is verified
       if (user.emailVerified) {
-        router.push({
-          pathname: "/(bottomTabs)/Home",
-        });
+        // router.push({
+        //   pathname: "/(bottomTabs)/Home",
+        // });
         console.log("User signed in!");
       } else {
         alert("Please verify your email before logging in.");
@@ -82,16 +86,13 @@ const Login = () => {
         const accessToken: string = userInfo.accessToken as string;
         const googleCredential = auth.GoogleAuthProvider.credential(
           null,
-          accessToken
+          accessToken,
         );
         await auth().signInWithCredential(googleCredential);
       } else {
         const googleCredential = auth.GoogleAuthProvider.credential(idToken);
         await auth().signInWithCredential(googleCredential);
       }
-      router.push({
-        pathname: "/(bottomTabs)/Home",
-      });
       console.log("User signed in!");
     } catch (error) {
       alert(error);
@@ -100,7 +101,9 @@ const Login = () => {
   };
 
   return (
-    <View style={styles.Container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={[styles.Container, { paddingTop: insets.top }]}
+    >
       <Image
         style={styles.Logo}
         source={require("../../assets/images/logo.png")}
@@ -110,7 +113,7 @@ const Login = () => {
       </Text>
       <View style={styles.Row}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          Don’t have an account?
+          Don’t have an account?{" "}
         </Text>
         <TouchableOpacity
           onPress={() => {
@@ -120,7 +123,6 @@ const Login = () => {
           }}
         >
           <Text size="p" weight="semibold" color="#FBF6FA">
-            {" "}
             Register here.
           </Text>
         </TouchableOpacity>
@@ -182,7 +184,7 @@ const Login = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
             );
           }}
         />
@@ -204,7 +206,7 @@ const Login = () => {
           </Text>
         </View>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -212,11 +214,11 @@ export default Login;
 
 const styles = StyleSheet.create({
   Container: {
-    flex: 1,
     paddingHorizontal: 24,
     backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
+    minHeight: "100%",
   },
   Logo: {
     height: 250,
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   PageTitle: {
-    marginTop: 24,
+    marginTop: "2%",
   },
   Row: {
     paddingTop: 8,
