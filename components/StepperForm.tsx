@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import {
   View,
   TouchableOpacity,
@@ -10,19 +10,23 @@ import Text from "./Text";
 import Button from "./Button";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
+import Step3 from "./Step3";
+import { FormContext } from "../context/FormContext";
 
-const StepperForm = () => {
-  const { width } = Dimensions.get("window");
-  const [step, setStep] = useState(1);
+const StepperForm: React.FC = () => {
   const totalSteps = 3;
+  const { width } = Dimensions.get("window");
+  const { step, setStep, formData } = useContext(FormContext)!;
+
   const stepLabels = ["Profile", "Tattoo Portfolio", "Preview"];
 
   const handleNext = () => {
-    setStep((prevStep) => Math.min(prevStep + 1, totalSteps));
+    setStep((prevStep: number) => Math.min(prevStep + 1, totalSteps));
+    console.log("FormData: ", formData);
   };
 
   const handlePrevious = () => {
-    setStep((prevStep) => Math.max(prevStep - 1, 1));
+    setStep((prevStep: number) => Math.max(prevStep - 1, 1));
   };
 
   const renderStepIndicator = () => {
@@ -33,7 +37,7 @@ const StepperForm = () => {
           <View
             style={[
               styles.stepIndicator,
-              i == step && styles.activeStep,
+              i === step && styles.activeStep,
               i < step && styles.doneStep,
             ]}
           >
@@ -53,23 +57,20 @@ const StepperForm = () => {
     return <View style={styles.indicatorContainer}>{indicators}</View>;
   };
 
-  const renderStepLabel = () => {
-    const indicators = [];
-    for (let i = 1; i <= totalSteps; i++) {
-      indicators.push(
-        <View key={i}>
-          <Text
-            size="medium"
-            weight="normal"
-            color={i === step ? "#FFFFFF" : "#A7A7A7"}
-          >
-            {stepLabels[i - 1]}
-          </Text>
-        </View>
-      );
-    }
-    return <View style={styles.labelContainer}>{indicators}</View>;
-  };
+  const renderStepLabel = () => (
+    <View style={styles.labelContainer}>
+      {stepLabels.map((label, index) => (
+        <Text
+          key={index}
+          size="medium"
+          weight="normal"
+          color={index + 1 === step ? "#FFFFFF" : "#A7A7A7"}
+        >
+          {label}
+        </Text>
+      ))}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -79,9 +80,9 @@ const StepperForm = () => {
       </View>
 
       <View style={styles.contentContainer}>
-        {step === 1 && <Step1></Step1>}
-        {step === 2 && <Step2></Step2>}
-        {step === 3 && <Text>Content for Step 3</Text>}
+        {step === 1 && <Step1 />}
+        {step === 2 && <Step2 />}
+        {step === 3 && <Step3 />}
       </View>
 
       <View style={styles.buttonContainer}>
@@ -167,11 +168,11 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: "100%",
+    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 24,
     paddingHorizontal: 16,
   },
 });
-
 export default StepperForm;

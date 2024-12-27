@@ -197,6 +197,18 @@ const AppNavigator = () => {
               ),
             }}
           />
+          <Stack.Screen
+            name="artist/SearchLocation"
+            options={{
+              headerShown: true,
+              headerTitle: "Add location",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
         </Stack>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

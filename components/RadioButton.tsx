@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import React from "react";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import Input from "./Input";
 import Text from "./Text";
 
@@ -11,34 +11,36 @@ interface Option {
 interface RadioButtonProps {
   title: string;
   options: Option[];
+  selectedValue: string;
+  inputValue?: string;
   onSelect: (value: string) => void;
+  onStudioNameChange?: (name: string) => void;
 }
 
 const RadioButton = ({
   title = "Studio",
   options,
+  selectedValue,
+  inputValue = "",
   onSelect,
+  onStudioNameChange,
 }: RadioButtonProps) => {
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
-  const [inputValue, setInputValue] = useState<string>("");
-
   const handleSelect = (value: string) => {
-    setSelectedValue(value);
     onSelect(value);
+    if (value !== "studio" && onStudioNameChange) {
+      onStudioNameChange("");
+    }
   };
 
   const handleInputChange = (text: string) => {
-    setInputValue(text);
+    if (onStudioNameChange) {
+      onStudioNameChange(text);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text
-        size="h4"
-        weight="semibold"
-        color="#A7A7A7"
-        style={{ marginBottom: 10 }}
-      >
+      <Text size="h4" weight="semibold" color="#A7A7A7" style={{ marginBottom: 10 }}>
         {title}
       </Text>
       {options.map((option, index) => (
@@ -58,9 +60,14 @@ const RadioButton = ({
             </Text>
           </TouchableOpacity>
 
-          {selectedValue === "option1" && index === 0 && (
+          {selectedValue === "studio" && index === 0 && (
             <View style={{ marginBottom: 10 }}>
-              <Input inputMode="text" placeholder="Studio name"></Input>
+              <Input
+                inputMode="text"
+                placeholder="Studio name"
+                value={inputValue}
+                onChangeText={handleInputChange}
+              ></Input>
             </View>
           )}
         </View>
@@ -69,7 +76,6 @@ const RadioButton = ({
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
@@ -93,25 +99,6 @@ const styles = StyleSheet.create({
   selectedRadioButton: {
     borderWidth: 3,
     borderColor: "#DAB769",
-  },
-  inputContainer: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: "#f1f1f1",
-    borderRadius: 5,
-    width: "100%",
-  },
-  inputLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: "#333",
-  },
-  textInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    paddingHorizontal: 10,
   },
 });
 
