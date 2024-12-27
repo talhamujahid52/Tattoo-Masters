@@ -1,11 +1,12 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-
+import "react-native-get-random-values";
 import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/redux/store";
 import AppNavigator from "./AppNavigator";
+import { FormProvider } from "../context/FormContext";
 import { ErrorBoundaryProps, SplashScreen } from "expo-router";
 import { View } from "react-native";
 import Text from "@/components/Text";
@@ -24,7 +25,9 @@ export default function RootLayout() {
           <StatusBar style="light" />
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
-              <AppNavigator />
+              <FormProvider>
+                <AppNavigator />
+              </FormProvider>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </PersistGate>

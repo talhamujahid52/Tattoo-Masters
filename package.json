@@ -45,6 +45,8 @@
     "react-native": "0.74.5",
     "react-native-flexible-grid": "^0.2.2",
     "react-native-gesture-handler": "~2.16.1",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-gradients": "^2.1.1",
     "react-native-image-picker": "^7.2.2",
     "react-native-international-phone-number": "^0.7.6",

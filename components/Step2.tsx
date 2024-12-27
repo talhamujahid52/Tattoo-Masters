@@ -1,36 +1,36 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Image, TouchableOpacity, ScrollView, Dimensions } from "react-native";
+import React, { useContext } from "react";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  Alert,
+} from "react-native";
 import Text from "@/components/Text";
-import { launchImageLibrary, Asset } from "react-native-image-picker";
-
-// Types for the selected image state
-type SelectedImages = (string | null | undefined)[];
-
+import { launchImageLibrary } from "react-native-image-picker";
+import { FormContext } from "../context/FormContext";
 const Step2: React.FC = () => {
+  const { formData, setFormData } = useContext(FormContext)!;
   const { width } = Dimensions.get("window");
   const imageTileWidth = (width - 40) / 2; // For 2 tiles per row
 
-  // State to hold selected image URIs
-  const [selectedImages, setSelectedImages] = useState<SelectedImages>([null, null, null, null]);
+  const handleSelectImage = async (index: number) => {
+    const result = await launchImageLibrary({
+      mediaType: "photo",
+      selectionLimit: 1, // Allow only one image to be selected
+    });
 
-  const handleImageSelection = (index: number) => {
-    launchImageLibrary(
-      {
-        mediaType: "photo",
-        quality: 0.7,
-      },
-      (response) => {
-        if (response.didCancel) {
-          console.log("User canceled image picker");
-        } else if (response.errorCode) {
-          console.log("ImagePicker Error: ", response.errorMessage);
-        } else {
-          const updatedImages = [...selectedImages];
-          updatedImages[index] = response.assets ? (response.assets[0] as Asset).uri : null;
-          setSelectedImages(updatedImages);
-        }
-      }
-    );
+    if (!result.didCancel && result.assets && result.assets[0].uri) {
+      const selectedImageUri = result.assets[0].uri;
+
+      setFormData((prev) => {
+        const updatedImages = [...prev.images];
+        updatedImages[index] = selectedImageUri; // Replace or add the image at the given index
+        return { ...prev, images: updatedImages };
+      });
+    }
   };
 
   return (
@@ -45,17 +45,20 @@ const Step2: React.FC = () => {
       </Text>
 
       <View style={styles.imageGrid}>
-        {selectedImages.map((imageUri, index) => (
+        {Array.from({ length: 4 }).map((_, index) => (
           <TouchableOpacity
             key={index}
             style={[
               styles.imageTile,
               { width: imageTileWidth, height: imageTileWidth },
             ]}
-            onPress={() => handleImageSelection(index)} // Trigger image picker on press
+            onPress={() => handleSelectImage(index)} // Open image picker when a box is clicked
           >
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.image} />
+            {formData.images[index] ? (
+              <Image
+                source={{ uri: formData.images[index] }}
+                style={styles.image}
+              />
             ) : (
               <>
                 <Image

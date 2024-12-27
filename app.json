@@ -19,7 +19,8 @@
       "infoPlist": {
         "LSMinimumSystemVersion": "12.0.0",
         "ITSAppUsesNonExemptEncryption": false,
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "NSPhotoLibraryUsageDescription":"We need access to your photo library to select images."
       }
     },
     "android": {
