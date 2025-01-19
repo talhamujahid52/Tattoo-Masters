@@ -161,10 +161,46 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="artist/ArtistProfile"
+            options={{
+              headerShown: true,
+              headerTitle: "Artist",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
             name="artist/EditProfile"
             options={{
               headerShown: true,
               headerTitle: "Edit Profile",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/EditProfileUser"
+            options={{
+              headerShown: true,
+              headerTitle: "Edit Profile",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/TattooDetail"
+            options={{
+              headerShown: true,
+              headerTitle: "Portfolio",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

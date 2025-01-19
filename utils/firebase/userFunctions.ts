@@ -1,6 +1,9 @@
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { uploadFileToFirebase } from "./fileFunctions";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "@/redux/slices/userSlice";
 
 /**
  * Adds a new user to Firebase Firestore.
@@ -16,7 +19,7 @@ export const addUser = async (
     reviewPasswordHash: string;
     userType: "simple" | "tattooArtist";
   },
-  profilePicture: { uri: string; fileName?: string } | null,
+  profilePicture: { uri: string; fileName?: string } | null
 ): Promise<void> => {
   try {
     let profilePictureUrl = "";
@@ -25,7 +28,7 @@ export const addUser = async (
     if (profilePicture) {
       profilePictureUrl = await uploadFileToFirebase(
         profilePicture,
-        "profilePictures",
+        "profilePictures"
       );
     }
 
@@ -44,12 +47,12 @@ export const addUser = async (
 
 export const createUserWithEmailAndPassword = async (
   email: string,
-  password: string,
+  password: string
 ) => {
   try {
     const userCredential = await auth().createUserWithEmailAndPassword(
       email,
-      password,
+      password
     );
     return userCredential;
   } catch (error) {
@@ -59,15 +62,94 @@ export const createUserWithEmailAndPassword = async (
 
 export const signInWithEmailAndPassword = async (
   email: string,
-  password: string,
+  password: string
 ) => {
   try {
     const userCredential = await auth().signInWithEmailAndPassword(
       email,
-      password,
+      password
     ); // Use user input for login
     return userCredential;
   } catch (error) {
     throw error;
+  }
+};
+
+interface User {
+  id: string; // Firestore document id (should be present in every document)
+  data: Record<string, unknown>; // Arbitrary fields from the document, using unknown to avoid assuming a shape
+}
+
+export const getUsers = async (): Promise<User[]> => {
+  try {
+    // Reference to the 'Users' collection
+    const usersCollectionRef = firestore().collection("Users");
+
+    // Fetch documents from the 'Users' collection
+    const querySnapshot = await usersCollectionRef.get();
+
+    // Map through the documents to return the list of user data
+    const usersList: User[] = querySnapshot.docs.map((doc) => ({
+      id: doc.id, // Document ID (Firestore automatically provides this)
+      data: doc.data(), // User document fields (unknown shape)
+    }));
+
+    return usersList;
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+    throw new Error("Failed to retrieve users from Firestore");
+  }
+};
+
+export const signInWithGoogle = async () => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const userInfo: any = await GoogleSignin.signIn();
+    console.log("User Info:", userInfo);
+
+    const idToken: string = userInfo.data.idToken as string;
+    let userCredential;
+    if (!idToken) {
+      const accessToken: string = userInfo.accessToken as string;
+      const googleCredential = auth.GoogleAuthProvider.credential(
+        null,
+        accessToken
+      );
+      userCredential = await auth().signInWithCredential(googleCredential);
+    } else {
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+      userCredential = await auth().signInWithCredential(googleCredential);
+    }
+
+    const user = userCredential.user;
+    console.log("User signed in:", user);
+
+    // Check if user exists in Firestore (in "users" collection)
+    const userDocRef = firestore().collection("Users").doc(user.uid);
+    const userDoc = await userDocRef.get();
+    console.log("User Doc: ", userDoc.data());
+
+    if (!userDoc.exists) {
+      // User does not exist in Firestore, create a new user document
+      await userDocRef.set({
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        profilePicture: user.photoURL,
+        followedArtists: [],
+        likedTattoos: [],
+        isArtist: false,
+        createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
+      });
+      console.log("User added to Firestore!");
+      return userDoc.data();
+    } else {
+      console.log("User already exists in Firestore");
+    }
+
+    console.log("User signed in and data saved to Firestore!");
+  } catch (error) {
+    alert(error);
+    console.log("Google Sign-In error:", error);
   }
 };

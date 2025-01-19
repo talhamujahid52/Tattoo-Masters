@@ -12,7 +12,7 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<FirebaseAuthTypes.User | null>) => {
+    setUser: (state, action: PayloadAction<any>) => {
       state.user = action.payload; // Set the user object from the action payload
     },
     resetUser: (state) => {

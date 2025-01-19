@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from "react";
 import { View, StyleSheet } from "react-native";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Region, PROVIDER_GOOGLE, Marker } from "react-native-maps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { useRouter } from "expo-router";
 import Button from "@/components/Button";
@@ -26,7 +26,9 @@ const SearchLocation: React.FC = () => {
     longitudeDelta: defaultLocation.longitudeDelta,
   });
 
-  const [address, setAddress] = useState<string>(formData.location?.address || "");
+  const [address, setAddress] = useState<string>(
+    formData.location?.address || ""
+  );
 
   const handleLocationSelect = (data: any, details: any) => {
     if (details && details.geometry) {
@@ -110,9 +112,9 @@ const SearchLocation: React.FC = () => {
               fontWeight: "400",
               height: 48,
               borderRadius: 50,
-              color: "white",
+              color: "bl",
               paddingHorizontal: 12,
-              backgroundColor: "#242424",
+              // backgroundColor: "#242424",
               fontSize: 16,
             },
           }}
@@ -127,7 +129,7 @@ const SearchLocation: React.FC = () => {
         customMapStyle={googleDarkModeStyle}
         initialRegion={region}
         onRegionChangeComplete={handleRegionChangeComplete} // Trigger when map dragging ends
-        mapType="terrain"
+        mapType="standard"
         zoomEnabled
       />
 
@@ -154,11 +156,7 @@ const SearchLocation: React.FC = () => {
                 address: address,
               },
             });
-
-            // Navigate to the next page
-            router.navigate({
-              pathname: "/artist/RegisterArtist",
-            });
+            router.back();
           }}
         />
       </View>
@@ -180,14 +178,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   map: {
-    ...StyleSheet.absoluteFillObject, 
+    ...StyleSheet.absoluteFillObject,
   },
   markerFixed: {
     position: "absolute",
     top: "50%",
     left: "50%",
-    marginLeft: -15, 
-    marginTop: -30, 
+    marginLeft: -15,
+    marginTop: -30,
     zIndex: 1,
   },
   customMarker: {

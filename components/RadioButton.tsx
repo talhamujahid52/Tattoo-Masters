@@ -9,7 +9,7 @@ interface Option {
 }
 
 interface RadioButtonProps {
-  title: string;
+  title?: string;
   options: Option[];
   selectedValue: string;
   inputValue?: string;
@@ -18,7 +18,7 @@ interface RadioButtonProps {
 }
 
 const RadioButton = ({
-  title = "Studio",
+  title = "",
   options,
   selectedValue,
   inputValue = "",
@@ -40,9 +40,18 @@ const RadioButton = ({
 
   return (
     <View style={styles.container}>
-      <Text size="h4" weight="semibold" color="#A7A7A7" style={{ marginBottom: 10 }}>
-        {title}
-      </Text>
+      {title ? (
+        <Text
+          size="h4"
+          weight="semibold"
+          color="#A7A7A7"
+          style={{ marginBottom: 10 }}
+        >
+          {title}
+        </Text>
+      ) : (
+        ""
+      )}
       {options.map((option, index) => (
         <View key={option.value}>
           <TouchableOpacity

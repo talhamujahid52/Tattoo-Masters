@@ -12,10 +12,11 @@ import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
-import ShareProfileBottomSheet from "@/components/BottomSheets/ShareProfileBottomSheet";
-import { useRouter } from "expo-router";
+import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtistProfileBottomSheet";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
-import { useDispatch, useSelector } from "react-redux";
+import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import useGetArtist from "@/hooks/useGetArtist";
 
 interface StudioItem {
   title: string;
@@ -23,10 +24,25 @@ interface StudioItem {
   selected: boolean;
 }
 
-const MyProfile = () => {
-  const router = useRouter();
+const ArtistProfile = () => {
+  const { artistId } = useLocalSearchParams<any>();
+  const artist = useGetArtist(artistId);
+
   const { BottomSheet, show, hide } = useBottomSheet();
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
+  const defaultLocation = {
+    latitude: 33.664286,
+    longitude: 73.004291,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  };
+
+  const [region, setRegion] = useState<Region>({
+    latitude: defaultLocation.latitude,
+    longitude: defaultLocation.longitude,
+    latitudeDelta: defaultLocation.latitudeDelta,
+    longitudeDelta: defaultLocation.longitudeDelta,
+  });
 
   const [studio, setStudio] = useState<StudioItem[]>([
     { title: "Studio", value: 1, selected: false },
@@ -65,23 +81,32 @@ const MyProfile = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <BottomSheet InsideComponent={<ShareProfileBottomSheet hide={hide} />} />
+      <BottomSheet
+        InsideComponent={<ShareArtistProfileBottomSheet hide1={hide} />}
+      />
 
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={require("../../assets/images/Artist.png")}
+            source={
+              artist?.data?.profilePicture
+                ? { uri: artist?.data?.profilePicture }
+                : require("../../assets/images/Artist.png")
+            }
+            // source={require("../../assets/images/Artist.png")}
           />
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
+              {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              Luis Arts Studio
+              {artist?.data?.studio?.name
+                ? artist?.data?.studio?.name
+                : "No Studio"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              Phuket, Thailand
+              {artist?.data?.city ? artist?.data?.city : "Oslo"}
             </Text>
           </View>
         </View>
@@ -123,7 +148,7 @@ const MyProfile = () => {
           source={require("../../assets/images/favorite-white.png")}
         />
         <Text size="p" weight="normal" color="#FBF6FA">
-          412
+          {artist?.data?.followersCount ? artist?.data?.followersCount : 420}
         </Text>
       </View>
       <View style={styles.tattooStylesRow}>
@@ -131,53 +156,89 @@ const MyProfile = () => {
           style={styles.icon}
           source={require("../../assets/images/draw.png")}
         />
-        {Array(5)
-          .fill(0)
-          .map((item, idx) => {
-            return (
-              <View
-                key={idx}
-                style={{
-                  backgroundColor: "#262526",
-                  paddingHorizontal: 5,
-                  paddingVertical: 2,
-                  borderRadius: 6,
-                }}
-              >
-                <Text size="p" weight="normal" color="#D7D7C9">
-                  Tribal
-                </Text>
-              </View>
-            );
-          })}
+        {artist?.data?.tattooStyles?.map((item: any, idx: any) => {
+          return (
+            <View
+              key={idx}
+              style={{
+                backgroundColor: "#262526",
+                paddingHorizontal: 5,
+                paddingVertical: 2,
+                borderRadius: 6,
+              }}
+            >
+              <Text size="p" weight="normal" color="#D7D7C9">
+                {item}
+              </Text>
+            </View>
+          );
+        })}
       </View>
       <Text size="p" weight="normal" color="#A7A7A7">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.
+        {artist?.data?.about
+          ? artist?.data?.about
+          : "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text."}
       </Text>
       <View style={styles.buttonRow}>
         <IconButton
-          title="Edit profile"
-          icon={require("../../assets/images/edit.png")}
-          variant="Primary"
-          onPress={() => {
-            router.push({
-              pathname: "/artist/EditProfile",
-            });
+          title="Favorite"
+          icon={require("../../assets/images/favorite-black.png")}
+          iconStyle={{
+            height: 20,
+            width: 20,
+            resizeMode: "contain",
           }}
+          variant="Secondary"
+          onPress={() => {}}
         />
         <IconButton
-          title="Add tattoo"
-          icon={require("../../assets/images/add_photo_alternate-2.png")}
+          title="Message"
+          icon={require("../../assets/images/message.png")}
           variant="Primary"
         />
       </View>
-      <ReviewOnProfile></ReviewOnProfile>
+      <ReviewOnProfile isArtist={false}></ReviewOnProfile>
+      <View style={{ marginTop: 24 }}>
+        <Text
+          size="h4"
+          weight="semibold"
+          color="white"
+          style={{ marginBottom: 10 }}
+        >
+          Location
+        </Text>
+        <Text
+          size="medium"
+          weight="normal"
+          color="#A7A7A7"
+          style={{ marginBottom: 10 }}
+        >
+          {artist?.data?.location?.address
+            ? artist?.data?.location?.address
+            : "S#251, Street 24, Phuket, Thailand"}
+        </Text>
+      </View>
+      <View
+        style={{
+          height: 130,
+          borderRadius: 20,
+          overflow: "hidden",
+          marginTop: 8,
+        }}
+      >
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          mapType="terrain"
+          region={region}
+          zoomEnabled={false}
+        >
+          {/* <Marker coordinate={region} title="Location" />  */}
+        </MapView>
+      </View>
+      <Text size="h4" weight="semibold" color="white" style={{ marginTop: 24 }}>
+        Portfolio
+      </Text>
       <View style={styles.stylesFilterRow}>
         <FlatList
           data={studio}
@@ -192,7 +253,7 @@ const MyProfile = () => {
   );
 };
 
-export default MyProfile;
+export default ArtistProfile;
 
 const styles = StyleSheet.create({
   container: {
@@ -217,7 +278,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
   },
   icon: {
@@ -260,7 +321,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   stylesFilterRow: {
-    marginTop: 24,
+    marginTop: 16,
     marginBottom: 16,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject, // Makes the map take up the entire screen
   },
 });

@@ -154,6 +154,11 @@ const BottomTabsLayout = () => {
                   style={{ height: 26, width: 26 }}
                 />
               ),
+            headerShown: false,
+            // headerStyle: {
+            //   backgroundColor: "#000",
+            //   // borderBottomWidth: 0,
+            // },
           }}
         />
         <Tabs.Screen
