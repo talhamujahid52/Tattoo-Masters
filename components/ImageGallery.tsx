@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
+import { useRouter } from "expo-router";
 
 interface DataProp {
   id: number;
@@ -46,15 +47,25 @@ const originalData = [
 ];
 
 const ImageGallery = () => {
+  const router = useRouter();
+
   const renderItem = ({ item }: { item: DataProp }) => {
     return (
-      <View style={styles.boxContainer}>
+      <TouchableOpacity
+        style={styles.boxContainer}
+        onPress={() => {
+          router.push({
+            pathname: "/artist/TattooDetail",
+            params: { tattoo: item.imageUrl },
+          });
+        }}
+      >
         <Image
           source={{ uri: item.imageUrl }}
           style={styles.box}
           resizeMode="cover"
         />
-      </View>
+      </TouchableOpacity>
     );
   };
 

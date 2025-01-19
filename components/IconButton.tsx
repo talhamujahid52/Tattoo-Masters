@@ -10,6 +10,7 @@ import Text from "./Text";
 interface ButtonProps {
   title: string;
   icon: any;
+  iconStyle?: any;
   variant: "Primary" | "Secondary";
   onPress?: (event: GestureResponderEvent) => void;
 }
@@ -17,6 +18,7 @@ interface ButtonProps {
 const IconButton = ({
   title = "Let's go",
   icon,
+  iconStyle,
   variant,
   onPress,
 }: ButtonProps) => {
@@ -28,7 +30,7 @@ const IconButton = ({
         { backgroundColor: variant === "Primary" ? "#262526" : "#DAB769" },
       ]}
     >
-      <Image style={styles.icon} source={icon} />
+      <Image style={iconStyle ? iconStyle : styles.icon} source={icon} />
       <Text
         size="h4"
         weight="medium"

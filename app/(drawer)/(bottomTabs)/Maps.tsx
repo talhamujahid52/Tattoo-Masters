@@ -158,6 +158,30 @@ const FullScreenMapWithSearch: React.FC = () => {
     },
   ];
 
+  const markers = [
+    {
+      id: 1,
+      latitude: 33.664286,
+      longitude: 73.004291,
+      title: "Marker 1",
+      description: "Description 1",
+    },
+    {
+      id: 2,
+      latitude: 33.666286,
+      longitude: 73.006291,
+      title: "Marker 2",
+      description: "Description 2",
+    },
+    {
+      id: 3,
+      latitude: 33.662286,
+      longitude: 73.002291,
+      title: "Marker 3",
+      description: "Description 3",
+    },
+  ];
+
   return (
     <View style={styles.container}>
       <BottomSheet InsideComponent={<FilterBottomSheet />} />
@@ -197,7 +221,19 @@ const FullScreenMapWithSearch: React.FC = () => {
         showsMyLocationButton
         zoomEnabled
       >
-        <Marker coordinate={region} title="Location" />
+        {/* <Marker coordinate={region} title="Location" /> */}
+
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={{
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }}
+            title={marker.title}
+            description={marker.description}
+          />
+        ))}
       </MapView>
     </View>
   );

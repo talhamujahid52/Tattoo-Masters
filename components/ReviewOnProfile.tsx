@@ -2,7 +2,13 @@ import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import Text from "./Text";
 
-const ReviewOnProfile = () => {
+interface ReviewOnProfileProps {
+  isArtist?: boolean;
+}
+
+const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
+  isArtist = true,
+}) => {
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
@@ -17,7 +23,7 @@ const ReviewOnProfile = () => {
         </View>
         <TouchableOpacity>
           <Text size="h4" weight="normal" color="#DAB769">
-            Share review password
+            {isArtist ? "Share review password" : "Review this artist?"}
           </Text>
         </TouchableOpacity>
       </View>

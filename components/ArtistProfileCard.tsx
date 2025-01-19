@@ -1,17 +1,37 @@
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import React from "react";
+import { useRouter } from "expo-router";
 
-const ArtistProfileCard = () => {
+interface ArtistProfileCardProps {
+  artist: any;
+}
+
+const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
+  // console.log("Artist is : ", artist);
+  const router = useRouter();
+
   return (
-    <View
+    <TouchableOpacity
+      onPress={() => {
+        // router.push("/artist/ArtistProfile");
+        router.push({
+          pathname: "/artist/ArtistProfile",
+          params: { artistId: artist.id },
+        });
+      }}
       style={{
         width: 131,
         height: 215,
       }}
     >
       <Image
-        source={require("../assets/images/Artist.png")}
+        // source={require("../assets/images/Artist.png")}
+        source={
+          artist.data.profilePicture
+            ? { uri: artist.data.profilePicture }
+            : require("../assets/images/Artist.png")
+        }
         style={{
           width: 131,
           height: 170,
@@ -25,18 +45,20 @@ const ArtistProfileCard = () => {
           style={{ height: 16, width: 16, resizeMode: "contain" }}
         />
         <Text size="small" weight="normal" color="#FBF6FA">
-          {" "}
-          4.8 (129)
+          {artist.data.rating ? artist.data.rating : "4.8"}{" "}
+          {artist.data?.reviews?.length > 0
+            ? "(" + artist.data?.reviews?.length + ")"
+            : "(129)"}
         </Text>
         <View style={styles.SeparatorDot}></View>
         <Text size="small" weight="normal" color="#FBF6FA">
-          Phuket
+          {artist.data.city ? artist.data.city : "Phuket"}
         </Text>
       </View>
       <Text size="large" weight="medium" color="#FFFFFF">
-        Martin Luis
+        {artist.data.name ? artist.data.name : "Martin Luis"}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 

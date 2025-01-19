@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -11,6 +11,8 @@ interface Artist {
 }
 
 const Search: React.FC = () => {
+  const [searchText, setSearchText] = useState("");
+
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
@@ -24,10 +26,13 @@ const Search: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.inputHeaderContainer}>
         <Input
+          value={searchText}
           inputMode="text"
           placeholder="Search for artists and studios"
           leftIcon={"search"}
-          rightIcon={"cancel"}
+          onChangeText={(text) => setSearchText(text)}
+          rightIcon={searchText !== "" && "cancel"}
+          rightIconOnPress={() => setSearchText("")}
         />
       </View>
       <View style={styles.searchView}>

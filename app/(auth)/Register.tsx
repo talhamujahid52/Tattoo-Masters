@@ -8,9 +8,11 @@ import Text from "@/components/Text";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { createUserWithEmailAndPassword } from "@/utils/firebase/userFunctions";
+import { signInWithGoogle } from "@/utils/firebase/userFunctions";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/redux/slices/userSlice";
 import { AppDispatch } from "@/redux/store";
+import firestore from "@react-native-firebase/firestore";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -30,14 +32,55 @@ const Register: React.FC = () => {
     return regex.test(email);
   };
 
+  // const handleRegister = async () => {
+  //   const fullPhoneNumber = formatPhoneNumber();
+
+  //   console.log("Full Name:", fullName);
+  //   console.log("Email:", email);
+  //   console.log("countryCode :", countryCode); // Log formatted phone number
+  //   console.log("phone :", phone); // Log formatted phone number
+
+  //   console.log("Phone Number:", fullPhoneNumber); // Log formatted phone number
+  //   console.log("Password:", password);
+  //   console.log("Confirm Password:", confirmPassword);
+
+  //   if (!validateEmail(email)) {
+  //     alert("Please enter a valid email address.");
+  //     return;
+  //   }
+  //   if (password !== confirmPassword) {
+  //     alert("Passwords do not match.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const userCredential = await createUserWithEmailAndPassword(
+  //       email,
+  //       password
+  //     );
+  //     dispatch(setUser(userCredential.user));
+  //     await userCredential.user.sendEmailVerification();
+  //     // Handle successful registration, e.g., navigate to verification
+  //     router.push({ pathname: "/(auth)/Verification" });
+
+  //     alert("Verification email sent. Please check your inbox.");
+  //   } catch (error: any) {
+  //     // Assert the error type to 'any'
+  //     if (error && error.code && error.message) {
+  //       alert(error.message); // Use the error message from Firebase
+  //     } else {
+  //       alert("An unexpected error occurred. Please try again.");
+  //     }
+  //   }
+  // };
+
   const handleRegister = async () => {
     const fullPhoneNumber = formatPhoneNumber();
 
     console.log("Full Name:", fullName);
     console.log("Email:", email);
-    console.log("countryCode :", countryCode); // Log formatted phone number
-    console.log("phone :", phone); // Log formatted phone number
-
+    console.log("Country Code:", countryCode); // Log formatted phone number
+    console.log("Phone:", phone); // Log formatted phone number
     console.log("Phone Number:", fullPhoneNumber); // Log formatted phone number
     console.log("Password:", password);
     console.log("Confirm Password:", confirmPassword);
@@ -52,16 +95,35 @@ const Register: React.FC = () => {
     }
 
     try {
+      // Step 1: Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         email,
-        password,
+        password
       );
-      dispatch(setUser(userCredential.user));
-      await userCredential.user.sendEmailVerification();
-      // Handle successful registration, e.g., navigate to verification
-      router.push({ pathname: "/(auth)/Verification" });
+      // dispatch(setUser(userCredential.user));
 
+      // Step 2: Add user data to Firestore
+      const user = userCredential.user;
+      console.log("User is : ", user);
+      await firestore().collection("Users").doc(user.uid).set({
+        uid: user.uid,
+        name: fullName,
+        email: user.email,
+        profilePicture: "",
+        followedArtists: [],
+        likedTattoos: [],
+        isArtist: false,
+        createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
+      });
+
+      // Step 3: Send email verification
+      await user.sendEmailVerification();
+
+      // Step 4: Handle successful registration
       alert("Verification email sent. Please check your inbox.");
+
+      // Navigate to verification screen
+      router.push({ pathname: "/(auth)/Login" });
     } catch (error: any) {
       // Assert the error type to 'any'
       if (error && error.code && error.message) {
@@ -139,13 +201,16 @@ const Register: React.FC = () => {
         <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
+          onPress={() => {
+            signInWithGoogle();
+          }}
         />
         <ThirdPartyLoginButton
           title="Facebook"
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
             );
           }}
         />

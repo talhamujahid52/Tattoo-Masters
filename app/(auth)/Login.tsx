@@ -8,10 +8,14 @@ import { router } from "expo-router";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { signInWithEmailAndPassword } from "@/utils/firebase/userFunctions";
+import {
+  signInWithEmailAndPassword,
+  signInWithGoogle,
+} from "@/utils/firebase/userFunctions";
 import { setUser } from "@/redux/slices/userSlice";
 import { useDispatch } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import firestore from "@react-native-firebase/firestore";
 
 GoogleSignin.configure({
   webClientId:
@@ -48,14 +52,19 @@ const Login = () => {
 
     try {
       const userCredential = await signInWithEmailAndPassword(email, password); // Use user input for login
-      dispatch(setUser(userCredential.user));
+      console.log("userCredential : ", userCredential);
       const user = userCredential.user;
+
+      const userDocRef = firestore().collection("Users").doc(user.uid);
+      const userDoc = await userDocRef.get();
+
+      dispatch(setUser(userDoc.data()));
 
       // Check if the email is verified
       if (user.emailVerified) {
-        // router.push({
-        //   pathname: "/(bottomTabs)/Home",
-        // });
+        router.push({
+          pathname: "/(bottomTabs)/Home",
+        });
         console.log("User signed in!");
       } else {
         alert("Please verify your email before logging in.");
@@ -75,30 +84,31 @@ const Login = () => {
       }
     }
   };
-  const signInWithGoogle = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo: any = await GoogleSignin.signIn();
-      console.log("User Info:", userInfo);
 
-      const idToken: string = userInfo.data.idToken as string;
-      if (!idToken) {
-        const accessToken: string = userInfo.accessToken as string;
-        const googleCredential = auth.GoogleAuthProvider.credential(
-          null,
-          accessToken,
-        );
-        await auth().signInWithCredential(googleCredential);
-      } else {
-        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-        await auth().signInWithCredential(googleCredential);
-      }
-      console.log("User signed in!");
-    } catch (error) {
-      alert(error);
-      console.log("Google Sign-In error:", error);
-    }
-  };
+  // const signInWithGoogle = async () => {
+  //   try {
+  //     await GoogleSignin.hasPlayServices();
+  //     const userInfo: any = await GoogleSignin.signIn();
+  //     console.log("User Info:", userInfo);
+
+  //     const idToken: string = userInfo.data.idToken as string;
+  //     if (!idToken) {
+  //       const accessToken: string = userInfo.accessToken as string;
+  //       const googleCredential = auth.GoogleAuthProvider.credential(
+  //         null,
+  //         accessToken,
+  //       );
+  //       await auth().signInWithCredential(googleCredential);
+  //     } else {
+  //       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+  //       await auth().signInWithCredential(googleCredential);
+  //     }
+  //     console.log("User signed in!");
+  //   } catch (error) {
+  //     alert(error);
+  //     console.log("Google Sign-In error:", error);
+  //   }
+  // };
 
   return (
     <KeyboardAwareScrollView
@@ -184,7 +194,7 @@ const Login = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
             );
           }}
         />
