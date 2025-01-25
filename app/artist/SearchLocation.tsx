@@ -129,7 +129,7 @@ const SearchLocation: React.FC = () => {
         customMapStyle={googleDarkModeStyle}
         initialRegion={region}
         onRegionChangeComplete={handleRegionChangeComplete} // Trigger when map dragging ends
-        mapType="standard"
+        mapType="terrain"
         zoomEnabled
       />
 

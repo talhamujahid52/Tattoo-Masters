@@ -6,13 +6,9 @@ import Button from "@/components/Button";
 import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";
 import Text from "@/components/Text";
 import { router } from "expo-router";
-import auth from "@react-native-firebase/auth";
 import { createUserWithEmailAndPassword } from "@/utils/firebase/userFunctions";
-import { signInWithGoogle } from "@/utils/firebase/userFunctions";
-import { useDispatch } from "react-redux";
-import { setUser } from "@/redux/slices/userSlice";
-import { AppDispatch } from "@/redux/store";
 import firestore from "@react-native-firebase/firestore";
+import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -21,9 +17,10 @@ const Register: React.FC = () => {
   const [countryCode, setCountryCode] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const dispatch = useDispatch<AppDispatch>();
+
+  const signInWithGoogle = useSignInWithGoogle();
+
   const formatPhoneNumber = (): string => {
-    // Combine the country code and phone number
     return `${countryCode ? `${countryCode}` : ""} ${phone}`.trim();
   };
 
@@ -32,56 +29,14 @@ const Register: React.FC = () => {
     return regex.test(email);
   };
 
-  // const handleRegister = async () => {
-  //   const fullPhoneNumber = formatPhoneNumber();
-
-  //   console.log("Full Name:", fullName);
-  //   console.log("Email:", email);
-  //   console.log("countryCode :", countryCode); // Log formatted phone number
-  //   console.log("phone :", phone); // Log formatted phone number
-
-  //   console.log("Phone Number:", fullPhoneNumber); // Log formatted phone number
-  //   console.log("Password:", password);
-  //   console.log("Confirm Password:", confirmPassword);
-
-  //   if (!validateEmail(email)) {
-  //     alert("Please enter a valid email address.");
-  //     return;
-  //   }
-  //   if (password !== confirmPassword) {
-  //     alert("Passwords do not match.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const userCredential = await createUserWithEmailAndPassword(
-  //       email,
-  //       password
-  //     );
-  //     dispatch(setUser(userCredential.user));
-  //     await userCredential.user.sendEmailVerification();
-  //     // Handle successful registration, e.g., navigate to verification
-  //     router.push({ pathname: "/(auth)/Verification" });
-
-  //     alert("Verification email sent. Please check your inbox.");
-  //   } catch (error: any) {
-  //     // Assert the error type to 'any'
-  //     if (error && error.code && error.message) {
-  //       alert(error.message); // Use the error message from Firebase
-  //     } else {
-  //       alert("An unexpected error occurred. Please try again.");
-  //     }
-  //   }
-  // };
-
   const handleRegister = async () => {
     const fullPhoneNumber = formatPhoneNumber();
 
     console.log("Full Name:", fullName);
     console.log("Email:", email);
-    console.log("Country Code:", countryCode); // Log formatted phone number
-    console.log("Phone:", phone); // Log formatted phone number
-    console.log("Phone Number:", fullPhoneNumber); // Log formatted phone number
+    console.log("Country Code:", countryCode);
+    console.log("Phone:", phone);
+    console.log("Phone Number:", fullPhoneNumber);
     console.log("Password:", password);
     console.log("Confirm Password:", confirmPassword);
 
@@ -95,16 +50,12 @@ const Register: React.FC = () => {
     }
 
     try {
-      // Step 1: Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         email,
         password
       );
-      // dispatch(setUser(userCredential.user));
 
-      // Step 2: Add user data to Firestore
       const user = userCredential.user;
-      console.log("User is : ", user);
       await firestore().collection("Users").doc(user.uid).set({
         uid: user.uid,
         name: fullName,
@@ -116,18 +67,12 @@ const Register: React.FC = () => {
         createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
       });
 
-      // Step 3: Send email verification
       await user.sendEmailVerification();
-
-      // Step 4: Handle successful registration
       alert("Verification email sent. Please check your inbox.");
-
-      // Navigate to verification screen
-      router.push({ pathname: "/(auth)/Login" });
+      // router.push({ pathname: "/(auth)/Login" });
     } catch (error: any) {
-      // Assert the error type to 'any'
       if (error && error.code && error.message) {
-        alert(error.message); // Use the error message from Firebase
+        alert(error.message);
       } else {
         alert("An unexpected error occurred. Please try again.");
       }
@@ -201,9 +146,7 @@ const Register: React.FC = () => {
         <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
-          onPress={() => {
-            signInWithGoogle();
-          }}
+          onPress={signInWithGoogle}
         />
         <ThirdPartyLoginButton
           title="Facebook"
@@ -217,19 +160,31 @@ const Register: React.FC = () => {
       </View>
       <View style={styles.BottomText}>
         <Text size="small" weight="normal" color="#828282">
-          By clicking continue, you agree to our{" "}
+          By clicking continue, you agree to our
         </Text>
         <View style={styles.TermsOfServiceContainer}>
-          <Text size="small" weight="normal" color="#FBF6FA">
-            Terms of Service
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/(auth)/TermsOfService");
+            }}
+          >
+            <Text size="small" weight="normal" color="#FBF6FA">
+              Terms of Service
+            </Text>
+          </TouchableOpacity>
           <Text size="small" weight="normal" color="#828282">
             {" "}
             and{" "}
           </Text>
-          <Text size="small" weight="normal" color="#FBF6FA">
-            Privacy Policy
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/(auth)/PrivacyPolicy");
+            }}
+          >
+            <Text size="small" weight="normal" color="#FBF6FA">
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

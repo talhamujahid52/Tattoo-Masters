@@ -10,13 +10,13 @@ import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   signInWithEmailAndPassword,
-  signInWithGoogle,
+  // signInWithGoogle,
 } from "@/utils/firebase/userFunctions";
 import { setUser } from "@/redux/slices/userSlice";
 import { useDispatch } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
-
+import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
 GoogleSignin.configure({
   webClientId:
     "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
@@ -58,13 +58,12 @@ const Login = () => {
       const userDocRef = firestore().collection("Users").doc(user.uid);
       const userDoc = await userDocRef.get();
 
-      dispatch(setUser(userDoc.data()));
-
       // Check if the email is verified
       if (user.emailVerified) {
         router.push({
           pathname: "/(bottomTabs)/Home",
         });
+        dispatch(setUser(userDoc.data()));
         console.log("User signed in!");
       } else {
         alert("Please verify your email before logging in.");
@@ -84,6 +83,8 @@ const Login = () => {
       }
     }
   };
+
+  const signInWithGoogle = useSignInWithGoogle();
 
   // const signInWithGoogle = async () => {
   //   try {
@@ -162,7 +163,11 @@ const Login = () => {
         />
       </View>
       <View style={styles.ForgotPasswordContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/(auth)/ChangePassword");
+          }}
+        >
           <Text size="medium" weight="semibold" color="#FBF6FA">
             Forgot password?
           </Text>
@@ -185,9 +190,7 @@ const Login = () => {
         <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
-          onPress={() => {
-            signInWithGoogle();
-          }}
+          onPress={signInWithGoogle}
         />
         <ThirdPartyLoginButton
           title="Facebook"
@@ -204,16 +207,24 @@ const Login = () => {
           By clicking continue, you agree to our
         </Text>
         <View style={styles.TermsOfServiceContainer}>
-          <Text size="small" weight="normal" color="#FBF6FA">
-            Terms of Service
-          </Text>
+          <TouchableOpacity onPress={()=>{
+            router.push("/(auth)/TermsOfService")
+          }}>
+            <Text size="small" weight="normal" color="#FBF6FA">
+              Terms of Service
+            </Text>
+          </TouchableOpacity>
           <Text size="small" weight="normal" color="#828282">
             {" "}
             and{" "}
           </Text>
-          <Text size="small" weight="normal" color="#FBF6FA">
-            Privacy Policy
-          </Text>
+          <TouchableOpacity onPress={()=>{
+            router.push("/(auth)/PrivacyPolicy")
+          }}>
+            <Text size="small" weight="normal" color="#FBF6FA">
+              Privacy Policy
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAwareScrollView>

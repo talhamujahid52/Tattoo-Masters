@@ -15,6 +15,7 @@ const AppNavigator = () => {
   const router = useRouter();
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
+    console.log("App Navigator : ", user);
     dispatch(setUser(user));
     if (initializing) setInitializing(false);
   }
@@ -103,7 +104,55 @@ const AppNavigator = () => {
             name="(auth)/ChangePassword"
             options={{
               headerShown: true,
-              headerTitle: "Choose new password",
+              headerTitle: "Reset Password",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/AddTattoo"
+            options={{
+              headerShown: true,
+              headerTitle: "Add Tattoo",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/Notification"
+            options={{
+              headerShown: true,
+              headerTitle: "Notifications",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/HelpAndSupport"
+            options={{
+              headerShown: true,
+              headerTitle: "Help and Support",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/Feedback"
+            options={{
+              headerShown: true,
+              headerTitle: "Feedback",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
