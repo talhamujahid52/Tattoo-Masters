@@ -16,13 +16,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
 interface CustomDrawerContentProps {
+  loggedInUser: any;
   isArtist: boolean;
 }
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
-  console.log("LoggedIn User : ", loggedInUser);
 
+const CustomDrawerContent = ({
+  loggedInUser,
+  isArtist,
+}: CustomDrawerContentProps) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -77,6 +79,7 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
               onPress={() => {
                 router.push({
                   pathname: "/artist/MyProfile",
+                  params: { loggedInUser: loggedInUser },
                 });
               }}
               style={styles.userProfileRow}
@@ -168,7 +171,14 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
               </Text>
             </TouchableOpacity>
             {isArtist && (
-              <TouchableOpacity style={styles.drawerItem}>
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  router.push({
+                    pathname: "/artist/AddTattoo",
+                  });
+                }}
+              >
                 <Image
                   style={styles.icon}
                   source={require("../../assets/images/add_photo_alternate.png")}
@@ -212,7 +222,14 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
                 </Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.drawerItem}>
+            <TouchableOpacity
+              style={styles.drawerItem}
+              onPress={() => {
+                router.push({
+                  pathname: "/artist/Notification",
+                });
+              }}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/notifications.png")}
@@ -224,7 +241,14 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
           </View>
           <View style={styles.seprator}></View>
           <View>
-            <TouchableOpacity style={styles.drawerItem}>
+            <TouchableOpacity
+              style={styles.drawerItem}
+              onPress={() => {
+                router.push({
+                  pathname: "/artist/HelpAndSupport",
+                });
+              }}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/support_agent.png")}
@@ -233,7 +257,14 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
                 Help and Support
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.drawerItem}>
+            <TouchableOpacity
+              style={styles.drawerItem}
+              onPress={() => {
+                router.push({
+                  pathname: "/artist/Feedback",
+                });
+              }}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/feedback.png")}
@@ -325,17 +356,14 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
 };
 
 const DrawerLayout: React.FC = () => {
-  const artists = useSelector((state: any) => state.artist.allArtists);
-  const isArtist = true; //Get From LoggedIn User
-  const router = useRouter();
-
-  const closeDrawer = () => {
-    router.back();
-  };
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const isArtist = loggedInUser?.isArtist; //Get From LoggedIn User
 
   return (
     <Drawer
-      drawerContent={(props) => <CustomDrawerContent isArtist={isArtist} />}
+      drawerContent={(props) => (
+        <CustomDrawerContent loggedInUser={loggedInUser} isArtist={isArtist} />
+      )}
       screenOptions={{
         headerShown: false,
         drawerStyle: {

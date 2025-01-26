@@ -13,7 +13,7 @@ import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ShareProfileBottomSheet from "@/components/BottomSheets/ShareProfileBottomSheet";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -25,6 +25,9 @@ interface StudioItem {
 
 const MyProfile = () => {
   const router = useRouter();
+  // const { loggedInUser } = useLocalSearchParams<any>();
+
+  // console.log("My Profile Page : ", JSON.parse(loggedInUser));
   const { BottomSheet, show, hide } = useBottomSheet();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
 
@@ -78,10 +81,12 @@ const MyProfile = () => {
               {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              Luis Arts Studio
+              {loggedInUser?.studio?.type === "studio"
+                ? loggedInUser?.studio?.name
+                : " Luis Arts Studio"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              Phuket, Thailand
+              {loggedInUser?.city ? loggedInUser?.city : "Phuket, Thailand"}
             </Text>
           </View>
         </View>
@@ -98,7 +103,7 @@ const MyProfile = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.userSocialsRow}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => {}}>
           <Image
             style={styles.icon}
             source={require("../../assets/images/facebook_2.png")}
@@ -123,7 +128,7 @@ const MyProfile = () => {
           source={require("../../assets/images/favorite-white.png")}
         />
         <Text size="p" weight="normal" color="#FBF6FA">
-          412
+          {loggedInUser?.followersCount ? loggedInUser?.followersCount : 412}
         </Text>
       </View>
       <View style={styles.tattooStylesRow}>
@@ -131,34 +136,28 @@ const MyProfile = () => {
           style={styles.icon}
           source={require("../../assets/images/draw.png")}
         />
-        {Array(5)
-          .fill(0)
-          .map((item, idx) => {
-            return (
-              <View
-                key={idx}
-                style={{
-                  backgroundColor: "#262526",
-                  paddingHorizontal: 5,
-                  paddingVertical: 2,
-                  borderRadius: 6,
-                }}
-              >
-                <Text size="p" weight="normal" color="#D7D7C9">
-                  Tribal
-                </Text>
-              </View>
-            );
-          })}
+        {loggedInUser?.tattooStyles?.map((item: any, idx: any) => {
+          return (
+            <View
+              key={idx}
+              style={{
+                backgroundColor: "#262526",
+                paddingHorizontal: 5,
+                paddingVertical: 2,
+                borderRadius: 6,
+              }}
+            >
+              <Text size="p" weight="normal" color="#D7D7C9">
+                {item}
+              </Text>
+            </View>
+          );
+        })}
       </View>
       <Text size="p" weight="normal" color="#A7A7A7">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.
+        {loggedInUser?.about
+          ? loggedInUser?.about
+          : "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text."}
       </Text>
       <View style={styles.buttonRow}>
         <IconButton
@@ -175,6 +174,9 @@ const MyProfile = () => {
           title="Add tattoo"
           icon={require("../../assets/images/add_photo_alternate-2.png")}
           variant="Primary"
+          onPress={() => {
+            router.push("/artist/AddTattoo");
+          }}
         />
       </View>
       <ReviewOnProfile></ReviewOnProfile>

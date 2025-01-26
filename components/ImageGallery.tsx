@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
 
 interface DataProp {
   id: number;
@@ -48,6 +49,7 @@ const originalData = [
 
 const ImageGallery = () => {
   const router = useRouter();
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   const renderItem = ({ item }: { item: DataProp }) => {
     return (

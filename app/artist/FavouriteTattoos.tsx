@@ -1,6 +1,5 @@
 import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Text from "@/components/Text";
-import ArtistSearchCard from "@/components/ArtistSearchCard";
 import ImageGallery from "@/components/ImageGallery";
 import React from "react";
 
