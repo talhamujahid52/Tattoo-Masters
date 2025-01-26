@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ActivityIndicator,
   GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
@@ -11,9 +12,10 @@ import Text from "./Text";
 interface ButtonProps {
   title: string;
   onPress?: (event: GestureResponderEvent) => void;
+  loading?: boolean;
 }
 
-const Button = ({ title = "Let's go", onPress }: ButtonProps) => {
+const Button = ({ title = "Let's go", onPress, loading }: ButtonProps) => {
   const colorList = [
     { offset: "0%", color: "#FFD982", opacity: "1" },
     { offset: "100%", color: "#927639", opacity: "1" },
@@ -30,9 +32,13 @@ const Button = ({ title = "Let's go", onPress }: ButtonProps) => {
           colorList={colorList}
         />
       </View>
-      <Text size="h4" weight="semibold">
-        {title}
-      </Text>
+      {loading ? (
+        <ActivityIndicator color={"black"} />
+      ) : (
+        <Text size="h4" weight="semibold">
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 };

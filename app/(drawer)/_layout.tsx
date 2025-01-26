@@ -262,7 +262,7 @@ const CustomDrawerContent = ({ isArtist }: CustomDrawerContentProps) => {
           </TouchableOpacity>
         </View>
         <View style={styles.registerArtistContainer}>
-          {!isArtist && (
+          {isArtist && (
             <TouchableOpacity
               onPress={() => {
                 router.push({

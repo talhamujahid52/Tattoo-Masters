@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -12,12 +12,25 @@ import Step1 from "./Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
 import { FormContext } from "../context/FormContext";
-
+import { useSelector } from "react-redux";
+import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import { getFileName } from "@/utils/helperFunctions";
+import { useRouter } from "expo-router";
 const StepperForm: React.FC = () => {
   const totalSteps = 3;
   const { width } = Dimensions.get("window");
   const { step, setStep, formData } = useContext(FormContext)!;
+  const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const currentUserId = loggedInUser?.uid;
+  console.log("currentUserId", currentUserId);
+  const { uploadImages } = useFirebaseImage({
+    uniqueFilePrefix: currentUserId,
+  });
+
+  console.log("logged in user", currentUserId);
   const stepLabels = ["Profile", "Tattoo Portfolio", "Preview"];
 
   const handleNext = () => {
@@ -27,6 +40,22 @@ const StepperForm: React.FC = () => {
 
   const handlePrevious = () => {
     setStep((prevStep: number) => Math.max(prevStep - 1, 1));
+  };
+  const submitForm = async () => {
+    try {
+      setLoading(true);
+      console.log("form data", formData);
+      const imgs = formData.images
+        .filter((item) => item !== "")
+        .map((item) => ({ uri: item, name: getFileName(item) }));
+      await uploadImages(imgs);
+
+      router.replace("/(bottomTabs)/Home");
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStepIndicator = () => {
@@ -51,7 +80,7 @@ const StepperForm: React.FC = () => {
           {i < totalSteps && (
             <View style={[styles.line, { width: width / 5 }]} />
           )}
-        </View>
+        </View>,
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;
@@ -109,7 +138,7 @@ const StepperForm: React.FC = () => {
           </View>
         ) : (
           <View style={{ width: 84 }}>
-            <Button title="Done" onPress={() => alert("Done!")} />
+            <Button loading={loading} title="Done" onPress={submitForm} />
           </View>
         )}
       </View>
