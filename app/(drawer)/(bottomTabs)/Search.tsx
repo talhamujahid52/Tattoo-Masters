@@ -3,6 +3,7 @@ import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
+import { useDispatch, useSelector } from "react-redux";
 
 interface Artist {
   id: string;
@@ -16,11 +17,13 @@ const Search: React.FC = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
-  const artists: Artist[] = Array.from({ length: 20 }, (_, index) => ({
-    id: index.toString(),
-    name: `Artist ${index + 1}`,
-    isActive: Math.random() < 0.5, // Randomly assign active status
-  }));
+  const artists = useSelector((state: any) => state.artist.allArtists);
+
+  // const artists: Artist[] = Array.from({ length: 20 }, (_, index) => ({
+  //   id: index.toString(),
+  //   name: `Artist ${index + 1}`,
+  //   isActive: Math.random() < 0.5, // Randomly assign active status
+  // }));
 
   return (
     <View style={styles.container}>
@@ -54,7 +57,7 @@ const Search: React.FC = () => {
                 marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
               }}
             >
-              <ArtistSearchCard isActive={item.isActive} />
+              <ArtistSearchCard artist={item} />
             </View>
           )}
           keyExtractor={(item) => item.id}

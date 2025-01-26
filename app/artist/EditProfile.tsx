@@ -16,41 +16,58 @@ import Button from "@/components/Button";
 import { router } from "expo-router";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { launchImageLibrary } from "react-native-image-picker";
+import { useDispatch, useSelector } from "react-redux";
 
 const EditProfile = () => {
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
+  // console.log(
+  //   "Logged In User in Edit Profile ",
+  //   loggedInUser.location.coordinates.latitude
+  // );
   const [formData, setFormData] = useState({
-    profilePicture: "",
-    fullName: "",
-    studio: "",
-    studioName: "",
-    city: "",
-    location: { latitude: 0, longitude: 0, address: "" },
+    profilePicture: loggedInUser?.profilePicture
+      ? loggedInUser?.profilePicture
+      : "",
+    fullName: loggedInUser?.name ? loggedInUser?.name : "",
+    studio: loggedInUser?.studio ? loggedInUser?.studio?.type : "",
+    studioName: loggedInUser?.studio ? loggedInUser?.studio?.name : "",
+    city: loggedInUser?.city ? loggedInUser?.city : "",
+    location: {
+      latitude: loggedInUser?.location?.coordinates?.latitude
+        ? loggedInUser?.location?.coordinates?.latitude
+        : "",
+      longitude: loggedInUser?.location?.coordinates?.longitude
+        ? loggedInUser?.location?.coordinates?.longitude
+        : "",
+      address: loggedInUser?.location?.address
+        ? loggedInUser?.location?.address
+        : "",
+    },
     showCityOnly: true,
-    tattooStyles: [
-      { title: "Tribal", selected: false },
-      { title: "Geometric", selected: false },
-      { title: "Black and White", selected: false },
-    ],
-    aboutYou: "",
-    images: ["", "", "", ""],
+    tattooStyles: loggedInUser?.tattooStyles
+      ? loggedInUser?.tattooStyles
+      : [
+          { title: "Tribal", selected: false },
+          { title: "Geometric", selected: false },
+          { title: "Black and White", selected: false },
+        ],
+    aboutYou: loggedInUser?.about ? loggedInUser?.about : "",
   });
-  const [aboutYou, setAboutYou] = useState("");
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
     { label: "Homeartist", value: "homeArtist" },
   ];
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", value: 1, selected: false },
-    { title: "Geometric", value: 2, selected: false },
-    { title: "Black and White", value: 3, selected: false },
-  ]);
+  // const [tattooStyles, setTattooStyles] = useState([
+  //   { title: "Tribal", value: 1, selected: false },
+  //   { title: "Geometric", value: 2, selected: false },
+  //   { title: "Black and White", value: 3, selected: false },
+  // ]);
   const toggleTattooStyles = (value: number) => {
-    const updatedTattooStyles = tattooStyles.map((item) =>
+    const updatedTattooStyles = formData.tattooStyles.map((item: any) =>
       item.value === value ? { ...item, selected: !item.selected } : item
     );
-
-    setTattooStyles(updatedTattooStyles);
   };
   const defaultLocation = {
     latitude: 33.664286,
@@ -113,7 +130,14 @@ const EditProfile = () => {
         >
           Full Name
         </Text>
-        <Input inputMode="text" placeholder="Full Name"></Input>
+        <Input
+          inputMode="text"
+          placeholder="Full Name"
+          value={formData.fullName}
+          onChangeText={(text) =>
+            setFormData((prev) => ({ ...prev, fullName: text }))
+          }
+        ></Input>
       </View>
       <RadioButton
         title="Studio"
@@ -136,7 +160,14 @@ const EditProfile = () => {
         >
           Location
         </Text>
-        <Input inputMode="text" placeholder="Location"></Input>
+        <Input
+          inputMode="text"
+          placeholder="Location"
+          value={formData.city}
+          onChangeText={(text) =>
+            setFormData((prev) => ({ ...prev, city: text }))
+          }
+        ></Input>
       </View>
       <View style={{ marginTop: 16 }}>
         <Text
@@ -163,13 +194,6 @@ const EditProfile = () => {
           >
             Show city only
           </Text>
-          {/* <Switch
-            trackColor={{ false: "#767577", true: "#44e52c" }}
-            thumbColor={isEnabledRadius ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={isEnabledRadius}
-          /> */}
           <Switch
             trackColor={{ false: "#767577", true: "#44e52c" }}
             thumbColor={formData.showCityOnly ? "#fff" : "#f4f3f4"}
@@ -208,24 +232,24 @@ const EditProfile = () => {
             Styles
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {tattooStyles.map((item, idx) => {
+            {formData.tattooStyles.map((item: any, idx: any) => {
               return (
                 <TouchableOpacity
-                  key={item.value}
+                  key={idx}
                   activeOpacity={1}
                   style={{
                     padding: 6,
                     borderRadius: 6,
                     backgroundColor: item.selected ? "#DAB769" : "#262526",
                   }}
-                  onPress={() => toggleTattooStyles(item.value)}
+                  onPress={() => toggleTattooStyles(item)}
                 >
                   <Text
                     size="p"
                     weight="normal"
                     color={item.selected ? "#22221F" : "#A7A7A7"}
                   >
-                    {item.title}
+                    {item}
                   </Text>
                 </TouchableOpacity>
               );
@@ -246,12 +270,12 @@ const EditProfile = () => {
             placeholderTextColor="#A29F93"
             placeholder="My Intro"
             multiline
-            value={aboutYou}
+            value={formData.aboutYou}
             style={styles.textArea}
             maxLength={100}
-            onChangeText={(newtext) => {
-              setAboutYou(newtext);
-            }}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, aboutYou: text }))
+            }
           ></TextInput>
           <Text
             size="medium"
@@ -259,7 +283,7 @@ const EditProfile = () => {
             color="#A7A7A7"
             style={{ textAlign: "right", marginTop: 4 }}
           >
-            {aboutYou.length} / 100
+            {formData.aboutYou.length} / 100
           </Text>
         </View>
         <View style={{ marginBottom: 70 }}>
@@ -297,7 +321,12 @@ const EditProfile = () => {
               isConnected={false}
             />
           </View>
-          <Button title="Save" />
+          <Button
+            title="Save"
+            onPress={() => {
+              console.log("Form Data after edit : ", formData);
+            }}
+          />
         </View>
       </View>
     </ScrollView>

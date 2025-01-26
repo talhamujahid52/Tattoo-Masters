@@ -1,28 +1,47 @@
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import React from "react";
+import { useRouter } from "expo-router";
 
 interface ArtistSearchCardProps {
-  isActive: boolean;
+  // isActive: boolean;
+  artist: any;
 }
 
-const ArtistSearchCard = ({ isActive }: ArtistSearchCardProps) => {
+const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
+  const router = useRouter();
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      onPress={() => {
+        router.push({
+          pathname: "/artist/ArtistProfile",
+          params: { artistId: artist.id },
+        });
+      }}
+      style={styles.card}
+    >
       <Image
-        source={require("../assets/images/Artist.png")}
+        // source={require("../assets/images/Artist.png")}
+        source={
+          artist?.data?.profilePicture
+            ? { uri: artist?.data?.profilePicture }
+            : require("../assets/images/Artist.png")
+        }
         style={styles.imageStyle}
       />
       <View style={styles.RatingAndLocation}>
-        {isActive && <View style={styles.greenOnlineDot} />}
+        {/* {isActive && <View style={styles.greenOnlineDot} />} */}
         <Text size="p" weight="semibold" color="#FFFFFF">
-          Martin Luis
+          {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
         </Text>
       </View>
       <Text size="medium" weight="normal" color="#A7A7A7">
-        Ink Fusion
+        {artist?.data?.studio?.type === "studio"
+          ? artist?.data?.studio?.name
+          : "Ink Fusion"}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
