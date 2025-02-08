@@ -27,7 +27,6 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   return (
     <TouchableOpacity
       onPress={() => {
-        console.log("chat.id: ", chat.item.id);
         router.push({
           pathname: "/artist/IndividualChat",
           params: {

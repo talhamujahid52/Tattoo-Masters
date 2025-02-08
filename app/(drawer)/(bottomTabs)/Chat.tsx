@@ -7,17 +7,15 @@ import {
   Dimensions,
   Pressable,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ChatListCell from "@/components/ChatListCell";
-import firestore from "@react-native-firebase/firestore";
-import { updateAllChats } from "@/redux/slices/chatSlice";
+import useChats from "@/hooks/useChat";
 import { router } from "expo-router";
 
 const Chat = () => {
-  const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 80;
@@ -26,28 +24,11 @@ const Chat = () => {
   const artists = useSelector((state: any) => state?.artist?.allArtists); // get Artists
   const chats = useSelector((state: any) => state?.chats?.allChats); // get Chats
 
+  const { fetchChats } = useChats(loggedInUser?.uid);
+
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const chatsSnapshot = await firestore()
-          .collection("Chats")
-          .where("participants", "array-contains", loggedInUser.uid)
-          .get();
-        const chatsList = chatsSnapshot.docs.map((doc) => {
-          const chatData = doc.data();
-          const id = doc.id; // Get the document ID (chat ID)
-          return { ...chatData, id }; // Add the chat ID to the chat data
-        });
-
-        console.log("Chats List Fetched: ", chatsList);
-        dispatch(updateAllChats(chatsList));
-      } catch (error) {
-        console.error("Error fetching chats: ", error);
-      }
-    };
-
     fetchChats();
   }, []);
 

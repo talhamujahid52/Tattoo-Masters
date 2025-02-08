@@ -4,7 +4,6 @@ import {
   View,
   Image,
   StyleSheet,
-  Platform,
   TouchableOpacity,
 } from "react-native";
 import { useSelector } from "react-redux";
@@ -15,12 +14,15 @@ import { router, useLocalSearchParams } from "expo-router";
 import firestore from "@react-native-firebase/firestore";
 import useGetArtist from "@/hooks/useGetArtist";
 
-const Example: React.FC = () => {
+const IndividualChat: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [chatID, setChatID] = useState<any>();
   const [messageRecieverName, setMessageRecieverName] = useState("");
-  const [messageRecieverProfilePicture, setMessageRecieverProfilePicture] =
-    useState("");
+  const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
+
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const { checkIfChatExists, fetchChatMessages, createChat, addMessageToChat } =
+    useChats(loggedInUser.uid);
 
   const {
     selectedArtistId,
@@ -28,10 +30,6 @@ const Example: React.FC = () => {
     otherUserName,
     otherUserProfilePicture,
   } = useLocalSearchParams<any>();
-
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
-
-  const { checkIfChatExists } = useChats(loggedInUser.uid);
   const selectedArtist = useGetArtist(selectedArtistId);
 
   useEffect(() => {
@@ -40,15 +38,14 @@ const Example: React.FC = () => {
       const fetchMessagesIfChatExists = async () => {
         try {
           const artistChat = await checkIfChatExists(selectedArtistId);
-
           setMessageRecieverName(artistChat?.data()?.[selectedArtistId]?.name);
-          setMessageRecieverProfilePicture(
+          setRecieverProfilePicture(
             artistChat?.data()?.[selectedArtistId]?.profilePicture
           );
-
           if (artistChat?.exists) {
             setChatID(artistChat.id);
-            fetchChatMessages(artistChat.id);
+            const chatMessages = await fetchChatMessages(artistChat.id);
+            setMessages(chatMessages);
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
@@ -58,106 +55,12 @@ const Example: React.FC = () => {
       fetchMessagesIfChatExists();
     } else if (existingChatId) {
       // If Click on Already Existing Chat.
-      console.log("Existing Chat Id, ", existingChatId);
       setChatID(existingChatId);
-      fetchChatMessages(existingChatId);
+      fetchChatMessages(existingChatId).then(setMessages);
       setMessageRecieverName(otherUserName);
-      setMessageRecieverProfilePicture(otherUserProfilePicture);
+      setRecieverProfilePicture(otherUserProfilePicture);
     }
   }, [selectedArtistId, existingChatId]);
-
-  const fetchChatMessages = async (chatId: any) => {
-    try {
-      const snapshot = await firestore()
-        .collection("Chats")
-        .doc(chatId)
-        .collection("messages")
-        .get();
-
-      if (!snapshot.empty) {
-        const messages = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMessages(messages);
-        console.log("Messages fetched for chat ID: ", chatId, " ", messages);
-      } else {
-        console.log("No messages found");
-      }
-    } catch (error) {
-      console.error("Error fetching messages: ", error);
-    }
-  };
-
-  const addMessageToChat = async (newMessages: any, currentChatID: string) => {
-    try {
-      await Promise.all(
-        newMessages.map(async (message: any) => {
-          console.log(
-            "Adding message:",
-            message,
-            "to chat chatID ",
-            currentChatID
-          );
-
-          const docRef = await firestore()
-            .collection("Chats")
-            .doc(currentChatID)
-            .collection("messages")
-            .add({
-              _id: message._id,
-              text: message.text,
-              createdAt: message.createdAt,
-              user: message.user,
-            });
-
-          // console.log("Message successfully added with ID: ", docRef.id);
-
-          await firestore().collection("Chats").doc(currentChatID).update({
-            lastMessage: message.text,
-            lastMessageTime: message.createdAt,
-          });
-
-          console.log("Chat updated with last message.");
-        })
-      );
-    } catch (error) {
-      console.error("Error adding message: ", error);
-    }
-  };
-
-  const createChat = async () => {
-    const loggedInUserID = loggedInUser.uid;
-    console.log("Loggedin user : ", loggedInUser);
-    console.log("Loggedin user : ", loggedInUser?.name);
-    console.log("Loggedin user : ", loggedInUser?.photoURL);
-
-    try {
-      const newChatRef = await firestore()
-        .collection("Chats")
-        .add({
-          createdAt: firestore.FieldValue.serverTimestamp(),
-          participants: [loggedInUserID, selectedArtistId],
-          [loggedInUserID]: {
-            name: loggedInUser?.displayName ? loggedInUser?.displayName : "",
-            profilePicture: loggedInUser?.photoURL
-              ? loggedInUser?.photoURL
-              : "",
-          },
-          [selectedArtistId]: {
-            name: selectedArtist?.data?.name ? selectedArtist?.data?.name : "",
-            profilePicture: selectedArtist?.data?.profilePicture
-              ? selectedArtist?.data?.profilePicture
-              : "",
-          },
-        });
-      console.log("New chat created with ID:", newChatRef.id);
-      return { id: newChatRef.id };
-    } catch (error) {
-      console.error("Error creating new chat:", error);
-      throw new Error("Failed to create new chat");
-    }
-  };
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
@@ -165,7 +68,7 @@ const Example: React.FC = () => {
       if (!currentChatID) {
         console.log("NEw Chat ...");
         try {
-          const newChat = await createChat();
+          const newChat = await createChat(selectedArtist, loggedInUser);
           currentChatID = newChat.id;
           setChatID(currentChatID); // Update the state after getting the new chat ID
         } catch (error) {
@@ -173,7 +76,6 @@ const Example: React.FC = () => {
           return; // Prevent sending message if chat creation failed
         }
       }
-
       // Add new message to Firestore
       await addMessageToChat(newMessages, currentChatID);
 
@@ -209,8 +111,8 @@ const Example: React.FC = () => {
         >
           <Image
             source={
-              messageRecieverProfilePicture
-                ? { uri: messageRecieverProfilePicture }
+              recieverProfilePicture
+                ? { uri: recieverProfilePicture }
                 : require("../../assets/images/Artist.png")
             }
             style={styles.avatar}
@@ -268,4 +170,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Example;
+export default IndividualChat;
