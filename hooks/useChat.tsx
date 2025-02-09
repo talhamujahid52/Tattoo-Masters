@@ -60,10 +60,10 @@ const useChats = (userId: string) => {
         .doc(chatId)
         .collection("messages")
         .get();
-
+  
       if (!snapshot.empty) {
         return snapshot.docs.map((doc) => ({
-          id: doc.id,
+            id: doc.id,
           ...doc.data(),
         }));
       }
@@ -83,8 +83,8 @@ const useChats = (userId: string) => {
             createdAt: firestore.FieldValue.serverTimestamp(),
             participants: [loggedInUser.uid, selectedArtist.id],
             [loggedInUser.uid]: {
-              name: loggedInUser?.displayName || "",
-              profilePicture: loggedInUser?.photoURL || "",
+              name: loggedInUser?.name || "",
+              profilePicture: loggedInUser?.profilePicture || "",
             },
             [selectedArtist.id]: {
               name: selectedArtist?.data?.name || "",

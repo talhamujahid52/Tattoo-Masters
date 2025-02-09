@@ -5,13 +5,20 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
 import useChats from "@/hooks/useChat";
-import { GiftedChat, IMessage } from "react-native-gifted-chat";
+import {
+  GiftedChat,
+  IMessage,
+  Bubble,
+  InputToolbar,
+  Composer,
+  Send,
+} from "react-native-gifted-chat";
 import { router, useLocalSearchParams } from "expo-router";
-import firestore from "@react-native-firebase/firestore";
 import useGetArtist from "@/hooks/useGetArtist";
 
 const IndividualChat: React.FC = () => {
@@ -32,20 +39,31 @@ const IndividualChat: React.FC = () => {
   } = useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
 
+  const formatMessages = (msgs: any[]) => {
+    return msgs.map((msg) => ({
+      ...msg,
+      createdAt: new Date(msg.createdAt).getTime(),
+    }));
+  };
+
   useEffect(() => {
     if (selectedArtistId) {
-      // If Click on Artist.
       const fetchMessagesIfChatExists = async () => {
         try {
           const artistChat = await checkIfChatExists(selectedArtistId);
-          setMessageRecieverName(artistChat?.data()?.[selectedArtistId]?.name);
-          setRecieverProfilePicture(
-            artistChat?.data()?.[selectedArtistId]?.profilePicture
-          );
           if (artistChat?.exists) {
             setChatID(artistChat.id);
+            setMessageRecieverName(
+              artistChat?.data()?.[selectedArtistId]?.name
+            );
+            setRecieverProfilePicture(
+              artistChat?.data()?.[selectedArtistId]?.profilePicture
+            );
             const chatMessages = await fetchChatMessages(artistChat.id);
-            setMessages(chatMessages);
+            setMessages(formatMessages(chatMessages));
+          } else {
+            setMessageRecieverName(selectedArtist?.data?.name);
+            setRecieverProfilePicture(selectedArtist?.data?.profilePicture);
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
@@ -54,9 +72,10 @@ const IndividualChat: React.FC = () => {
 
       fetchMessagesIfChatExists();
     } else if (existingChatId) {
-      // If Click on Already Existing Chat.
       setChatID(existingChatId);
-      fetchChatMessages(existingChatId).then(setMessages);
+      fetchChatMessages(existingChatId).then((msgs) => {
+        setMessages(formatMessages(msgs));
+      });
       setMessageRecieverName(otherUserName);
       setRecieverProfilePicture(otherUserProfilePicture);
     }
@@ -66,26 +85,115 @@ const IndividualChat: React.FC = () => {
     async (newMessages: IMessage[]) => {
       let currentChatID = chatID;
       if (!currentChatID) {
-        console.log("NEw Chat ...");
         try {
           const newChat = await createChat(selectedArtist, loggedInUser);
           currentChatID = newChat.id;
-          setChatID(currentChatID); // Update the state after getting the new chat ID
+          setChatID(currentChatID);
         } catch (error) {
           console.error("Failed to create chat:", error);
-          return; // Prevent sending message if chat creation failed
+          return;
         }
       }
-      // Add new message to Firestore
       await addMessageToChat(newMessages, currentChatID);
-
-      // Append new message to local state (UI)
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, newMessages)
       );
     },
     [chatID]
   );
+
+  // Custom rendering functions
+  const renderBubble = (props: any) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: {
+            backgroundColor: "#514D33", // WhatsApp green for sent messages
+            padding: 5,
+            marginVertical: 3,
+          },
+          left: {
+            backgroundColor: "#292929", // White for received messages
+            padding: 5,
+            marginVertical: 3,
+          },
+        }}
+        textStyle={{
+          right: {
+            color: "#FBF6FA", // Black text for sent messages
+          },
+          left: {
+            color: "#FBF6FA", // Black text for received messages
+          },
+        }}
+      />
+    );
+  };
+
+  const renderInputToolbar = (props: any) => {
+    return (
+      <InputToolbar
+        {...props}
+        containerStyle={{
+          backgroundColor: "#080808",
+        }}
+      />
+    );
+  };
+
+  const renderComposer = (props: any) => {
+    return (
+      <Composer
+        {...props}
+        textInputStyle={{
+          backgroundColor: "#303030",
+          color: "white",
+          borderRadius: 25,
+          overflow: "hidden",
+          marginLeft: 16,
+          minHeight: 44, // Increased minimum height
+          maxHeight: 100, // Maximum height before scrolling
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+        }}
+        textInputProps={{
+          cursorColor: "green",
+        }}
+        placeholderTextColor="#C1C1C1"
+        placeholder="Send Message"
+        multiline={true} // Explicitly enable multiline
+      />
+    );
+  };
+
+  const renderSend = (props: any) => {
+    return (
+      <Send
+        {...props}
+        containerStyle={{
+          width: 44,
+          height: 44,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            width: 32,
+            height: 32,
+          }}
+        >
+          <Image
+            style={{ height: "100%", width: "100%" }}
+            source={require("../../assets/images/sendMessage.png")}
+          />
+        </View>
+      </Send>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,15 +242,22 @@ const IndividualChat: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* GiftedChat component */}
-
       <GiftedChat
         messages={messages}
         onSend={(newMessages) => onSend(newMessages)}
         user={{
           _id: loggedInUser.uid,
         }}
+        renderBubble={renderBubble}
+        renderInputToolbar={renderInputToolbar}
+        renderComposer={renderComposer}
+        renderSend={renderSend}
         scrollToBottom
+        timeFormat="HH:mm"
+        dateFormat="MMM DD, YYYY"
+        messagesContainerStyle={{ paddingVertical: 20 }}
+        alwaysShowSend={true}
+        // timeTextStyle={}
       />
     </SafeAreaView>
   );
@@ -151,7 +266,6 @@ const IndividualChat: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "green",
   },
   header: {
     flexDirection: "row",
