@@ -40,10 +40,29 @@ const IndividualChat: React.FC = () => {
   const selectedArtist = useGetArtist(selectedArtistId);
 
   const formatMessages = (msgs: any[]) => {
-    return msgs.map((msg) => ({
-      ...msg,
-      createdAt: new Date(msg.createdAt).getTime(),
-    }));
+    return msgs.map((msg) => {
+      let createdAt = msg.createdAt;
+      
+      // If createdAt is a Firestore timestamp, convert it to milliseconds
+      if (createdAt && typeof createdAt.toMillis === 'function') {
+        createdAt = createdAt.toMillis();
+      }
+      
+      // Handle string dates
+      if (typeof createdAt === 'string') {
+        createdAt = new Date(createdAt).getTime();
+      }
+      
+      // If no valid date, use current time
+      if (!createdAt || isNaN(createdAt)) {
+        createdAt = Date.now();
+      }
+
+      return {
+        ...msg,
+        createdAt,
+      };
+    });
   };
 
   useEffect(() => {
@@ -104,28 +123,73 @@ const IndividualChat: React.FC = () => {
 
   // Custom rendering functions
   const renderBubble = (props: any) => {
+    const getTime = (createdAt: any) => {
+      if (!createdAt) return '';
+      
+      // Handle both timestamp and date object cases
+      const messageDate = typeof createdAt === 'number' 
+        ? new Date(createdAt) 
+        : (createdAt instanceof Date ? createdAt : new Date(createdAt));
+      
+      if (isNaN(messageDate.getTime())) return '';
+      
+      return messageDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
     return (
       <Bubble
         {...props}
         wrapperStyle={{
           right: {
-            backgroundColor: "#514D33", // WhatsApp green for sent messages
+            backgroundColor: "#514D33",
             padding: 5,
             marginVertical: 3,
           },
           left: {
-            backgroundColor: "#292929", // White for received messages
+            backgroundColor: "#292929",
             padding: 5,
             marginVertical: 3,
           },
         }}
         textStyle={{
           right: {
-            color: "#FBF6FA", // Black text for sent messages
+            color: "#FBF6FA",
           },
           left: {
-            color: "#FBF6FA", // Black text for received messages
+            color: "#FBF6FA",
           },
+        }}
+        bottomContainerStyle={{
+          right: {
+            marginBottom: 4,
+            marginRight: 10,
+          },
+          left: {
+            marginBottom: 4,
+            marginLeft: 10,
+          },
+        }}
+        renderTime={() => {
+          const time = getTime(props.currentMessage.createdAt);
+          return time ? (
+            <View style={{
+              marginLeft: 10,
+              marginRight: 10,
+              marginBottom: 5
+            }}>
+              <Text style={{
+                color: '#C1C1C1',
+                fontSize: 10,
+                textAlign: props.position === 'right' ? 'right' : 'left'
+              }}>
+                {time}
+              </Text>
+            </View>
+          ) : null;
         }}
       />
     );
@@ -253,11 +317,9 @@ const IndividualChat: React.FC = () => {
         renderComposer={renderComposer}
         renderSend={renderSend}
         scrollToBottom
-        timeFormat="HH:mm"
         dateFormat="MMM DD, YYYY"
         messagesContainerStyle={{ paddingVertical: 20 }}
         alwaysShowSend={true}
-        // timeTextStyle={}
       />
     </SafeAreaView>
   );
