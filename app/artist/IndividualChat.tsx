@@ -320,6 +320,7 @@ const IndividualChat: React.FC = () => {
         dateFormat="MMM DD, YYYY"
         messagesContainerStyle={{ paddingVertical: 20 }}
         alwaysShowSend={true}
+        inverted={true}
       />
     </SafeAreaView>
   );

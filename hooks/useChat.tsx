@@ -31,26 +31,28 @@ const useChats = (userId: string) => {
     [userId]
   );
 
-  const fetchChats = useCallback(async () => {
-    try {
-      const chatsSnapshot = await firestore()
-        .collection("Chats")
-        .where("participants", "array-contains", userId)
-        .get();
+  const fetchChats = useCallback(() => {
+    // Return the unsubscribe function from onSnapshot
+    return firestore()
+      .collection("Chats")
+      .where("participants", "array-contains", userId)
+      .orderBy("lastMessageTime", "desc")
 
-      const chatsList = chatsSnapshot.docs.map((doc) => {
-        const chatData = doc.data();
-        const id = doc.id;
-        return { ...chatData, id };
-      });
+      .onSnapshot(
+        (snapshot) => {
+          const chatsList = snapshot.docs.map((doc) => {
+            const chatData = doc.data();
+            const id = doc.id;
+            return { ...chatData, id };
+          });
 
-      console.log("Chats List Fetched: ", chatsList);
-      dispatch(updateAllChats(chatsList));
-      return chatsList;
-    } catch (error) {
-      console.error("Error fetching chats: ", error);
-      return [];
-    }
+          console.log("Chats List Updated: ", chatsList);
+          dispatch(updateAllChats(chatsList));
+        },
+        (error) => {
+          console.error("Error fetching chats: ", error);
+        }
+      );
   }, [userId, dispatch]);
 
   const fetchChatMessages = useCallback(async (chatId: string) => {
@@ -59,11 +61,12 @@ const useChats = (userId: string) => {
         .collection("Chats")
         .doc(chatId)
         .collection("messages")
+        .orderBy("createdAt", "desc")
         .get();
-  
+
       if (!snapshot.empty) {
         return snapshot.docs.map((doc) => ({
-            id: doc.id,
+          id: doc.id,
           ...doc.data(),
         }));
       }

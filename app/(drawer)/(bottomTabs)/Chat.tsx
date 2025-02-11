@@ -29,7 +29,11 @@ const Chat = () => {
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    fetchChats();
+    // Get the unsubscribe function
+    const unsubscribe = fetchChats();
+    
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const onOnlineArtistClick = async (selectedArtistId: any) => {
