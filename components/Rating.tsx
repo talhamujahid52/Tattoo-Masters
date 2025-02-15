@@ -35,7 +35,7 @@ const Rating: React.FC<RatingProps> = ({
           .fill(0)
           .map((_, idx) => {
             const tintColor =
-              idx <= (selectedStar ?? -1) ? "#DAB769" : "#262626"; // Use the selectedStar prop to determine color
+              idx <= (selectedStar ?? -1) ? "#DAB769" : "#2D2D2D"; // Use the selectedStar prop to determine color
             return (
               <TouchableOpacity
                 style={{ height: 42, width: 42 }}

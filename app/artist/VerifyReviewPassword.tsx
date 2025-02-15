@@ -1,12 +1,32 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import Button from "@/components/Button";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import useGetArtist from "@/hooks/useGetArtist";
 
 const VerifyReviewPassword = () => {
   const router = useRouter();
+  const { artistId } = useLocalSearchParams();
+  const artist = useGetArtist(artistId);
+  const [inputReviewPassword, setInputReviewPassword] = useState("");
+
+  const checkReviewPasswordClick = () => {
+    if (!inputReviewPassword) {
+      return;
+    } else {
+      if (inputReviewPassword === artist?.data?.reviewPassword) {
+        router.push({
+          pathname: "/artist/AddReview",
+          params: { artistId: artistId },
+        });
+      } else {
+        alert("Wrong Password");
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={{ height: 44, width: 44 }}>
@@ -16,7 +36,7 @@ const VerifyReviewPassword = () => {
         />
       </View>
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Enter Password to review Martin
+        Enter Password to review {artist?.data?.name}
       </Text>
       <Text
         size="p"
@@ -28,14 +48,18 @@ const VerifyReviewPassword = () => {
         authenticity of reviews.
       </Text>
       <View style={styles.passwordFieldsContainer}>
-        <Input inputMode="password" placeholder="Enter review password"></Input>
+        <Input
+          inputMode="password"
+          placeholder="Enter review password"
+          value={inputReviewPassword}
+          onChangeText={setInputReviewPassword}
+        />
       </View>
       <Button
         title="Continue"
-        onPress={() => {
-          router.push("/artist/AddReview");
-        }}
-      ></Button>
+        onPress={checkReviewPasswordClick}
+        disabled={!inputReviewPassword}
+      />
     </View>
   );
 };
@@ -54,8 +78,6 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 10,
     marginTop: 24,
-  },
-  description: {
     textAlign: "center",
   },
   description1: {

@@ -1,30 +1,34 @@
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
   ScrollView,
   TouchableOpacity,
   Image,
-  FlatList,
   TextInput,
 } from "react-native";
-import Text from "@/components/Text";
-import React, { useState } from "react";
 import { launchImageLibrary } from "react-native-image-picker";
-import Rating from "@/components/Rating";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Button from "@/components/Button";
 import { router } from "expo-router";
+import Text from "@/components/Text";
+import Rating from "@/components/Rating";
+import Button from "@/components/Button";
+import { useLocalSearchParams } from "expo-router";
+import useGetArtist from "@/hooks/useGetArtist";
 
 const AddReview = () => {
-  const [reviewText, setReviewText] = useState("");
-  const [attachment, setAttachment] = useState<string | null>("");
-  const [overallRating, setOverallRating] = useState<number | null>(null);
-  const [qualityOfTattooRating, setQualityOfTattooRating] = useState<
-    number | null
-  >(null);
-  const [tattooAsImagined, setTattooAsImagined] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
+  const { artistId } = useLocalSearchParams();
+  const artist = useGetArtist(artistId);
 
+  // State hooks
+  const [overallRating, setOverallRating] = useState<number | null>(null);
+  const [qualityOfTattoo, setQualityOfTattoo] = useState<number | null>(null);
+  const [tattooAsImagined, setTattooAsImagined] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [attachment, setAttachment] = useState<string | null>("");
+
+  // Tattoo styles state and toggling function
   const [tattooStyles, setTattooStyles] = useState([
     { title: "Tribal", value: 1, selected: false },
     { title: "Geometric", value: 2, selected: false },
@@ -33,13 +37,16 @@ const AddReview = () => {
     { title: "Geometric", value: 5, selected: false },
     { title: "Black and White", value: 6, selected: false },
   ]);
+
   const toggleTattooStyles = (value: number) => {
-    const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+    setTattooStyles((prevState) =>
+      prevState.map((item) =>
+        item.value === value ? { ...item, selected: !item.selected } : item
+      )
     );
-    setTattooStyles(updatedTattooStyles);
   };
 
+  // Handle image selection
   const handleSelectImage = async () => {
     const result = await launchImageLibrary({
       mediaType: "photo",
@@ -47,39 +54,47 @@ const AddReview = () => {
     });
 
     if (!result.didCancel && result.assets && result.assets[0].uri) {
-      const selectedImageUri = result.assets[0].uri;
-
-      setAttachment(selectedImageUri);
+      setAttachment(result.assets[0].uri);
     }
   };
 
+  // Render content
   return (
     <ScrollView
-      style={[styles.container, { marginBottom: insets.bottom + 16 }]} // Extra margin for bottom spacing
-      contentContainerStyle={{
-        paddingBottom: 32,
-        display: "flex",
-        flexDirection: "column",
-        rowGap: 16,
-      }} // Ensure there's enough bottom space
+      style={[styles.container, { marginBottom: insets.bottom + 16 }]}
+      contentContainerStyle={styles.scrollViewContent}
     >
+      {/* Artist Profile Section */}
       <View style={styles.artistProfileTile}>
         <Image
           style={styles.profilePicture}
-          source={require("../../assets/images/Artist.png")}
+          source={
+            artist?.data?.profilePicture
+              ? { uri: artist?.data?.profilePicture }
+              : require("../../assets/images/Artist.png")
+          }
         />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            Martin Luis
+            {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
-            Luis Arts Studio
+            {artist?.data?.studio
+              ? artist?.data?.studio?.name
+              : "Luis Arts Studio"}
           </Text>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            Phuket, Thailand
+          <Text
+            size="p"
+            weight="normal"
+            color="#A7A7A7"
+            style={{ width: "70%" }}
+          >
+            {artist?.data?.city ? artist?.data?.city : "Phuket, Thailand"}
           </Text>
         </View>
       </View>
+
+      {/* Ratings Section */}
       <Rating
         title="Overall"
         selectedStar={overallRating}
@@ -87,8 +102,8 @@ const AddReview = () => {
       />
       <Rating
         title="Quality of Tattoo"
-        selectedStar={qualityOfTattooRating}
-        setSelectedStar={setQualityOfTattooRating}
+        selectedStar={qualityOfTattoo}
+        setSelectedStar={setQualityOfTattoo}
       />
       <Rating
         title="Tattoo as Imagined"
@@ -96,6 +111,7 @@ const AddReview = () => {
         setSelectedStar={setTattooAsImagined}
       />
 
+      {/* Feedback Section */}
       <View>
         <Text size="h4" weight="semibold" color="#A7A7A7">
           Feedback
@@ -105,53 +121,40 @@ const AddReview = () => {
           placeholderTextColor="#A29F93"
           placeholder="Enter Feedback"
           multiline
-          value={reviewText}
+          value={feedback}
           style={styles.textArea}
           maxLength={200}
-          onChangeText={(text) => {
-            setReviewText(text);
-          }}
+          onChangeText={setFeedback}
         />
         <Text
           size="medium"
           weight="normal"
           color="#A7A7A7"
-          style={{ textAlign: "right", marginTop: 4 }}
+          style={styles.charCount}
         >
-          {reviewText.length} / 200
+          {feedback.length} / 200
         </Text>
       </View>
 
+      {/* Attachment Section */}
       <View>
         <Text size="h4" weight="semibold" color="#A7A7A7">
           Attachment
         </Text>
         <TouchableOpacity
-          style={{
-            height: 150,
-            width: "100%",
-            borderWidth: 1,
-            borderColor: "#262626",
-            borderRadius: 12,
-            marginTop: 16,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            rowGap: 5,
-            overflow: "hidden",
-          }}
-          onPress={handleSelectImage} // Trigger the image selection
+          style={styles.attachmentContainer}
+          onPress={handleSelectImage}
         >
           {attachment ? (
             <Image
-              style={{ height: "100%", width: "100%" }}
+              style={styles.attachmentImage}
               source={{ uri: attachment }}
             />
           ) : (
             <>
-              <View style={{ height: 24, width: 24 }}>
+              <View style={styles.addIcon}>
                 <Image
-                  style={{ height: "100%", width: "100%" }}
+                  style={styles.addIconImage}
                   source={require("../../assets/images/add_photo_alternate-2.png")}
                 />
               </View>
@@ -163,39 +166,47 @@ const AddReview = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Styles Section */}
       <View>
         <Text size="h4" weight="semibold" color="#A7A7A7">
           Styles
         </Text>
         <View style={styles.stylesRow}>
-          {tattooStyles.map((item) => {
-            return (
-              <TouchableOpacity
-                key={item.value}
-                activeOpacity={1}
-                style={{
-                  padding: 6,
-                  borderRadius: 6,
-                  backgroundColor: item.selected ? "#DAB769" : "#22221F",
-                }}
-                onPress={() => toggleTattooStyles(item.value)}
+          {tattooStyles.map((item) => (
+            <TouchableOpacity
+              key={item.value}
+              activeOpacity={1}
+              style={[
+                styles.styleButton,
+                { backgroundColor: item.selected ? "#DAB769" : "#22221F" },
+              ]}
+              onPress={() => toggleTattooStyles(item.value)}
+            >
+              <Text
+                size="p"
+                weight="normal"
+                color={item.selected ? "#22221F" : "#A7A7A7"}
               >
-                <Text
-                  size="p"
-                  weight="normal"
-                  color={item.selected ? "#22221F" : "#A7A7A7"}
-                >
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
+
+      {/* Next Button */}
       <Button
         title="Next"
         onPress={() => {
-          router.push("/artist/PublishReview");
+          router.push({
+            pathname: "/artist/PublishReview",
+            params: {
+              artistId: artistId,
+              rating: overallRating,
+              tattooFeedback: feedback,
+              tattooImage: attachment,
+            },
+          });
         }}
       />
     </ScrollView>
@@ -207,6 +218,12 @@ export default AddReview;
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+  },
+  scrollViewContent: {
+    paddingBottom: 32,
+    display: "flex",
+    flexDirection: "column",
+    rowGap: 16,
   },
   artistProfileTile: {
     display: "flex",
@@ -239,5 +256,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginTop: 10,
+  },
+  charCount: {
+    textAlign: "right",
+    marginTop: 4,
+  },
+  attachmentContainer: {
+    height: 150,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#262626",
+    borderRadius: 12,
+    marginTop: 16,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    rowGap: 5,
+    overflow: "hidden",
+  },
+  attachmentImage: {
+    height: "100%",
+    width: "100%",
+  },
+  addIcon: {
+    height: 24,
+    width: 24,
+  },
+  addIconImage: {
+    height: "100%",
+    width: "100%",
+  },
+  styleButton: {
+    padding: 6,
+    borderRadius: 6,
   },
 });

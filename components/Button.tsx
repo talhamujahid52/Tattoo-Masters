@@ -11,16 +11,25 @@ import Text from "./Text";
 interface ButtonProps {
   title: string;
   onPress?: (event: GestureResponderEvent) => void;
+  disabled?: boolean;
 }
 
-const Button = ({ title = "Let's go", onPress }: ButtonProps) => {
+const Button = ({
+  title = "Let's go",
+  onPress,
+  disabled = false,
+}: ButtonProps) => {
   const colorList = [
     { offset: "0%", color: "#FFD982", opacity: "1" },
     { offset: "100%", color: "#927639", opacity: "1" },
   ];
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.button}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.button}
+      disabled={disabled}
+    >
       <View style={styles.gradientContainer}>
         <RadialGradient
           x="53.8%" // Center position (horizontal)

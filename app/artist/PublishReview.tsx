@@ -1,26 +1,63 @@
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
 import Text from "@/components/Text";
-import React from "react";
+import React, { useState } from "react";
 import Review from "@/components/Review";
 import Button from "@/components/Button";
+import { router, useLocalSearchParams } from "expo-router";
+import useGetArtist from "@/hooks/useGetArtist";
+import firestore from "@react-native-firebase/firestore";
+import { firebase } from "@react-native-firebase/firestore";
 
 const PublishReview = () => {
+  const { artistId, rating, tattooFeedback, tattooImage } =
+    useLocalSearchParams();
+  const artist = useGetArtist(artistId);
+  const currentUserId = firebase?.auth()?.currentUser?.uid;
+  const [loading, setLoading] = useState(false); // Manage loading state
+
+  const handlePublishReview = async () => {
+    setLoading(true);
+
+    try {
+      await firestore().collection("reviews").add({
+        artistId,
+        date: new Date(),
+        feedback: tattooFeedback,
+        rating,
+        user: currentUserId,
+      });
+      router.navigate("/artist/ArtistProfile");
+    } catch (err) {
+    } finally {
+      setLoading(false); // Hide loading indicator after operation completes
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.artistProfileTile}>
         <Image
           style={styles.profilePicture}
-          source={require("../../assets/images/Artist.png")}
+          source={
+            artist?.data?.profilePicture
+              ? { uri: artist?.data?.profilePicture }
+              : require("../../assets/images/Artist.png")
+          }
         />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            Martin Luis
+            {artist?.data?.name || "Martin Luis"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
-            Luis Arts Studio
+            {artist?.data?.studio?.name || "Luis Arts Studio"}
           </Text>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            Phuket, Thailand
+          <Text
+            size="p"
+            weight="normal"
+            color="#A7A7A7"
+            style={{ width: "70%" }}
+          >
+            {artist?.data?.city || "Phuket, Thailand"}
           </Text>
         </View>
       </View>
@@ -34,7 +71,11 @@ const PublishReview = () => {
         >
           Review
         </Text>
-        <Review />
+        <Review
+          rating={rating}
+          tattooFeedback={tattooFeedback}
+          tattooImage={tattooImage}
+        />
       </View>
 
       <View style={styles.buttonContainer}>
@@ -46,7 +87,12 @@ const PublishReview = () => {
         >
           You are unable to edit or remove your review once published.
         </Text>
-        <Button title="Publish Review" />
+
+        <Button
+          title={loading ? "Publishing..." : "Publish Review"}
+          onPress={handlePublishReview}
+          disabled={loading} // Disable button during loading
+        />
       </View>
     </View>
   );
@@ -56,9 +102,9 @@ export default PublishReview;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Allow the container to take up full available space
+    flex: 1,
     padding: 16,
-    justifyContent: "space-between", // Distribute space and push the button to the bottom
+    justifyContent: "space-between",
   },
   artistProfileTile: {
     flexDirection: "row",
@@ -75,9 +121,12 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   content: {
-    flex: 1, // Allow the content to take up available space
+    flex: 1,
   },
   buttonContainer: {
-    marginBottom: 16, // Add some space between the button and the bottom
+    marginBottom: 16,
+  },
+  loader: {
+    marginTop: 20, // Space out the loader from the button
   },
 });

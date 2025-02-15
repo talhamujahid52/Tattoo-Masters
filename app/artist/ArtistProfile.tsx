@@ -197,7 +197,7 @@ const ArtistProfile = () => {
           variant="Primary"
         />
       </View>
-      <ReviewOnProfile isArtist={false}></ReviewOnProfile>
+      <ReviewOnProfile ArtistId={artistId}></ReviewOnProfile>
       <View style={{ marginTop: 24 }}>
         <Text
           size="h4"
