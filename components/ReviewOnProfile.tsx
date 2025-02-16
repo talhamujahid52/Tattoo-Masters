@@ -19,6 +19,10 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   const { BottomSheet, show, hide } = useBottomSheet();
   const artist = useGetArtist(ArtistId);
 
+  const artistRating = artist?.data?.rating;
+  const totalReviews = artist?.data?.reviewsCount;
+  const latestReview = artist?.data?.latestReview;
+
   return (
     <>
       <BottomSheet
@@ -66,18 +70,25 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             source={require("../assets/images/star.png")}
           />
           <Text size="p" weight="normal" color="#FBF6FA">
-            4.8 (129 reviews)
+            {artistRating ? Number(artistRating).toFixed(1) : "4.8"} (
+            {totalReviews ? totalReviews : "129"} reviews)
           </Text>
         </View>
         <View style={styles.userProfileRow}>
           <View style={styles.pictureAndName}>
             <Image
               style={styles.profilePicture}
-              source={require("../assets/images/Artist.png")}
+              source={
+                latestReview?.reviewerProfilePicture
+                  ? { uri: latestReview?.reviewerProfilePicture }
+                  : require("../assets/images/Artist.png")
+              }
             />
             <View>
               <Text size="p" weight="normal" color="#FFF">
-                Martin Luis
+                {latestReview?.reviewerName
+                  ? latestReview?.reviewerName
+                  : "Martin Luis"}
               </Text>
               <Text size="medium" weight="normal" color="#A7A7A7">
                 2 days ago
@@ -90,13 +101,14 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
               source={require("../assets/images/star.png")}
             />
             <Text size="p" weight="normal" color="#FBF6FA">
-              4.5
+              {latestReview?.rating ? latestReview?.rating : "4.5"}
             </Text>
           </View>
         </View>
         <Text size="p" weight="normal" color="#A7A7A7">
-          Lorem ipsum dolor sit amet, contetur itbj jbds adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore.
+          {latestReview?.feedback
+            ? latestReview?.feedback
+            : "Lorem ipsum dolor sit amet contetur itbj jbds adipiscing elit sed do eiusmod tempor incididunt ut labore."}
         </Text>
         <View style={styles.seprator}></View>
         <TouchableOpacity style={styles.bottomRow}>
@@ -155,7 +167,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 42,
     width: 42,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
   },
   seprator: {

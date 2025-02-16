@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import firestore from "@react-native-firebase/firestore";
 import { firebase } from "@react-native-firebase/firestore";
+import { useSelector } from "react-redux";
 
 const PublishReview = () => {
   const { artistId, rating, tattooFeedback, tattooImage } =
@@ -14,6 +15,7 @@ const PublishReview = () => {
   const artist = useGetArtist(artistId);
   const currentUserId = firebase?.auth()?.currentUser?.uid;
   const [loading, setLoading] = useState(false); // Manage loading state
+  const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
 
   const handlePublishReview = async () => {
     setLoading(true);
@@ -26,10 +28,38 @@ const PublishReview = () => {
         rating,
         user: currentUserId,
       });
-      router.navigate("/artist/ArtistProfile");
+
+      const userRef = firestore().collection("Users").doc(artistId.toString());
+      const userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        if (userData) {
+          const { reviewsCount = 0, totalRating = 0 } = userData;
+
+          const newReviewsCount = reviewsCount + 1;
+          const newTotalRating = totalRating + Number(rating);
+          const newAverageRating = newTotalRating / newReviewsCount;
+
+          const latestReview = {
+            feedback: tattooFeedback,
+            rating,
+            date: new Date(),
+            reviewerName: loggedInUser?.name,
+            reviewerProfilePicture: loggedInUser?.profilePicture,
+          };
+          await userRef.update({
+            reviewsCount: newReviewsCount,
+            totalRating: newTotalRating,
+            rating: newAverageRating,
+            latestReview,
+          });
+        }
+      }
     } catch (err) {
+      console.error("Error publishing review:", err);
     } finally {
-      setLoading(false); // Hide loading indicator after operation completes
+      setLoading(false);
     }
   };
 
