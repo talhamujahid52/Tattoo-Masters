@@ -34,7 +34,7 @@ interface UseFirebaseImageReturn {
 }
 
 // Function to resize image names
-const resizedName = (fileName: string, dimensions: string): string => {
+export const resizedName = (fileName: string, dimensions: string): string => {
   const extIndex = fileName.lastIndexOf(".");
   const ext = ".jpeg";
   return `${fileName.substring(0, extIndex)}_${dimensions}${ext}`;
@@ -44,7 +44,7 @@ const resizedName = (fileName: string, dimensions: string): string => {
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Recursive function to keep trying to get download URL
-const keepTrying = async (
+export const keepTrying = async (
   storagePath: string,
   triesRemaining = 4,
 ): Promise<string> => {
@@ -59,7 +59,7 @@ const keepTrying = async (
     return url;
   } catch (error: any) {
     if (error.code === "storage/object-not-found") {
-      console.warn(
+      console.log(
         `Retrying to fetch URL for ${storagePath} (${triesRemaining} tries left)...`,
       );
       await delay(4000);

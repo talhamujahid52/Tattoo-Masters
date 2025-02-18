@@ -1,5 +1,6 @@
-import { setUser } from "@/redux/slices/userSlice";
+import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
 import { AppDispatch, RootState } from "@/redux/store";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { SplashScreen, Stack, useRouter } from "expo-router";
@@ -24,6 +25,15 @@ const AppNavigator = () => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      getUpdatedUser(userId).then((updatedUser) => {
+        console.log("updatedUser", updatedUser);
+        dispatch(setUserFirestoreData(updatedUser));
+      });
+    }
+  }, [userId]);
 
   useEffect(() => {
     if (!initializing) {

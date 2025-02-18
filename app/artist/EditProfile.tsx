@@ -66,7 +66,7 @@ const EditProfile = () => {
   // ]);
   const toggleTattooStyles = (value: number) => {
     const updatedTattooStyles = formData.tattooStyles.map((item: any) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
   };
   const defaultLocation = {

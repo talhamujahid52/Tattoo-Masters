@@ -43,8 +43,11 @@ const StepperForm: React.FC = () => {
   };
   const submitForm = async () => {
     try {
+      console.log("formData", formData);
+      return;
       setLoading(true);
       console.log("form data", formData);
+      //also edit user data here along with adding a new publication
       const imgs = formData.images
         .filter((item) => item !== "")
         .map((item) => ({ uri: item, name: getFileName(item) }));

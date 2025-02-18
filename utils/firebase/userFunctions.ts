@@ -2,8 +2,7 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { uploadFileToFirebase } from "./fileFunctions";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "@/redux/slices/userSlice";
+import { UserFirestore } from "@/types/user";
 
 /**
  * Adds a new user to Firebase Firestore.
@@ -19,7 +18,7 @@ export const addUser = async (
     reviewPasswordHash: string;
     userType: "simple" | "tattooArtist";
   },
-  profilePicture: { uri: string; fileName?: string } | null
+  profilePicture: { uri: string; fileName?: string } | null,
 ): Promise<void> => {
   try {
     let profilePictureUrl = "";
@@ -28,7 +27,7 @@ export const addUser = async (
     if (profilePicture) {
       profilePictureUrl = await uploadFileToFirebase(
         profilePicture,
-        "profilePictures"
+        "profilePictures",
       );
     }
 
@@ -44,15 +43,37 @@ export const addUser = async (
     throw new Error("Failed to add user.");
   }
 };
+/**
+ * Fetches the updated user document from Firestore using the provided user ID.
+ *
+ * @param uid - The unique ID of the user.
+ * @returns A Promise that resolves with the User object if found, or null if no user exists.
+ */
+export const getUpdatedUser = async (
+  uid: string,
+): Promise<UserFirestore | null> => {
+  try {
+    const userDoc = await firestore().collection("Users").doc(uid).get();
+    if (!userDoc.exists) {
+      console.warn(`User with id ${uid} does not exist.`);
+      return null;
+    }
+    // Return the user data as a User type.
+    return userDoc.data() as UserFirestore;
+  } catch (error) {
+    console.error(`Error fetching user with id ${uid}:`, error);
+    throw error;
+  }
+};
 
 export const createUserWithEmailAndPassword = async (
   email: string,
-  password: string
+  password: string,
 ) => {
   try {
     const userCredential = await auth().createUserWithEmailAndPassword(
       email,
-      password
+      password,
     );
     return userCredential;
   } catch (error) {
@@ -62,12 +83,12 @@ export const createUserWithEmailAndPassword = async (
 
 export const signInWithEmailAndPassword = async (
   email: string,
-  password: string
+  password: string,
 ) => {
   try {
     const userCredential = await auth().signInWithEmailAndPassword(
       email,
-      password
+      password,
     ); // Use user input for login
     return userCredential;
   } catch (error) {
@@ -113,7 +134,7 @@ export const signInWithGoogle = async () => {
       const accessToken: string = userInfo.accessToken as string;
       const googleCredential = auth.GoogleAuthProvider.credential(
         null,
-        accessToken
+        accessToken,
       );
       userCredential = await auth().signInWithCredential(googleCredential);
     } else {
