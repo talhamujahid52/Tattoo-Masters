@@ -11,3 +11,6 @@ export function normalize(size: number) {
     return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 1;
   }
 }
+export const getFileName = (fileUri: string): string => {
+  return fileUri.split("/").pop() || "";
+};
