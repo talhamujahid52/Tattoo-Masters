@@ -1,7 +1,6 @@
 import { Drawer } from "expo-router/drawer";
 import {
   StyleSheet,
-  SafeAreaView,
   View,
   Image,
   TouchableOpacity,
@@ -9,17 +8,13 @@ import {
 } from "react-native";
 import Text from "@/components/Text";
 import React, { useMemo } from "react";
-import { ErrorBoundaryProps, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Dimensions } from "react-native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { UserFirestore } from "@/types/user";
 
-interface CustomDrawerContentProps {
-  loggedInUser: any;
-  isArtist: boolean;
-}
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const CustomDrawerContent = () => {
@@ -39,11 +34,12 @@ const CustomDrawerContent = () => {
     return {
       uri:
         loggedInUserFirestore.profilePictureSmall ??
+        loggedInUserFirestore.profilePicture ??
         loggedInUser.photoURL ??
         undefined,
     };
   }, [loggedInUser, loggedInUserFirestore]);
-  console.log("loggedInUser", loggedInUserFirestore);
+
   return (
     <>
       <View

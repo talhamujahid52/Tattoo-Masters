@@ -4,6 +4,7 @@ import {
   View,
   FlatList,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -19,32 +20,45 @@ const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const artists = useSelector((state: any) => state.artist.allArtists);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersList = await getUsers(); // Call your getUsers function here
-        // console.log("Users: ", JSON.stringify(usersList));
-        dispatch(resetAllArtists());
-        dispatch(updateAllArtists(usersList));
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-    };
+  // Function to fetch users and update Redux state
+  const fetchUsers = async () => {
+    try {
+      const usersList = await getUsers(); // Call your getUsers function here
+      dispatch(resetAllArtists());
+      dispatch(updateAllArtists(usersList));
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
 
-    fetchUsers(); // Fetch users when the component mounts
+  // Initial fetch when the component mounts
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
-  useEffect(() => {
-    // console.log("Artists From Redux : ", artists);
-  }, [artists]);
+  // Handler for pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUsers();
+    setRefreshing(false);
+  };
 
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: 30 }}
       style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#fff"
+          colors={["#fff"]}
+        />
+      }
     >
       <Input
         value={searchText}
@@ -54,7 +68,7 @@ const Home = () => {
         onChangeText={(text) => setSearchText(text)}
         rightIcon={searchText !== "" && "cancel"}
         rightIconOnPress={() => setSearchText("")}
-      ></Input>
+      />
       <View style={styles.flatlistHeadingContainer}>
         <Text size="h4" weight="semibold" color="#FBF6FA">
           Popular artists near you
@@ -81,6 +95,7 @@ const Home = () => {
           height: 215,
         }}
       />
+
       <Text
         size="h4"
         weight="semibold"
@@ -89,7 +104,7 @@ const Home = () => {
       >
         Find Your Inspiration
       </Text>
-      <ImageGallery></ImageGallery>
+      <ImageGallery />
     </ScrollView>
   );
 };
@@ -103,7 +118,6 @@ const styles = StyleSheet.create({
     paddingTop: 15,
   },
   flatlistHeadingContainer: {
-    display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

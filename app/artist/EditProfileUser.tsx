@@ -18,9 +18,11 @@ import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import firestore from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
 
 const EditProfile = () => {
   // Get auth and firestore user data from redux
+  const router = useRouter();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user,
   );
@@ -110,6 +112,7 @@ const EditProfile = () => {
       return {
         uri:
           loggedInUserFirestore.profilePictureSmall ??
+          loggedInUserFirestore.profilePicture ??
           loggedInUser.photoURL ??
           undefined,
       };
@@ -137,6 +140,7 @@ const EditProfile = () => {
       // Fetch the updated user data and update Redux.
       const updatedUser = await getUpdatedUser(currentUserId);
       dispatch(setUserFirestoreData(updatedUser));
+      router.back();
     } catch (error) {
       console.error("Failed to update profile:", error);
     } finally {

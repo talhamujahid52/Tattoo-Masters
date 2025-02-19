@@ -8,10 +8,9 @@ interface ArtistProfileCardProps {
 }
 
 const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
-  console.log("Artist is : ", artist);
   const router = useRouter();
   const profilePicture =
-    artist?.data?.profilePictureMedium ?? artist?.data?.profilePicture;
+    artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
   return (
     <TouchableOpacity
       onPress={() => {
