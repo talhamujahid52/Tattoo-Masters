@@ -109,7 +109,42 @@ const AppNavigator = () => {
               headerTintColor: "#fff",
             }}
           />
-
+          <Stack.Screen
+            name="artist/VerifyReviewPassword"
+            options={{
+              headerShown: true,
+              headerTitle: "Leave Review",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/AddReview"
+            options={{
+              headerShown: true,
+              headerTitle: "Leave Review",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/PublishReview"
+            options={{
+              headerShown: true,
+              headerTitle: "Leave Review",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
           <Stack.Screen
             name="(auth)/ChangePassword"
             options={{

@@ -1,6 +1,7 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import Text from "./Text";
+import { useRouter } from "expo-router";
 
 interface ReviewOnProfileProps {
   isArtist?: boolean;
@@ -9,6 +10,7 @@ interface ReviewOnProfileProps {
 const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   isArtist = true,
 }) => {
+  const router = useRouter();
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
@@ -21,11 +23,23 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             source={require("../assets/images/help.png")}
           />
         </View>
-        <TouchableOpacity>
-          <Text size="h4" weight="normal" color="#DAB769">
-            {isArtist ? "Share review password" : "Review this artist?"}
-          </Text>
-        </TouchableOpacity>
+        {isArtist ? (
+          <TouchableOpacity>
+            <Text size="h4" weight="normal" color="#DAB769">
+              Share review password
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/artist/VerifyReviewPassword");
+            }}
+          >
+            <Text size="h4" weight="normal" color="#DAB769">
+              Review this artist?
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       <View style={[styles.midRow, { gap: 4, marginBottom: 16 }]}>
         <Image
