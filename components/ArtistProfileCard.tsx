@@ -8,9 +8,10 @@ interface ArtistProfileCardProps {
 }
 
 const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
-  // console.log("Artist is : ", artist);
+  console.log("Artist is : ", artist);
   const router = useRouter();
-
+  const profilePicture =
+    artist?.data?.profilePictureMedium ?? artist?.data?.profilePicture;
   return (
     <TouchableOpacity
       onPress={() => {
@@ -26,10 +27,9 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
       }}
     >
       <Image
-        // source={require("../assets/images/Artist.png")}
         source={
           artist.data.profilePicture
-            ? { uri: artist.data.profilePicture }
+            ? { uri: profilePicture }
             : require("../assets/images/Artist.png")
         }
         style={{

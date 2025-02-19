@@ -3,42 +3,50 @@ import {
   View,
   Image,
   TouchableOpacity,
-  // Switch,
-  // TextInput,
-  Dimensions,
   ScrollView,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
-// import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
-// import Button from "@/components/Button";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import Button from "@/components/Button";
 import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
-import { useDispatch } from "react-redux";
+import firestore from "@react-native-firebase/firestore";
 
 const EditProfile = () => {
+  // Get auth and firestore user data from redux
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user,
   );
-
   const loggedInUserFirestore: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore,
   );
   const currentUserId = loggedInUser?.uid;
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(false);
-  const [newImage, setNewImage] = useState<Asset>();
   const dispatch = useDispatch();
 
+  // Local state for loading, selected new image, full name, and phone number.
+  const [loading, setLoading] = useState(false);
+  const [newImage, setNewImage] = useState<Asset>();
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  // When Firestore user data changes, update the input states.
+  useEffect(() => {
+    if (loggedInUserFirestore) {
+      setFullName(loggedInUserFirestore.name || "");
+      // If phoneNumber doesn't exist, leave it empty.
+      setPhoneNumber(loggedInUserFirestore.phoneNumber || "");
+    }
+  }, [loggedInUserFirestore]);
+
+  // On mount, fetch updated user data from Firestore.
   useEffect(() => {
     if (currentUserId) {
       getUpdatedUser(currentUserId).then((updatedUser) => {
@@ -46,7 +54,8 @@ const EditProfile = () => {
       });
     }
   }, [currentUserId]);
-  // Opens the image picker to allow the user to choose a photo.
+
+  // Open the image picker to allow the user to choose a new photo.
   const openImagePicker = () => {
     launchImageLibrary(
       {
@@ -61,9 +70,7 @@ const EditProfile = () => {
         } else if (response.assets && response.assets.length > 0) {
           const asset = response.assets[0];
           if (asset.uri) {
-            // Call the function to change the profile picture with the selected image URI.
             setNewImage(asset);
-            // handleProfilePictureChange(asset.uri);
           }
         }
       },
@@ -71,41 +78,67 @@ const EditProfile = () => {
   };
 
   const handleProfilePictureChange = async (newImageUri: string) => {
+    const TIMEOUT_MS = 120000; // 2 minutes
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Profile picture update timed out!")),
+        TIMEOUT_MS,
+      ),
+    );
+
     try {
-      // Optionally, generate or extract a proper file name.
       const fileName = "profile.jpeg";
-      const profilePictureUrls = await changeProfilePicture(
-        currentUserId,
-        newImageUri,
-        fileName,
-      );
+
+      // Race between changeProfilePicture and the timeout
+      const profilePictureUrls = await Promise.race([
+        changeProfilePicture(currentUserId, newImageUri, fileName),
+        timeoutPromise,
+      ]);
+
       console.log("New resized profile picture URLs:", profilePictureUrls);
     } catch (error) {
       console.error("Failed to update profile picture:", error);
-      // Handle errors as needed.
     }
   };
+
+  // Determine which image to show.
+  // Use the newly selected image if available, otherwise use Firestore profile picture,
+  // and as a last resort, fallback to Google photo URL.
   const localImage = useMemo(() => {
     if (!newImage) {
       return {
         uri:
-          loggedInUserFirestore.profilePictureSmall ?? //get from firestore
-          loggedInUser.photoURL ?? //get from google if firestore not found
-          undefined, //show nothing if both not found
+          loggedInUserFirestore.profilePictureSmall ??
+          loggedInUser.photoURL ??
+          undefined,
       };
     }
     return { uri: newImage.uri ?? undefined };
   }, [newImage, loggedInUser, loggedInUserFirestore]);
 
+  // Update profile in Firestore with the new full name, phone number, and profile picture (if changed).
   const updateProfile = async () => {
     try {
       setLoading(true);
+      // Update profile picture if a new image was selected.
+      //
+      // Update full name and phone number.
+      await firestore().collection("Users").doc(currentUserId).set(
+        {
+          name: fullName,
+          phoneNumber: phoneNumber,
+        },
+        { merge: true },
+      );
       if (newImage?.uri) {
         await handleProfilePictureChange(newImage.uri);
-      } else {
-        console.log("nothing to update yet...");
       }
-    } catch {
+      // Fetch the updated user data and update Redux.
+      const updatedUser = await getUpdatedUser(currentUserId);
+      dispatch(setUserFirestoreData(updatedUser));
+    } catch (error) {
+      console.error("Failed to update profile:", error);
     } finally {
       setLoading(false);
     }
@@ -146,7 +179,12 @@ const EditProfile = () => {
           >
             Full Name
           </Text>
-          <Input inputMode="text" placeholder="Full Name"></Input>
+          <Input
+            inputMode="text"
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
         </View>
         <View style={{ marginBottom: 16 }}>
           <Text
@@ -157,7 +195,12 @@ const EditProfile = () => {
           >
             Phone Number
           </Text>
-          <Input inputMode="tel" placeholder="Phone Number"></Input>
+          <Input
+            inputMode="tel"
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+          />
         </View>
       </View>
       <Button onPress={updateProfile} loading={loading} title="Save" />
@@ -203,6 +246,5 @@ const styles = StyleSheet.create({
     color: "white",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    // marginBottom: 100,
   },
 });

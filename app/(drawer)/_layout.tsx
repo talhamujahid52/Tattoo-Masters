@@ -8,12 +8,13 @@ import {
   ScrollView,
 } from "react-native";
 import Text from "@/components/Text";
-import React from "react";
+import React, { useMemo } from "react";
 import { ErrorBoundaryProps, useRouter } from "expo-router";
 import { Dimensions } from "react-native";
-import auth from "@react-native-firebase/auth";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+import { UserFirestore } from "@/types/user";
 
 interface CustomDrawerContentProps {
   loggedInUser: any;
@@ -21,13 +22,28 @@ interface CustomDrawerContentProps {
 }
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
-const CustomDrawerContent = ({
-  loggedInUser,
-  isArtist,
-}: CustomDrawerContentProps) => {
+const CustomDrawerContent = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
+  const isArtist = loggedInUserFirestore?.isArtist; //Get From LoggedIn User
+  const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
+
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        loggedInUserFirestore.profilePictureSmall ??
+        loggedInUser.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore]);
+  console.log("loggedInUser", loggedInUserFirestore);
   return (
     <>
       <View
@@ -95,7 +111,7 @@ const CustomDrawerContent = ({
                 />
                 <View>
                   <Text size="profileName" weight="semibold" color="white">
-                    {loggedInUser?.name ? loggedInUser.name : "Martin Luis"}
+                    {name}
                   </Text>
                   <Text size="p" weight="normal" color="#A7A7A7">
                     My Artist Profile
@@ -114,8 +130,8 @@ const CustomDrawerContent = ({
                 source={require("../../assets/images/favorite.png")}
               />
               <Text size="p" weight="normal" color="#A7A7A7">
-                {loggedInUser?.followersCount
-                  ? loggedInUser?.followersCount
+                {loggedInUserFirestore?.followersCount
+                  ? loggedInUserFirestore?.followersCount
                   : "412"}
               </Text>
             </View>
@@ -124,17 +140,10 @@ const CustomDrawerContent = ({
           <View>
             <View style={styles.userProfileRow}>
               <View style={styles.pictureAndName}>
-                <Image
-                  style={styles.profilePicture}
-                  source={
-                    loggedInUser?.profilePicture
-                      ? { uri: loggedInUser?.profilePicture }
-                      : require("../../assets/images/Artist.png")
-                  }
-                />
+                <Image style={styles.profilePicture} source={profileImage} />
                 <View>
                   <Text size="profileName" weight="semibold" color="white">
-                    {loggedInUser?.name ? loggedInUser.name : "Martin Luis"}
+                    {name}
                   </Text>
                   <Text size="p" weight="normal" color="#A7A7A7">
                     My Profile
@@ -356,14 +365,15 @@ const CustomDrawerContent = ({
 };
 
 const DrawerLayout: React.FC = () => {
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
-  const isArtist = loggedInUser?.isArtist; //Get From LoggedIn User
-
+  // const loggedInUser = useSelector((state: any) => state?.user?.user);
+  // const loggedInUserFirestore = useSelector(
+  //   (state: any) => state?.user?.userFirestore,
+  // );
+  // // const isArtist = loggedInUser?.isArtist; //Get From LoggedIn User
+  // console.log("loggedInUser", loggedInUserFirestore);
   return (
     <Drawer
-      drawerContent={(props) => (
-        <CustomDrawerContent loggedInUser={loggedInUser} isArtist={isArtist} />
-      )}
+      drawerContent={(props) => <CustomDrawerContent />}
       screenOptions={{
         headerShown: false,
         drawerStyle: {
