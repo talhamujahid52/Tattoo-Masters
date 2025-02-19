@@ -6,7 +6,7 @@ import {
   Image,
   FlatList,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -52,11 +52,22 @@ const ArtistProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);
   };
+  const profilePicture = useMemo(() => {
+    const profileSmall = artist?.data?.profilePictureSmall;
+    const profileDefault = artist?.data?.profilePicture;
+    if (profileSmall) {
+      return { uri: profileSmall };
+    } else if (artist?.data?.profilePicture) {
+      return { uri: profileDefault };
+    }
+
+    return require("../../assets/images/Artist.png");
+  }, [artist]);
 
   const renderItem = ({ item }: { item: StudioItem }) => (
     <TouchableOpacity
@@ -89,11 +100,7 @@ const ArtistProfile = () => {
         <View style={styles.pictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={
-              artist?.data?.profilePicture
-                ? { uri: artist?.data?.profilePicture }
-                : require("../../assets/images/Artist.png")
-            }
+            source={profilePicture}
             // source={require("../../assets/images/Artist.png")}
           />
           <View>

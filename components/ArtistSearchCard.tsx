@@ -24,8 +24,12 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
       <Image
         // source={require("../assets/images/Artist.png")}
         source={
-          artist?.data?.profilePicture
-            ? { uri: artist?.data?.profilePicture }
+          artist?.data?.profilePicture || artist?.data?.profilePictureSmall
+            ? {
+                uri:
+                  artist?.data?.profilePictureSmall ??
+                  artist?.data?.profilePicture,
+              }
             : require("../assets/images/Artist.png")
         }
         style={styles.imageStyle}
