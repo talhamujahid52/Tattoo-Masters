@@ -25,12 +25,10 @@ const StepperForm: React.FC = () => {
   const router = useRouter();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const currentUserId = loggedInUser?.uid;
-  console.log("currentUserId", currentUserId);
   const { uploadImages } = useFirebaseImage({
     uniqueFilePrefix: currentUserId,
   });
 
-  console.log("logged in user", currentUserId);
   const stepLabels = ["Profile", "Tattoo Portfolio", "Preview"];
 
   const handleNext = () => {
@@ -44,7 +42,7 @@ const StepperForm: React.FC = () => {
   const submitForm = async () => {
     try {
       console.log("formData", formData);
-      return;
+      // return;
       setLoading(true);
       console.log("form data", formData);
       //also edit user data here along with adding a new publication
@@ -53,7 +51,7 @@ const StepperForm: React.FC = () => {
         .map((item) => ({ uri: item, name: getFileName(item) }));
       await uploadImages(imgs);
 
-      router.replace("/(bottomTabs)/Home");
+      // router.replace("/(bottomTabs)/Home");
     } catch (error) {
       console.log("error", error);
     } finally {

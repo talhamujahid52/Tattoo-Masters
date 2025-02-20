@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -13,9 +13,12 @@ import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
 import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
-import { launchImageLibrary } from "react-native-image-picker";
+import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { router } from "expo-router";
 import { FormContext } from "../context/FormContext";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 
 const Step1: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
@@ -33,22 +36,34 @@ const Step1: React.FC = () => {
     longitudeDelta: 0.02,
   };
 
+  const [newImage, setNewImage] = useState<Asset>();
+
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
+
+  const localImage = useMemo(() => {
+    if (!newImage) {
+      return {
+        uri:
+          loggedInUserFirestore.profilePictureSmall ??
+          loggedInUserFirestore.profilePicture ??
+          loggedInUser.photoURL ??
+          undefined,
+      };
+    }
+    return { uri: newImage.uri ?? undefined };
+  }, [newImage, loggedInUser, loggedInUserFirestore]);
+
   const [region, setRegion] = useState<Region>({
     latitude: formData.location?.latitude || defaultLocation.latitude,
     longitude: formData.location?.longitude || defaultLocation.longitude,
     latitudeDelta: defaultLocation.latitudeDelta,
     longitudeDelta: defaultLocation.longitudeDelta,
   });
-
-  useEffect(() => {
-    console.log("Location Changed in Step1")
-    setRegion({
-      latitude: formData.location?.latitude || defaultLocation.latitude,
-      longitude: formData.location?.longitude || defaultLocation.longitude,
-      latitudeDelta: defaultLocation.latitudeDelta,
-      longitudeDelta: defaultLocation.longitudeDelta,
-    });
-  }, [formData.location]);
 
   const handleProfilePictureSelection = async () => {
     const result = await launchImageLibrary({
@@ -59,6 +74,7 @@ const Step1: React.FC = () => {
     });
     if (!result.didCancel && result.assets && result.assets[0].uri) {
       const selectedImageUri = result.assets[0].uri;
+      setNewImage(result?.assets[0]);
       setFormData((prev) => ({ ...prev, profilePicture: selectedImageUri }));
     }
   };
@@ -74,18 +90,25 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = formData.tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item
+        : item,
     );
     setFormData((prev) => ({ ...prev, tattooStyles: updatedTattooStyles }));
   };
 
+  useEffect(() => {
+    console.log("Location Changed in Step1");
+    setRegion({
+      latitude: formData.location?.latitude || defaultLocation.latitude,
+      longitude: formData.location?.longitude || defaultLocation.longitude,
+      latitudeDelta: defaultLocation.latitudeDelta,
+      longitudeDelta: defaultLocation.longitudeDelta,
+    });
+  }, [formData.location]);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profilePictureRow}>
-        <Image
-          style={styles.profilePicture}
-          source={require("../assets/images/profilePicture.png")}
-        />
+        <Image style={styles.profilePicture} source={localImage} />
         <TouchableOpacity onPress={handleProfilePictureSelection}>
           <Text size="h4" weight="semibold" color="#DAB769">
             Change photo
@@ -313,9 +336,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   profilePicture: {
+    borderRadius: 57,
     width: 114,
     height: 114,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   ratingButtonsRow: {
     marginTop: 16,
