@@ -11,6 +11,7 @@ export function normalize(size: number) {
     return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 1;
   }
 }
+
 export const formatMessageDate = (date: Date) => {
   const today = new Date();
   const yesterday = new Date(today);
@@ -45,4 +46,8 @@ export const formatMessageDate = (date: Date) => {
   return `${date.getDate() < 10 ? "0" : ""}${date.getDate()}/${
     date.getMonth() + 1 < 10 ? "0" : ""
   }${date.getMonth() + 1}/${date.getFullYear()}`;
+}
+
+export const getFileName = (fileUri: string): string => {
+  return fileUri.split("/").pop() || "";
 };
