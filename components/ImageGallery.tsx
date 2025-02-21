@@ -3,6 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
+import { Publication, TypesenseResult } from "@/hooks/useTypesense";
 
 interface DataProp {
   id: number;
@@ -47,23 +48,26 @@ const originalData = [
   },
 ];
 
-const ImageGallery = () => {
+interface Props {
+  images: TypesenseResult<Publication>[];
+}
+const ImageGallery = ({ images }: Props) => {
   const router = useRouter();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
 
-  const renderItem = ({ item }: { item: DataProp }) => {
+  const renderItem = ({ item }: { item: TypesenseResult<Publication> }) => {
     return (
       <TouchableOpacity
         style={styles.boxContainer}
         onPress={() => {
           router.push({
             pathname: "/artist/TattooDetail",
-            params: { tattoo: item.imageUrl },
+            params: { tattoo: item.document.downloadUrls.veryHigh },
           });
         }}
       >
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{ uri: item.document.downloadUrls.small }}
           style={styles.box}
           resizeMode="cover"
         />
@@ -79,7 +83,7 @@ const ImageGallery = () => {
     >
       <ResponsiveGrid
         maxItemsPerColumn={3}
-        data={originalData}
+        data={images}
         renderItem={renderItem}
         showScrollIndicator={false}
       />

@@ -15,13 +15,15 @@ import { getUsers } from "@/utils/firebase/userFunctions";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
+import Typesense from "typesense";
+import useTypesense from "@/hooks/useTypesense";
 
 const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-
+  const { search, results } = useTypesense();
   const artists = useSelector((state: any) => state.artist.allArtists);
 
   // Function to fetch users and update Redux state
@@ -38,6 +40,7 @@ const Home = () => {
   // Initial fetch when the component mounts
   useEffect(() => {
     fetchUsers();
+    search({ collection: "publications" });
   }, []);
 
   // Handler for pull-to-refresh
@@ -104,7 +107,7 @@ const Home = () => {
       >
         Find Your Inspiration
       </Text>
-      <ImageGallery />
+      <ImageGallery images={results} />
     </ScrollView>
   );
 };

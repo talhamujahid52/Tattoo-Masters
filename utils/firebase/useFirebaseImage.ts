@@ -23,6 +23,8 @@ interface FirebaseImage {
 interface ImageItem {
   uri: string;
   name: string;
+  caption?: string;
+  styles?: string[];
 }
 
 // Interface for the hook's return values
@@ -116,6 +118,8 @@ const useFirebaseImage = ({
         const newImageEntry = {
           userId: uniqueFilePrefix, // Store the user's unique ID
           timestamp: firestore.FieldValue.serverTimestamp(), // Add timestamp
+          caption: item?.caption ?? "",
+          styles: item?.styles ?? [],
           downloadUrls: {
             small: downloadUrlSmall,
             medium: downloadUrlMedium,

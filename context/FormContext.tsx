@@ -13,7 +13,7 @@ type TattooStyle = {
 };
 
 type FormData = {
-  profilePicture: string;
+  profilePicture: string | undefined;
   fullName: string;
   studio: string;
   studioName: string;
@@ -40,7 +40,7 @@ type FormProviderProps = {
 
 const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
   const [formData, setFormData] = useState<FormData>({
-    profilePicture: "",
+    profilePicture: undefined,
     fullName: "",
     studio: "",
     studioName: "",

@@ -111,9 +111,9 @@ const EditProfile = () => {
     if (!newImage) {
       return {
         uri:
-          loggedInUserFirestore.profilePictureSmall ??
-          loggedInUserFirestore.profilePicture ??
-          loggedInUser.photoURL ??
+          loggedInUserFirestore?.profilePictureSmall ??
+          loggedInUserFirestore?.profilePicture ??
+          loggedInUser?.photoURL ??
           undefined,
       };
     }

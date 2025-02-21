@@ -2,7 +2,7 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { uploadFileToFirebase } from "./fileFunctions";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { UserFirestore } from "@/types/user";
+import { UserFirestore, UserProfileFormData } from "@/types/user";
 
 /**
  * Adds a new user to Firebase Firestore.
@@ -41,6 +41,22 @@ export const addUser = async (
   } catch (error) {
     console.error("Error adding user to Firestore:", error);
     throw new Error("Failed to add user.");
+  }
+};
+// Function to update the user's profile in the "Users" collection
+export const updateUserProfile = async (
+  userId: string,
+  formData: UserProfileFormData,
+): Promise<void> => {
+  try {
+    await firestore()
+      .collection("Users")
+      .doc(userId)
+      .set(formData, { merge: true });
+    console.log("User updated successfully!");
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
   }
 };
 /**

@@ -27,18 +27,18 @@ const CustomDrawerContent = () => {
   const loggedInUserFirestore: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore,
   );
-  const isArtist = loggedInUserFirestore?.isArtist; //Get From LoggedIn User
-  const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
-
   const profileImage = useMemo(() => {
     return {
       uri:
-        loggedInUserFirestore.profilePictureSmall ??
-        loggedInUserFirestore.profilePicture ??
-        loggedInUser.photoURL ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
         undefined,
     };
   }, [loggedInUser, loggedInUserFirestore]);
+
+  const isArtist = loggedInUserFirestore?.isArtist; //Get From LoggedIn User
+  const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
 
   return (
     <>
@@ -97,14 +97,7 @@ const CustomDrawerContent = () => {
               style={styles.userProfileRow}
             >
               <View style={styles.pictureAndName}>
-                <Image
-                  style={styles.profilePicture}
-                  source={
-                    loggedInUser?.profilePicture
-                      ? { uri: loggedInUser?.profilePicture }
-                      : require("../../assets/images/Artist.png")
-                  }
-                />
+                <Image style={styles.profilePicture} source={profileImage} />
                 <View>
                   <Text size="profileName" weight="semibold" color="white">
                     {name}

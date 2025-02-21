@@ -36,8 +36,6 @@ const Step1: React.FC = () => {
     longitudeDelta: 0.02,
   };
 
-  const [newImage, setNewImage] = useState<Asset>();
-
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user,
   );
@@ -45,18 +43,30 @@ const Step1: React.FC = () => {
     (state: any) => state?.user?.userFirestore,
   );
 
-  const localImage = useMemo(() => {
-    if (!newImage) {
-      return {
-        uri:
-          loggedInUserFirestore.profilePictureSmall ??
-          loggedInUserFirestore.profilePicture ??
-          loggedInUser.photoURL ??
-          undefined,
-      };
+  // Prepopulate the full name field if it is not already set.
+  useEffect(() => {
+    if (
+      loggedInUserFirestore?.name &&
+      !formData.fullName &&
+      formData.fullName !== ""
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        name: loggedInUserFirestore.name,
+      }));
     }
-    return { uri: newImage.uri ?? undefined };
-  }, [newImage, loggedInUser, loggedInUserFirestore]);
+  }, [loggedInUserFirestore, formData.fullName, setFormData]);
+
+  const localImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
 
   const [region, setRegion] = useState<Region>({
     latitude: formData.location?.latitude || defaultLocation.latitude,
@@ -74,7 +84,6 @@ const Step1: React.FC = () => {
     });
     if (!result.didCancel && result.assets && result.assets[0].uri) {
       const selectedImageUri = result.assets[0].uri;
-      setNewImage(result?.assets[0]);
       setFormData((prev) => ({ ...prev, profilePicture: selectedImageUri }));
     }
   };
@@ -266,9 +275,9 @@ const Step1: React.FC = () => {
             value={formData.aboutYou}
             style={styles.textArea}
             maxLength={100}
-            onChangeText={(text) => {
-              setFormData((prev) => ({ ...prev, aboutYou: text }));
-            }}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, aboutYou: text }))
+            }
           />
           <Text
             size="medium"

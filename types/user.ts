@@ -25,3 +25,28 @@ export interface UserFirestore {
   profilePictureVeryHigh: string;
   uid: string;
 }
+
+export interface LocationData {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface TattooStyle {
+  selected: boolean;
+  title: string;
+}
+
+export interface UserProfileFormData {
+  aboutYou: string;
+  city: string;
+  fullName: string;
+  images: string[];
+  location: LocationData;
+  profilePicture: string;
+  showCityOnly: boolean;
+  studio: string;
+  studioName: string;
+  tattooStyles: TattooStyle[];
+  isArtist: boolean;
+}

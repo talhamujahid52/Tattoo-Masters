@@ -16,6 +16,13 @@ import { useSelector } from "react-redux";
 import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
 import { getFileName } from "@/utils/helperFunctions";
 import { useRouter } from "expo-router";
+import { updateProfile } from "@react-native-firebase/auth";
+import { updateUserProfile } from "@/utils/firebase/userFunctions";
+import { UserProfileFormData } from "@/types/user";
+import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
+import { setUserFirestoreData } from "@/redux/slices/userSlice";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+import { useDispatch } from "react-redux";
 const StepperForm: React.FC = () => {
   const totalSteps = 3;
   const { width } = Dimensions.get("window");
@@ -23,6 +30,7 @@ const StepperForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const dispatch = useDispatch();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const currentUserId = loggedInUser?.uid;
   const { uploadImages } = useFirebaseImage({
@@ -41,17 +49,29 @@ const StepperForm: React.FC = () => {
   };
   const submitForm = async () => {
     try {
-      console.log("formData", formData);
-      // return;
       setLoading(true);
-      console.log("form data", formData);
-      //also edit user data here along with adding a new publication
       const imgs = formData.images
         .filter((item) => item !== "")
         .map((item) => ({ uri: item, name: getFileName(item) }));
-      await uploadImages(imgs);
+      await uploadImages(imgs); // upload publications images and add to publication collection as well
 
-      // router.replace("/(bottomTabs)/Home");
+      await updateUserProfile(currentUserId, {
+        ...formData,
+        isArtist: true, //make the user an artist
+      } as UserProfileFormData);
+      // update the user profile picture as well if it has been changed
+      if (formData?.profilePicture) {
+        await changeProfilePicture(
+          currentUserId,
+          formData?.profilePicture,
+          "profile.jpeg",
+        );
+      }
+
+      const updatedUser = await getUpdatedUser(currentUserId);
+      dispatch(setUserFirestoreData(updatedUser));
+      console.log("profile updated successfully");
+      router.replace("/(bottomTabs)/Home");
     } catch (error) {
       console.log("error", error);
     } finally {

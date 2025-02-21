@@ -69,7 +69,6 @@ export const changeProfilePicture = async (
 
     // Upload the original image (which triggers the resizing process).
     const reference = storage().ref(newFilePath);
-    console.log("reference", reference);
     await reference.putFile(imageUri);
     console.log("Original profile picture uploaded at:", newFilePath);
 
