@@ -23,16 +23,33 @@ const Home = () => {
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const { search, results } = useTypesense();
+  const artistsTs = useTypesense();
+  const publicationsTs = useTypesense();
+
   const artists = useSelector((state: any) => state.artist.allArtists);
 
   // Function to fetch users and update Redux state
   const fetchUsers = async () => {
     try {
-      const usersList = await getUsers(); // Call your getUsers function here
-      console.log("usersList", usersList);
+      const hits = await artistsTs.search({
+        collection: "Users",
+        query: "*",
+        queryBy: "name", // You can use any searchable field
+        filterBy: "isArtist:=true",
+      });
+      // Map the search hits to get the actual documents.
+      const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
+      console.log("fetchedArtists", fetchedArtists);
+
       dispatch(resetAllArtists());
-      dispatch(updateAllArtists(usersList));
+      dispatch(
+        updateAllArtists(
+          fetchedArtists.map(({ id, ...data }) => ({
+            data,
+            id,
+          })),
+        ),
+      );
     } catch (err) {
       console.error("Error fetching users:", err);
     }
@@ -40,42 +57,18 @@ const Home = () => {
 
   // Initial fetch when the component mounts
   useEffect(() => {
-    search({ collection: "publications" });
-  }, []);
+    publicationsTs.search({ collection: "publications" });
+  }, [publicationsTs.search]);
 
   useEffect(() => {
+    fetchUsers();
     // Use "*" as query to match all, then filter by isArtist:true.
-    search({
-      collection: "Users",
-      query: "*",
-      queryBy: "name", // You can use any searchable field
-      filterBy: "isArtist:=true",
-    })
-      .then((hits) => {
-        // Map the search hits to get the actual documents.
-        const fetchedArtists = hits.map(
-          (hit) => hit.document,
-        ) as UserFirestore[];
-        console.log("fetchedArtists", fetchedArtists);
-
-        dispatch(resetAllArtists());
-        dispatch(
-          updateAllArtists(
-            fetchedArtists.map(({ id, ...data }) => ({
-              data,
-              id,
-            })),
-          ),
-        );
-      })
-      .catch((err) => {
-        console.error("Error fetching artists:", err);
-      });
-  }, [search]);
+  }, [artistsTs.search]);
   // Handler for pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchUsers();
+    publicationsTs.search({ collection: "publications" });
     setRefreshing(false);
   };
 
@@ -136,7 +129,7 @@ const Home = () => {
       >
         Find Your Inspiration
       </Text>
-      <ImageGallery images={results} />
+      <ImageGallery images={publicationsTs.results} />
     </ScrollView>
   );
 };
