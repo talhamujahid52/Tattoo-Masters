@@ -1,93 +1,43 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
-import { useDispatch, useSelector } from "react-redux";
-import { Publication, TypesenseResult } from "@/hooks/useTypesense";
-
-interface DataProp {
-  id: number;
-  widthRatio?: number;
-  heightRatio?: number;
-  imageUrl: string;
-}
-const originalData = [
-  {
-    imageUrl: "https://picsum.photos/200/300?random=1",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=2",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=3",
-    widthRatio: 1,
-    heightRatio: 2,
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=4",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=5",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=6",
-    widthRatio: 1,
-    heightRatio: 2,
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=7",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=8",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=9",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=10",
-  },
-];
+import { TypesenseResult, Publication } from "@/hooks/useTypesense";
 
 interface Props {
   images: TypesenseResult<Publication>[];
 }
 
 const ImageGallery = ({ images }: Props) => {
-  // const loggedInUser = useSelector((state: any) => state?.user?.user);
   const router = useRouter();
-  const renderItem = useCallback(
-    ({ item }: { item: TypesenseResult<Publication> }) => {
-      const doc = item.document;
-      return (
-        <TouchableOpacity
-          style={styles.boxContainer}
-          onPress={() => {
-            router.push({
-              pathname: "/artist/TattooDetail",
-              params: {
-                photoUrlVeryHigh: encodeURIComponent(
-                  doc?.downloadUrls?.veryHigh,
-                ),
-                photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
-                id: doc.id,
-                caption: doc.caption,
-                styles: doc.styles,
-                userId: doc.userId,
-                timestamp: doc.timestamp,
-              },
-            });
-          }}
-        >
-          <Image
-            source={{ uri: item.document.downloadUrls.small }}
-            style={styles.box}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
-      );
-    },
-    [],
-  );
+  const renderItem = useCallback(({ item }: { item: TypesenseResult<any> }) => {
+    const doc = item.document;
+    return (
+      <TouchableOpacity
+        style={styles.boxContainer}
+        onPress={() => {
+          router.push({
+            pathname: "/artist/TattooDetail",
+            params: {
+              photoUrlVeryHigh: encodeURIComponent(doc?.downloadUrls?.veryHigh),
+              photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+              id: doc.id,
+              caption: doc.caption,
+              styles: doc.styles,
+              userId: doc.userId,
+              timestamp: doc.timestamp,
+            },
+          });
+        }}
+      >
+        <Image
+          source={{ uri: item?.document?.downloadUrls?.small }}
+          style={styles.box}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    );
+  }, []);
   return (
     <View
       style={{

@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
+import { UserFirestore } from "@/types/user";
 
 const Home = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const Home = () => {
   const fetchUsers = async () => {
     try {
       const usersList = await getUsers(); // Call your getUsers function here
+      console.log("usersList", usersList);
       dispatch(resetAllArtists());
       dispatch(updateAllArtists(usersList));
     } catch (err) {
@@ -38,11 +40,38 @@ const Home = () => {
 
   // Initial fetch when the component mounts
   useEffect(() => {
-    fetchUsers();
-    // fetch all artists here
     search({ collection: "publications" });
   }, []);
 
+  useEffect(() => {
+    // Use "*" as query to match all, then filter by isArtist:true.
+    search({
+      collection: "Users",
+      query: "*",
+      queryBy: "name", // You can use any searchable field
+      filterBy: "isArtist:=true",
+    })
+      .then((hits) => {
+        // Map the search hits to get the actual documents.
+        const fetchedArtists = hits.map(
+          (hit) => hit.document,
+        ) as UserFirestore[];
+        console.log("fetchedArtists", fetchedArtists);
+
+        dispatch(resetAllArtists());
+        dispatch(
+          updateAllArtists(
+            fetchedArtists.map(({ id, ...data }) => ({
+              data,
+              id,
+            })),
+          ),
+        );
+      })
+      .catch((err) => {
+        console.error("Error fetching artists:", err);
+      });
+  }, [search]);
   // Handler for pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);

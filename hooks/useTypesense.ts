@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import Typesense from "typesense";
-
 // Define the structure of your publication document
 export interface Publication {
   caption: string;
@@ -21,7 +20,6 @@ export interface Publication {
   timestamp: number;
   userId: string;
 }
-
 // Define the structure of a search hit from Typesense, making some fields optional
 export interface TypesenseResult<T> {
   document: T;
@@ -47,6 +45,10 @@ interface SearchParams {
    * Defaults to "caption,styles" if not provided.
    */
   queryBy?: string;
+  /**
+   * Optional filter_by parameter (e.g. "isArtist:=true")
+   */
+  filterBy?: string;
 }
 
 interface GetDocumentParams {
@@ -68,7 +70,7 @@ const client = new Typesense.Client({
 });
 
 const useTypesense = () => {
-  const [results, setResults] = useState<TypesenseResult<Publication>[]>([]);
+  const [results, setResults] = useState<TypesenseResult<any>[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -81,7 +83,8 @@ const useTypesense = () => {
       collection,
       query,
       queryBy,
-    }: SearchParams): Promise<TypesenseResult<Publication>[]> => {
+      filterBy,
+    }: SearchParams): Promise<TypesenseResult<any>[]> => {
       setLoading(true);
       try {
         const response = await client
@@ -90,9 +93,9 @@ const useTypesense = () => {
           .search({
             q: query ?? "",
             query_by: queryBy ?? "caption,styles",
+            filter_by: filterBy, // pass the filterBy parameter here
           });
-        // Now that our interface reflects optional properties, we can cast directly
-        const hits = response.hits as TypesenseResult<Publication>[];
+        const hits = response.hits as TypesenseResult<any>[];
         setResults(hits);
         setError(null);
         return hits;
