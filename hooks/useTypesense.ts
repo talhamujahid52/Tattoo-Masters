@@ -63,7 +63,7 @@ const client = new Typesense.Client({
       protocol: "https",
     },
   ],
-  apiKey: "kMbqgolTjpDspA7BSvkzcpV7csCPZZY2",
+  apiKey: "m9ha4JfGUemJ8dZJI1k3weikrjzaizgg",
   connectionTimeoutSeconds: 60,
 });
 
@@ -113,10 +113,7 @@ const useTypesense = () => {
    * Returns the Publication document.
    */
   const getDocument = useCallback(
-    async ({
-      collection,
-      documentId,
-    }: GetDocumentParams): Promise<Publication> => {
+    async ({ collection, documentId }: GetDocumentParams): Promise<any> => {
       setLoading(true);
       try {
         const document = await client
@@ -124,7 +121,7 @@ const useTypesense = () => {
           .documents(documentId)
           .retrieve();
         setError(null);
-        return document as Publication;
+        return document;
       } catch (err: any) {
         console.error("Typesense getDocument error:", err);
         setError(err);

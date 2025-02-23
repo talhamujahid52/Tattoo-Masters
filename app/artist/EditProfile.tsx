@@ -7,7 +7,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import React, { useState, useContext } from "react";
+import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
@@ -15,105 +15,202 @@ import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import Button from "@/components/Button";
 import { router } from "expo-router";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
-import { launchImageLibrary } from "react-native-image-picker";
-import { useDispatch, useSelector } from "react-redux";
+import { Asset, launchImageLibrary } from "react-native-image-picker";
+import { useSelector } from "react-redux";
+import firestore from "@react-native-firebase/firestore";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { UserFirestore } from "@/types/user";
+import { useDispatch } from "react-redux";
+import { setUserFirestoreData } from "@/redux/slices/userSlice";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
+
+type TattooStyle = {
+  title: string;
+  value: number;
+  selected: boolean;
+};
+
+// Constant master list of available tattoo styles.
+const CONSTANT_TATTOO_STYLES: TattooStyle[] = [
+  { title: "Tribal", value: 1, selected: false },
+  { title: "Geometric", value: 2, selected: false },
+  { title: "Black and White", value: 3, selected: false },
+];
 
 const EditProfile = () => {
-  const loggedInUser = useSelector((state: any) => state?.user?.userFirestore);
-
-  // console.log(
-  //   "Logged In User in Edit Profile ",
-  //   loggedInUser.location.coordinates.latitude
-  // );
+  const loggedInUserAuth: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const dispatch = useDispatch();
+  const loggedInUser: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
+  const currentUserId = loggedInUserAuth?.uid;
+  // Convert the Firebase tattooStyles (array of strings) into our object format.
+  const initialTattooStyles: TattooStyle[] = CONSTANT_TATTOO_STYLES.map(
+    (style) => ({
+      ...style,
+      selected: loggedInUser?.tattooStyles
+        ? loggedInUser.tattooStyles.includes(style.title)
+        : false,
+    }),
+  );
 
   const [formData, setFormData] = useState({
     profilePicture:
       loggedInUser?.profilePictureSmall ?? loggedInUser.profilePicture,
     name: loggedInUser?.name ? loggedInUser?.name : "",
-    studio: loggedInUser?.studio ? loggedInUser?.studio?.type : "",
-    studioName: loggedInUser?.studio ? loggedInUser?.studio?.name : "",
+    studio: loggedInUser?.studio ? loggedInUser?.studio : "",
+    studioName: loggedInUser?.studio ? loggedInUser?.studioName : "",
     city: loggedInUser?.city ? loggedInUser?.city : "",
     location: {
-      latitude: loggedInUser?.location?.coordinates?.latitude
-        ? loggedInUser?.location?.coordinates?.latitude
-        : "",
-      longitude: loggedInUser?.location?.coordinates?.longitude
-        ? loggedInUser?.location?.coordinates?.longitude
-        : "",
-      address: loggedInUser?.address ? loggedInUser?.address : "",
+      latitude: loggedInUser?.location?.latitude || 0,
+      longitude: loggedInUser?.location?.longitude || 0,
     },
     showCityOnly: true,
+    address: loggedInUser?.address ? loggedInUser?.address : "",
     tattooStyles: loggedInUser?.tattooStyles
-      ? loggedInUser?.tattooStyles
-      : [
-          { title: "Tribal", selected: false },
-          { title: "Geometric", selected: false },
-          { title: "Black and White", selected: false },
-        ],
-    aboutYou: loggedInUser?.about ? loggedInUser?.about : "",
+      ? initialTattooStyles
+      : CONSTANT_TATTOO_STYLES,
+    aboutYou: loggedInUser?.aboutYou ? loggedInUser?.aboutYou : "",
   });
+
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
     { label: "Homeartist", value: "homeArtist" },
   ];
-  // const [tattooStyles, setTattooStyles] = useState([
-  //   { title: "Tribal", value: 1, selected: false },
-  //   { title: "Geometric", value: 2, selected: false },
-  //   { title: "Black and White", value: 3, selected: false },
-  // ]);
+
   const toggleTattooStyles = (value: number) => {
-    const updatedTattooStyles = formData.tattooStyles.map((item: any) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
-    );
+    setFormData((prev) => ({
+      ...prev,
+      tattooStyles: prev.tattooStyles.map((item: TattooStyle) =>
+        item.value === value ? { ...item, selected: !item.selected } : item,
+      ),
+    }));
   };
+
+  const [newImage, setNewImage] = useState<Asset>();
   const defaultLocation = {
     latitude: 33.664286,
     longitude: 73.004291,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   };
+  const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState<Region>({
-    latitude: formData.location?.latitude || defaultLocation.latitude,
-    longitude: formData.location?.longitude || defaultLocation.longitude,
+    latitude: formData.location.latitude || defaultLocation.latitude,
+    longitude: formData.location.longitude || defaultLocation.longitude,
     latitudeDelta: defaultLocation.latitudeDelta,
     longitudeDelta: defaultLocation.longitudeDelta,
   });
+  const localImage = useMemo(() => {
+    if (!newImage) {
+      return {
+        uri:
+          loggedInUser?.profilePictureSmall ??
+          loggedInUser?.profilePicture ??
+          loggedInUserAuth?.photoURL ??
+          undefined,
+      };
+    }
+    return { uri: newImage.uri ?? undefined };
+  }, [newImage, loggedInUserAuth, loggedInUser]);
 
+  const handleProfilePictureChange = async (newImageUri: string) => {
+    const TIMEOUT_MS = 120000; // 2 minutes
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Profile picture update timed out!")),
+        TIMEOUT_MS,
+      ),
+    );
+
+    try {
+      const fileName = "profile.jpeg";
+
+      // Race between changeProfilePicture and the timeout
+      const profilePictureUrls = await Promise.race([
+        changeProfilePicture(currentUserId, newImageUri, fileName),
+        timeoutPromise,
+      ]);
+
+      console.log("New resized profile picture URLs:", profilePictureUrls);
+    } catch (error) {
+      console.error("Failed to update profile picture:", error);
+    }
+  };
   const toggleSwitch = () => {
     setFormData((prev) => ({ ...prev, showCityOnly: !prev.showCityOnly }));
   };
+  const updateProfile = async () => {
+    try {
+      setLoading(true);
+      // Transform the array to include only the titles for which selected is true:
+      const firebaseTattooStyles = formData.tattooStyles
+        .filter(
+          (style: { selected: boolean; title: string; value: number }) =>
+            style.selected,
+        )
+        .map((style: { title: string }) => style.title);
 
-  const handleSelectImage = async () => {
-    const result = await launchImageLibrary({
-      mediaType: "photo",
-      selectionLimit: 1, // Allow only one image to be selected
-    });
-
-    if (!result.didCancel && result.assets && result.assets[0].uri) {
-      const selectedImageUri = result.assets[0].uri;
-
-      setFormData((prev) => {
-        return { ...prev, profilePicture: selectedImageUri };
-      });
+      await firestore()
+        .collection("Users")
+        .doc(currentUserId)
+        .set(
+          {
+            ...formData,
+            tattooStyles: firebaseTattooStyles,
+          },
+          { merge: true },
+        );
+      if (newImage?.uri) {
+        await handleProfilePictureChange(newImage.uri);
+      }
+      // Fetch the updated user data and update Redux.
+      const updatedUser = await getUpdatedUser(currentUserId);
+      dispatch(setUserFirestoreData(updatedUser));
+      router.back();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const openImagePicker = () => {
+    launchImageLibrary(
+      {
+        mediaType: "photo",
+        quality: 1,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log("User cancelled image picker");
+        } else if (response.errorCode) {
+          console.error("ImagePicker Error: ", response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          const asset = response.assets[0];
+          if (asset.uri) {
+            setNewImage(asset);
+          }
+        }
+      },
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profilePictureRow}>
         <Image
           style={styles.profilePicture}
           source={
-            formData?.profilePicture
-              ? { uri: formData?.profilePicture }
-              : require("../../assets/images/profilePicture.png")
+            localImage ?? require("../../assets/images/profilePicture.png")
           }
         />
-        <TouchableOpacity
-          onPress={() => {
-            handleSelectImage();
-          }}
-        >
+        <TouchableOpacity onPress={openImagePicker}>
           <Text size="h4" weight="semibold" color="#DAB769">
             Change photo
           </Text>
@@ -135,7 +232,7 @@ const EditProfile = () => {
           onChangeText={(text) =>
             setFormData((prev) => ({ ...prev, name: text }))
           }
-        ></Input>
+        />
       </View>
       <RadioButton
         title="Studio"
@@ -165,7 +262,7 @@ const EditProfile = () => {
           onChangeText={(text) =>
             setFormData((prev) => ({ ...prev, city: text }))
           }
-        ></Input>
+        />
       </View>
       <View style={{ marginTop: 16 }}>
         <Text
@@ -178,7 +275,6 @@ const EditProfile = () => {
         </Text>
         <View
           style={{
-            display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
             marginBottom: 16,
@@ -203,9 +299,7 @@ const EditProfile = () => {
         {!formData.showCityOnly && (
           <TouchableOpacity
             onPress={() => {
-              router.push({
-                pathname: "/artist/SearchLocation",
-              });
+              router.push({ pathname: "/artist/SearchLocation" });
             }}
             style={{
               height: 130,
@@ -220,9 +314,7 @@ const EditProfile = () => {
               style={styles.map}
               mapType="terrain"
               region={region}
-            >
-              {/* <Marker coordinate={region} title="Location" />  */}
-            </MapView>
+            />
           </TouchableOpacity>
         )}
         <View>
@@ -230,28 +322,26 @@ const EditProfile = () => {
             Styles
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {formData.tattooStyles.map((item: any, idx: any) => {
-              return (
-                <TouchableOpacity
-                  key={idx}
-                  activeOpacity={1}
-                  style={{
-                    padding: 6,
-                    borderRadius: 6,
-                    backgroundColor: item.selected ? "#DAB769" : "#262526",
-                  }}
-                  onPress={() => toggleTattooStyles(item)}
+            {formData.tattooStyles.map((item: TattooStyle, idx: number) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={1}
+                style={{
+                  padding: 6,
+                  borderRadius: 6,
+                  backgroundColor: item.selected ? "#DAB769" : "#262526",
+                }}
+                onPress={() => toggleTattooStyles(item.value)}
+              >
+                <Text
+                  size="p"
+                  weight="normal"
+                  color={item.selected ? "#22221F" : "#A7A7A7"}
                 >
-                  <Text
-                    size="p"
-                    weight="normal"
-                    color={item.selected ? "#22221F" : "#A7A7A7"}
-                  >
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
         <View style={{ marginTop: 16, marginBottom: 16 }}>
@@ -274,7 +364,7 @@ const EditProfile = () => {
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, aboutYou: text }))
             }
-          ></TextInput>
+          />
           <Text
             size="medium"
             weight="normal"
@@ -299,32 +389,19 @@ const EditProfile = () => {
             <ConnectSocialMediaButton
               title="Facebook Connected"
               icon={require("../../assets/images/facebook_2.png")}
-              onConnect={() => {
-                alert("This Functionality is not Available.");
-              }}
-              onDisconnect={() => {
-                alert("This Functionality is not Available.");
-              }}
+              onConnect={() => alert("This Functionality is not Available.")}
+              onDisconnect={() => alert("This Functionality is not Available.")}
               isConnected={true}
             />
             <ConnectSocialMediaButton
               title="Connect Instagram"
               icon={require("../../assets/images/instagram.png")}
-              onConnect={() => {
-                alert("This Functionality is not Available.");
-              }}
-              onDisconnect={() => {
-                alert("This Functionality is not Available.");
-              }}
+              onConnect={() => alert("This Functionality is not Available.")}
+              onDisconnect={() => alert("This Functionality is not Available.")}
               isConnected={false}
             />
           </View>
-          <Button
-            title="Save"
-            onPress={() => {
-              console.log("Form Data after edit : ", formData);
-            }}
-          />
+          <Button loading={loading} title="Save" onPress={updateProfile} />
         </View>
       </View>
     </ScrollView>
@@ -342,7 +419,6 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF56",
   },
   profilePictureRow: {
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
@@ -357,7 +433,6 @@ const styles = StyleSheet.create({
   },
   ratingButtonsRow: {
     marginTop: 16,
-    display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
@@ -370,9 +445,8 @@ const styles = StyleSheet.create({
     color: "white",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    // marginBottom: 100,
   },
   map: {
-    ...StyleSheet.absoluteFillObject, // Makes the map take up the entire screen
+    ...StyleSheet.absoluteFillObject,
   },
 });

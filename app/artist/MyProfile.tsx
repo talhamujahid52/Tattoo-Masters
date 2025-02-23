@@ -78,11 +78,15 @@ const MyProfile = () => {
         <View style={styles.pictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={require("../../assets/images/Artist.png")}
+            source={{
+              uri:
+                loggedInUser?.profilePictureSmall ??
+                loggedInUser?.profilePicture,
+            }}
           />
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
+              {loggedInUser?.name ?? ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {loggedInUser.studioName ?? ""}
@@ -219,7 +223,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
   },
   icon: {

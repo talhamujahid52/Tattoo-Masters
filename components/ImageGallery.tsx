@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
@@ -52,37 +52,42 @@ interface Props {
   images: TypesenseResult<Publication>[];
 }
 
-const renderItem = ({ item }: { item: TypesenseResult<Publication> }) => {
-  const doc = item.document;
-  return (
-    <TouchableOpacity
-      style={styles.boxContainer}
-      onPress={() => {
-        // router.push({
-        //   pathname: "/artist/TattooDetail",
-        //   params: {
-        //     photoUrlVeryHigh: encodeURIComponent(doc?.downloadUrls?.veryHigh),
-        //     photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
-        //     id: doc.id,
-        //     caption: doc.caption,
-        //     styles: doc.styles,
-        //     user: doc.userId,
-        //     timestamp: doc.timestamp,
-        //   },
-        // });
-      }}
-    >
-      <Image
-        source={{ uri: item.document.downloadUrls.small }}
-        style={styles.box}
-        resizeMode="cover"
-      />
-    </TouchableOpacity>
-  );
-};
 const ImageGallery = ({ images }: Props) => {
   // const loggedInUser = useSelector((state: any) => state?.user?.user);
-
+  const router = useRouter();
+  const renderItem = useCallback(
+    ({ item }: { item: TypesenseResult<Publication> }) => {
+      const doc = item.document;
+      return (
+        <TouchableOpacity
+          style={styles.boxContainer}
+          onPress={() => {
+            router.push({
+              pathname: "/artist/TattooDetail",
+              params: {
+                photoUrlVeryHigh: encodeURIComponent(
+                  doc?.downloadUrls?.veryHigh,
+                ),
+                photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+                id: doc.id,
+                caption: doc.caption,
+                styles: doc.styles,
+                userId: doc.userId,
+                timestamp: doc.timestamp,
+              },
+            });
+          }}
+        >
+          <Image
+            source={{ uri: item.document.downloadUrls.small }}
+            style={styles.box}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      );
+    },
+    [],
+  );
   return (
     <View
       style={{

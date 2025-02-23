@@ -22,7 +22,7 @@ export interface UserFirestore {
   images: string[];
   isArtist: boolean;
   likedTattoos: any[];
-  location: [number, number];
+  location: LocationData;
   name: string;
   phoneNumber: string;
   profilePicture: string;

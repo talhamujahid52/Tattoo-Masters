@@ -5,14 +5,19 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import Text from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
-import { Publication, TypesenseResult } from "@/hooks/useTypesense";
+import useTypesense, {
+  Publication,
+  TypesenseResult,
+} from "@/hooks/useTypesense";
 import { doc } from "@react-native-firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
+import { UserFirestore } from "@/types/user";
 
 const TattooDetail: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -22,22 +27,34 @@ const TattooDetail: React.FC = () => {
     id,
     caption,
     styles,
-    user,
+    userId,
     timestamp,
   } = useLocalSearchParams<any>();
 
   const { width, height } = Dimensions.get("window");
   const { BottomSheet, show, hide } = useBottomSheet();
-  //
-  //
+  // Use the Typesense hook to fetch the user details from the "Users" collection.
+  const { getDocument } = useTypesense();
+  const [userDetails, setUserDetails] = useState<UserFirestore | undefined>();
 
-  // const { document }: TypesenseResult<Publication> = JSON.parse(tattoo);
-  // console.log("document", document.downloadUrls.small);
+  useEffect(() => {
+    if (userId) {
+      getDocument({ collection: "Users", documentId: userId })
+        .then((doc) => {
+          console.log("user details", doc);
+          setUserDetails(doc);
+        })
+        .catch((err) =>
+          console.error("Error fetching user details from Typesense:", err),
+        );
+    }
+  }, [userId, getDocument]);
 
   return (
     <View
       style={{
         flex: 1,
+        borderWidth: 2,
         position: "relative",
       }}
     >
@@ -58,13 +75,17 @@ const TattooDetail: React.FC = () => {
           source={{ uri: photoUrlVeryHigh }}
         />
       </View>
-      <View
+      <LinearGradient
+        colors={["rgba(0, 0, 0, 0.98)", "transparent"]}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0.5, y: 0 }}
+        id="bottom-container"
         style={{
-          height: 100,
-          width: width - 32,
+          width: "100%",
+          padding: 16,
+          paddingBottom: insets.bottom + 10,
           position: "absolute",
-          bottom: insets.bottom,
-          left: 16,
+          bottom: 0,
         }}
       >
         <View
@@ -76,17 +97,23 @@ const TattooDetail: React.FC = () => {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
+            <Image
               style={{
                 width: 42,
                 height: 42,
                 borderRadius: 50,
-                backgroundColor: "green",
+                backgroundColor: "white",
                 marginRight: 8,
               }}
+              source={{
+                uri:
+                  userDetails?.profilePictureSmall ??
+                  userDetails?.profilePicture,
+              }}
             />
+            <View />
             <Text size="p" weight="semibold" color="#FFF">
-              Abid Iqbal
+              {userDetails?.name}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -95,7 +122,7 @@ const TattooDetail: React.FC = () => {
               source={require("../../assets/images/favorite-outline-white.png")}
             />
             <Text size="medium" weight="normal" color="#fff">
-              245
+              0
             </Text>
             <TouchableOpacity
               onPress={() => {
@@ -110,10 +137,9 @@ const TattooDetail: React.FC = () => {
           </View>
         </View>
         <Text size="p" weight="normal" color="#FBF6FA">
-          Lorem ipsum dolor sit amet, contetur adipiscing elit, sed do eiusmod
-          tempor incididunt.
+          {caption}
         </Text>
-      </View>
+      </LinearGradient>
     </View>
   );
 };

@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 52,
     width: 52,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
     marginRight: 16,
   },
