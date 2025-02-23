@@ -183,7 +183,7 @@ const MyProfile = () => {
           }}
         />
       </View>
-      <ReviewOnProfile></ReviewOnProfile>
+      <ReviewOnProfile isMyProfile={true}></ReviewOnProfile>
       <View style={styles.stylesFilterRow}>
         <FlatList
           data={studio}

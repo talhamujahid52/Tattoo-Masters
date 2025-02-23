@@ -11,9 +11,8 @@ import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
-import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtistProfileBottomSheet";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
@@ -25,10 +24,9 @@ interface StudioItem {
 }
 
 const ArtistProfile = () => {
+  const { BottomSheet, show, hide } = useBottomSheet();
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
-
-  const { BottomSheet, show, hide } = useBottomSheet();
 
   const defaultLocation = {
     latitude: 33.664286,
@@ -202,9 +200,15 @@ const ArtistProfile = () => {
           title="Message"
           icon={require("../../assets/images/message.png")}
           variant="Primary"
+          onPress={() => {
+            router.push({
+              pathname: "/artist/IndividualChat",
+              params: { selectedArtistId: artistId },
+            });
+          }}
         />
       </View>
-      <ReviewOnProfile isArtist={false}></ReviewOnProfile>
+      <ReviewOnProfile ArtistId={artistId}></ReviewOnProfile>
       <View style={{ marginTop: 24 }}>
         <Text
           size="h4"

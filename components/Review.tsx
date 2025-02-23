@@ -1,20 +1,29 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import Text from "./Text";
-import { useRouter } from "expo-router";
+import { useSelector } from "react-redux";
+import { router } from "expo-router";
 
 interface Review {
-  isArtist?: boolean;
+  rating?: any;
+  tattooFeedback?: any;
+  tattooImage?: any;
 }
 
-const Review: React.FC<Review> = () => {
+const Review: React.FC<Review> = ({ rating, tattooFeedback, tattooImage }) => {
+  const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
+
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.profilePictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={require("../assets/images/Artist.png")}
+            source={
+              loggedInUser?.profilePicture
+                ? { uri: loggedInUser?.profilePicture }
+                : require("../assets/images/Artist.png")
+            }
           />
           <View
             style={{
@@ -24,10 +33,10 @@ const Review: React.FC<Review> = () => {
             }}
           >
             <Text size="p" weight="normal" color="#FFF">
-              Martin Luis
+              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
             </Text>
             <Text size="medium" weight="normal" color="#A7A7A7">
-              2 days ago
+              1 min
             </Text>
           </View>
           <View style={styles.midRow}>
@@ -36,15 +45,18 @@ const Review: React.FC<Review> = () => {
               source={require("../assets/images/star.png")}
             />
             <Text size="p" weight="normal" color="#FBF6FA">
-              4.5
+              {rating ? rating : "4.5"}
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={{ height: 24, width: 24 }}>
-          <Image
-            style={{ height: "100%", width: "100%" }}
-            source={require("../assets/images/flag.png")}
-          />
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Text size="h4" color="#DAB769" weight="semibold">
+            Edit Review?
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -57,8 +69,7 @@ const Review: React.FC<Review> = () => {
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7" style={{ width: "70%" }}>
-          Lorem ipsum dolor sit amet, contetur itbj jbds adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore.
+          {tattooFeedback}
         </Text>
         <View
           style={{
@@ -74,7 +85,11 @@ const Review: React.FC<Review> = () => {
               width: "100%",
               resizeMode: "cover",
             }}
-            source={require("../assets/images/Artist.png")}
+            source={
+              tattooImage
+                ? { uri: tattooImage }
+                : require("../assets/images/Artist.png")
+            }
           />
         </View>
       </View>
