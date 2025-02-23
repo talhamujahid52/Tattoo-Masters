@@ -1,4 +1,3 @@
-#import <GoogleMaps/GoogleMaps.h>
 #import "AppDelegate.h"
 #import <Firebase/Firebase.h>
 
@@ -10,11 +9,6 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 // @generated begin @react-native-firebase/app-didFinishLaunchingWithOptions - expo prebuild (DO NOT MODIFY) sync-ecd111c37e49fdd1ed6354203cd6b1e2a38cccda
-[GMSServices provideAPIKey:@"AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k"];
-
-[GMSServices provideAPIKey:@"AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k"];
-
-[GMSServices provideAPIKey:@"AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k"];
 [FIRApp configure];
 // @generated end @react-native-firebase/app-didFinishLaunchingWithOptions
   self.moduleName = @"main";
