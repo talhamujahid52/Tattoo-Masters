@@ -41,7 +41,6 @@ const StepperForm: React.FC = () => {
 
   const handleNext = () => {
     setStep((prevStep: number) => Math.min(prevStep + 1, totalSteps));
-    console.log("FormData: ", formData);
   };
 
   const handlePrevious = () => {
@@ -53,10 +52,14 @@ const StepperForm: React.FC = () => {
       const imgs = formData.images
         .filter((item) => item !== "")
         .map((item) => ({ uri: item, name: getFileName(item) }));
-      await uploadImages(imgs); // upload publications images and add to publication collection as well
-
-      await updateUserProfile(currentUserId, {
+      const updatedFormData = {
         ...formData,
+        tattooStyles: formData.tattooStyles.map((style) => style.title),
+      };
+      console.log("updatedFormData", updatedFormData);
+      await uploadImages(imgs); // upload publications images and add to publication collection as well
+      await updateUserProfile(currentUserId, {
+        ...updatedFormData,
         isArtist: true, //make the user an artist
       } as UserProfileFormData);
       // update the user profile picture as well if it has been changed

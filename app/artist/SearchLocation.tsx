@@ -26,9 +26,7 @@ const SearchLocation: React.FC = () => {
     longitudeDelta: defaultLocation.longitudeDelta,
   });
 
-  const [address, setAddress] = useState<string>(
-    formData.location?.address || ""
-  );
+  const [address, setAddress] = useState<string>(formData.address || "");
 
   const handleLocationSelect = (data: any, details: any) => {
     if (details && details.geometry) {
@@ -49,8 +47,8 @@ const SearchLocation: React.FC = () => {
         location: {
           latitude: lat,
           longitude: lng,
-          address: data.description,
         },
+        address: data.description,
       });
 
       // Move the map to the selected location
@@ -71,8 +69,8 @@ const SearchLocation: React.FC = () => {
       location: {
         latitude: newRegion.latitude,
         longitude: newRegion.longitude,
-        address: address, // Address will remain the same unless updated
       },
+      address: address, // Address will remain the same unless updated
     });
   };
 
@@ -153,8 +151,8 @@ const SearchLocation: React.FC = () => {
               location: {
                 latitude: region.latitude,
                 longitude: region.longitude,
-                address: address,
               },
+              address: address,
             });
             router.back();
           }}

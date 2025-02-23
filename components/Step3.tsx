@@ -44,7 +44,6 @@ const step3: React.FC = () => {
         undefined,
     };
   }, [loggedInUser, loggedInUserFirestore, formData]);
-  console.log("pro", profileImage);
   const [tattooStyles, setTattooStyles] = useState([
     { title: "Tribal", value: 1, selected: false },
     { title: "Geometric", value: 2, selected: false },
@@ -79,14 +78,13 @@ const step3: React.FC = () => {
       </Text>
     </TouchableOpacity>
   );
-  console.log("formData", formData);
   return (
     <ScrollView style={styles.container}>
       <View style={styles.pictureAndName}>
         <Image style={styles.profilePicture} source={profileImage} />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            {formData?.fullName}
+            {formData?.name}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.studio === "studio"

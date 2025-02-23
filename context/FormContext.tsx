@@ -4,7 +4,6 @@ import React, { createContext, useState, ReactNode } from "react";
 type Location = {
   latitude: number;
   longitude: number;
-  address: string;
 };
 
 type TattooStyle = {
@@ -13,12 +12,12 @@ type TattooStyle = {
 };
 
 type FormData = {
-  profilePicture: string | undefined;
-  fullName: string;
+  name: string;
   studio: string;
   studioName: string;
   city: string;
   location: Location;
+  address: string;
   showCityOnly: boolean;
   tattooStyles: TattooStyle[];
   aboutYou: string;
@@ -40,12 +39,12 @@ type FormProviderProps = {
 
 const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
   const [formData, setFormData] = useState<FormData>({
-    profilePicture: undefined,
-    fullName: "",
+    name: "",
     studio: "",
     studioName: "",
     city: "",
-    location: { latitude: 0, longitude: 0, address: "" },
+    address: "",
+    location: { latitude: 0, longitude: 0 },
     showCityOnly: true,
     tattooStyles: [
       { title: "Tribal", selected: false },

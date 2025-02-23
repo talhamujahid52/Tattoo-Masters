@@ -29,7 +29,7 @@ const AppNavigator = () => {
   useEffect(() => {
     if (userId) {
       getUpdatedUser(userId).then((updatedUser) => {
-        console.log("updatedUser", updatedUser);
+        // console.log("updatedUser", updatedUser);
         dispatch(setUserFirestoreData(updatedUser));
       });
     }

@@ -51,29 +51,37 @@ const originalData = [
 interface Props {
   images: TypesenseResult<Publication>[];
 }
-const ImageGallery = ({ images }: Props) => {
-  const router = useRouter();
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
-  const renderItem = ({ item }: { item: TypesenseResult<Publication> }) => {
-    return (
-      <TouchableOpacity
-        style={styles.boxContainer}
-        onPress={() => {
-          router.push({
-            pathname: "/artist/TattooDetail",
-            params: { tattoo: item.document.downloadUrls.veryHigh },
-          });
-        }}
-      >
-        <Image
-          source={{ uri: item.document.downloadUrls.small }}
-          style={styles.box}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-    );
-  };
+const renderItem = ({ item }: { item: TypesenseResult<Publication> }) => {
+  const doc = item.document;
+  return (
+    <TouchableOpacity
+      style={styles.boxContainer}
+      onPress={() => {
+        // router.push({
+        //   pathname: "/artist/TattooDetail",
+        //   params: {
+        //     photoUrlVeryHigh: encodeURIComponent(doc?.downloadUrls?.veryHigh),
+        //     photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+        //     id: doc.id,
+        //     caption: doc.caption,
+        //     styles: doc.styles,
+        //     user: doc.userId,
+        //     timestamp: doc.timestamp,
+        //   },
+        // });
+      }}
+    >
+      <Image
+        source={{ uri: item.document.downloadUrls.small }}
+        style={styles.box}
+        resizeMode="cover"
+      />
+    </TouchableOpacity>
+  );
+};
+const ImageGallery = ({ images }: Props) => {
+  // const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   return (
     <View
@@ -83,7 +91,7 @@ const ImageGallery = ({ images }: Props) => {
     >
       <ResponsiveGrid
         maxItemsPerColumn={3}
-        data={images}
+        data={images ?? []}
         renderItem={renderItem}
         showScrollIndicator={false}
       />

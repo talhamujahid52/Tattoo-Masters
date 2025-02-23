@@ -45,17 +45,13 @@ const Step1: React.FC = () => {
 
   // Prepopulate the full name field if it is not already set.
   useEffect(() => {
-    if (
-      loggedInUserFirestore?.name &&
-      !formData.fullName &&
-      formData.fullName !== ""
-    ) {
+    if (loggedInUserFirestore?.name && !formData.name && formData.name !== "") {
       setFormData((prev) => ({
         ...prev,
         name: loggedInUserFirestore.name,
       }));
     }
-  }, [loggedInUserFirestore, formData.fullName, setFormData]);
+  }, [loggedInUserFirestore, formData.name, setFormData]);
 
   const localImage = useMemo(() => {
     return {
@@ -136,9 +132,9 @@ const Step1: React.FC = () => {
         <Input
           inputMode="text"
           placeholder="Full Name"
-          value={formData.fullName}
+          value={formData.name}
           onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, fullName: text }))
+            setFormData((prev) => ({ ...prev, name: text }))
           }
         />
       </View>

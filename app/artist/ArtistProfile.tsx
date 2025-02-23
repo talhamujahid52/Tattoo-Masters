@@ -220,8 +220,8 @@ const ArtistProfile = () => {
           color="#A7A7A7"
           style={{ marginBottom: 10 }}
         >
-          {artist?.data?.location?.address
-            ? artist?.data?.location?.address
+          {artist?.data?.address
+            ? artist?.data?.address
             : "S#251, Street 24, Phuket, Thailand"}
         </Text>
       </View>

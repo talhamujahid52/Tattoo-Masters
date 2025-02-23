@@ -19,17 +19,17 @@ import { launchImageLibrary } from "react-native-image-picker";
 import { useDispatch, useSelector } from "react-redux";
 
 const EditProfile = () => {
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const loggedInUser = useSelector((state: any) => state?.user?.userFirestore);
 
   // console.log(
   //   "Logged In User in Edit Profile ",
   //   loggedInUser.location.coordinates.latitude
   // );
+
   const [formData, setFormData] = useState({
-    profilePicture: loggedInUser?.profilePicture
-      ? loggedInUser?.profilePicture
-      : "",
-    fullName: loggedInUser?.name ? loggedInUser?.name : "",
+    profilePicture:
+      loggedInUser?.profilePictureSmall ?? loggedInUser.profilePicture,
+    name: loggedInUser?.name ? loggedInUser?.name : "",
     studio: loggedInUser?.studio ? loggedInUser?.studio?.type : "",
     studioName: loggedInUser?.studio ? loggedInUser?.studio?.name : "",
     city: loggedInUser?.city ? loggedInUser?.city : "",
@@ -40,9 +40,7 @@ const EditProfile = () => {
       longitude: loggedInUser?.location?.coordinates?.longitude
         ? loggedInUser?.location?.coordinates?.longitude
         : "",
-      address: loggedInUser?.location?.address
-        ? loggedInUser?.location?.address
-        : "",
+      address: loggedInUser?.address ? loggedInUser?.address : "",
     },
     showCityOnly: true,
     tattooStyles: loggedInUser?.tattooStyles
@@ -133,9 +131,9 @@ const EditProfile = () => {
         <Input
           inputMode="text"
           placeholder="Full Name"
-          value={formData.fullName}
+          value={formData.name}
           onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, fullName: text }))
+            setFormData((prev) => ({ ...prev, name: text }))
           }
         ></Input>
       </View>

@@ -299,6 +299,7 @@ const CustomDrawerContent = () => {
                 });
               }}
             >
+              {/* Register as an artist */}
               <Image
                 style={styles.registerArtist}
                 source={require("../../assets/images/registerartist.png")}

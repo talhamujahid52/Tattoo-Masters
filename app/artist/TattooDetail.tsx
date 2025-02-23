@@ -11,24 +11,37 @@ import Text from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
+import { Publication, TypesenseResult } from "@/hooks/useTypesense";
+import { doc } from "@react-native-firebase/firestore";
 
 const TattooDetail: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { tattoo } = useLocalSearchParams<any>();
+  const {
+    photoUrlVeryHigh,
+    photoUrlHigh,
+    id,
+    caption,
+    styles,
+    user,
+    timestamp,
+  } = useLocalSearchParams<any>();
+
   const { width, height } = Dimensions.get("window");
   const { BottomSheet, show, hide } = useBottomSheet();
+  //
+  //
 
-  console.log("Tattoo ID, ", tattoo);
+  // const { document }: TypesenseResult<Publication> = JSON.parse(tattoo);
+  // console.log("document", document.downloadUrls.small);
 
   return (
     <View
       style={{
         flex: 1,
         position: "relative",
-        backgroundColor: "#000",
       }}
     >
-      <BottomSheet InsideComponent={<ImageActionsBottomSheet hide1={hide}  />} />
+      <BottomSheet InsideComponent={<ImageActionsBottomSheet hide1={hide} />} />
 
       <View
         style={{
@@ -37,8 +50,12 @@ const TattooDetail: React.FC = () => {
         }}
       >
         <Image
-          style={{ height: "100%", width: "100%", resizeMode: "contain" }}
-          source={{ uri: tattoo }}
+          style={{
+            height: "100%",
+            width: "100%",
+            resizeMode: "contain",
+          }}
+          source={{ uri: photoUrlVeryHigh }}
         />
       </View>
       <View

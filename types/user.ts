@@ -11,23 +11,34 @@ export interface ProfilePictureDeleteUrls {
 }
 
 export interface UserFirestore {
-  createdAt: FirebaseTimestamp;
+  aboutYou: string;
+  address: string;
+  city: string;
+  createdAt: number;
   email: string;
-  followedArtists: string[]; // Adjust if followedArtists should contain objects instead of strings
+  followedArtists: any[];
+  fullName: string;
+  id: string;
+  images: string[];
   isArtist: boolean;
-  likedTattoos: string[]; // Adjust if likedTattoos should contain objects instead of strings
+  likedTattoos: any[];
+  location: [number, number];
   name: string;
+  phoneNumber: string;
   profilePicture: string;
   profilePictureDeleteUrls: ProfilePictureDeleteUrls;
   profilePictureHigh: string;
   profilePictureMedium: string;
   profilePictureSmall: string;
   profilePictureVeryHigh: string;
+  showCityOnly: boolean;
+  studio: string;
+  studioName: string;
+  tattooStyles: string[];
   uid: string;
 }
 
 export interface LocationData {
-  address: string;
   latitude: number;
   longitude: number;
 }
@@ -40,13 +51,14 @@ export interface TattooStyle {
 export interface UserProfileFormData {
   aboutYou: string;
   city: string;
-  fullName: string;
+  name: string;
   images: string[];
   location: LocationData;
+  address: string;
   profilePicture: string;
   showCityOnly: boolean;
   studio: string;
   studioName: string;
-  tattooStyles: TattooStyle[];
+  tattooStyles: string[];
   isArtist: boolean;
 }
