@@ -329,6 +329,17 @@ const AppNavigator = () => {
               headerTintColor: "#fff",
             }}
           />
+          <Stack.Screen
+            name="artist/IndividualChat"
+            options={{
+              headerShown: false,
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
         </Stack>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>

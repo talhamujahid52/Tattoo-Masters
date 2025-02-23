@@ -13,7 +13,9 @@ interface ButtonProps {
   title: string;
   onPress?: (event: GestureResponderEvent) => void;
   loading?: boolean;
+  disabled?: boolean;
 }
+
 
 const Button = ({ title = "Let's go", onPress, loading }: ButtonProps) => {
   const colorList = [
@@ -22,7 +24,11 @@ const Button = ({ title = "Let's go", onPress, loading }: ButtonProps) => {
   ];
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.button}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.button}
+      disabled={disabled}
+    >
       <View style={styles.gradientContainer}>
         <RadialGradient
           x="53.8%" // Center position (horizontal)

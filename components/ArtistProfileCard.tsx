@@ -45,10 +45,8 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
           style={{ height: 16, width: 16, resizeMode: "contain" }}
         />
         <Text size="small" weight="normal" color="#FBF6FA">
-          {artist.data.rating ? artist.data.rating : "4.8"}{" "}
-          {artist.data?.reviews?.length > 0
-            ? "(" + artist.data?.reviews?.length + ")"
-            : "(129)"}
+          {artist.data.rating ? Number(artist.data.rating).toFixed(1) : "4.8"} (
+          {artist.data?.reviewsCount ? artist.data?.reviewsCount : "129"})
         </Text>
         <View style={styles.SeparatorDot}></View>
         <Text size="small" weight="normal" color="#FBF6FA">

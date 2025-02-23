@@ -1,23 +1,13 @@
-import {
-  StyleSheet,
-  View,
-  Image,
-  StatusBar,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, Image, StatusBar, TouchableOpacity } from "react-native";
 import Text from "@/components/Text";
 import React, { useRef, useCallback, useState } from "react";
 import { Tabs, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
-import { DrawerToggleButton } from "@react-navigation/drawer";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BottomTabsLayout = () => {
-  const unreadMessages = 17;
-  const router = useRouter();
   const navigation = useNavigation();
   const { BottomSheet, show, hide } = useBottomSheet();
   const insets = useSafeAreaInsets();
@@ -29,7 +19,7 @@ const BottomTabsLayout = () => {
           tabBarStyle: {
             backgroundColor: "#000000",
             borderColor: "#FFFFFF26",
-            borderTopWidth: 0,
+            borderTopWidth: 0.33,
             height: 54 + insets.bottom,
           },
         }}
@@ -179,18 +169,7 @@ const BottomTabsLayout = () => {
                   style={{ height: 26, width: 26 }}
                 />
               ),
-            // <View style={styles.iconContainer}>
-            //   <Ionicons
-            //     name={focused ? "chatbubble-sharp" : "chatbubble-outline"}
-            //     size={24}
-            //     color={focused ? "#fff" : "#838383"}
-            //   />
-            //   {unreadMessages > 0 && (
-            //     <View style={styles.badge}>
-            //       <Text style={styles.badgeText}>{unreadMessages}</Text>
-            //     </View>
-            //   )}
-            // </View>
+            headerShown: false,
           }}
         />
       </Tabs>
