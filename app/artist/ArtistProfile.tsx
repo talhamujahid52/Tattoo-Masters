@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface StudioItem {
   title: string;
@@ -27,7 +28,7 @@ const ArtistProfile = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
-
+  const insets = useSafeAreaInsets();
   const defaultLocation = {
     latitude: 33.664286,
     longitude: 73.004291,
@@ -89,7 +90,10 @@ const ArtistProfile = () => {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
+      style={styles.container}
+    >
       <BottomSheet
         InsideComponent={<ShareArtistProfileBottomSheet hide1={hide} />}
       />

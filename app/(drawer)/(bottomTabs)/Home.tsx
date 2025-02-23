@@ -15,7 +15,6 @@ import { getUsers } from "@/utils/firebase/userFunctions";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
-import Typesense from "typesense";
 import useTypesense from "@/hooks/useTypesense";
 
 const Home = () => {
@@ -40,6 +39,7 @@ const Home = () => {
   // Initial fetch when the component mounts
   useEffect(() => {
     fetchUsers();
+    // fetch all artists here
     search({ collection: "publications" });
   }, []);
 
