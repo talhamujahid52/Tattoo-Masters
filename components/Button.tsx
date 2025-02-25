@@ -16,8 +16,12 @@ interface ButtonProps {
   disabled?: boolean;
 }
 
-
-const Button = ({ title = "Let's go", onPress, loading }: ButtonProps) => {
+const Button = ({
+  title = "Let's go",
+  onPress,
+  loading,
+  disabled,
+}: ButtonProps) => {
   const colorList = [
     { offset: "0%", color: "#FFD982", opacity: "1" },
     { offset: "100%", color: "#927639", opacity: "1" },
@@ -25,17 +29,17 @@ const Button = ({ title = "Let's go", onPress, loading }: ButtonProps) => {
 
   return (
     <TouchableOpacity
+      disabled={disabled}
       onPress={onPress}
       style={styles.button}
-      disabled={disabled}
     >
-      <View style={styles.gradientContainer}>
+      <View style={[styles.gradientContainer, disabled && styles.disabled]}>
         <RadialGradient
           x="53.8%" // Center position (horizontal)
           y="50%" // Center position (vertical)
           rx="46.2%" // Horizontal radius
           ry="307.19%" // Vertical radius
-          colorList={colorList}
+          colorList={!disabled ? colorList : []}
         />
       </View>
       {loading ? (
@@ -66,6 +70,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 30,
     backgroundColor: "#927639",
+  },
+  disabled: {
+    backgroundColor: "grey",
   },
 });
 

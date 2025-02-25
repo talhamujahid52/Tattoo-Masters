@@ -20,7 +20,8 @@
         "LSMinimumSystemVersion": "12.0.0",
         "ITSAppUsesNonExemptEncryption": false,
         "aps-environment": "production",
-        "NSPhotoLibraryUsageDescription":"We need access to your photo library to select images."
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location when open.",
+        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images."
       }
     },
     "android": {
@@ -59,14 +60,11 @@
           }
         }
       ],
-      [
-        "./plugin/iosAppDelegatePlugin.js"
-      ],
+      ["./plugin/iosAppDelegatePlugin.js"],
       [
         "./plugin/androidGoogleMapsApiPlugin.js",
         { "apiKey": "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k" }
       ]
-      
     ],
     "experiments": {
       "typedRoutes": true

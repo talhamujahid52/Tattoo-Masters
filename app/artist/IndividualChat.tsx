@@ -26,7 +26,7 @@ const IndividualChat: React.FC = () => {
   const [chatID, setChatID] = useState<any>();
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
-
+  console.log("recieverProfilePicture", recieverProfilePicture);
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const { checkIfChatExists, fetchChatMessages, createChat, addMessageToChat } =
     useChats(loggedInUser.uid);
@@ -42,17 +42,17 @@ const IndividualChat: React.FC = () => {
   const formatMessages = (msgs: any[]) => {
     return msgs.map((msg) => {
       let createdAt = msg.createdAt;
-      
+
       // If createdAt is a Firestore timestamp, convert it to milliseconds
-      if (createdAt && typeof createdAt.toMillis === 'function') {
+      if (createdAt && typeof createdAt.toMillis === "function") {
         createdAt = createdAt.toMillis();
       }
-      
+
       // Handle string dates
-      if (typeof createdAt === 'string') {
+      if (typeof createdAt === "string") {
         createdAt = new Date(createdAt).getTime();
       }
-      
+
       // If no valid date, use current time
       if (!createdAt || isNaN(createdAt)) {
         createdAt = Date.now();
@@ -73,16 +73,20 @@ const IndividualChat: React.FC = () => {
           if (artistChat?.exists) {
             setChatID(artistChat.id);
             setMessageRecieverName(
-              artistChat?.data()?.[selectedArtistId]?.name
+              artistChat?.data()?.[selectedArtistId]?.name,
             );
             setRecieverProfilePicture(
-              artistChat?.data()?.[selectedArtistId]?.profilePicture
+              artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
+                artistChat?.data()?.[selectedArtistId]?.profilePicture,
             );
             const chatMessages = await fetchChatMessages(artistChat.id);
             setMessages(formatMessages(chatMessages));
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
-            setRecieverProfilePicture(selectedArtist?.data?.profilePicture);
+            setRecieverProfilePicture(
+              artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
+                artistChat?.data()?.[selectedArtistId]?.profilePicture,
+            );
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
@@ -115,28 +119,31 @@ const IndividualChat: React.FC = () => {
       }
       await addMessageToChat(newMessages, currentChatID);
       setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, newMessages)
+        GiftedChat.append(previousMessages, newMessages),
       );
     },
-    [chatID]
+    [chatID],
   );
 
   // Custom rendering functions
   const renderBubble = (props: any) => {
     const getTime = (createdAt: any) => {
-      if (!createdAt) return '';
-      
+      if (!createdAt) return "";
+
       // Handle both timestamp and date object cases
-      const messageDate = typeof createdAt === 'number' 
-        ? new Date(createdAt) 
-        : (createdAt instanceof Date ? createdAt : new Date(createdAt));
-      
-      if (isNaN(messageDate.getTime())) return '';
-      
-      return messageDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
+      const messageDate =
+        typeof createdAt === "number"
+          ? new Date(createdAt)
+          : createdAt instanceof Date
+            ? createdAt
+            : new Date(createdAt);
+
+      if (isNaN(messageDate.getTime())) return "";
+
+      return messageDate.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
       });
     };
 
@@ -176,16 +183,20 @@ const IndividualChat: React.FC = () => {
         renderTime={() => {
           const time = getTime(props.currentMessage.createdAt);
           return time ? (
-            <View style={{
-              marginLeft: 10,
-              marginRight: 10,
-              marginBottom: 5
-            }}>
-              <Text style={{
-                color: '#C1C1C1',
-                fontSize: 10,
-                textAlign: props.position === 'right' ? 'right' : 'left'
-              }}>
+            <View
+              style={{
+                marginLeft: 10,
+                marginRight: 10,
+                marginBottom: 5,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#C1C1C1",
+                  fontSize: 10,
+                  textAlign: props.position === "right" ? "right" : "left",
+                }}
+              >
                 {time}
               </Text>
             </View>

@@ -6,7 +6,7 @@ import {
   Image,
   FlatList,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface StudioItem {
   title: string;
@@ -27,7 +28,7 @@ const ArtistProfile = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
-
+  const insets = useSafeAreaInsets();
   const defaultLocation = {
     latitude: 33.664286,
     longitude: 73.004291,
@@ -50,11 +51,22 @@ const ArtistProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);
   };
+  const profilePicture = useMemo(() => {
+    const profileSmall = artist?.data?.profilePictureSmall;
+    const profileDefault = artist?.data?.profilePicture;
+    if (profileSmall) {
+      return { uri: profileSmall };
+    } else if (artist?.data?.profilePicture) {
+      return { uri: profileDefault };
+    }
+
+    return require("../../assets/images/Artist.png");
+  }, [artist]);
 
   const renderItem = ({ item }: { item: StudioItem }) => (
     <TouchableOpacity
@@ -78,7 +90,10 @@ const ArtistProfile = () => {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
+      style={styles.container}
+    >
       <BottomSheet
         InsideComponent={<ShareArtistProfileBottomSheet hide1={hide} />}
       />
@@ -87,11 +102,8 @@ const ArtistProfile = () => {
         <View style={styles.pictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={
-              artist?.data?.profilePicture
-                ? { uri: artist?.data?.profilePicture }
-                : require("../../assets/images/Artist.png")
-            }
+            source={profilePicture}
+            // source={require("../../assets/images/Artist.png")}
           />
           <View>
             <Text size="h3" weight="semibold" color="white">
@@ -216,8 +228,8 @@ const ArtistProfile = () => {
           color="#A7A7A7"
           style={{ marginBottom: 10 }}
         >
-          {artist?.data?.location?.address
-            ? artist?.data?.location?.address
+          {artist?.data?.address
+            ? artist?.data?.address
             : "S#251, Street 24, Phuket, Thailand"}
         </Text>
       </View>

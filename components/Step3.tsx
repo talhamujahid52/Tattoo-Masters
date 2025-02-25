@@ -6,7 +6,7 @@ import {
   Image,
   FlatList,
 } from "react-native";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -14,6 +14,9 @@ import ImageGallery from "@/components/ImageGallery";
 import { useRouter } from "expo-router";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { FormContext } from "../context/FormContext";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 
 interface StudioItem {
   title: string;
@@ -24,6 +27,23 @@ const step3: React.FC = () => {
   const { formData } = useContext(FormContext)!;
 
   const router = useRouter();
+
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
   const [tattooStyles, setTattooStyles] = useState([
     { title: "Tribal", value: 1, selected: false },
     { title: "Geometric", value: 2, selected: false },
@@ -32,7 +52,7 @@ const step3: React.FC = () => {
 
   const toggleTattooStyles = (value: number) => {
     const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setTattooStyles(updatedTattooStyles);
@@ -58,24 +78,20 @@ const step3: React.FC = () => {
       </Text>
     </TouchableOpacity>
   );
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.pictureAndName}>
-        <Image
-          style={styles.profilePicture}
-          source={require("../assets/images/Artist.png")}
-        />
+        <Image style={styles.profilePicture} source={profileImage} />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            {formData?.fullName}
+            {formData?.name}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.studio === "studio"
               ? formData?.studioName
               : formData?.studio === "freelancer"
-              ? "Freelancer"
-              : "HomeArtist"}
+                ? "Freelancer"
+                : "HomeArtist"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.city}

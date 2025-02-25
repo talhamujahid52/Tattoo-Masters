@@ -31,7 +31,7 @@ const Chat = () => {
   useEffect(() => {
     // Get the unsubscribe function
     const unsubscribe = fetchChats();
-    
+
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
@@ -84,11 +84,11 @@ const Chat = () => {
               >
                 <Image
                   style={{ width: "100%", height: "100%" }}
-                  source={
-                    item?.data?.profilePicture
-                      ? { uri: item?.data?.profilePicture }
-                      : require("../../../assets/images/Artist.png")
-                  }
+                  source={{
+                    uri:
+                      item?.data?.profilePictureSmall ??
+                      item?.data?.profilePicture,
+                  }}
                 />
               </View>
               <Text

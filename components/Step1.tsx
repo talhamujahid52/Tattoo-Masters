@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -13,9 +13,12 @@ import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
 import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
-import { launchImageLibrary } from "react-native-image-picker";
+import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { router } from "expo-router";
 import { FormContext } from "../context/FormContext";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 
 const Step1: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
@@ -33,22 +36,40 @@ const Step1: React.FC = () => {
     longitudeDelta: 0.02,
   };
 
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
+
+  // Prepopulate the full name field if it is not already set.
+  useEffect(() => {
+    if (loggedInUserFirestore?.name && !formData.name && formData.name !== "") {
+      setFormData((prev) => ({
+        ...prev,
+        name: loggedInUserFirestore.name,
+      }));
+    }
+  }, [loggedInUserFirestore, formData.name, setFormData]);
+
+  const localImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
+
   const [region, setRegion] = useState<Region>({
     latitude: formData.location?.latitude || defaultLocation.latitude,
     longitude: formData.location?.longitude || defaultLocation.longitude,
     latitudeDelta: defaultLocation.latitudeDelta,
     longitudeDelta: defaultLocation.longitudeDelta,
   });
-
-  useEffect(() => {
-    console.log("Location Changed in Step1")
-    setRegion({
-      latitude: formData.location?.latitude || defaultLocation.latitude,
-      longitude: formData.location?.longitude || defaultLocation.longitude,
-      latitudeDelta: defaultLocation.latitudeDelta,
-      longitudeDelta: defaultLocation.longitudeDelta,
-    });
-  }, [formData.location]);
 
   const handleProfilePictureSelection = async () => {
     const result = await launchImageLibrary({
@@ -74,18 +95,25 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = formData.tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item
+        : item,
     );
     setFormData((prev) => ({ ...prev, tattooStyles: updatedTattooStyles }));
   };
 
+  useEffect(() => {
+    console.log("Location Changed in Step1");
+    setRegion({
+      latitude: formData.location?.latitude || defaultLocation.latitude,
+      longitude: formData.location?.longitude || defaultLocation.longitude,
+      latitudeDelta: defaultLocation.latitudeDelta,
+      longitudeDelta: defaultLocation.longitudeDelta,
+    });
+  }, [formData.location]);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profilePictureRow}>
-        <Image
-          style={styles.profilePicture}
-          source={require("../assets/images/profilePicture.png")}
-        />
+        <Image style={styles.profilePicture} source={localImage} />
         <TouchableOpacity onPress={handleProfilePictureSelection}>
           <Text size="h4" weight="semibold" color="#DAB769">
             Change photo
@@ -104,9 +132,9 @@ const Step1: React.FC = () => {
         <Input
           inputMode="text"
           placeholder="Full Name"
-          value={formData.fullName}
+          value={formData.name}
           onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, fullName: text }))
+            setFormData((prev) => ({ ...prev, name: text }))
           }
         />
       </View>
@@ -243,9 +271,9 @@ const Step1: React.FC = () => {
             value={formData.aboutYou}
             style={styles.textArea}
             maxLength={100}
-            onChangeText={(text) => {
-              setFormData((prev) => ({ ...prev, aboutYou: text }));
-            }}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, aboutYou: text }))
+            }
           />
           <Text
             size="medium"
@@ -313,9 +341,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   profilePicture: {
+    borderRadius: 57,
     width: 114,
     height: 114,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   ratingButtonsRow: {
     marginTop: 16,

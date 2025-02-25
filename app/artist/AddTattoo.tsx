@@ -4,15 +4,30 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import Text from "@/components/Text";
 import { launchImageLibrary } from "react-native-image-picker";
 import Button from "@/components/Button";
+import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import { useSelector } from "react-redux";
+import { getFileName } from "@/utils/helperFunctions";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const AddTattoo = () => {
   const [attachment, setAttachment] = useState<string | null>("");
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [caption, setCaption] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const currentUserId = loggedInUser?.uid;
+  const { uploadImages } = useFirebaseImage({
+    uniqueFilePrefix: currentUserId,
+  });
   const [tattooStyles, setTattooStyles] = useState([
     { title: "Tribal", value: 1, selected: false },
     { title: "Geometric", value: 2, selected: false },
@@ -24,7 +39,7 @@ const AddTattoo = () => {
 
   const toggleTattooStyles = (value: number) => {
     const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
     setTattooStyles(updatedTattooStyles);
   };
@@ -40,9 +55,37 @@ const AddTattoo = () => {
       setAttachment(selectedImageUri); // Save the selected image URI
     }
   };
-
+  const publishTattoo = async () => {
+    if (!attachment) {
+      return;
+    }
+    try {
+      setLoading(true);
+      const styles = tattooStyles?.reduce((acc: string[], item) => {
+        if (item.selected) {
+          return [...acc, item.title];
+        }
+        return acc;
+      }, []);
+      await uploadImages([
+        {
+          uri: attachment,
+          name: getFileName(attachment),
+          caption,
+          styles,
+        },
+      ]); // upload publications images and add to publication collection as well
+      router.back();
+    } catch (error) {
+      Alert.alert("Error adding tattoo", error as string);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
+    >
       <TouchableOpacity
         style={{
           height: "50%",
@@ -60,14 +103,14 @@ const AddTattoo = () => {
       >
         {attachment ? (
           <Image
-            style={{ height: "100%", width: "100%", resizeMode: "stretch" }} // Set image height to 40%
+            style={{ height: "100%", width: "100%", resizeMode: "contain" }} // Set image height to 40%
             source={{ uri: attachment }}
           />
         ) : (
           <>
             <View style={{ height: 24, width: 24 }}>
               <Image
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: "100%", width: "100%", resizeMode: "cover" }}
                 source={require("../../assets/images/add_photo_alternate-2.png")}
               />
             </View>
@@ -131,10 +174,17 @@ const AddTattoo = () => {
         </View>
       </View>
 
-      <View style={styles.fixedButtonContainer}>
-        <Button title="Publish" />
+      <View
+        style={[styles.fixedButtonContainer, { marginBottom: insets.bottom }]}
+      >
+        <Button
+          loading={loading}
+          disabled={!!!attachment}
+          onPress={publishTattoo}
+          title="Publish"
+        />
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -162,7 +212,7 @@ const styles = StyleSheet.create({
   },
   fixedButtonContainer: {
     position: "absolute", // Fix the button at the bottom
-    bottom: 20, // Adjust the distance from the bottom
+    bottom: 10, // Adjust the distance from the bottom
     left: 16,
     right: 16,
   },

@@ -16,6 +16,7 @@ import ShareProfileBottomSheet from "@/components/BottomSheets/ShareProfileBotto
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import { useDispatch, useSelector } from "react-redux";
+import { UserFirestore } from "@/types/user";
 
 interface StudioItem {
   title: string;
@@ -29,7 +30,10 @@ const MyProfile = () => {
 
   // console.log("My Profile Page : ", JSON.parse(loggedInUser));
   const { BottomSheet, show, hide } = useBottomSheet();
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  // const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const loggedInUser: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
 
   const [studio, setStudio] = useState<StudioItem[]>([
     { title: "Studio", value: 1, selected: false },
@@ -39,7 +43,7 @@ const MyProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);
@@ -74,19 +78,21 @@ const MyProfile = () => {
         <View style={styles.pictureAndName}>
           <Image
             style={styles.profilePicture}
-            source={require("../../assets/images/Artist.png")}
+            source={{
+              uri:
+                loggedInUser?.profilePictureSmall ??
+                loggedInUser?.profilePicture,
+            }}
           />
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
+              {loggedInUser?.name ?? ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {loggedInUser?.studio?.type === "studio"
-                ? loggedInUser?.studio?.name
-                : " Luis Arts Studio"}
+              {loggedInUser.studioName ?? ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {loggedInUser?.city ? loggedInUser?.city : "Phuket, Thailand"}
+              {loggedInUser?.city ?? ""}
             </Text>
           </View>
         </View>
@@ -155,9 +161,7 @@ const MyProfile = () => {
         })}
       </View>
       <Text size="p" weight="normal" color="#A7A7A7">
-        {loggedInUser?.about
-          ? loggedInUser?.about
-          : "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text."}
+        {loggedInUser?.aboutYou ?? ""}
       </Text>
       <View style={styles.buttonRow}>
         <IconButton
@@ -219,7 +223,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
   },
   icon: {

@@ -4,47 +4,85 @@ import {
   View,
   FlatList,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import React, { useState, useEffect } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
-import { getUsers } from "@/utils/firebase/userFunctions";
+// import { getUsers } from "@/utils/firebase/userFunctions";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
+import useTypesense from "@/hooks/useTypesense";
+import { UserFirestore } from "@/types/user";
 
 const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const artistsTs = useTypesense();
+  const publicationsTs = useTypesense();
 
   const artists = useSelector((state: any) => state.artist.allArtists);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersList = await getUsers(); // Call your getUsers function here
-        // console.log("Users: ", JSON.stringify(usersList));
-        dispatch(resetAllArtists());
-        dispatch(updateAllArtists(usersList));
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-    };
+  // Function to fetch users and update Redux state
+  const fetchUsers = async () => {
+    try {
+      const hits = await artistsTs.search({
+        collection: "Users",
+        query: "*",
+        queryBy: "name", // You can use any searchable field
+        filterBy: "isArtist:=true",
+      });
+      // Map the search hits to get the actual documents.
+      const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
 
-    fetchUsers(); // Fetch users when the component mounts
-  }, []);
+      dispatch(resetAllArtists());
+      dispatch(
+        updateAllArtists(
+          fetchedArtists.map(({ id, ...data }) => ({
+            data,
+            id,
+          })),
+        ),
+      );
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  // Initial fetch when the component mounts
+  useEffect(() => {
+    publicationsTs.search({ collection: "publications" });
+  }, [publicationsTs.search]);
 
   useEffect(() => {
-    // console.log("Artists From Redux : ", artists);
-  }, [artists]);
+    fetchUsers();
+    // Use "*" as query to match all, then filter by isArtist:true.
+  }, [artistsTs.search]);
+  // Handler for pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUsers();
+    publicationsTs.search({ collection: "publications" });
+    setRefreshing(false);
+  };
 
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: 30 }}
       style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#fff"
+          colors={["#fff"]}
+        />
+      }
     >
       <Input
         value={searchText}
@@ -54,7 +92,7 @@ const Home = () => {
         onChangeText={(text) => setSearchText(text)}
         rightIcon={searchText !== "" && "cancel"}
         rightIconOnPress={() => setSearchText("")}
-      ></Input>
+      />
       <View style={styles.flatlistHeadingContainer}>
         <Text size="h4" weight="semibold" color="#FBF6FA">
           Popular artists near you
@@ -81,6 +119,7 @@ const Home = () => {
           height: 215,
         }}
       />
+
       <Text
         size="h4"
         weight="semibold"
@@ -89,7 +128,7 @@ const Home = () => {
       >
         Find Your Inspiration
       </Text>
-      <ImageGallery></ImageGallery>
+      <ImageGallery images={publicationsTs.results} />
     </ScrollView>
   );
 };
@@ -103,7 +142,6 @@ const styles = StyleSheet.create({
     paddingTop: 15,
   },
   flatlistHeadingContainer: {
-    display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

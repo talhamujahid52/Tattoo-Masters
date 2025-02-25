@@ -1,76 +1,44 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
-import { useDispatch, useSelector } from "react-redux";
+import { TypesenseResult, Publication } from "@/hooks/useTypesense";
 
-interface DataProp {
-  id: number;
-  widthRatio?: number;
-  heightRatio?: number;
-  imageUrl: string;
+interface Props {
+  images: TypesenseResult<Publication>[];
 }
-const originalData = [
-  {
-    imageUrl: "https://picsum.photos/200/300?random=1",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=2",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=3",
-    widthRatio: 1,
-    heightRatio: 2,
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=4",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=5",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=6",
-    widthRatio: 1,
-    heightRatio: 2,
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=7",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=8",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=9",
-  },
-  {
-    imageUrl: "https://picsum.photos/200/300?random=10",
-  },
-];
 
-const ImageGallery = () => {
+const ImageGallery = ({ images }: Props) => {
+  console.log("iamges", images);
   const router = useRouter();
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
-
-  const renderItem = ({ item }: { item: DataProp }) => {
+  const renderItem = useCallback(({ item }: { item: TypesenseResult<any> }) => {
+    const doc = item.document;
     return (
       <TouchableOpacity
         style={styles.boxContainer}
         onPress={() => {
           router.push({
             pathname: "/artist/TattooDetail",
-            params: { tattoo: item.imageUrl },
+            params: {
+              photoUrlVeryHigh: encodeURIComponent(doc?.downloadUrls?.veryHigh),
+              photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+              id: doc.id,
+              caption: doc.caption,
+              styles: doc.styles,
+              userId: doc.userId,
+              timestamp: doc.timestamp,
+            },
           });
         }}
       >
         <Image
-          source={{ uri: item.imageUrl }}
+          source={{ uri: item?.document?.downloadUrls?.small }}
           style={styles.box}
           resizeMode="cover"
         />
       </TouchableOpacity>
     );
-  };
-
+  }, []);
   return (
     <View
       style={{
@@ -79,7 +47,7 @@ const ImageGallery = () => {
     >
       <ResponsiveGrid
         maxItemsPerColumn={3}
-        data={originalData}
+        data={images ?? []}
         renderItem={renderItem}
         showScrollIndicator={false}
       />

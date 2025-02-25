@@ -2,33 +2,117 @@ import {
   StyleSheet,
   View,
   Image,
-  Dimensions,
+  // Dimensions,
   TouchableOpacity,
+  // Alert,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
+
+import { Zoomable, ZoomableRef } from "@likashefqet/react-native-image-zoom";
 import Text from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
+import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publication,
+// import { doc } from "@react-native-firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
+import { UserFirestore } from "@/types/user";
+import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { toggleLikePublication } from "@/utils/firebase/userFunctions";
+import { useSelector } from "react-redux";
+import { useIsPublicationLiked } from "@/hooks/useIsPublicationLiked";
+import usePublicationLikes from "@/hooks/usePublicationLikes";
+import { Ionicons } from "@expo/vector-icons";
+
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 5;
+// const ZOOM_IN_X = 146;
+// const ZOOM_IN_Y = 491;
 
 const TattooDetail: React.FC = () => {
-  const insets = useSafeAreaInsets();
-  const { tattoo } = useLocalSearchParams<any>();
-  const { width, height } = Dimensions.get("window");
-  const { BottomSheet, show, hide } = useBottomSheet();
+  const zoomableRef = useRef<ZoomableRef>(null);
 
-  console.log("Tattoo ID, ", tattoo);
+  const scale = useSharedValue(1);
+
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user,
+  );
+  const currentUserId = loggedInUser?.uid;
+
+  // const [isZoomed, setIsZoomed] = useState(false);
+
+  // const zoomIn = () => {
+  //   zoomableRef?.current?.zoom({ scale: 5, x: ZOOM_IN_X, y: ZOOM_IN_Y });
+  // };
+  // const zoomOut = () => {
+  //   zoomableRef?.current?.reset();
+  // };
+  //
+  // const getInfo = () => {
+  //   const info = zoomableRef?.current?.getInfo();
+  //   Alert.alert("Info", JSON.stringify(info, null, 2));
+  // };
+
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      borderRadius: 30 / scale.value,
+    }),
+    [scale],
+  );
+  const insets = useSafeAreaInsets();
+  const {
+    photoUrlVeryHigh,
+    // photoUrlHigh,
+    id,
+    caption,
+    // styles,
+    userId,
+    // timestamp,
+  } = useLocalSearchParams<any>();
+
+  // const { width, height } = Dimensions.get("window");
+  const { BottomSheet, show, hide } = useBottomSheet();
+  // Use the Typesense hook to fetch the user details from the "Users" collection.
+  const { getDocument } = useTypesense();
+  const [loading, setLoading] = useState(false);
+  const [userDetails, setUserDetails] = useState<UserFirestore | undefined>();
+  const isLiked = useIsPublicationLiked(id, currentUserId);
+  const totalLikes = usePublicationLikes(id);
+  const toggleLikePublicationOnHandle = async () => {
+    try {
+      setLoading(true);
+      await toggleLikePublication(id, currentUserId);
+    } catch {
+      console.log("failed to like unlike photo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      getDocument({ collection: "Users", documentId: userId })
+        .then((doc) => {
+          console.log("user details", doc);
+          setUserDetails(doc);
+        })
+        .catch((err) =>
+          console.error("Error fetching user details from Typesense:", err),
+        );
+    }
+  }, [userId, getDocument]);
 
   return (
     <View
       style={{
         flex: 1,
+        borderWidth: 2,
         position: "relative",
-        backgroundColor: "#000",
       }}
     >
-      <BottomSheet InsideComponent={<ImageActionsBottomSheet hide1={hide}  />} />
+      <BottomSheet InsideComponent={<ImageActionsBottomSheet hide1={hide} />} />
 
       <View
         style={{
@@ -36,18 +120,35 @@ const TattooDetail: React.FC = () => {
           height: "100%",
         }}
       >
-        <Image
-          style={{ height: "100%", width: "100%", resizeMode: "contain" }}
-          source={{ uri: tattoo }}
-        />
+        <Zoomable
+          ref={zoomableRef}
+          scale={scale}
+          minScale={MIN_SCALE}
+          maxScale={MAX_SCALE}
+          style={animatedStyle}
+        >
+          <Image
+            style={{
+              height: "100%",
+              bottom: insets.bottom,
+              width: "100%",
+              resizeMode: "contain",
+            }}
+            source={{ uri: photoUrlVeryHigh }}
+          />
+        </Zoomable>
       </View>
-      <View
+      <LinearGradient
+        colors={["rgba(0, 0, 0, 0.98)", "transparent"]}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0.5, y: 0 }}
+        id="bottom-container"
         style={{
-          height: 100,
-          width: width - 32,
+          width: "100%",
+          padding: 16,
+          paddingBottom: insets.bottom + 10,
           position: "absolute",
-          bottom: insets.bottom,
-          left: 16,
+          bottom: 0,
         }}
       >
         <View
@@ -59,27 +160,46 @@ const TattooDetail: React.FC = () => {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
+            <Image
               style={{
                 width: 42,
                 height: 42,
                 borderRadius: 50,
-                backgroundColor: "green",
+                backgroundColor: "white",
                 marginRight: 8,
               }}
+              source={{
+                uri:
+                  userDetails?.profilePictureSmall ??
+                  userDetails?.profilePicture,
+              }}
             />
+            <View />
             <Text size="p" weight="semibold" color="#FFF">
-              Abid Iqbal
+              {userDetails?.name}
             </Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Image
-              style={{ height: 26, width: 26 }}
-              source={require("../../assets/images/favorite-outline-white.png")}
-            />
-            <Text size="medium" weight="normal" color="#fff">
-              245
-            </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <TouchableOpacity
+              onPress={toggleLikePublicationOnHandle}
+              disabled={loading}
+              hitSlop={{ top: 8, left: 8, right: 4, bottom: 8 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              {isLiked ? (
+                <Ionicons name="heart" size={24} color="#fff" />
+              ) : (
+                <Ionicons name="heart-outline" size={24} color="#fff" />
+              )}
+              <Text
+                size="medium"
+                weight="normal"
+                style={{ minWidth: 10 }}
+                color="#fff"
+              >
+                {totalLikes ?? 0}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
                 show();
@@ -93,10 +213,9 @@ const TattooDetail: React.FC = () => {
           </View>
         </View>
         <Text size="p" weight="normal" color="#FBF6FA">
-          Lorem ipsum dolor sit amet, contetur adipiscing elit, sed do eiusmod
-          tempor incididunt.
+          {caption}
         </Text>
-      </View>
+      </LinearGradient>
     </View>
   );
 };
