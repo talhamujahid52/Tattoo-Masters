@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^5.0.5",
+    "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/slider": "4.5.2",
     "@react-native-firebase/app": "^21.7.1",

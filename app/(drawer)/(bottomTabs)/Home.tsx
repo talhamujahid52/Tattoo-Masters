@@ -11,7 +11,7 @@ import Text from "@/components/Text";
 import React, { useState, useEffect } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
-import { getUsers } from "@/utils/firebase/userFunctions";
+// import { getUsers } from "@/utils/firebase/userFunctions";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
@@ -39,7 +39,6 @@ const Home = () => {
       });
       // Map the search hits to get the actual documents.
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
-      console.log("fetchedArtists", fetchedArtists);
 
       dispatch(resetAllArtists());
       dispatch(

@@ -190,3 +190,44 @@ export const signInWithGoogle = async () => {
     console.log("Google Sign-In error:", error);
   }
 };
+
+export const toggleLikePublication = async (
+  publicationId: string,
+  userId: string,
+) => {
+  const publicationRef = firestore()
+    .collection("publications")
+    .doc(publicationId);
+  const userRef = firestore().collection("Users").doc(userId);
+
+  try {
+    await firestore().runTransaction(async (transaction) => {
+      // Get the user document to check likedItems
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        throw new Error("User does not exist");
+      }
+      const userData = userDoc.data() || {};
+      const likedItems: string[] = userData.likedItems || [];
+
+      // Determine if the publication is already liked
+      const alreadyLiked = likedItems.includes(publicationId);
+      const incrementValue = alreadyLiked ? -1 : 1;
+
+      // Update publication: increment or decrement likes
+      transaction.update(publicationRef, {
+        likes: firestore.FieldValue.increment(incrementValue),
+      });
+
+      // Update user: remove or add publicationId to likedItems array
+      transaction.update(userRef, {
+        likedItems: alreadyLiked
+          ? firestore.FieldValue.arrayRemove(publicationId)
+          : firestore.FieldValue.arrayUnion(publicationId),
+      });
+    });
+    console.log("Publication like toggled successfully.");
+  } catch (error) {
+    console.error("Error toggling publication like:", error);
+  }
+};

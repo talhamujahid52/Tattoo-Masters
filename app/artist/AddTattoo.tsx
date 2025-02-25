@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 import { getFileName } from "@/utils/helperFunctions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const AddTattoo = () => {
   const [attachment, setAttachment] = useState<string | null>("");
@@ -82,7 +83,9 @@ const AddTattoo = () => {
     }
   };
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
+    >
       <TouchableOpacity
         style={{
           height: "50%",
@@ -181,7 +184,7 @@ const AddTattoo = () => {
           title="Publish"
         />
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 

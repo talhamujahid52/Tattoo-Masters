@@ -9,6 +9,7 @@ interface Props {
 }
 
 const ImageGallery = ({ images }: Props) => {
+  console.log("iamges", images);
   const router = useRouter();
   const renderItem = useCallback(({ item }: { item: TypesenseResult<any> }) => {
     const doc = item.document;
