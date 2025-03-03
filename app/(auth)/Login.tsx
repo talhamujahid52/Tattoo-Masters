@@ -283,15 +283,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   Spacer: {
-    width: 102,
+    flex: 1,
     height: 1,
-    backgroundColor: "#E6E6E6",
+    backgroundColor: "#454545",
   },
   ThirdPartyLoginButtonsContainer: {
-    width: "100%",
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 8,
   },
   BottomText: {
     marginTop: 24,

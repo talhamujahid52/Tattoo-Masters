@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 16,
     borderTopWidth: 0.33,
-    borderColor: "#FFFFFF56",
+    borderColor: "#2D2D2D",
   },
   profilePictureRow: {
     display: "flex",

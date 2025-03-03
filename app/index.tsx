@@ -1,4 +1,4 @@
-import { SplashScreen } from "expo-router";
+import React from "react";
 import Welcome from "./(auth)/Welcome";
 
 export default function Index() {

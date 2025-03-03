@@ -83,7 +83,7 @@ const Input = ({
           <MaterialIcons
             name={isPasswordVisible ? "visibility" : "visibility-off"}
             size={24}
-            color="white"
+            color="#B1AFA1"
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -93,7 +93,7 @@ const Input = ({
             <MaterialIcons
               name={rightIcon}
               size={24}
-              color="white"
+              color="#B1AFA1"
               style={styles.icon}
             />
           </TouchableOpacity>

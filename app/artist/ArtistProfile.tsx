@@ -183,7 +183,7 @@ const ArtistProfile = () => {
           );
         })}
       </View>
-      <Text size="p" weight="normal" color="#A7A7A7">
+      <Text size="p" weight="normal" color="#A7A7A7" numberOfLines={2}>
         {artist?.data?.about
           ? artist?.data?.about
           : "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text."}
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 16,
     borderTopWidth: 0.33,
-    borderColor: "#FFFFFF56",
+    borderColor: "#2D2D2D",
   },
   userProfileRow: {
     display: "flex",

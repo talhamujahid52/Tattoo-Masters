@@ -14,12 +14,12 @@ const OnboardingComponent = () => (
       paginationStyleItemActive={{
         width: 17,
         height: 7,
-        backgroundColor: "#ecc775",
+        backgroundColor: "#ECC775",
       }}
       paginationStyleItemInactive={{
         width: 7,
         height: 7,
-        backgroundColor: "#ecc775",
+        backgroundColor: "#5A4E34",
       }}
     >
       <View style={styles.textContainer}>

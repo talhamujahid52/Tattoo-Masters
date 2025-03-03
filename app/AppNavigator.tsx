@@ -1,3 +1,4 @@
+import React from "react";
 import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";

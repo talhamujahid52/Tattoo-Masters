@@ -18,7 +18,7 @@ const BottomTabsLayout = () => {
         screenOptions={{
           tabBarStyle: {
             backgroundColor: "#000000",
-            borderColor: "#FFFFFF26",
+            borderColor: "#333739",
             borderTopWidth: 0.33,
             height: 54 + insets.bottom,
           },
@@ -44,7 +44,7 @@ const BottomTabsLayout = () => {
               ),
             headerStyle: {
               backgroundColor: "#000",
-              borderBottomWidth: 0,
+              shadowOpacity: 0,
             },
             headerLeftContainerStyle: {
               paddingLeft: 16,
