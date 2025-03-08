@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import useTypesense from "@/hooks/useTypesense";
+import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 
 interface Artist {
   id: string;
@@ -13,17 +15,49 @@ interface Artist {
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
+  const dispatch = useDispatch();
+  const artistsTs = useTypesense();
 
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
   const artists = useSelector((state: any) => state.artist.allArtists);
 
-  // const artists: Artist[] = Array.from({ length: 20 }, (_, index) => ({
-  //   id: index.toString(),
-  //   name: `Artist ${index + 1}`,
-  //   isActive: Math.random() < 0.5, // Randomly assign active status
-  // }));
+  // Function to fetch artists from Typesense based on the search text.
+  const fetchUsers = async () => {
+    try {
+      // Use "*" to fetch all artists when the search box is empty.
+      const query = searchText.trim() === "" ? "*" : searchText;
+      const hits = await artistsTs.search({
+        collection: "Users",
+        query,
+        queryBy: "name,studio,studioName",
+        filterBy: "isArtist:=true",
+      });
+      // Map the search hits to actual documents.
+      const fetchedArtists = hits.map((hit) => hit.document);
+      dispatch(resetAllArtists());
+      dispatch(
+        updateAllArtists(
+          fetchedArtists.map(({ id, ...data }: any) => ({
+            id,
+            data,
+          })),
+        ),
+      );
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
+  // Debounced effect: wait for 300ms after the user stops typing before fetching users.
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchText]);
 
   return (
     <View style={styles.container}>
@@ -32,9 +66,9 @@ const Search: React.FC = () => {
           value={searchText}
           inputMode="text"
           placeholder="Search for artists and studios"
-          leftIcon={"search"}
+          leftIcon="search"
           onChangeText={(text) => setSearchText(text)}
-          rightIcon={searchText !== "" && "cancel"}
+          rightIcon={searchText !== "" ? "cancel" : undefined}
           rightIconOnPress={() => setSearchText("")}
         />
       </View>
@@ -45,7 +79,9 @@ const Search: React.FC = () => {
           color="#A7A7A7"
           style={styles.Heading}
         >
-          Artists near you
+          {searchText
+            ? `Showing ${artists?.length} result${artists?.length !== 1 ? "s" : ""} for "${searchText}"`
+            : "Artists near you"}
         </Text>
         <FlatList
           data={artists}
@@ -53,8 +89,8 @@ const Search: React.FC = () => {
             <View
               style={{
                 width: adjustedWidth / 3,
-                marginRight: index % 3 === 0 ? 5 : 0, // Right margin for the 1st column
-                marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
+                marginRight: index % 3 === 0 ? 5 : 0,
+                marginLeft: index % 3 === 2 ? 5 : 0,
               }}
             >
               <ArtistSearchCard artist={item} />

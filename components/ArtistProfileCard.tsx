@@ -39,15 +39,24 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
         }}
       />
       <View style={styles.RatingAndLocation}>
-        <Image
-          source={require("../assets/images/star.png")}
-          style={{ height: 16, width: 16, resizeMode: "contain" }}
-        />
-        <Text size="small" weight="normal" color="#FBF6FA">
-          {artist.data.rating ? Number(artist.data.rating).toFixed(1) : "4.8"} (
-          {artist.data?.reviewsCount ? artist.data?.reviewsCount : "129"})
-        </Text>
-        <View style={styles.SeparatorDot}></View>
+        {artist?.data?.rating && (
+          <>
+            <Image
+              source={require("../assets/images/star.png")}
+              style={{ height: 16, width: 16, resizeMode: "contain" }}
+            />
+            <Text size="small" weight="normal" color="#FBF6FA">
+              {artist.data.rating
+                ? Number(artist.data.rating).toFixed(1)
+                : "5.0"}
+              {artist.data?.reviewsCount
+                ? `(${artist.data?.reviewsCount})`
+                : ""}
+            </Text>
+
+            <View style={styles.SeparatorDot}></View>
+          </>
+        )}
         <Text size="small" weight="normal" color="#FBF6FA">
           {artist.data.city ? artist.data.city : "Phuket"}
         </Text>
@@ -66,6 +75,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
     display: "flex",
+    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
   },

@@ -2,25 +2,13 @@ import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-
-interface Artist {
-  id: string;
-  name: string;
-  isActive: boolean;
-}
+import { useSelector } from "react-redux";
 
 const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
   const artists = useSelector((state: any) => state.artist.allArtists);
-
-  // const artists: Artist[] = Array.from({ length: 8 }, (_, index) => ({
-  //   id: index.toString(),
-  //   name: `Artist ${index + 1}`,
-  //   isActive: Math.random() < 0.5, // Randomly assign active status
-  // }));
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
