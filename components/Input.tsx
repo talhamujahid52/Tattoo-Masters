@@ -20,6 +20,8 @@ interface InputProps {
   textInputProps?: TextInputProps;
   backgroundColour?: string;
   rightIconOnPress?: () => void;
+
+  onSubmitEditing?: () => void;
 }
 
 const Input = ({
@@ -33,6 +35,7 @@ const Input = ({
   backgroundColour = "#FFFFFF1A",
   textInputProps,
   isNameField,
+  onSubmitEditing,
 }: InputProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -70,6 +73,7 @@ const Input = ({
         secureTextEntry={inputMode === "password" && !isPasswordVisible}
         inputMode={inputMode === "email" ? "email" : "text"}
         autoCapitalize={shouldAutoCap}
+        onSubmitEditing={onSubmitEditing}
         keyboardType={
           inputMode === "email"
             ? "email-address"
