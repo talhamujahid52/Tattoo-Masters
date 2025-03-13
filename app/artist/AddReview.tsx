@@ -22,9 +22,9 @@ const AddReview = () => {
   const artist = useGetArtist(artistId);
 
   // State hooks
-  const [overallRating, setOverallRating] = useState<number | null>(null);
-  const [qualityOfTattoo, setQualityOfTattoo] = useState<number | null>(null);
-  const [tattooAsImagined, setTattooAsImagined] = useState<number | null>(null);
+  const [overallRating, setOverallRating] = useState<number>(0);
+  const [qualityOfTattoo, setQualityOfTattoo] = useState<number>(0);
+  const [tattooAsImagined, setTattooAsImagined] = useState<number>(0);
   const [feedback, setFeedback] = useState("");
   const [attachment, setAttachment] = useState<string | null>("");
 
@@ -202,7 +202,9 @@ const AddReview = () => {
             pathname: "/artist/PublishReview",
             params: {
               artistId: artistId,
-              rating: overallRating,
+              rating: Number(
+                (overallRating + qualityOfTattoo + tattooAsImagined) / 3
+              ).toFixed(1),
               tattooFeedback: feedback,
               tattooImage: attachment,
             },

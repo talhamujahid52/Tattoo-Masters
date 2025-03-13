@@ -7,7 +7,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import firestore from "@react-native-firebase/firestore";
 import { firebase } from "@react-native-firebase/firestore";
-import { useSelector } from "react-redux";
 
 const PublishReview = () => {
   const { artistId, rating, tattooFeedback, tattooImage } =
@@ -15,7 +14,6 @@ const PublishReview = () => {
   const artist = useGetArtist(artistId);
   const currentUserId = firebase?.auth()?.currentUser?.uid;
   const [loading, setLoading] = useState(false); // Manage loading state
-  const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
 
   const handlePublishReview = async () => {
     setLoading(true);
@@ -45,8 +43,7 @@ const PublishReview = () => {
             feedback: tattooFeedback,
             rating,
             date: new Date(),
-            reviewerName: loggedInUser?.name,
-            reviewerProfilePicture: loggedInUser?.profilePicture,
+            reviewerId: currentUserId,
           };
           await userRef.update({
             reviewsCount: newReviewsCount,

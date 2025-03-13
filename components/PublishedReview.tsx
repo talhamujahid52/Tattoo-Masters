@@ -1,23 +1,28 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import Text from "./Text";
-import { useSelector } from "react-redux";
-import { router } from "expo-router";
+import { formatDistanceToNow } from "date-fns"; // Import date-fns
 
 interface Review {
-  rating?: any;
-  tattooFeedback?: any;
-  tattooImage?: any;
-  isShownOnProfile?: boolean;
+  artistId: string;
+  date: {
+    nanoseconds: number;
+    seconds: number;
+  };
+  feedback: string;
+  id: string;
+  rating: string;
+  user: string;
+  userName: string;
+  userProfilePicture: string;
 }
 
-const Review: React.FC<Review> = ({
-  rating,
-  tattooFeedback,
-  tattooImage,
-  isShownOnProfile = false,
-}) => {
-  const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
+const PublishedReview = ({ review }: { review: Review }) => {
+  // Convert the review date to a JavaScript Date object
+  const reviewDate = new Date(review.date.seconds * 1000);
+
+  // Get the time difference in a human-readable format
+  const timeAgo = formatDistanceToNow(reviewDate, { addSuffix: true });
 
   return (
     <View style={styles.container}>
@@ -26,8 +31,8 @@ const Review: React.FC<Review> = ({
           <Image
             style={styles.profilePicture}
             source={
-              loggedInUser?.profilePicture
-                ? { uri: loggedInUser?.profilePicture }
+              review?.userProfilePicture
+                ? { uri: review?.userProfilePicture }
                 : require("../assets/images/Artist.png")
             }
           />
@@ -39,10 +44,10 @@ const Review: React.FC<Review> = ({
             }}
           >
             <Text size="p" weight="normal" color="#FFF">
-              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
+              {review?.userName ? review?.userName : "Martin Luis"}
             </Text>
             <Text size="medium" weight="normal" color="#A7A7A7">
-              1 min
+              {timeAgo} {/* Display the calculated time ago */}
             </Text>
           </View>
           <View style={styles.midRow}>
@@ -51,23 +56,17 @@ const Review: React.FC<Review> = ({
               source={require("../assets/images/star.png")}
             />
             <Text size="p" weight="normal" color="#FBF6FA">
-              {rating ? rating : "4.5"}
+              {review?.rating ? review?.rating : "4.5"}
             </Text>
           </View>
         </View>
 
-        {isShownOnProfile && (
-          <TouchableOpacity
-            onPress={() => {
-              // router.back();
-            }}
-          >
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/report-flag.png")}
-            />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={() => {}}>
+          <Image
+            style={styles.icon}
+            source={require("../assets/images/report-flag.png")}
+          />
+        </TouchableOpacity>
       </View>
 
       <View
@@ -79,7 +78,9 @@ const Review: React.FC<Review> = ({
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7" style={{ width: "70%" }}>
-          {tattooFeedback}
+          {review?.feedback
+            ? review?.feedback
+            : "This is the 3rd review. This artist is going great."}
         </Text>
         <View
           style={{
@@ -95,11 +96,7 @@ const Review: React.FC<Review> = ({
               width: "100%",
               resizeMode: "cover",
             }}
-            source={
-              tattooImage
-                ? { uri: tattooImage }
-                : require("../assets/images/Artist.png")
-            }
+            source={require("../assets/images/Artist.png")}
           />
         </View>
       </View>
@@ -107,7 +104,7 @@ const Review: React.FC<Review> = ({
   );
 };
 
-export default Review;
+export default PublishedReview;
 
 const styles = StyleSheet.create({
   container: {},

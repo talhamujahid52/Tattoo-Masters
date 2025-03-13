@@ -86,6 +86,19 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="(auth)/EmailVerification"
+            options={{
+              headerShown: true,
+              headerTitle: "Email verification",
+              headerTitleStyle: { color: "#fff" },
+              headerTitleAlign: "center",
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
             name="(auth)/Verification"
             options={{
               headerShown: true,
@@ -127,6 +140,18 @@ const AppNavigator = () => {
             options={{
               headerShown: true,
               headerTitle: "Leave Review",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/AllReviews"
+            options={{
+              headerShown: true,
+              headerTitle: "Reviews",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -333,6 +358,18 @@ const AppNavigator = () => {
             options={{
               headerShown: true,
               headerTitle: "Add location",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/SearchArtistProfiles"
+            options={{
+              headerShown: false,
+              // headerTitle: "Add location",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  Pressable,
 } from "react-native";
 import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -28,6 +29,15 @@ const ArtistProfile = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const content =
+    artist?.data?.about ||
+    "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
+
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded); // Toggle the state
+  };
+
   const insets = useSafeAreaInsets();
   const defaultLocation = {
     latitude: 33.664286,
@@ -183,11 +193,13 @@ const ArtistProfile = () => {
           );
         })}
       </View>
-      <Text size="p" weight="normal" color="#A7A7A7" numberOfLines={2}>
-        {artist?.data?.about
-          ? artist?.data?.about
-          : "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text."}
-      </Text>
+      <Pressable onPress={handleToggle}>
+        <Text size="p" weight="normal" color="#A7A7A7">
+          {isExpanded ? content : `${content.slice(0, 100)}...`}{" "}
+          {/* Show a snippet or full content */}
+        </Text>
+      </Pressable>
+
       <View style={styles.buttonRow}>
         <IconButton
           title="Favorite"
