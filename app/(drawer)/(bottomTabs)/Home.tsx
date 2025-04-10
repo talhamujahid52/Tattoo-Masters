@@ -11,12 +11,16 @@ import Text from "@/components/Text";
 import React, { useState, useEffect } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
-// import { getUsers } from "@/utils/firebase/userFunctions";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
 import { UserFirestore } from "@/types/user";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 
 const Home = () => {
   const router = useRouter();
@@ -27,17 +31,29 @@ const Home = () => {
   const publicationsTs = useTypesense();
 
   const artists = useSelector((state: any) => state.artist.allArtists);
+  const [searchMode, setSearchMode] = useState(false);
+  // Shared values for the animation of the popular artists section
+  const artistsOpacity = useSharedValue(1);
+  const artistsTranslateY = useSharedValue(0);
+  const artistsHeight = useSharedValue(215); // initial height for the FlatList container
 
-  // Function to fetch users and update Redux state
+  const animatedArtistsStyle = useAnimatedStyle(() => {
+    return {
+      opacity: artistsOpacity.value,
+      transform: [{ translateY: artistsTranslateY.value }],
+      height: artistsHeight.value,
+    };
+  });
+
+  // Fetch artists and update Redux state
   const fetchUsers = async () => {
     try {
       const hits = await artistsTs.search({
         collection: "Users",
         query: "*",
-        queryBy: "name", // You can use any searchable field
+        queryBy: "name",
         filterBy: "isArtist:=true",
       });
-      // Map the search hits to get the actual documents.
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
 
       dispatch(resetAllArtists());
@@ -54,16 +70,62 @@ const Home = () => {
     }
   };
 
-  // Initial fetch when the component mounts
+  // Search publications with the given query (adjust queryBy fields as needed)
+  const searchPublications = async (query: string) => {
+    try {
+      await publicationsTs.search({
+        collection: "publications",
+        query,
+        queryBy: "styles,caption", // adjust to match your publications schema
+      });
+    } catch (err) {
+      console.error("Error searching publications:", err);
+    }
+  };
+
+  // Handler for when the user submits the search
+  const handleSearchSubmit = async () => {
+    if (searchText.trim() !== "") {
+      setSearchMode(true);
+      // Run the publications search using the search query
+      await searchPublications(searchText);
+      // Animate the popular artists section out (fade, slide up, and collapse height)
+      artistsOpacity.value = withTiming(0, { duration: 300 });
+      artistsTranslateY.value = withTiming(-20, { duration: 300 });
+      artistsHeight.value = withTiming(0, { duration: 300 });
+    } else {
+      // If search is empty, animate the artists section back in
+      //
+      setSearchMode(false);
+      artistsOpacity.value = withTiming(1, { duration: 300 });
+      artistsTranslateY.value = withTiming(0, { duration: 300 });
+      artistsHeight.value = withTiming(215, { duration: 300 });
+      await publicationsTs.search({ collection: "publications" });
+    }
+  };
+
+  // When the search field is cleared, fade the artists section back in
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setSearchMode(false);
+      artistsOpacity.value = withTiming(1, { duration: 300 });
+      artistsTranslateY.value = withTiming(0, { duration: 300 });
+      artistsHeight.value = withTiming(215, { duration: 300 });
+      publicationsTs.search({ collection: "publications" });
+    }
+  }, [searchText]);
+
+  // Initial publications search on mount
   useEffect(() => {
     publicationsTs.search({ collection: "publications" });
   }, [publicationsTs.search]);
 
+  // Fetch artists on mount or when typesense dependency changes
   useEffect(() => {
     fetchUsers();
-    // Use "*" as query to match all, then filter by isArtist:true.
   }, [artistsTs.search]);
-  // Handler for pull-to-refresh
+
+  // Pull-to-refresh handler
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchUsers();
@@ -90,36 +152,38 @@ const Home = () => {
         placeholder="Search for ideas"
         leftIcon={"search"}
         onChangeText={(text) => setSearchText(text)}
+        onSubmitEditing={handleSearchSubmit}
         rightIcon={searchText !== "" && "cancel"}
         rightIconOnPress={() => setSearchText("")}
         backgroundColour="#151515"
       />
-      <View style={styles.flatlistHeadingContainer}>
-        <Text size="h4" weight="semibold" color="#FBF6FA">
-          Popular artists near you
-        </Text>
-        <TouchableOpacity
-          onPress={() => {
-            router.push("/(bottomTabs)/Search");
-          }}
-        >
-          <Text size="h4" weight="normal" color="#DAB769">
-            See more
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      <FlatList
-        data={artists}
-        renderItem={({ item }) => <ArtistProfileCard artist={item} />}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          gap: 16,
-          height: 215,
-        }}
-      />
+      {/* Animated container for the popular artists section */}
+      <Animated.View style={[animatedArtistsStyle, { overflow: "hidden" }]}>
+        <View style={styles.flatlistHeadingContainer}>
+          <Text size="h4" weight="semibold" color="#FBF6FA">
+            Popular artists near you
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/(bottomTabs)/Search");
+            }}
+          >
+            <Text size="h4" weight="normal" color="#DAB769">
+              See more
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={artists}
+          renderItem={({ item }) => <ArtistProfileCard artist={item} />}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          // Remove fixed height so the container's animated height controls the space
+          contentContainerStyle={{ gap: 16 }}
+        />
+      </Animated.View>
 
       <Text
         size="h4"
@@ -127,7 +191,9 @@ const Home = () => {
         color="#FBF6FA"
         style={{ marginTop: 24, marginBottom: 8 }}
       >
-        Find Your Inspiration
+        {searchText && searchMode
+          ? `Showing ${publicationsTs.results?.length} results for ${searchText}`
+          : "Find Your Inspiration"}
       </Text>
       <ImageGallery images={publicationsTs.results} />
     </ScrollView>

@@ -80,6 +80,7 @@ const Input = ({
         secureTextEntry={inputMode === "password" && !isPasswordVisible}
         inputMode={inputMode === "email" ? "email" : "text"}
         autoCapitalize={shouldAutoCap}
+        onSubmitEditing={onSubmitEditing}
         keyboardType={
           inputMode === "email"
             ? "email-address"

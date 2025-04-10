@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
     display: "flex",
+    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
   },

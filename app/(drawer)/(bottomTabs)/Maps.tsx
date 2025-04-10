@@ -213,11 +213,11 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Map View */}
       <MapView
-        provider={PROVIDER_GOOGLE}
+        provider={Platform.OS === "ios" ? undefined : PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         region={region} // Dynamically update region based on search
-        mapType="terrain"
+        // mapType="terrain"
         showsMyLocationButton
         zoomEnabled
       >

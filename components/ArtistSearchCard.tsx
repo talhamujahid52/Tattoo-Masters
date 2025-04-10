@@ -37,13 +37,11 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
       <View style={styles.RatingAndLocation}>
         {/* {isActive && <View style={styles.greenOnlineDot} />} */}
         <Text size="p" weight="semibold" color="#FFFFFF">
-          {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
+          {artist?.data?.name ?? ""}
         </Text>
       </View>
       <Text size="medium" weight="normal" color="#A7A7A7">
-        {artist?.data?.studio?.type === "studio"
-          ? artist?.data?.studio?.name
-          : "Ink Fusion"}
+        {artist?.data?.studioName}
       </Text>
     </TouchableOpacity>
   );
