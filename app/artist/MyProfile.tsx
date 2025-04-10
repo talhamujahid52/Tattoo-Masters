@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  Pressable,
 } from "react-native";
 import React, { useState } from "react";
 import Text from "@/components/Text";
@@ -32,8 +33,17 @@ const MyProfile = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
   // const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const content =
+    loggedInUser?.aboutYou ||
+    "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
+
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded); // Toggle the state
+  };
 
   const [studio, setStudio] = useState<StudioItem[]>([
     { title: "Studio", value: 1, selected: false },
@@ -43,7 +53,7 @@ const MyProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+      item.value === value ? { ...item, selected: !item.selected } : item
     );
 
     setStudio(updatedstudio);
@@ -160,9 +170,15 @@ const MyProfile = () => {
           );
         })}
       </View>
-      <Text size="p" weight="normal" color="#A7A7A7">
+      {/* <Text size="p" weight="normal" color="#A7A7A7">
         {loggedInUser?.aboutYou ?? ""}
-      </Text>
+      </Text> */}
+      <Pressable onPress={handleToggle}>
+        <Text size="p" weight="normal" color="#A7A7A7">
+          {isExpanded ? content : `${content.slice(0, 100)}...`}{" "}
+          {/* Show a snippet or full content */}
+        </Text>
+      </Pressable>
       <View style={styles.buttonRow}>
         <IconButton
           title="Edit profile"
@@ -206,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 16,
     borderTopWidth: 0.33,
-    borderColor: "#FFFFFF56",
+    borderColor: "#2D2D2D",
   },
   userProfileRow: {
     display: "flex",

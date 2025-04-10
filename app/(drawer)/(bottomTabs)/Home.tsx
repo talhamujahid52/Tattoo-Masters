@@ -92,6 +92,7 @@ const Home = () => {
         onChangeText={(text) => setSearchText(text)}
         rightIcon={searchText !== "" && "cancel"}
         rightIconOnPress={() => setSearchText("")}
+        backgroundColour="#151515"
       />
       <View style={styles.flatlistHeadingContainer}>
         <Text size="h4" weight="semibold" color="#FBF6FA">

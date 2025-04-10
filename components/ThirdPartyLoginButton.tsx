@@ -26,7 +26,7 @@ const ThirdPartyLoginButton = ({ title = "Google", icon, onPress }: ButtonProps)
 
 const styles = StyleSheet.create({
   button: {
-    flex: 0.48,
+    flex: 1,
     display: "flex",
     flexDirection: "row",
     gap: 8,

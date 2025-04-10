@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { StyleSheet, View, FlatList, Dimensions } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 import { useDispatch, useSelector } from "react-redux";
+import { router } from "expo-router";
 
 interface Artist {
   id: string;
@@ -28,15 +35,25 @@ const Search: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.inputHeaderContainer}>
-        <Input
-          value={searchText}
-          inputMode="text"
-          placeholder="Search for artists and studios"
-          leftIcon={"search"}
-          onChangeText={(text) => setSearchText(text)}
-          rightIcon={searchText !== "" && "cancel"}
-          rightIconOnPress={() => setSearchText("")}
-        />
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/artist/SearchArtistProfiles");
+          }}
+        >
+          <Input
+            value={searchText}
+            inputMode="text"
+            placeholder="Search for artists and studios"
+            leftIcon={"search"}
+            onChangeText={(text) => setSearchText(text)}
+            rightIcon={searchText !== "" && "cancel"}
+            rightIconOnPress={() => setSearchText("")}
+            onPress={() => {
+              router.push("/artist/SearchArtistProfiles");
+            }}
+            editable={false}
+          />
+        </TouchableOpacity>
       </View>
       <View style={styles.searchView}>
         <Text

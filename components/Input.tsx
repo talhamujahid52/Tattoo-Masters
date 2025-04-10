@@ -20,6 +20,11 @@ interface InputProps {
   textInputProps?: TextInputProps;
   backgroundColour?: string;
   rightIconOnPress?: () => void;
+  editable?: boolean;
+  onPress?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onSubmitEditing?: () => void;
 }
 
 const Input = ({
@@ -33,6 +38,11 @@ const Input = ({
   backgroundColour = "#FFFFFF1A",
   textInputProps,
   isNameField,
+  editable = true,
+  onPress,
+  onFocus,
+  onBlur,
+  onSubmitEditing,
 }: InputProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -74,16 +84,21 @@ const Input = ({
           inputMode === "email"
             ? "email-address"
             : inputMode === "tel"
-              ? "phone-pad"
-              : "default"
+            ? "phone-pad"
+            : "default"
         }
+        editable={editable}
+        onPress={onPress}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onSubmitEditing={onSubmitEditing}
       />
       {inputMode === "password" ? (
         <TouchableOpacity onPress={togglePasswordVisibility}>
           <MaterialIcons
             name={isPasswordVisible ? "visibility" : "visibility-off"}
             size={24}
-            color="white"
+            color="#B1AFA1"
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -93,7 +108,7 @@ const Input = ({
             <MaterialIcons
               name={rightIcon}
               size={24}
-              color="white"
+              color="#B1AFA1"
               style={styles.icon}
             />
           </TouchableOpacity>

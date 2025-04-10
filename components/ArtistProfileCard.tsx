@@ -14,7 +14,6 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
   return (
     <TouchableOpacity
       onPress={() => {
-        // router.push("/artist/ArtistProfile");
         router.push({
           pathname: "/artist/ArtistProfile",
           params: { artistId: artist.id },
@@ -45,12 +44,20 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
         />
         <Text size="small" weight="normal" color="#FBF6FA">
           {artist.data.rating ? Number(artist.data.rating).toFixed(1) : "4.8"} (
-          {artist.data?.reviewsCount ? artist.data?.reviewsCount : "129"})
+          {artist.data?.reviewsCount ? artist.data?.reviewsCount : "5"})
         </Text>
         <View style={styles.SeparatorDot}></View>
-        <Text size="small" weight="normal" color="#FBF6FA">
-          {artist.data.city ? artist.data.city : "Phuket"}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            size="small"
+            weight="normal"
+            color="#FBF6FA"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {artist.data.city ? artist.data.city : "Phuket"}
+          </Text>
+        </View>
       </View>
       <Text size="large" weight="medium" color="#FFFFFF">
         {artist.data.name ? artist.data.name : "Martin Luis"}

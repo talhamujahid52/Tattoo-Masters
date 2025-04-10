@@ -1,10 +1,12 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Text from "./Text";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ShareReviewPasswordBottomSheet from "./BottomSheets/ShareReviewPasswordBottomSheet";
 import useGetArtist from "@/hooks/useGetArtist";
+import { formatDistanceToNow } from "date-fns";
+import firestore from "@react-native-firebase/firestore";
 
 interface ReviewOnProfileProps {
   ArtistId?: any;
@@ -15,13 +17,60 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   ArtistId,
   isMyProfile = false,
 }) => {
-  const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
   const artist = useGetArtist(ArtistId);
 
   const artistRating = artist?.data?.rating;
   const totalReviews = artist?.data?.reviewsCount;
   const latestReview = artist?.data?.latestReview;
+
+  const reviewerId = latestReview?.reviewerId;
+  const [reviewerDetails, setReviewerDetails] = useState<any>({});
+
+  const getUserFromId = async () => {
+    try {
+      if (!reviewerId) {
+        return null;
+      }
+
+      const usersSnapshot = await firestore()
+        .collection("Users")
+        .where("uid", "==", reviewerId)
+        .get();
+
+      if (usersSnapshot.empty) {
+        return null;
+      }
+
+      const userData = usersSnapshot.docs[0].data();
+      return userData;
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    // Create an async function inside the useEffect
+    const fetchUserData = async () => {
+      const user = await getUserFromId();
+      if (user) {
+        setReviewerDetails(user);
+        console.log("User data fetched:", user);
+        // Do something with the fetched user data (e.g., set state)
+      } else {
+        console.log("User not found");
+      }
+    };
+
+    fetchUserData(); // Call the async function
+  }, [reviewerId]);
+
+  // Use date-fns to calculate the distance from now
+  const timeAgo = (timestamp: number): string => {
+    const reviewDate = new Date(timestamp * 1000); // Convert seconds to milliseconds
+    return formatDistanceToNow(reviewDate, { addSuffix: true });
+  };
 
   return (
     <>
@@ -79,19 +128,18 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             <Image
               style={styles.profilePicture}
               source={
-                latestReview?.reviewerProfilePicture
-                  ? { uri: latestReview?.reviewerProfilePicture }
+                reviewerDetails?.profilePicture
+                  ? { uri: reviewerDetails?.profilePicture }
                   : require("../assets/images/Artist.png")
               }
             />
             <View>
               <Text size="p" weight="normal" color="#FFF">
-                {latestReview?.reviewerName
-                  ? latestReview?.reviewerName
-                  : "Martin Luis"}
+                {reviewerDetails?.name ? reviewerDetails?.name : "Martin Luis"}
               </Text>
               <Text size="medium" weight="normal" color="#A7A7A7">
-                2 days ago
+                {latestReview?.date ? timeAgo(latestReview.date) : "Just now"}{" "}
+                {/* Display the calculated time ago */}
               </Text>
             </View>
           </View>
@@ -110,16 +158,28 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             ? latestReview?.feedback
             : "Lorem ipsum dolor sit amet contetur itbj jbds adipiscing elit sed do eiusmod tempor incididunt ut labore."}
         </Text>
-        <View style={styles.seprator}></View>
-        <TouchableOpacity style={styles.bottomRow}>
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            View all 129 reviews
-          </Text>
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/rightArrow.png")}
-          />
-        </TouchableOpacity>
+        {totalReviews && (
+          <>
+            <View style={styles.seprator}></View>
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/artist/AllReviews",
+                  params: { artistId: ArtistId },
+                });
+              }}
+              style={styles.bottomRow}
+            >
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                View all {totalReviews > 1 ? totalReviews : ""} reviews
+              </Text>
+              <Image
+                style={styles.icon}
+                source={require("../assets/images/rightArrow.png")}
+              />
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </>
   );

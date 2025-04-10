@@ -45,12 +45,11 @@ const CustomDrawerContent = () => {
       <View
         style={{
           height: insets.top + 30,
-          // backgroundColor: "green",
           flexDirection: "column",
           justifyContent: "flex-end",
           paddingHorizontal: 16,
-          borderBottomColor: "#FFFFFF26",
-          borderBottomWidth: 1,
+          borderBottomColor: "#282828",
+          borderBottomWidth: 0.33,
           marginBottom: 16,
         }}
       >
@@ -417,7 +416,7 @@ const styles = StyleSheet.create({
   seprator: {
     height: 1,
     width: "100%",
-    backgroundColor: "#FFFFFF26",
+    backgroundColor: "#2D2D2D",
     marginVertical: 16,
   },
   drawerItemList: {

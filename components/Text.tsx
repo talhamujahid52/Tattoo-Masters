@@ -1,8 +1,8 @@
 import { normalize } from "@/utils/helperFunctions";
 import React, { FC } from "react";
-import { Text as RNText, TextStyle } from "react-native";
+import { Text as RNText, TextStyle, TextProps as RNTextProps } from "react-native";
 
-interface TextProps {
+interface TextProps extends RNTextProps {
   size?:
     | "h1"
     | "h2"
@@ -28,6 +28,7 @@ const Text: FC<TextProps> = ({
   font, // Optional
   children,
   style, // New prop for additional styles
+  ...props // Capture any other props like `numberOfLines`, `ellipsizeMode`
 }) => {
   // Define the size mapping
   const sizeMap: Record<string, number> = {
@@ -66,7 +67,7 @@ const Text: FC<TextProps> = ({
   // Combine baseStyle with any additional styles
   const combinedStyle = [baseStyle, style]; // React Native accepts an array of styles
 
-  return <RNText style={combinedStyle}>{children}</RNText>;
+  return <RNText style={combinedStyle} {...props}>{children}</RNText>;
 };
 
 export default Text;
