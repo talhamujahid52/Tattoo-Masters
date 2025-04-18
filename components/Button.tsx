@@ -10,7 +10,7 @@ import { RadialGradient } from "react-native-gradients";
 import Text from "./Text";
 
 interface ButtonProps {
-  title: string;
+  title: string | React.ReactElement;
   onPress?: (event: GestureResponderEvent) => void;
   loading?: boolean;
   disabled?: boolean;
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#927639",
   },
   disabled: {
-    backgroundColor: "grey",
+    // backgroundColor: "grey",
   },
 });
 

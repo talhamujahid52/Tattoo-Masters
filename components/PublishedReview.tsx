@@ -15,6 +15,7 @@ interface Review {
   user: string;
   userName: string;
   userProfilePicture: string;
+  imageUrl: string;
 }
 
 const PublishedReview = ({ review }: { review: Review }) => {
@@ -96,7 +97,11 @@ const PublishedReview = ({ review }: { review: Review }) => {
               width: "100%",
               resizeMode: "cover",
             }}
-            source={require("../assets/images/Artist.png")}
+            source={
+              review.imageUrl
+                ? { uri: review.imageUrl }
+                : require("../assets/images/Artist.png")
+            }
           />
         </View>
       </View>
