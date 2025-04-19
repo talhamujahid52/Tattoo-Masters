@@ -1,44 +1,19 @@
-import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
-import Text from "../Text";
 import React from "react";
-import { useRouter } from "expo-router";
-import ReportBottomSheet from "./ReportBottomSheet";
-import useBottomSheet from "@/hooks/useBottomSheet";
+import Text from "../Text";
+import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
 
 interface bottomSheetProps {
-  hide1: () => void;
+  hideShareSheet: () => void;
+  showReportSheet: () => void;
 }
 
-const ShareArtistProfileBottomSheet = ({ hide1 }: bottomSheetProps) => {
-  const options = [
-    { label: "Inappropriate account", value: "1" },
-    { label: "Impersonation", value: "2" },
-    { label: "Fake Account", value: "3" },
-    { label: "Other", value: "4" },
-  ];
-  const { BottomSheet, show, hide } = useBottomSheet();
-  const router = useRouter();
-
+const ShareArtistProfileBottomSheet = ({
+  hideShareSheet,
+  showReportSheet,
+}: bottomSheetProps) => {
   return (
     <View style={styles.container}>
-      <BottomSheet
-        InsideComponent={
-          <ReportBottomSheet
-            hide={hide}
-            title="Report User"
-            options={options}
-          />
-        }
-      />
-      <TouchableOpacity
-        onPress={() => {
-          hide();
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
-        }}
-        style={styles.drawerItem}
-      >
+      <TouchableOpacity onPress={() => {}} style={styles.drawerItem}>
         <Image
           style={styles.icon}
           source={require("../../assets/images/share_2.png")}
@@ -47,14 +22,7 @@ const ShareArtistProfileBottomSheet = ({ hide1 }: bottomSheetProps) => {
           Share Profile
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => {
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
-        }}
-        style={styles.drawerItem}
-      >
+      <TouchableOpacity onPress={() => {}} style={styles.drawerItem}>
         <Image
           style={styles.icon}
           source={require("../../assets/images/feedback.png")}
@@ -65,7 +33,8 @@ const ShareArtistProfileBottomSheet = ({ hide1 }: bottomSheetProps) => {
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
-          show();
+          hideShareSheet();
+          showReportSheet();
         }}
         style={styles.drawerItem}
       >

@@ -13,6 +13,7 @@ import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
 import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtistProfileBottomSheet";
+import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
@@ -24,9 +25,24 @@ interface StudioItem {
   value: number;
   selected: boolean;
 }
+const options = [
+  { label: "Inappropriate account", value: "Inappropriate account" },
+  { label: "Impersonation", value: "Impersonation" },
+  { label: "Fake Account", value: "Fake Account" },
+  { label: "Other", value: "Other" },
+];
 
 const ArtistProfile = () => {
-  const { BottomSheet, show, hide } = useBottomSheet();
+  const {
+    BottomSheet: ShareSheet,
+    show: showShareSheet,
+    hide: hideShareSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: ReportSheet,
+    show: showReportSheet,
+    hide: hideReportSheet,
+  } = useBottomSheet();
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -61,7 +77,7 @@ const ArtistProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+      item.value === value ? { ...item, selected: !item.selected } : item
     );
 
     setStudio(updatedstudio);
@@ -104,8 +120,24 @@ const ArtistProfile = () => {
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
     >
-      <BottomSheet
-        InsideComponent={<ShareArtistProfileBottomSheet hide1={hide} />}
+      <ShareSheet
+        InsideComponent={
+          <ShareArtistProfileBottomSheet
+            hideShareSheet={hideShareSheet}
+            showReportSheet={showReportSheet}
+          />
+        }
+      />
+
+      <ReportSheet
+        InsideComponent={
+          <ReportBottomSheet
+            hideReportSheet={hideReportSheet}
+            title="User"
+            options={options}
+            reportItem={artistId}
+          />
+        }
       />
 
       <View style={styles.userProfileRow}>
@@ -131,7 +163,7 @@ const ArtistProfile = () => {
         </View>
         <TouchableOpacity
           onPress={() => {
-            show();
+            showShareSheet();
           }}
           style={styles.moreIconContainer}
         >
