@@ -6,37 +6,20 @@ import ReportBottomSheet from "./ReportBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
 
 interface bottomSheetProps {
-  hide1: () => void;
+  hideImageActionsSheet: () => void;
+  showReportSheet: () => void;
 }
 
-const ImageActionsBottomSheet = ({ hide1 }: bottomSheetProps) => {
-  const options = [
-    { label: "Nudity or sexual content", value: "1" },
-    { label: "Inappropriate content", value: "2" },
-    { label: "Image theft", value: "3" },
-    { label: "Other", value: "4" },
-  ];
-  const { BottomSheet, show, hide } = useBottomSheet();
-
+const ImageActionsBottomSheet = ({
+  hideImageActionsSheet,
+  showReportSheet,
+}: bottomSheetProps) => {
   return (
     <View style={styles.container}>
-      <BottomSheet
-        InsideComponent={
-          <ReportBottomSheet
-            hide={hide}
-            title="Report Image"
-            options={options}
-          />
-        }
-      />
-
       <TouchableOpacity
         onPress={() => {
-          hide1();
-          show();
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
+          hideImageActionsSheet();
+          showReportSheet();
         }}
         style={styles.drawerItem}
       >
@@ -48,14 +31,7 @@ const ImageActionsBottomSheet = ({ hide1 }: bottomSheetProps) => {
           Report
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => {
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
-        }}
-        style={styles.drawerItem}
-      >
+      <TouchableOpacity onPress={() => {}} style={styles.drawerItem}>
         <Image
           style={styles.icon}
           source={require("../../assets/images/feedback.png")}
