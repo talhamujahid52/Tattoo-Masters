@@ -17,7 +17,7 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   ArtistId,
   isMyProfile = false,
 }) => {
-  const { BottomSheet, show, hide } = useBottomSheet();
+  const { BottomSheet, show, hide: hideShareReviewPasswordBottomSheet } = useBottomSheet();
   const artist = useGetArtist(ArtistId);
 
   const artistRating = artist?.data?.rating;
@@ -75,7 +75,7 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   return (
     <>
       <BottomSheet
-        InsideComponent={<ShareReviewPasswordBottomSheet hide1={hide} />}
+        InsideComponent={<ShareReviewPasswordBottomSheet hideShareReviewPasswordBottomSheet={hideShareReviewPasswordBottomSheet} />}
       />
       <View style={styles.container}>
         <View style={styles.topRow}>
