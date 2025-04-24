@@ -35,7 +35,7 @@ const Home = () => {
   // Shared values for the animation of the popular artists section
   const artistsOpacity = useSharedValue(1);
   const artistsTranslateY = useSharedValue(0);
-  const artistsHeight = useSharedValue(215); // initial height for the FlatList container
+  const artistsHeight = useSharedValue(280); // initial height for the FlatList container
 
   const animatedArtistsStyle = useAnimatedStyle(() => {
     return {
@@ -99,7 +99,7 @@ const Home = () => {
       setSearchMode(false);
       artistsOpacity.value = withTiming(1, { duration: 300 });
       artistsTranslateY.value = withTiming(0, { duration: 300 });
-      artistsHeight.value = withTiming(215, { duration: 300 });
+      artistsHeight.value = withTiming(280, { duration: 300 });
       await publicationsTs.search({ collection: "publications" });
     }
   };
@@ -110,7 +110,7 @@ const Home = () => {
       setSearchMode(false);
       artistsOpacity.value = withTiming(1, { duration: 300 });
       artistsTranslateY.value = withTiming(0, { duration: 300 });
-      artistsHeight.value = withTiming(215, { duration: 300 });
+      artistsHeight.value = withTiming(280, { duration: 300 });
       publicationsTs.search({ collection: "publications" });
     }
   }, [searchText]);

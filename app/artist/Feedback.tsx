@@ -5,16 +5,24 @@ import {
   Pressable,
   TextInput,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
 import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { launchImageLibrary, Asset } from "react-native-image-picker"; // Ensure proper typing for launchImageLibrary
+import { uploadFeedbackImage } from "@/utils/firebase/uploadFeedbackImage";
+import { firebase } from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
+import { router } from "expo-router";
 
 const Feedback = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null); // Track the selected option
   const [content, setContent] = useState<string>("");
   const [attachment, setAttachment] = useState<string | null>("");
+  const currentUserId = firebase?.auth()?.currentUser?.uid;
+  const [loading, setLoading] = useState(false);
 
   const handleSelectImage = async () => {
     const result = await launchImageLibrary({
@@ -31,6 +39,49 @@ const Feedback = () => {
 
   const handleSelection = (option: string) => {
     setSelectedOption(option);
+  };
+
+  const handleSubmitFeedback = async () => {
+    setLoading(true);
+
+    try {
+      const imageURLs = await uploadFeedbackImage(
+        attachment as string,
+        currentUserId as string,
+        "feedbackImage.jpeg"
+      );
+
+      if (!imageURLs?.downloadUrlSmall) {
+        throw new Error("Failed to upload image");
+      }
+
+      await firestore().collection("feedback").add({
+        feedbackType: selectedOption,
+        date: new Date(),
+        feedback: content,
+        user: currentUserId,
+        imageUrl: imageURLs.downloadUrlSmall,
+      });
+      Alert.alert("Success", "Your Feedback has been submitted Successfully.", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.back();
+          },
+        },
+      ]);
+    } catch (err) {
+      console.error("Error publishing review:", err);
+      Alert.alert(
+        "Error",
+        err instanceof Error && err.message === "Failed to upload image"
+          ? "We couldn't upload your tattoo image. Please try again."
+          : "There was a problem publishing your review. Please try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -164,7 +215,17 @@ const Feedback = () => {
 
       {/* Button fixed at the bottom */}
       <View style={styles.footer}>
-        <Button title="Submit" />
+        <Button
+          title={
+            loading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              "Submit"
+            )
+          }
+          onPress={handleSubmitFeedback}
+          disabled={loading}
+        />
       </View>
     </View>
   );

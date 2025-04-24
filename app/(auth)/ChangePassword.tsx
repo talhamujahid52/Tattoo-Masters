@@ -4,6 +4,7 @@ import Input from "@/components/Input";
 import Text from "@/components/Text";
 import Button from "@/components/Button";
 import auth from "@react-native-firebase/auth";
+import { router } from "expo-router";
 
 const ChangePassword = () => {
   const [email, setEmail] = useState("");
@@ -22,7 +23,15 @@ const ChangePassword = () => {
       await auth().sendPasswordResetEmail(email);
       Alert.alert(
         "Success",
-        "A password reset link has been sent to your email address."
+        "A password reset link has been sent to your email address.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.back();
+            },
+          },
+        ]
       );
     } catch (error: any) {
       // Handle errors here

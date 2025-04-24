@@ -1,208 +1,193 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
-  TextInput,
   StyleSheet,
   Platform,
   TouchableOpacity,
   Image,
+  Text,
 } from "react-native";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
-import Text from "@/components/Text";
-import { ErrorBoundaryProps } from "expo-router";
+import ArtistProfileBottomSheet from "@/components/BottomSheets/ArtistProfileBottomSheet";
+import { useSelector } from "react-redux";
 
 const FullScreenMapWithSearch: React.FC = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
+  const {
+    BottomSheet: MapProfileBottomSheet,
+    show: showMapProfileBottomSheet,
+    hide: hideMapProfileBottomSheet,
+  } = useBottomSheet();
+  const artists = useSelector((state: any) => state.artist.allArtists);
+  // console.log("Artists: ", artists);
+  // const [selectedArtistId, setSelectedArtistId] = useState("");
 
-  // State for the map region
   const [region, setRegion] = useState<Region>({
     latitude: 33.664286,
     longitude: 73.004291,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+
+  const mapRef = useRef<MapView>(null);
+  const zoomIn = () => {
+    mapRef.current?.animateToRegion({
+      ...region,
+      latitudeDelta: region.latitudeDelta / 2,
+      longitudeDelta: region.longitudeDelta / 2,
+    });
+    setRegion((prev) => ({
+      ...prev,
+      latitudeDelta: prev.latitudeDelta / 2,
+      longitudeDelta: prev.longitudeDelta / 2,
+    }));
+  };
+
+  const zoomOut = () => {
+    mapRef.current?.animateToRegion({
+      ...region,
+      latitudeDelta: region.latitudeDelta * 1.1,
+      longitudeDelta: region.longitudeDelta * 1.1,
+    });
+    setRegion((prev) => ({
+      ...prev,
+      latitudeDelta: prev.latitudeDelta * 1.1,
+      longitudeDelta: prev.longitudeDelta * 1.1,
+    }));
+  };
+
   const googleDarkModeStyle = [
     {
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#212121",
-        },
-      ],
-    },
-    {
-      elementType: "labels.icon",
-      stylers: [
-        {
-          visibility: "off",
-        },
-      ],
-    },
-    {
-      elementType: "labels.text.fill",
-      stylers: [
-        {
-          color: "#757575",
-        },
-      ],
+      stylers: [{ color: "#242f3e" }], // Dark blue-gray background
     },
     {
       elementType: "labels.text.stroke",
-      stylers: [
-        {
-          color: "#212121",
-        },
-      ],
+      stylers: [{ color: "#242f3e" }],
     },
     {
-      featureType: "administrative",
-      elementType: "geometry.fill",
-      stylers: [
-        {
-          color: "#757575",
-        },
-      ],
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#a5b1c2" }], // Light gray text
     },
     {
-      featureType: "administrative",
-      elementType: "geometry.stroke",
-      stylers: [
-        {
-          color: "#212121",
-        },
-      ],
-    },
-    {
-      featureType: "landscape",
-      elementType: "geometry",
-      stylers: [
-        {
-          color: "#212121",
-        },
-      ],
-    },
-    {
-      featureType: "poi",
-      elementType: "geometry",
-      stylers: [
-        {
-          color: "#212121",
-        },
-      ],
-    },
-    {
-      featureType: "poi.park",
-      elementType: "geometry",
-      stylers: [
-        {
-          color: "#2c6e49",
-        },
-      ],
+      featureType: "administrative.locality",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#d3d8e0" }], // Lighter for location names
     },
     {
       featureType: "road",
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#3e3e3e",
-        },
-      ],
+      stylers: [{ color: "#6b7b8e" }], // Medium light gray roads
     },
     {
-      featureType: "road.arterial",
-      elementType: "geometry",
-      stylers: [
-        {
-          color: "#3e3e3e",
-        },
-      ],
+      featureType: "road",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#5c6a7d" }], // Stroke for roads
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#ffffff" }], // White text for road names
     },
     {
       featureType: "road.highway",
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#3e3e3e",
-        },
-      ],
+      stylers: [{ color: "#8696ac" }], // Lighter for highways
+    },
+    {
+      featureType: "road.highway",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#788ca1" }],
+    },
+    {
+      featureType: "road.arterial",
+      elementType: "geometry",
+      stylers: [{ color: "#717e90" }], // Medium for arterial roads
     },
     {
       featureType: "road.local",
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#3e3e3e",
-        },
-      ],
+      stylers: [{ color: "#5d6b7e" }], // Darker for local roads
     },
     {
-      featureType: "transit",
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#d5d5d5" }],
+    },
+    {
+      featureType: "poi.park",
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#2c2c2c",
-        },
-      ],
+      stylers: [{ color: "#1c3a28" }], // Dark green for parks
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#8ab77a" }], // Light green for park labels
     },
     {
       featureType: "water",
       elementType: "geometry",
-      stylers: [
-        {
-          color: "#000000",
-        },
-      ],
-    },
-  ];
-
-  const markers = [
-    {
-      id: 1,
-      latitude: 33.664286,
-      longitude: 73.004291,
-      title: "Marker 1",
-      description: "Description 1",
+      stylers: [{ color: "#17263c" }], // Darker blue for water
     },
     {
-      id: 2,
-      latitude: 33.666286,
-      longitude: 73.006291,
-      title: "Marker 2",
-      description: "Description 2",
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#79a6cf" }], // Blue for water labels
     },
     {
-      id: 3,
-      latitude: 33.662286,
-      longitude: 73.002291,
-      title: "Marker 3",
-      description: "Description 3",
+      featureType: "transit",
+      elementType: "geometry",
+      stylers: [{ color: "#2f3948" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "geometry",
+      stylers: [{ color: "#283242" }], // POIs slightly lighter than background
+    },
+    {
+      featureType: "poi.business",
+      stylers: [{ visibility: "on" }], // Make businesses visible
+    },
+    {
+      featureType: "poi.attraction",
+      stylers: [{ visibility: "on" }], // Make attractions visible
+    },
+    {
+      featureType: "transit.station",
+      elementType: "labels.icon",
+      stylers: [{ visibility: "on" }], // Show transit icons
+    },
+    {
+      elementType: "labels.icon",
+      stylers: [{ visibility: "on" }], // Show other icons
     },
   ];
 
   return (
     <View style={styles.container}>
       <BottomSheet InsideComponent={<FilterBottomSheet />} />
+      <MapProfileBottomSheet
+        InsideComponent={
+          // <FilterBottomSheet />
+          <ArtistProfileBottomSheet />
+        }
+      />
 
-      {/* Input field */}
+      {/* Search & Filter */}
       <View style={styles.searchContainer}>
         <View style={{ width: "80%" }}>
           <Input
             inputMode="text"
             placeholder="Search by location"
-            rightIcon={"cancel"}
-            leftIcon={"search"}
+            rightIcon="cancel"
+            leftIcon="search"
             backgroundColour="#242424"
           />
         </View>
-        <TouchableOpacity
-          onPress={() => {
-            show();
-          }}
-          style={styles.filterButton}
-        >
+        <TouchableOpacity onPress={show} style={styles.filterButton}>
           <Image
             source={require("../../../assets/images/filter.png")}
             resizeMode="contain"
@@ -211,30 +196,68 @@ const FullScreenMapWithSearch: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Map View */}
+      {/* Map */}
       <MapView
         provider={Platform.OS === "ios" ? undefined : PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
-        region={region} // Dynamically update region based on search
-        // mapType="terrain"
+        region={region}
+        mapType="standard"
         showsMyLocationButton
+        showsUserLocation
         zoomEnabled
+        ref={mapRef}
       >
-        {/* <Marker coordinate={region} title="Location" /> */}
+        {artists.map((artist: any, index: number) => {
+          const location = artist?.data?.location;
+          const profilePic = artist?.data?.profilePicture;
 
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude,
-            }}
-            title={marker.title}
-            description={marker.description}
-          />
-        ))}
+          // console.log("location: ", location);
+          // console.log("profilePic: ", profilePic);
+
+          if (!location[0] || !location[1]) return null;
+
+          return (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: location[0],
+                longitude: location[1],
+              }}
+              title={artist?.data?.name || "Artist"}
+              onPress={() => {
+                // setSelectedArtistId(artist?.data?.id);
+                showMapProfileBottomSheet();
+              }}
+            >
+              <View style={{ alignItems: "center" }}>
+                <Image
+                  source={{
+                    uri: profilePic
+                      ? profilePic
+                      : "https://lh3.googleusercontent.com/a/ACg8ocLJTuqJGXUSEPryOs9uSZWlMHe5YwjDWb_vRiYSJKm46KmQM-Sj=s96-c",
+                  }}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 40,
+                    borderWidth: 2,
+                    borderColor: "#fff",
+                  }}
+                />
+              </View>
+            </Marker>
+          );
+        })}
       </MapView>
+      <View style={styles.zoomControls}>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
+          <Text style={styles.zoomText}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
+          <Text style={styles.zoomText}>−</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -246,18 +269,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   searchContainer: {
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 30, // Adjust for iOS status bar
+    top: Platform.OS === "ios" ? 60 : 30,
     width: "100%",
     paddingHorizontal: 20,
     zIndex: 1,
   },
   filterButton: {
-    display: "flex",
     alignItems: "center",
     justifyContent: "center",
     height: 48,
@@ -270,7 +291,28 @@ const styles = StyleSheet.create({
     width: 26,
   },
   map: {
-    ...StyleSheet.absoluteFillObject, // Makes the map take up the entire screen
+    ...StyleSheet.absoluteFillObject,
+  },
+  zoomControls: {
+    position: "absolute",
+    right: 20,
+    bottom: 40,
+    flexDirection: "column",
+    gap: 10,
+  },
+  zoomButton: {
+    backgroundColor: "#242424",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+  },
+  zoomText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
   },
 });
 

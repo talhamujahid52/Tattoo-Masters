@@ -1,4 +1,4 @@
-import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator, Alert } from "react-native";
 import Text from "@/components/Text";
 import React, { useState } from "react";
 import Review from "@/components/Review";
@@ -7,27 +7,39 @@ import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import firestore from "@react-native-firebase/firestore";
 import { firebase } from "@react-native-firebase/firestore";
+import { uploadReviewImage } from "@/utils/firebase/uploadReviewImage";
 
 const PublishReview = () => {
   const { artistId, rating, tattooFeedback, tattooImage } =
     useLocalSearchParams();
   const artist = useGetArtist(artistId);
   const currentUserId = firebase?.auth()?.currentUser?.uid;
-  const [loading, setLoading] = useState(false); // Manage loading state
+  const [loading, setLoading] = useState(false);
 
   const handlePublishReview = async () => {
     setLoading(true);
 
     try {
+      const imageURLs = await uploadReviewImage(
+        tattooImage as string,
+        currentUserId as string,
+        "reviewImage.jpeg"
+      );
+      
+      if (!imageURLs?.downloadUrlSmall) {
+        throw new Error("Failed to upload image");
+      }
+
       await firestore().collection("reviews").add({
         artistId,
         date: new Date(),
         feedback: tattooFeedback,
         rating,
         user: currentUserId,
+        imageUrl: imageURLs.downloadUrlSmall,
       });
 
-      const userRef = firestore().collection("Users").doc(artistId.toString());
+      const userRef = firestore().collection("Users").doc(artistId as string);
       const userDoc = await userRef.get();
 
       if (userDoc.exists) {
@@ -44,7 +56,9 @@ const PublishReview = () => {
             rating,
             date: new Date(),
             reviewerId: currentUserId,
+            imageUrl: imageURLs.downloadUrlSmall,
           };
+          
           await userRef.update({
             reviewsCount: newReviewsCount,
             totalRating: newTotalRating,
@@ -53,8 +67,17 @@ const PublishReview = () => {
           });
         }
       }
+
+      router.back();
     } catch (err) {
       console.error("Error publishing review:", err);
+      Alert.alert(
+        "Error",
+        err instanceof Error && err.message === "Failed to upload image" 
+          ? "We couldn't upload your tattoo image. Please try again."
+          : "There was a problem publishing your review. Please try again.",
+        [{ text: "OK" }]
+      );
     } finally {
       setLoading(false);
     }
@@ -99,9 +122,9 @@ const PublishReview = () => {
           Review
         </Text>
         <Review
-          rating={rating}
-          tattooFeedback={tattooFeedback}
-          tattooImage={tattooImage}
+          rating={rating as string}
+          tattooFeedback={tattooFeedback as string}
+          tattooImage={tattooImage as string}
         />
       </View>
 
@@ -116,9 +139,13 @@ const PublishReview = () => {
         </Text>
 
         <Button
-          title={loading ? "Publishing..." : "Publish Review"}
+          title={loading ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            "Publish Review"
+          )}
           onPress={handlePublishReview}
-          disabled={loading} // Disable button during loading
+          disabled={loading}
         />
       </View>
     </View>
@@ -152,8 +179,5 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginBottom: 16,
-  },
-  loader: {
-    marginTop: 20, // Space out the loader from the button
   },
 });

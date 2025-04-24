@@ -1,9 +1,17 @@
-import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import Text from "../Text";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import RadioButton from "@/components/RadioButton";
 import Button from "../Button";
+import firestore from "@react-native-firebase/firestore";
+import { firebase } from "@react-native-firebase/firestore";
 
 interface Option {
   label: string;
@@ -11,14 +19,54 @@ interface Option {
 }
 
 interface bottomSheetProps {
-  hide: () => void;
+  hideReportSheet: () => void;
   title?: string;
   options: Option[];
+  reportItem: any;
 }
 
-const ReportBottomSheet = ({ hide, title, options }: bottomSheetProps) => {
-  const [reasonForReport, setReasonForReport] = useState("1");
-  console.log("reasonForReport ", reasonForReport);
+const ReportBottomSheet = ({
+  hideReportSheet,
+  title,
+  options,
+  reportItem,
+}: bottomSheetProps) => {
+  const [reasonForReport, setReasonForReport] = useState("");
+  const [loading, setLoading] = useState(false);
+  const currentUserId = firebase?.auth()?.currentUser?.uid;
+
+  const handleReportClick = async () => {
+    setLoading(true);
+    try {
+      await firestore().collection("ReportedItems").add({
+        reportedBy: currentUserId,
+        type: title,
+        targetId: reportItem,
+        reason: reasonForReport,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+      Alert.alert("Success", "Your Request has been submitted successfully.", [
+        {
+          text: "OK",
+          onPress: () => {
+            hideReportSheet();
+          },
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("Failure", "An error occurs while submitting request.", [
+        {
+          text: "OK",
+          onPress: () => {
+            hideReportSheet();
+          },
+        },
+      ]);
+      console.error("Failed to submit report:", error);
+    }
+    setLoading(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -35,7 +83,7 @@ const ReportBottomSheet = ({ hide, title, options }: bottomSheetProps) => {
           color="#FFF"
           style={{ textAlign: "center" }}
         >
-          {title}
+          Report {title?.toLocaleLowerCase()}
         </Text>
       </View>
       <Text
@@ -53,7 +101,16 @@ const ReportBottomSheet = ({ hide, title, options }: bottomSheetProps) => {
           onSelect={(value) => setReasonForReport(value)}
         />
         <View style={{ marginTop: 24 }}>
-          <Button title="Report"></Button>
+          <Button
+            title={
+              loading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                "Report"
+              )
+            }
+            onPress={handleReportClick}
+          ></Button>
         </View>
       </View>
     </View>

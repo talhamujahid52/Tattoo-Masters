@@ -17,7 +17,7 @@ const VerifyReviewPassword = () => {
       return;
     } else {
       if (inputReviewPassword === artist?.data?.reviewPassword) {
-        router.push({
+        router.replace({
           pathname: "/artist/AddReview",
           params: { artistId: artistId },
         });

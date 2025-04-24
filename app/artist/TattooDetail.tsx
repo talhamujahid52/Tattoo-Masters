@@ -14,6 +14,7 @@ import Text from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
+import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publication,
 // import { doc } from "@react-native-firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,6 +31,13 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 5;
 // const ZOOM_IN_X = 146;
 // const ZOOM_IN_Y = 491;
+
+const ReportImageOptions = [
+  { label: "Nudity or sexual content", value: "Nudity or sexual content" },
+  { label: "Inappropriate content", value: "Inappropriate content" },
+  { label: "Image theft", value: "Image theft" },
+  { label: "Other", value: "Other" },
+];
 
 const TattooDetail: React.FC = () => {
   const zoomableRef = useRef<ZoomableRef>(null);
@@ -73,7 +81,18 @@ const TattooDetail: React.FC = () => {
   } = useLocalSearchParams<any>();
 
   // const { width, height } = Dimensions.get("window");
-  const { BottomSheet, show, hide } = useBottomSheet();
+
+  const {
+    BottomSheet: ImageActionsSheet,
+    show: showImageActionsSheet,
+    hide: hideImageActionsSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: ReportSheet,
+    show: showReportSheet,
+    hide: hideReportSheet,
+  } = useBottomSheet();
+
   // Use the Typesense hook to fetch the user details from the "Users" collection.
   const { getDocument } = useTypesense();
   const [loading, setLoading] = useState(false);
@@ -112,7 +131,25 @@ const TattooDetail: React.FC = () => {
         position: "relative",
       }}
     >
-      <BottomSheet InsideComponent={<ImageActionsBottomSheet hide1={hide} />} />
+
+      <ImageActionsSheet
+        InsideComponent={
+          <ImageActionsBottomSheet
+            hideImageActionsSheet={hideImageActionsSheet}
+            showReportSheet={showReportSheet}
+          />
+        }
+      />
+      <ReportSheet
+        InsideComponent={
+          <ReportBottomSheet
+            hideReportSheet={hideReportSheet}
+            title="Image"
+            options={ReportImageOptions}
+            reportItem={id}
+          />
+        }
+      />
 
       <View
         style={{
@@ -202,7 +239,7 @@ const TattooDetail: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                show();
+                showImageActionsSheet();
               }}
             >
               <Image
