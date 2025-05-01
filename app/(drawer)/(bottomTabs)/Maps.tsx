@@ -178,7 +178,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Search & Filter */}
       <View style={styles.searchContainer}>
-        <View style={{ width: "80%" }}>
+        <View style={{ width: "85%" }}>
           <Input
             inputMode="text"
             placeholder="Search by location"

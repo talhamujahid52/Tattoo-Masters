@@ -1,12 +1,19 @@
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
+import Text from "@/components/Text";
 import React from "react";
 import PublishedReview from "@/components/PublishedReview";
 import { useLocalSearchParams } from "expo-router";
 import useGetReviews from "@/hooks/useGetReviews";
+import ReviewsAndRatingSummary from "@/components/ReviewsAndRatingSummary";
 
 const AllReviews = () => {
-  const { artistId } = useLocalSearchParams();
+  const { artistId, artistRating, totalReviews, ratingCategories } =
+    useLocalSearchParams();
   const { reviews, loading, error } = useGetReviews(artistId);
+
+  const parsedRatingCategories = ratingCategories
+    ? JSON.parse(ratingCategories as string)
+    : null;
 
   if (loading) {
     return <Text>Loading...</Text>;
@@ -19,8 +26,18 @@ const AllReviews = () => {
   return (
     <FlatList
       data={reviews}
-      keyExtractor={(item) => item.id.toString()} // Ensure unique key for each item
+      keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={styles.container}
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <ReviewsAndRatingSummary
+            ratingCategories={parsedRatingCategories}
+            averageRating={Number(artistRating)}
+            totalReviews={Number(totalReviews)}
+          />
+          <View style={styles.separator} />
+        </View>
+      }
       renderItem={({ item }) => (
         <View>
           <PublishedReview review={item} />
@@ -36,6 +53,10 @@ export default AllReviews;
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  header: {
+    // marginBottom: 16,
   },
   separator: {
     marginVertical: 24,

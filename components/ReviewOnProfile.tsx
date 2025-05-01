@@ -17,12 +17,17 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   ArtistId,
   isMyProfile = false,
 }) => {
-  const { BottomSheet, show, hide: hideShareReviewPasswordBottomSheet } = useBottomSheet();
+  const {
+    BottomSheet,
+    show,
+    hide: hideShareReviewPasswordBottomSheet,
+  } = useBottomSheet();
   const artist = useGetArtist(ArtistId);
 
   const artistRating = artist?.data?.rating;
   const totalReviews = artist?.data?.reviewsCount;
   const latestReview = artist?.data?.latestReview;
+  const ratingCategories = artist?.data?.ratingCategories;
 
   const reviewerId = latestReview?.reviewerId;
   const [reviewerDetails, setReviewerDetails] = useState<any>({});
@@ -75,7 +80,13 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   return (
     <>
       <BottomSheet
-        InsideComponent={<ShareReviewPasswordBottomSheet hideShareReviewPasswordBottomSheet={hideShareReviewPasswordBottomSheet} />}
+        InsideComponent={
+          <ShareReviewPasswordBottomSheet
+            hideShareReviewPasswordBottomSheet={
+              hideShareReviewPasswordBottomSheet
+            }
+          />
+        }
       />
       <View style={styles.container}>
         <View style={styles.topRow}>
@@ -165,7 +176,12 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
               onPress={() => {
                 router.push({
                   pathname: "/artist/AllReviews",
-                  params: { artistId: ArtistId },
+                  params: {
+                    artistId: ArtistId,
+                    artistRating: artistRating,
+                    totalReviews: totalReviews,
+                    ratingCategories: JSON.stringify(ratingCategories),
+                  },
                 });
               }}
               style={styles.bottomRow}
