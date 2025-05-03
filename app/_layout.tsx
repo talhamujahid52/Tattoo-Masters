@@ -1,4 +1,5 @@
-import React from "react"
+globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import "react-native-get-random-values";
@@ -9,12 +10,16 @@ import { persistor, store } from "@/redux/store";
 import AppNavigator from "./AppNavigator";
 import { FormProvider } from "../context/FormContext";
 import { ErrorBoundaryProps, SplashScreen } from "expo-router";
-import { View } from "react-native";
+import { LogBox, View } from "react-native";
 import Text from "@/components/Text";
 import { Try } from "expo-router/build/views/Try";
 // import { useRouter } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
+LogBox.ignoreLogs([
+  "Please use `getApp()` instead",
+  "React Native Firebase: The method .* is deprecated",
+]);
 
 export default function RootLayout() {
   // const router = useRouter();
