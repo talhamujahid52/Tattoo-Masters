@@ -55,6 +55,7 @@ const Home = () => {
         filterBy: "isArtist:=true",
       });
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
+      console.log("fetchedArtists", fetchedArtists);
 
       dispatch(resetAllArtists());
       dispatch(

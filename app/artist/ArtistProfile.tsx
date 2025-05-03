@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   icon: {
-    height: 24,
-    width: 24,
+    height: 20,
+    width: 20,
     resizeMode: "contain",
   },
   moreIconContainer: {

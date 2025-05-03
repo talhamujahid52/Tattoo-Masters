@@ -3257,6 +3257,15 @@ axios@^1.7.2:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
+axios@^1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.9.0.tgz#25534e3b72b54540077d33046f77e3b8d7081901"
+  integrity sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==
+  dependencies:
+    follow-redirects "^1.15.6"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
 babel-core@^7.0.0-bridge.0:
   version "7.0.0-bridge.0"
   resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-7.0.0-bridge.0.tgz#95a492ddd90f9b4e9a4a1da14eb335b87b634ece"
@@ -8088,6 +8097,11 @@ react-native-lightbox-v2@^0.9.2:
   version "0.9.2"
   resolved "https://registry.yarnpkg.com/react-native-lightbox-v2/-/react-native-lightbox-v2-0.9.2.tgz#58e256ee18bdd2e270f228a911a76831251229e5"
   integrity sha512-+8LwINeSWvPP69YAyWhiJQyaw4Gtu8X4EMvT3PEN615NrOeDaz8jOcIw73pzYJst3z4Z0vxvFB73iH16wCPXtw==
+
+react-native-maps-expo-plugin@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/react-native-maps-expo-plugin/-/react-native-maps-expo-plugin-1.0.4.tgz#73337c63ea401b5adffc1b63dcf3171ad0113d35"
+  integrity sha512-oz7WoZjI3DA+KPaZ06333yTpwv55I53EiKg5AFr6/ydB6gXMhNTeI35xjyiG5ReoNPXqUclZLBsyENFdoGx20A==
 
 react-native-maps@1.14.0:
   version "1.14.0"

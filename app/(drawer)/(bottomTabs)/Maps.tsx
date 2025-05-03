@@ -178,7 +178,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Search & Filter */}
       <View style={styles.searchContainer}>
-        <View style={{ width: "80%" }}>
+        <View style={{ width: "85%" }}>
           <Input
             inputMode="text"
             placeholder="Search by location"
@@ -198,7 +198,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Map */}
       <MapView
-        provider={Platform.OS === "ios" ? undefined : PROVIDER_GOOGLE}
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         region={region}

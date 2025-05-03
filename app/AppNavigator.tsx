@@ -368,7 +368,9 @@ const AppNavigator = () => {
           <Stack.Screen
             name="artist/SearchArtistProfiles"
             options={{
+              animation: "fade",
               headerShown: false,
+              // gestureEnabled: true,
               // headerTitle: "Add location",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
