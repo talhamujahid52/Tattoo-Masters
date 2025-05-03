@@ -198,7 +198,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Map */}
       <MapView
-        provider={Platform.OS === "ios" ? undefined : PROVIDER_GOOGLE}
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         region={region}
