@@ -1,4 +1,10 @@
-import { StyleSheet, View, Image, ActivityIndicator, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import Text from "@/components/Text";
 import React, { useState } from "react";
 import Review from "@/components/Review";
@@ -25,7 +31,7 @@ const PublishReview = () => {
         currentUserId as string,
         "reviewImage.jpeg"
       );
-      
+
       if (!imageURLs?.downloadUrlSmall) {
         throw new Error("Failed to upload image");
       }
@@ -39,17 +45,34 @@ const PublishReview = () => {
         imageUrl: imageURLs.downloadUrlSmall,
       });
 
-      const userRef = firestore().collection("Users").doc(artistId as string);
+      const userRef = firestore()
+        .collection("Users")
+        .doc(artistId as string);
       const userDoc = await userRef.get();
 
       if (userDoc.exists) {
         const userData = userDoc.data();
         if (userData) {
-          const { reviewsCount = 0, totalRating = 0 } = userData;
+          const {
+            reviewsCount = 0,
+            totalRating = 0,
+            ratingCategores = {
+              "5 star": 0,
+              "4 star": 0,
+              "3 star": 0,
+              "2 star": 0,
+              "1 star": 0,
+            },
+          } = userData;
 
           const newReviewsCount = reviewsCount + 1;
           const newTotalRating = totalRating + Number(rating);
           const newAverageRating = newTotalRating / newReviewsCount;
+          const ratingKey = `${Math.floor(Number(rating))} star`;
+          const updatedRatingCategories = {
+            ...ratingCategores,
+            [ratingKey]: ratingCategores[ratingKey] + 1,
+          };
 
           const latestReview = {
             feedback: tattooFeedback,
@@ -58,11 +81,12 @@ const PublishReview = () => {
             reviewerId: currentUserId,
             imageUrl: imageURLs.downloadUrlSmall,
           };
-          
+
           await userRef.update({
             reviewsCount: newReviewsCount,
             totalRating: newTotalRating,
             rating: newAverageRating,
+            ratingCategores: updatedRatingCategories,
             latestReview,
           });
         }
@@ -73,7 +97,7 @@ const PublishReview = () => {
       console.error("Error publishing review:", err);
       Alert.alert(
         "Error",
-        err instanceof Error && err.message === "Failed to upload image" 
+        err instanceof Error && err.message === "Failed to upload image"
           ? "We couldn't upload your tattoo image. Please try again."
           : "There was a problem publishing your review. Please try again.",
         [{ text: "OK" }]
@@ -139,11 +163,13 @@ const PublishReview = () => {
         </Text>
 
         <Button
-          title={loading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            "Publish Review"
-          )}
+          title={
+            loading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              "Publish Review"
+            )
+          }
           onPress={handlePublishReview}
           disabled={loading}
         />
