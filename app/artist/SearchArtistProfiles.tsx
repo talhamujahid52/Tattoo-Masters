@@ -59,7 +59,7 @@ const SearchArtistProfiles: React.FC = () => {
         </View>
 
         {/* Show recent searches when input is focused */}
-        {isFocused && recentSearches.length > 0 && (
+        {recentSearches.length > 0 && (
           <View style={styles.recentSearchContainer}>
             <View style={styles.recentSearchHeader}>
               <Text size="h4" weight="semibold" color="#A7A7A7">
