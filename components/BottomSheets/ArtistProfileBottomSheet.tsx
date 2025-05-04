@@ -42,8 +42,8 @@ const ArtistProfileBottomSheet = () => {
   }, [artist]);
 
   return (
-    <ScrollView
-      contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
+    <View
+      // contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
     >
       <View style={styles.userProfileRow}>
@@ -108,15 +108,15 @@ const ArtistProfileBottomSheet = () => {
           title="Message"
           icon={require("../../assets/images/message.png")}
           variant="Primary"
-        //   onPress={() => {
-        //     router.push({
-        //       pathname: "/artist/IndividualChat",
-        //       params: { selectedArtistId },
-        //     });
-        //   }}
+          //   onPress={() => {
+          //     router.push({
+          //       pathname: "/artist/IndividualChat",
+          //       params: { selectedArtistId },
+          //     });
+          //   }}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
