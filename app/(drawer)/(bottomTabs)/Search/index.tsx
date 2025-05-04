@@ -1,3 +1,4 @@
+// app/Search.tsx
 import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
@@ -6,7 +7,6 @@ import {
   Dimensions,
   TouchableOpacity,
   SafeAreaView,
-  Keyboard,
   Animated,
 } from "react-native";
 import Input from "@/components/Input";
@@ -29,19 +29,33 @@ const Search: React.FC = () => {
   const adjustedWidth = width - 42;
   const artists = useSelector((state: any) => state.artist.allArtists);
 
-  // fetchUsers debounced as before…
   const fetchUsers = async () => {
-    // … your existing fetch logic …
+    try {
+      const query = searchText.trim() === "" ? "*" : searchText;
+      const hits = await artistsTs.search({
+        collection: "Users",
+        query,
+        queryBy: "name,studio,studioName",
+        filterBy: "isArtist:=true",
+      });
+      const docs = hits.map((h: any) => h.document);
+      dispatch(resetAllArtists());
+      dispatch(
+        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
+      );
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
   };
-  useEffect(() => {
-    const handle = setTimeout(fetchUsers, 500);
-    return () => clearTimeout(handle);
-  }, [searchText]);
 
-  // Animate fade in/out when isFocused changes
+  // initial fetch
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // overlay fade (if you re-enable it)
   useEffect(() => {
     if (isFocused) {
-      // start showing overlay
       setShowOverlay(true);
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -49,7 +63,6 @@ const Search: React.FC = () => {
         useNativeDriver: true,
       }).start();
     } else {
-      // fade out, then unmount
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 200,
@@ -58,40 +71,40 @@ const Search: React.FC = () => {
     }
   }, [isFocused, fadeAnim]);
 
-  // Hide overlay if keyboard is dismissed externally
-  useEffect(() => {
-    const sub = Keyboard.addListener("keyboardDidHide", () =>
-      setIsFocused(false),
-    );
-    return () => sub.remove();
-  }, []);
-
   const recentSearches = ["Picasso", "Van Gogh", "Da Vinci", "Banksy"];
   const onRecentPress = (term: string) => {
     setSearchText(term);
+    setIsFocused(false);
     fetchUsers();
-    Keyboard.dismiss();
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
-        {/* Search bar */}
         <View style={styles.inputHeaderContainer}>
           <Input
+            style={{ flex: 1 }}
             value={searchText}
+            returnKeyLabel="Search"
+            returnKeyType="search"
+            onSubmitEditing={() => {
+              router.push({
+                pathname: "/(bottomTabs)/Search/SearchAll",
+                params: { query: searchText },
+              });
+              setSearchText("");
+            }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             inputMode="text"
             placeholder="Search for artists and studios"
             leftIcon="search"
             rightIcon={searchText ? "cancel" : undefined}
             rightIconOnPress={() => setSearchText("")}
             onChangeText={setSearchText}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setTimeout(() => setIsFocused(false), 50)}
           />
         </View>
 
-        {/* Overlay of recents with fade */}
         {showOverlay && (
           <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
             <FlatList
@@ -102,7 +115,7 @@ const Search: React.FC = () => {
                   style={styles.recentItem}
                   onPress={() => onRecentPress(item)}
                 >
-                  <Text style={{ color: "white" }} size="p">
+                  <Text style={{ color: "#fff" }} size="p">
                     {item}
                   </Text>
                 </TouchableOpacity>
@@ -112,7 +125,7 @@ const Search: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Normal results */}
+        {/* ─── Main Results ──────────────────────────────── */}
         {!isFocused && (
           <View style={styles.searchView}>
             <Text
@@ -121,9 +134,7 @@ const Search: React.FC = () => {
               color="#A7A7A7"
               style={styles.heading}
             >
-              {searchText
-                ? `Showing ${artists.length} result${artists.length !== 1 ? "s" : ""} for “${searchText}”`
-                : "Artists near you"}
+              Artists near you
             </Text>
             <FlatList
               data={artists}
@@ -153,21 +164,34 @@ const Search: React.FC = () => {
 export default Search;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  inner: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  inner: {
+    flex: 1,
+    position: "relative", // allow absolute overlays if needed
+  },
   inputHeaderContainer: {
+    height: 48 + 10,
+    position: "relative", // stack above results
+    zIndex: 2,
+    backgroundColor: "#000",
     paddingHorizontal: 16,
     paddingBottom: 11,
     borderBottomWidth: 0.33,
     borderColor: "#FFFFFF56",
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
-    top: 56, // adjust to sit below your header (e.g. 56px)
+    position: "absolute",
+    top: 56, // same as header height
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0,0,0,0.7)",
     paddingHorizontal: 16,
     paddingTop: 8,
-    zIndex: 10,
+    zIndex: 1,
   },
   recentItem: {
     paddingVertical: 12,
@@ -179,6 +203,7 @@ const styles = StyleSheet.create({
   searchView: {
     flex: 1,
     paddingHorizontal: 16,
+    zIndex: 0,
   },
   heading: {
     marginVertical: 16,

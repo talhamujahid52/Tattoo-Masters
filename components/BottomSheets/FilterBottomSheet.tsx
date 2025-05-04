@@ -35,20 +35,20 @@ const FilterBottomSheet = () => {
       (item) =>
         item.value === value
           ? { ...item, selected: true } // Set clicked item to selected
-          : { ...item, selected: false } // Deselect all other items
+          : { ...item, selected: false }, // Deselect all other items
     );
     setRatings(updatedRatings);
   };
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);
   };
   const toggleTattooStyles = (value: number) => {
     const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setTattooStyles(updatedTattooStyles);
@@ -60,7 +60,7 @@ const FilterBottomSheet = () => {
         <Text size="h4" weight="medium" color="#FFF">
           Filters
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity style={{ width: 70 }}>
           <Text size="h4" weight="normal" color="#DAB769">
             Clear all
           </Text>

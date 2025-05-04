@@ -52,15 +52,17 @@ const Chat = () => {
         paddingHorizontal: 16,
       }}
     >
-      <Input
-        value={searchText}
-        inputMode="text"
-        placeholder="Search for artists and studios"
-        leftIcon={"search"}
-        onChangeText={(text) => setSearchText(text)}
-        rightIcon={searchText !== "" && "cancel"}
-        rightIconOnPress={() => setSearchText("")}
-      />
+      <View style={{ height: 58 }}>
+        <Input
+          value={searchText}
+          inputMode="text"
+          placeholder="Search for artists"
+          leftIcon={"search"}
+          onChangeText={(text) => setSearchText(text)}
+          rightIcon={searchText !== "" && "cancel"}
+          rightIconOnPress={() => setSearchText("")}
+        />
+      </View>
       <Text
         size="h4"
         weight="semibold"
@@ -122,7 +124,6 @@ const Chat = () => {
         <FlatList
           data={chats}
           renderItem={(item) => <ChatListCell chat={item} />}
-          // keyExtractor={(item, idx) => item.lastSeen}
           contentContainerStyle={{ paddingBottom: 250 }}
         />
       </View>

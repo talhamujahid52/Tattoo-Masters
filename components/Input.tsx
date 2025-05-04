@@ -9,13 +9,12 @@ import React, { useMemo, useState } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
 import { normalize } from "@/utils/helperFunctions";
 
-interface InputProps {
+interface InputProps extends TextInputProps {
   placeholder?: string;
   value?: string; // Added value prop
   onChangeText?: (text: string) => void;
   leftIcon?: any;
   rightIcon?: any;
-  inputMode: "text" | "email" | "password" | "tel";
   isNameField?: boolean;
   textInputProps?: TextInputProps;
   backgroundColour?: string;
@@ -85,8 +84,8 @@ const Input = ({
           inputMode === "email"
             ? "email-address"
             : inputMode === "tel"
-            ? "phone-pad"
-            : "default"
+              ? "phone-pad"
+              : "default"
         }
         editable={editable}
         onPress={onPress}
@@ -125,22 +124,21 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 48,
-    width: "100%",
+    // flex: 1,
+    height: 48, // ensure at least 48 high
     borderRadius: 50,
     backgroundColor: "#FFFFFF1A",
     paddingHorizontal: 10,
+    paddingVertical: 6, // adjust vertical space instead of fixed height
   },
   input: {
-    flex: 1,
-    height: "100%",
+    flex: 1, // take up all remaining horizontal space
     fontSize: normalize(16),
-    fontWeight: "400",
-    lineHeight: normalize(20.28),
-    padding: 10,
     color: "white",
+    paddingVertical: 0, // vertical padding is on container
+    marginLeft: 4, // a little breathing room after the icon
   },
   icon: {
-    marginHorizontal: 5,
+    marginHorizontal: 4,
   },
 });
