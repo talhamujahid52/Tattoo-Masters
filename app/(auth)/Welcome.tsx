@@ -43,7 +43,7 @@ const Welcome = () => {
           title="Let's go"
           onPress={() => {
             router.push({
-              pathname: "/Login",
+              pathname: "/(bottomTabs)/Home",
             });
           }}
         />
