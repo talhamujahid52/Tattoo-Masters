@@ -9,7 +9,6 @@ import {
 import React, { useState, useContext, useMemo } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
-import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
 import { useRouter } from "expo-router";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
@@ -17,22 +16,23 @@ import { FormContext } from "../context/FormContext";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
+import ReviewOnProfileBlur from "./ReviewOnProfileBlur";
 
 interface StudioItem {
   title: string;
-  value: number;
   selected: boolean;
 }
 const step3: React.FC = () => {
   const { formData } = useContext(FormContext)!;
-
+  console.log("Form Data: ", formData);
+  const tattooStyles = formData?.tattooStyles;
   const router = useRouter();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const profileImage = useMemo(() => {
     return {
@@ -44,39 +44,29 @@ const step3: React.FC = () => {
         undefined,
     };
   }, [loggedInUser, loggedInUserFirestore, formData]);
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", value: 1, selected: false },
-    { title: "Geometric", value: 2, selected: false },
-    { title: "Black and White", value: 3, selected: false },
-  ]);
 
-  const toggleTattooStyles = (value: number) => {
-    const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
-    );
-
-    setTattooStyles(updatedTattooStyles);
-  };
-
+  const [region, setRegion] = useState<Region>({
+    latitude: formData.location?.latitude,
+    longitude: formData.location?.longitude,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  });
   const renderItem = ({ item }: { item: StudioItem }) => (
-    <TouchableOpacity
-      key={item.value}
-      activeOpacity={1}
+    <View
       style={{
         padding: 6,
         borderRadius: 6,
-        backgroundColor: item.selected ? "#DAB769" : "#262526",
+        backgroundColor: "#262526",
       }}
-      onPress={() => toggleTattooStyles(item.value)} // Toggle selected state on press
     >
       <Text
         style={{
-          color: item.selected ? "#22221F" : "#A7A7A7",
+          color: "#A7A7A7",
         }}
       >
         {item.title}
       </Text>
-    </TouchableOpacity>
+    </View>
   );
   return (
     <ScrollView style={styles.container}>
@@ -90,8 +80,8 @@ const step3: React.FC = () => {
             {formData?.studio === "studio"
               ? formData?.studioName
               : formData?.studio === "freelancer"
-                ? "Freelancer"
-                : "HomeArtist"}
+              ? "Freelancer"
+              : "HomeArtist"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.city}
@@ -123,19 +113,27 @@ const step3: React.FC = () => {
           style={styles.icon}
           source={require("../assets/images/favorite-white.png")}
         />
-        <Text size="p" weight="normal" color="#FBF6FA">
-          412
-        </Text>
+        <View
+          style={{
+            height: 11,
+            width: 31,
+            borderRadius: 6,
+            backgroundColor: "#2D2D2D",
+          }}
+        ></View>
       </View>
       <Text size="p" weight="normal" color="#A7A7A7" style={{ marginTop: 16 }}>
         {formData?.aboutYou}
-        {/* Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. */}
       </Text>
       <View style={styles.buttonRow}>
         <IconButton
-          title="Edit profile"
-          icon={require("../assets/images/edit.png")}
+          title="Favorite"
+          icon={require("../assets/images/favorite-outline-white.png")}
+          iconStyle={{
+            height: 15,
+            width: 17,
+            resizeMode: "contain",
+          }}
           variant="Primary"
           onPress={() => {
             router.push({
@@ -144,12 +142,12 @@ const step3: React.FC = () => {
           }}
         />
         <IconButton
-          title="Add tattoo"
-          icon={require("../assets/images/add_photo_alternate-2.png")}
+          title="Message"
+          icon={require("../assets/images/message.png")}
           variant="Primary"
         />
       </View>
-      <ReviewOnProfile></ReviewOnProfile>
+      <ReviewOnProfileBlur></ReviewOnProfileBlur>
       <View style={{ marginVertical: 24 }}>
         <Text size="profileName" weight="semibold" color="#FBF6FA">
           Location
@@ -160,7 +158,7 @@ const step3: React.FC = () => {
           color="#A7A7A7"
           style={{ marginTop: 10 }}
         >
-          S#251, Street 24, Phuket, Thailand
+          {formData?.address}
         </Text>
         <View
           style={{
@@ -174,9 +172,10 @@ const step3: React.FC = () => {
             provider={PROVIDER_GOOGLE}
             style={styles.map}
             mapType="terrain"
-          >
-            {/* <Marker coordinate={region} title="Location" />  */}
-          </MapView>
+            region={region}
+            scrollEnabled={false}
+            zoomEnabled={false}
+          ></MapView>
         </View>
       </View>
       <View>
@@ -188,12 +187,12 @@ const step3: React.FC = () => {
         <FlatList
           data={tattooStyles}
           renderItem={renderItem}
-          keyExtractor={(item) => item.value.toString()}
+          keyExtractor={(item) => item.title}
           horizontal={true}
           contentContainerStyle={{ gap: 10 }}
         />
       </View>
-      <ImageGallery></ImageGallery>
+      <ImageGallery imageUris={formData?.images}></ImageGallery>
     </ScrollView>
   );
 };
@@ -205,8 +204,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
     padding: 16,
-    borderTopWidth: 0.33,
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
     borderColor: "#FFFFFF56",
+    borderRadius: 20,
   },
   userProfileRow: {
     display: "flex",

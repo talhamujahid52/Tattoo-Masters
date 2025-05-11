@@ -105,12 +105,12 @@ const ArtistProfileBottomSheet = () => {
           title="Message"
           icon={require("../../assets/images/message.png")}
           variant="Primary"
-        //   onPress={() => {
-        //     router.push({
-        //       pathname: "/artist/IndividualChat",
-        //       params: { selectedArtistId },
-        //     });
-        //   }}
+          //   onPress={() => {
+          //     router.push({
+          //       pathname: "/artist/IndividualChat",
+          //       params: { selectedArtistId },
+          //     });
+          //   }}
         />
       </View>
     </View>
