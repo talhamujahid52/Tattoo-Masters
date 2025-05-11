@@ -77,7 +77,7 @@ const ArtistProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);

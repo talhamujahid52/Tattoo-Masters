@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import userSlice from "./slices/userSlice"; // Import your slice
 import artistSlice from "./slices/artistSlice";
 import chatSlice from "./slices/chatSlice";
+import recentSearchesSlice from "./slices/recentSearchesSlice";
 
 // Persist configuration
 const persistConfig = {
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   user: userSlice,
   artist: artistSlice,
   chats: chatSlice,
+  recentSearches: recentSearchesSlice,
 });
 
 // Create persisted reducer

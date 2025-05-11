@@ -31,10 +31,9 @@ const Search: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const query = searchText.trim() === "" ? "*" : searchText;
       const hits = await artistsTs.search({
         collection: "Users",
-        query,
+        query: "",
         queryBy: "name,studio,studioName",
         filterBy: "isArtist:=true",
       });
@@ -92,6 +91,7 @@ const Search: React.FC = () => {
                 pathname: "/(bottomTabs)/Search/SearchAll",
                 params: { query: searchText },
               });
+
               setSearchText("");
             }}
             onFocus={() => setIsFocused(true)}

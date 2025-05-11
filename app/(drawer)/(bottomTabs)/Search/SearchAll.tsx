@@ -26,17 +26,24 @@ import ArtistSearchCard from "@/components/ArtistSearchCard";
 
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
+import { SearchType, addSearch } from "@/redux/slices/recentSearchesSlice";
+import ImageGallery from "@/components/ImageGallery";
 
-const filters = [
-  { title: "Tattoos" },
-  { title: "Artists" },
-  { title: "Studios" },
+interface FilterOption {
+  title: string;
+  type: SearchType;
+}
+
+export const filters: FilterOption[] = [
+  { title: "Tattoos", type: "tattoos" },
+  { title: "Artists", type: "artists" },
+  { title: "Studios", type: "studios" },
 ];
 export default function SearchAll() {
   const { query: initialQuery } = useLocalSearchParams<{ query?: string }>();
   const router = useRouter();
   const dispatch = useDispatch();
-  const artistsTs = useTypesense();
+  const searchAll = useTypesense();
   const results = useSelector((s: any) => s.artist.searchResults);
   console.log("results", results);
   const [searchText, setSearchText] = useState(initialQuery || "");
@@ -51,13 +58,39 @@ export default function SearchAll() {
   const doSearch = async (q: string) => {
     try {
       setLoading(true);
+
       const query = q.trim() === "" ? "*" : q;
-      const hits = await artistsTs.search({
-        collection: "Users",
-        query,
-        queryBy: "name,studio,studioName",
-        filterBy: "isArtist:=true",
-      });
+      let hits = null;
+      if (selectedFilter === "tattoos") {
+        hits = await searchAll.search({
+          collection: "publications",
+          query,
+          queryBy: "styles,caption", // adjust to match your publications schema
+        });
+      } else if (selectedFilter === "studios") {
+        hits = await searchAll.search({
+          collection: "Users",
+          query,
+          queryBy: "studio,studioName",
+          filterBy: "isArtist:=true",
+        });
+      } else if (selectedFilter === "artists") {
+        hits = await searchAll.search({
+          collection: "Users",
+          query,
+          queryBy: "name",
+          filterBy: "isArtist:=true",
+        });
+      } else {
+        console.warn("no filter specified using publications");
+        hits = await searchAll.search({
+          collection: "publications",
+          query,
+          queryBy: "styles,caption", // adjust to match your publications schema
+        });
+      }
+
+      dispatch(addSearch({ text: query, type: "tattoos" }));
       const docs = hits.map((h: any) => h.document);
 
       dispatch(
@@ -71,8 +104,8 @@ export default function SearchAll() {
       setLoading(false);
     }
   };
-  const [selectedFilter, setSelectedFilter] = useState<number | null>();
-  const toggleFilter = (value: number) => {
+  const [selectedFilter, setSelectedFilter] = useState<SearchType | null>();
+  const toggleFilter = (value: SearchType) => {
     if (selectedFilter === value) {
       setSelectedFilter(null);
     } else {
@@ -131,14 +164,14 @@ export default function SearchAll() {
                   padding: 6,
                   borderRadius: 6,
                   backgroundColor:
-                    selectedFilter === idx ? "#DAB769" : "#262526",
+                    selectedFilter === item.type ? "#DAB769" : "#262526",
                 }}
-                onPress={() => toggleFilter(idx)}
+                onPress={() => toggleFilter(item.type)}
               >
                 <Text
                   size="p"
                   weight="normal"
-                  color={selectedFilter === idx ? "#22221F" : "#A7A7A7"}
+                  color={selectedFilter === item.type ? "#22221F" : "#A7A7A7"}
                 >
                   {item.title}
                 </Text>
@@ -163,24 +196,30 @@ export default function SearchAll() {
             <ActivityIndicator size={"large"} />
           </View>
         ) : (
-          <FlatList
-            data={results}
-            numColumns={3}
-            keyExtractor={(item: any) => item.id}
-            renderItem={({ item, index }) => (
-              <View
-                style={{
-                  width: adjustedWidth / 3,
-                  marginRight: index % 3 === 0 ? 5 : 0,
-                  marginLeft: index % 3 === 2 ? 5 : 0,
-                }}
-              >
-                <ArtistSearchCard artist={item} />
-              </View>
+          <>
+            {selectedFilter === "tattoos" || selectedFilter === null ? (
+              <ImageGallery images={results} />
+            ) : (
+              <FlatList
+                data={results}
+                numColumns={3}
+                keyExtractor={(item: any) => item.id}
+                renderItem={({ item, index }) => (
+                  <View
+                    style={{
+                      width: adjustedWidth / 3,
+                      marginRight: index % 3 === 0 ? 5 : 0,
+                      marginLeft: index % 3 === 2 ? 5 : 0,
+                    }}
+                  >
+                    <ArtistSearchCard artist={item} />
+                  </View>
+                )}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
+              />
             )}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
-          />
+          </>
         )}
       </View>
     </SafeAreaView>

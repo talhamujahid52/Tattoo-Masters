@@ -55,7 +55,6 @@ const Home = () => {
         filterBy: "isArtist:=true",
       });
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
-      console.log("fetchedArtists", fetchedArtists);
 
       dispatch(resetAllArtists());
       dispatch(
@@ -121,6 +120,7 @@ const Home = () => {
     publicationsTs.search({ collection: "publications" });
   }, [publicationsTs.search]);
 
+  console.log("results", publicationsTs.results);
   // Fetch artists on mount or when typesense dependency changes
   useEffect(() => {
     fetchUsers();

@@ -32,6 +32,7 @@ const ImageGallery = ({ images }: Props) => {
       >
         <Image
           source={{ uri: item?.document?.downloadUrls?.small }}
+          key={item?.document?.downloadUrls?.small}
           style={styles.box}
           resizeMode="cover"
         />

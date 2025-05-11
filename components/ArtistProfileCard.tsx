@@ -25,6 +25,7 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
       }}
     >
       <Image
+        key={artist.data?.profilePicture}
         source={
           artist.data.profilePicture
             ? { uri: profilePicture }
