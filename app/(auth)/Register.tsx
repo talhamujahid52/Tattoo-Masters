@@ -9,6 +9,8 @@ import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "@/utils/firebase/userFunctions";
 import firestore from "@react-native-firebase/firestore";
 import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -52,7 +54,7 @@ const Register: React.FC = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         email,
-        password
+        password,
       );
 
       const user = userCredential.user;
@@ -80,113 +82,118 @@ const Register: React.FC = () => {
   };
 
   return (
-    <View style={styles.Container}>
-      <Image
-        style={styles.Logo}
-        source={require("../../assets/images/logo.png")}
-      />
-      <Text style={styles.PageTitle}>Registration</Text>
-      <View style={styles.Row}>
-        <Text size="p" weight="normal" color="#A7A7A7">
-          Already have an account?{" "}
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: "/(auth)/Login" })}
-        >
-          <Text size="p" weight="semibold" color="#FBF6FA">
-            Login here.
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.InputContainer}>
-        <Input
-          inputMode="text"
-          placeholder="Full Name"
-          isNameField
-          textInputProps={{ autoCorrect: false }}
-          value={fullName}
-          onChangeText={setFullName}
+    <SafeAreaView style={styles.Container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1, flex: 1, alignItems: "center" }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Image
+          style={styles.Logo}
+          source={require("../../assets/images/logo.png")}
         />
-        <Input
-          inputMode="email"
-          placeholder="Email address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <PhoneInput
-          value={phone}
-          onChange={(phoneNumber, code) => {
-            setPhone(phoneNumber);
-            setCountryCode(code); // Capture country code
-          }}
-        />
-        <Input
-          inputMode="password"
-          placeholder="Create Password"
-          value={password}
-          onChangeText={setPassword}
-        />
-        <Input
-          inputMode="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-      </View>
-      <Button title="Register" onPress={handleRegister} />
-      <View style={styles.SpacerContainer}>
-        <View style={styles.Spacer}></View>
-        <Text size="p" weight="normal" color="#A7A7A7">
-          Or continue with
-        </Text>
-        <View style={styles.Spacer}></View>
-      </View>
-      <View style={styles.ThirdPartyLoginButtonsContainer}>
-        <ThirdPartyLoginButton
-          title="Google"
-          icon={require("../../assets/images/Google.png")}
-          onPress={signInWithGoogle}
-        />
-        <ThirdPartyLoginButton
-          title="Facebook"
-          icon={require("../../assets/images/facebook.png")}
-          onPress={() => {
-            alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
-            );
-          }}
-        />
-      </View>
-      <View style={styles.BottomText}>
-        <Text size="small" weight="normal" color="#828282">
-          By clicking continue, you agree to our
-        </Text>
-        <View style={styles.TermsOfServiceContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/(auth)/TermsOfService");
-            }}
-          >
-            <Text size="small" weight="normal" color="#FBF6FA">
-              Terms of Service
-            </Text>
-          </TouchableOpacity>
-          <Text size="small" weight="normal" color="#828282">
-            {" "}
-            and{" "}
+        <Text style={styles.PageTitle}>Registration</Text>
+        <View style={styles.Row}>
+          <Text size="p" weight="normal" color="#A7A7A7">
+            Already have an account?{" "}
           </Text>
           <TouchableOpacity
-            onPress={() => {
-              router.push("/(auth)/PrivacyPolicy");
-            }}
+            onPress={() => router.push({ pathname: "/(auth)/Login" })}
           >
-            <Text size="small" weight="normal" color="#FBF6FA">
-              Privacy Policy
+            <Text size="p" weight="semibold" color="#FBF6FA">
+              Login here.
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </View>
+        <View style={styles.InputContainer}>
+          <Input
+            inputMode="text"
+            placeholder="Full Name"
+            isNameField
+            textInputProps={{ autoCorrect: false }}
+            value={fullName}
+            onChangeText={setFullName}
+          />
+          <Input
+            inputMode="email"
+            placeholder="Email address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <PhoneInput
+            value={phone}
+            onChange={(phoneNumber, code) => {
+              setPhone(phoneNumber);
+              setCountryCode(code); // Capture country code
+            }}
+          />
+          <Input
+            inputMode="password"
+            placeholder="Create Password"
+            value={password}
+            onChangeText={setPassword}
+          />
+          <Input
+            inputMode="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+        </View>
+        <Button title="Register" onPress={handleRegister} />
+        <View style={styles.SpacerContainer}>
+          <View style={styles.Spacer}></View>
+          <Text size="p" weight="normal" color="#A7A7A7">
+            Or continue with
+          </Text>
+          <View style={styles.Spacer}></View>
+        </View>
+        <View style={styles.ThirdPartyLoginButtonsContainer}>
+          <ThirdPartyLoginButton
+            title="Google"
+            icon={require("../../assets/images/Google.png")}
+            onPress={signInWithGoogle}
+          />
+          <ThirdPartyLoginButton
+            title="Facebook"
+            icon={require("../../assets/images/facebook.png")}
+            onPress={() => {
+              alert(
+                "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
+              );
+            }}
+          />
+        </View>
+        <View style={styles.BottomText}>
+          <Text size="small" weight="normal" color="#828282">
+            By clicking continue, you agree to our
+          </Text>
+          <View style={styles.TermsOfServiceContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/(auth)/TermsOfService");
+              }}
+            >
+              <Text size="small" weight="normal" color="#FBF6FA">
+                Terms of Service
+              </Text>
+            </TouchableOpacity>
+            <Text size="small" weight="normal" color="#828282">
+              {" "}
+              and{" "}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                router.push("/(auth)/PrivacyPolicy");
+              }}
+            >
+              <Text size="small" weight="normal" color="#FBF6FA">
+                Privacy Policy
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -198,7 +205,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: "#000",
     alignItems: "center",
-    paddingTop: 50,
   },
   Logo: {
     height: 120,

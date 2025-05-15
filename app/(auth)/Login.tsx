@@ -197,7 +197,7 @@ const Login = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
             );
           }}
         />
@@ -207,9 +207,11 @@ const Login = () => {
           By clicking continue, you agree to our
         </Text>
         <View style={styles.TermsOfServiceContainer}>
-          <TouchableOpacity onPress={()=>{
-            router.push("/(auth)/TermsOfService")
-          }}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/(auth)/TermsOfService");
+            }}
+          >
             <Text size="small" weight="normal" color="#FBF6FA">
               Terms of Service
             </Text>
@@ -218,9 +220,11 @@ const Login = () => {
             {" "}
             and{" "}
           </Text>
-          <TouchableOpacity onPress={()=>{
-            router.push("/(auth)/PrivacyPolicy")
-          }}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/(auth)/PrivacyPolicy");
+            }}
+          >
             <Text size="small" weight="normal" color="#FBF6FA">
               Privacy Policy
             </Text>
@@ -256,6 +260,7 @@ const styles = StyleSheet.create({
   },
   InputContainer: {
     paddingTop: 24,
+    width: "100%",
     display: "flex",
     flexDirection: "column",
     rowGap: 16,
