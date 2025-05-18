@@ -1,10 +1,56 @@
-import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
-import React from "react";
+import { StyleSheet, TouchableOpacity, View, Image, Alert } from "react-native";
+import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
+import auth from "@react-native-firebase/auth";
 import Button from "@/components/Button";
 
 const DeleteAccount = () => {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const providerId = auth().currentUser?.providerData;
+  console.log("Provider: ", providerId);
+  const handleDelete = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
+    const user = auth().currentUser;
+    if (!user?.email) {
+      Alert.alert("Error", "No user is currently signed in.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Re-authenticate
+      const credential = auth.EmailAuthProvider.credential(
+        user.email,
+        password
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // Delete user
+      await user.delete();
+      Alert.alert(
+        "Account Deleted",
+        "Your account has been permanently deleted."
+      );
+    } catch (error) {
+      console.error("Account deletion failed:", error);
+      if (error.code === "auth/wrong-password") {
+        Alert.alert("Error", "Incorrect password.");
+      } else {
+        Alert.alert("Error", "Something went wrong. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -24,13 +70,25 @@ const DeleteAccount = () => {
         We prefer you wouldn’t.
       </Text>
       <View style={styles.passwordFieldsContainer}>
-        <Input inputMode="password" placeholder="Enter Password"></Input>
-        <Input inputMode="password" placeholder="Confirm Password"></Input>
+        <Input
+          inputMode="password"
+          placeholder="Enter Password"
+          value={password}
+          onChangeText={setPassword}
+        />
+        <Input
+          inputMode="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
       </View>
       <Text size="small" weight="normal" color="#F2D189" style={styles.warning}>
         You won’t be able to recover your account once deleted.
       </Text>
       <TouchableOpacity
+        onPress={handleDelete}
+        disabled={loading}
         style={{
           display: "flex",
           justifyContent: "center",
@@ -40,10 +98,11 @@ const DeleteAccount = () => {
           borderColor: "#FBF6FA",
           height: 48,
           width: "100%",
+          opacity: loading ? 0.5 : 1,
         }}
       >
         <Text size="h4" weight="semibold" color="#E01D1D">
-          I wanna miss out
+          {loading ? "Deleting..." : "I wanna miss out"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -76,5 +135,6 @@ const styles = StyleSheet.create({
   passwordFieldsContainer: {
     rowGap: 16,
     marginVertical: 24,
+    width: "100%",
   },
 });

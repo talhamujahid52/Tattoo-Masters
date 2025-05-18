@@ -49,9 +49,7 @@ const StepperForm: React.FC = () => {
   const submitForm = async () => {
     try {
       setLoading(true);
-      const imgs = formData.images
-        .filter((item) => item !== "")
-        .map((item) => ({ uri: item, name: getFileName(item) }));
+      const imgs = formData.images.filter((img) => img && img.uri);
       const updatedFormData = {
         ...formData,
         tattooStyles: formData.tattooStyles.map((style) => style.title),

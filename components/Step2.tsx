@@ -6,32 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Alert,
 } from "react-native";
 import Text from "@/components/Text";
-import { launchImageLibrary } from "react-native-image-picker";
 import { FormContext } from "../context/FormContext";
+import { useRouter } from "expo-router";
+
 const Step2: React.FC = () => {
-  const { formData, setFormData } = useContext(FormContext)!;
+  const { formData } = useContext(FormContext)!;
+  const router = useRouter();
   const { width } = Dimensions.get("window");
-  const imageTileWidth = (width - 40) / 2; // For 2 tiles per row
-
-  const handleSelectImage = async (index: number) => {
-    const result = await launchImageLibrary({
-      mediaType: "photo",
-      selectionLimit: 1, // Allow only one image to be selected
-    });
-
-    if (!result.didCancel && result.assets && result.assets[0].uri) {
-      const selectedImageUri = result.assets[0].uri;
-
-      setFormData((prev) => {
-        const updatedImages = [...prev.images];
-        updatedImages[index] = selectedImageUri; // Replace or add the image at the given index
-        return { ...prev, images: updatedImages };
-      });
-    }
-  };
+  const imageTileWidth = (width - 40) / 2;
 
   return (
     <ScrollView style={styles.container}>
@@ -52,11 +36,16 @@ const Step2: React.FC = () => {
               styles.imageTile,
               { width: imageTileWidth, height: imageTileWidth },
             ]}
-            onPress={() => handleSelectImage(index)} // Open image picker when a box is clicked
+            onPress={() =>
+              router.push({
+                pathname: "/artist/UploadTattoo",
+                params: { index },
+              })
+            }
           >
-            {formData.images[index] ? (
+            {formData.images[index]?.uri ? (
               <Image
-                source={{ uri: formData.images[index] }}
+                source={{ uri: formData.images[index].uri }}
                 style={styles.image}
               />
             ) : (
@@ -102,7 +91,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
-    resizeMode: "cover", // Ensures the image covers the area of the tile
+    resizeMode: "cover",
   },
   imageTile: {
     borderWidth: 1,

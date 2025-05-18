@@ -42,7 +42,7 @@ const Welcome = () => {
         <Button
           title="Let's go"
           onPress={() => {
-            router.push({
+            router.replace({
               pathname: "/(bottomTabs)/Home",
             });
           }}

@@ -6,12 +6,14 @@ import {
   Platform,
   ToastAndroid,
   Alert,
+  Share,
 } from "react-native";
 import Text from "../Text";
 import React from "react";
 import { useRouter } from "expo-router";
 import Input from "../Input";
 import Clipboard from "@react-native-clipboard/clipboard";
+import { useSelector } from "react-redux";
 
 interface bottomSheetProps {
   hideShareReviewPasswordBottomSheet: () => void;
@@ -20,15 +22,35 @@ interface bottomSheetProps {
 const ShareReviewPasswordBottomSheet = ({
   hideShareReviewPasswordBottomSheet,
 }: bottomSheetProps) => {
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
   const router = useRouter();
-  const password = "GfVRRSG";
 
   const handleCopyToClipboard = () => {
-    Clipboard.setString(password);
+    Clipboard.setString(loggedInUser?.reviewPassword);
     if (Platform.OS === "android") {
       ToastAndroid.show("Password copied to clipboard!", ToastAndroid.SHORT);
     } else {
       Alert.alert("Copied", "Password copied to clipboard.");
+    }
+  };
+
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message: loggedInUser?.reviewPassword,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log("Avtivity Type : ", result.activityType);
+        } else {
+          console.log("Shared : ");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log("Share Sheet Dismissed : ");
+      }
+    } catch (error) {
+      console.log("Error opening Share Sheet : ", error);
     }
   };
 
@@ -73,7 +95,7 @@ const ShareReviewPasswordBottomSheet = ({
           Password
         </Text>
         <Input
-          value={password}
+          value={loggedInUser?.reviewPassword}
           inputMode="text"
           placeholder="Review Password"
           rightIcon={"content-copy"}
@@ -86,7 +108,12 @@ const ShareReviewPasswordBottomSheet = ({
         style={{ height: 1, backgroundColor: "#2D2D2D", marginVertical: 16 }}
       ></View>
 
-      <TouchableOpacity style={styles.drawerItem}>
+      <TouchableOpacity
+        style={styles.drawerItem}
+        onPress={() => {
+          onShare();
+        }}
+      >
         <Image
           style={styles.icon}
           source={require("../../assets/images/share.png")}

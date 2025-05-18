@@ -12,20 +12,21 @@ import { useRouter } from "expo-router";
 import { Dimensions } from "react-native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { UserFirestore } from "@/types/user";
+import { resetUser } from "@/redux/slices/userSlice";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const CustomDrawerContent = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
+  const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const profileImage = useMemo(() => {
     return {
@@ -117,11 +118,20 @@ const CustomDrawerContent = () => {
                 style={styles.icon}
                 source={require("../../assets/images/favorite.png")}
               />
-              <Text size="p" weight="normal" color="#A7A7A7">
-                {loggedInUserFirestore?.followersCount
-                  ? loggedInUserFirestore?.followersCount
-                  : "412"}
-              </Text>
+              {loggedInUserFirestore?.followersCount ? (
+                <Text size="p" weight="normal" color="#A7A7A7">
+                  {loggedInUserFirestore?.followersCount}
+                </Text>
+              ) : (
+                <View
+                  style={{
+                    height: 11,
+                    width: 31,
+                    borderRadius: 6,
+                    backgroundColor: "#A7A7A7",
+                  }}
+                ></View>
+              )}
             </View>
           </View>
         ) : (
@@ -336,6 +346,7 @@ const CustomDrawerContent = () => {
           <TouchableOpacity
             onPress={() => {
               auth().signOut();
+              dispatch(resetUser());
             }}
             style={styles.logoutButton}
           >
@@ -354,7 +365,7 @@ const CustomDrawerContent = () => {
 };
 
 const DrawerLayout: React.FC = () => {
-  // const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
   // const loggedInUserFirestore = useSelector(
   //   (state: any) => state?.user?.userFirestore,
   // );
@@ -370,6 +381,7 @@ const DrawerLayout: React.FC = () => {
           // paddingHorizontal: 16,
           backgroundColor: "black",
         },
+        swipeEnabled: loggedInUser ? true : false,
       }}
     ></Drawer>
   );

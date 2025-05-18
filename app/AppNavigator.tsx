@@ -196,6 +196,18 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="artist/UploadTattoo"
+            options={{
+              headerShown: true,
+              headerTitle: "Add Tattoo",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
             name="artist/Notification"
             options={{
               headerShown: true,

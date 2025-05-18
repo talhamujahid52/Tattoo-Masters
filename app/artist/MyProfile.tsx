@@ -7,7 +7,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -18,6 +18,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import { useDispatch, useSelector } from "react-redux";
 import { UserFirestore } from "@/types/user";
+import useTypesense from "@/hooks/useTypesense";
+import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 
 interface StudioItem {
   title: string;
@@ -27,14 +29,15 @@ interface StudioItem {
 
 const MyProfile = () => {
   const router = useRouter();
-  // const { loggedInUser } = useLocalSearchParams<any>();
-
-  // console.log("My Profile Page : ", JSON.parse(loggedInUser));
   const { BottomSheet, show, hide } = useBottomSheet();
-  // const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUser: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore
   );
+
+  const myId = loggedInUser?.uid;
+
+  console.log("LoggedIn User : ", loggedInUser);
+  console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const content =
@@ -79,6 +82,37 @@ const MyProfile = () => {
       </Text>
     </TouchableOpacity>
   );
+
+  const publicationsTs = useTypesense();
+
+  const handleFetchPublications = async () => {
+    try {
+      // Triggering the publication search when the button is clicked
+      const hits = await publicationsTs.search({
+        collection: "publications", // Your collection name
+        query: myId, // You can adjust the query here
+        queryBy: "userId", // Modify according to your schema
+      });
+
+      // Update the state with the fetched publications (assuming it's stored in a state)
+      console.log("Fetched Publications: ", hits);
+
+      // Set the fetched publications to a state to display
+      // Assuming publications state is defined below
+      // setPublications(hits);
+    } catch (err) {
+      console.error("Error fetching publications:", err);
+    }
+  };
+
+  useEffect(() => {
+    publicationsTs.search({
+      collection: "publications", // Your collection name
+      query: myId, // You can adjust the query here
+      queryBy: "userId", // Modify according to your schema
+    });
+    // handleFetchPublications();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
@@ -143,9 +177,21 @@ const MyProfile = () => {
           style={styles.icon}
           source={require("../../assets/images/favorite-white.png")}
         />
-        <Text size="p" weight="normal" color="#FBF6FA">
-          {loggedInUser?.followersCount ? loggedInUser?.followersCount : 412}
-        </Text>
+
+        {loggedInUser?.followersCount ? (
+          <Text size="p" weight="normal" color="#FBF6FA">
+            {loggedInUser?.followersCount}
+          </Text>
+        ) : (
+          <View
+            style={{
+              height: 11,
+              width: 31,
+              borderRadius: 6,
+              backgroundColor: "#2D2D2D",
+            }}
+          ></View>
+        )}
       </View>
       <View style={styles.tattooStylesRow}>
         <Image
@@ -199,7 +245,11 @@ const MyProfile = () => {
           }}
         />
       </View>
-      <ReviewOnProfile isMyProfile={true}></ReviewOnProfile>
+      {loggedInUser?.latestReview ? (
+        <ReviewOnProfile isMyProfile={true} />
+      ) : (
+        <ReviewOnProfileBlur />
+      )}
       <View style={styles.stylesFilterRow}>
         <FlatList
           data={studio}
@@ -209,7 +259,7 @@ const MyProfile = () => {
           contentContainerStyle={{ gap: 10 }}
         />
       </View>
-      <ImageGallery></ImageGallery>
+      <ImageGallery images={publicationsTs.results}></ImageGallery>
     </ScrollView>
   );
 };

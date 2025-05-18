@@ -11,6 +11,13 @@ type TattooStyle = {
   selected: boolean;
 };
 
+type ImageObject = {
+  uri: string;
+  name: string;
+  caption: string;
+  styles: string[];
+};
+
 type FormData = {
   profilePicture: string;
   name: string;
@@ -22,7 +29,9 @@ type FormData = {
   showCityOnly: boolean;
   tattooStyles: TattooStyle[];
   aboutYou: string;
-  images: string[];
+  images: ImageObject[];
+  reviewPassword: string;
+  followersCount: number;
 };
 
 type FormContextType = {
@@ -50,7 +59,14 @@ const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
     showCityOnly: false,
     tattooStyles: [],
     aboutYou: "",
-    images: ["", "", "", ""],
+    images: [
+      { uri: "", name: "", caption: "", styles: [] },
+      { uri: "", name: "", caption: "", styles: [] },
+      { uri: "", name: "", caption: "", styles: [] },
+      { uri: "", name: "", caption: "", styles: [] },
+    ],
+    reviewPassword: "",
+    followersCount: 0,
   });
 
   const [step, setStep] = useState<number>(1);

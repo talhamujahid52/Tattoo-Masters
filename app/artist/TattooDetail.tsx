@@ -14,6 +14,7 @@ import Text from "@/components/Text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
+import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publication,
 // import { doc } from "@react-native-firebase/firestore";
@@ -45,7 +46,7 @@ const TattooDetail: React.FC = () => {
   const scale = useSharedValue(1);
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const currentUserId = loggedInUser?.uid;
 
@@ -67,7 +68,7 @@ const TattooDetail: React.FC = () => {
     () => ({
       borderRadius: 30 / scale.value,
     }),
-    [scale],
+    [scale]
   );
   const insets = useSafeAreaInsets();
   const {
@@ -92,6 +93,11 @@ const TattooDetail: React.FC = () => {
     show: showReportSheet,
     hide: hideReportSheet,
   } = useBottomSheet();
+  const {
+    BottomSheet: LoggingInBottomSheet,
+    show: showLoggingInBottomSheet,
+    hide: hideLoggingInBottomSheet,
+  } = useBottomSheet();
 
   // Use the Typesense hook to fetch the user details from the "Users" collection.
   const { getDocument } = useTypesense();
@@ -101,8 +107,9 @@ const TattooDetail: React.FC = () => {
   const totalLikes = usePublicationLikes(id);
   const toggleLikePublicationOnHandle = async () => {
     try {
-      setLoading(true);
-      await toggleLikePublication(id, currentUserId);
+      loggedInUser
+        ? (setLoading(true), await toggleLikePublication(id, currentUserId))
+        : showLoggingInBottomSheet();
     } catch {
       console.log("failed to like unlike photo");
     } finally {
@@ -118,7 +125,7 @@ const TattooDetail: React.FC = () => {
           setUserDetails(doc);
         })
         .catch((err) =>
-          console.error("Error fetching user details from Typesense:", err),
+          console.error("Error fetching user details from Typesense:", err)
         );
     }
   }, [userId, getDocument]);
@@ -131,12 +138,12 @@ const TattooDetail: React.FC = () => {
         position: "relative",
       }}
     >
-
       <ImageActionsSheet
         InsideComponent={
           <ImageActionsBottomSheet
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
+            showLoggingInBottomSheet={showLoggingInBottomSheet}
           />
         }
       />
@@ -148,6 +155,11 @@ const TattooDetail: React.FC = () => {
             options={ReportImageOptions}
             reportItem={id}
           />
+        }
+      />
+      <LoggingInBottomSheet
+        InsideComponent={
+          <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
         }
       />
 
