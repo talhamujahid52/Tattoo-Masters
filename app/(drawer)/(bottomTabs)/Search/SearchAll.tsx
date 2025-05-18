@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import {
   SafeAreaView,
   View,
-  FlatList,
   Dimensions,
   TouchableOpacity,
   StyleSheet,
@@ -20,6 +19,12 @@ import {
   resetSearchResults,
 } from "@/redux/slices/artistSlice";
 
+import {
+  setTattooLoading,
+  setTattooSearchResults,
+  TattooSearchResult,
+} from "@/redux/slices/tattooSlice";
+
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
@@ -28,6 +33,7 @@ import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import { SearchType, addSearch } from "@/redux/slices/recentSearchesSlice";
 import ImageGallery from "@/components/ImageGallery";
+import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 
 interface FilterOption {
   title: string;
@@ -40,12 +46,13 @@ export const filters: FilterOption[] = [
   { title: "Studios", type: "studios" },
 ];
 export default function SearchAll() {
-  const { query: initialQuery } = useLocalSearchParams<{ query?: string }>();
+  const { query: initialQuery, type: searchTypeInitial } =
+    useLocalSearchParams<{ query?: string; type?: SearchType }>();
   const router = useRouter();
   const dispatch = useDispatch();
   const searchAll = useTypesense();
-  const results = useSelector((s: any) => s.artist.searchResults);
-  console.log("results", results);
+  const resultsArtists = useSelector((s: any) => s.artist.searchResults);
+  const resultsTattooss = useSelector((s: any) => s.tattoos.searchResults);
   const [searchText, setSearchText] = useState(initialQuery || "");
   const [searchedText, setSearchedText] = useState(initialQuery || "");
   const { width } = Dimensions.get("window");
@@ -54,6 +61,9 @@ export default function SearchAll() {
   const [loading, setLoading] = useState(false);
   const { BottomSheet, show, hide } = useBottomSheet();
 
+  const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
+    () => searchTypeInitial || null,
+  );
   // Perform a Typesense search and dispatch results
   const doSearch = async (q: string) => {
     try {
@@ -61,19 +71,24 @@ export default function SearchAll() {
 
       const query = q.trim() === "" ? "*" : q;
       let hits = null;
-      if (selectedFilter === "tattoos") {
-        hits = await searchAll.search({
-          collection: "publications",
-          query,
-          queryBy: "styles,caption", // adjust to match your publications schema
-        });
-      } else if (selectedFilter === "studios") {
+
+      if (selectedFilter === "studios") {
         hits = await searchAll.search({
           collection: "Users",
           query,
           queryBy: "studio,studioName",
           filterBy: "isArtist:=true",
         });
+
+        const docs = hits.map((h: any) => h.document);
+
+        dispatch(
+          updateSearchResults(
+            docs.map(({ id, ...data }: any) => ({ id, data })),
+          ),
+        );
+
+        dispatch(addSearch({ text: query, type: "studios" }));
       } else if (selectedFilter === "artists") {
         hits = await searchAll.search({
           collection: "Users",
@@ -81,30 +96,38 @@ export default function SearchAll() {
           queryBy: "name",
           filterBy: "isArtist:=true",
         });
+
+        const docs = hits.map((h: any) => h.document);
+
+        dispatch(
+          updateSearchResults(
+            docs.map(({ id, ...data }: any) => ({ id, data })),
+          ),
+        );
+
+        dispatch(addSearch({ text: query, type: "artists" }));
       } else {
-        console.warn("no filter specified using publications");
+        dispatch(setTattooLoading(true));
+        console.log("no filter specified using publications");
         hits = await searchAll.search({
           collection: "publications",
           query,
           queryBy: "styles,caption", // adjust to match your publications schema
         });
+        dispatch(addSearch({ text: query, type: "tattoos" }));
+
+        dispatch(setTattooSearchResults(hits as TattooSearchResult[]));
       }
 
-      dispatch(addSearch({ text: query, type: "tattoos" }));
-      const docs = hits.map((h: any) => h.document);
-
-      dispatch(
-        updateSearchResults(docs.map(({ id, ...data }: any) => ({ id, data }))),
-      );
       setSearchedText(searchText);
     } catch (err) {
       console.error("Search error:", err);
       dispatch(resetSearchResults());
     } finally {
       setLoading(false);
+      setTattooLoading(false);
     }
   };
-  const [selectedFilter, setSelectedFilter] = useState<SearchType | null>();
   const toggleFilter = (value: SearchType) => {
     if (selectedFilter === value) {
       setSelectedFilter(null);
@@ -116,6 +139,10 @@ export default function SearchAll() {
   useEffect(() => {
     doSearch(searchedText);
   }, [selectedFilter, searchedText]);
+
+  // useEffect(() => {
+  //   console.log("searchall--results", results);
+  // }, [results]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -181,14 +208,11 @@ export default function SearchAll() {
         </View>
 
         {searchedText && (
-          <Text
-            size="h4"
-            // weight="semibold"
-            color="#A7A7A7"
-            style={styles.heading}
-          >
+          <Text size="h4" color="#A7A7A7" style={styles.heading}>
             {searchedText &&
-              `${results?.length} result${results?.length !== 1 ? "s" : ""} for "${searchedText}"`}
+              (selectedFilter === "tattoos" || selectedFilter === null
+                ? `${resultsTattooss?.length} result${resultsTattooss?.length !== 1 ? "s" : ""} for "${searchedText}"`
+                : `${resultsArtists?.length} result${resultsArtists?.length !== 1 ? "s" : ""} for "${searchedText}"`)}
           </Text>
         )}
         {loading ? (
@@ -198,10 +222,10 @@ export default function SearchAll() {
         ) : (
           <>
             {selectedFilter === "tattoos" || selectedFilter === null ? (
-              <ImageGallery images={results} />
+              <ImageGallery images={resultsTattooss} />
             ) : (
-              <FlatList
-                data={results}
+              <KeyboardAwareFlatList
+                data={resultsArtists}
                 numColumns={3}
                 keyExtractor={(item: any) => item.id}
                 renderItem={({ item, index }) => (

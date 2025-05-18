@@ -3,11 +3,11 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   View,
-  FlatList,
   Dimensions,
   TouchableOpacity,
   SafeAreaView,
   Animated,
+  Keyboard,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -16,6 +16,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { router } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
+import { addSearch } from "@/redux/slices/recentSearchesSlice";
+import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
@@ -70,11 +72,19 @@ const Search: React.FC = () => {
     }
   }, [isFocused, fadeAnim]);
 
-  const recentSearches = ["Picasso", "Van Gogh", "Da Vinci", "Banksy"];
-  const onRecentPress = (term: string) => {
-    setSearchText(term);
-    setIsFocused(false);
-    fetchUsers();
+  const recentSearches = useSelector(
+    (state: any) => state.recentSearches.items,
+  );
+
+  const onRecentPress = (term: { type: string; text: string }) => {
+    Keyboard.dismiss();
+
+    router.push({
+      pathname: "/(bottomTabs)/Search/SearchAll",
+      params: { query: term.text, type: term.type },
+    });
+
+    dispatch(addSearch({ text: term.text, type: term.type }));
   };
 
   return (
@@ -89,9 +99,10 @@ const Search: React.FC = () => {
             onSubmitEditing={() => {
               router.push({
                 pathname: "/(bottomTabs)/Search/SearchAll",
-                params: { query: searchText },
+                params: { query: searchText, type: "artists" },
               });
 
+              dispatch(addSearch({ text: searchText, type: "artists" }));
               setSearchText("");
             }}
             onFocus={() => setIsFocused(true)}
@@ -107,7 +118,7 @@ const Search: React.FC = () => {
 
         {showOverlay && (
           <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-            <FlatList
+            <KeyboardAwareFlatList
               data={recentSearches}
               keyExtractor={(item, i) => `${item}-${i}`}
               renderItem={({ item }) => (
@@ -116,11 +127,12 @@ const Search: React.FC = () => {
                   onPress={() => onRecentPress(item)}
                 >
                   <Text style={{ color: "#fff" }} size="p">
-                    {item}
+                    {item.text}
                   </Text>
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.sep} />}
+              keyboardShouldPersistTaps="handled"
             />
           </Animated.View>
         )}
@@ -136,7 +148,7 @@ const Search: React.FC = () => {
             >
               Artists near you
             </Text>
-            <FlatList
+            <KeyboardAwareFlatList
               data={artists}
               renderItem={({ item, index }) => (
                 <View

@@ -19,8 +19,8 @@ import { UserFirestore } from "@/types/user";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
 } from "react-native-reanimated";
+import { addSearch } from "@/redux/slices/recentSearchesSlice";
 
 const Home = () => {
   const router = useRouter();
@@ -31,7 +31,6 @@ const Home = () => {
   const publicationsTs = useTypesense();
 
   const artists = useSelector((state: any) => state.artist.allArtists);
-  const [searchMode, setSearchMode] = useState(false);
   // Shared values for the animation of the popular artists section
   const artistsOpacity = useSharedValue(1);
   const artistsTranslateY = useSharedValue(0);
@@ -70,57 +69,22 @@ const Home = () => {
     }
   };
 
-  // Search publications with the given query (adjust queryBy fields as needed)
-  const searchPublications = async (query: string) => {
-    try {
-      await publicationsTs.search({
-        collection: "publications",
-        query,
-        queryBy: "styles,caption", // adjust to match your publications schema
-      });
-    } catch (err) {
-      console.error("Error searching publications:", err);
-    }
-  };
-
   // Handler for when the user submits the search
   const handleSearchSubmit = async () => {
-    if (searchText.trim() !== "") {
-      setSearchMode(true);
-      // Run the publications search using the search query
-      await searchPublications(searchText);
-      // Animate the popular artists section out (fade, slide up, and collapse height)
-      artistsOpacity.value = withTiming(0, { duration: 300 });
-      artistsTranslateY.value = withTiming(-20, { duration: 300 });
-      artistsHeight.value = withTiming(0, { duration: 300 });
-    } else {
-      // If search is empty, animate the artists section back in
-      //
-      setSearchMode(false);
-      artistsOpacity.value = withTiming(1, { duration: 300 });
-      artistsTranslateY.value = withTiming(0, { duration: 300 });
-      artistsHeight.value = withTiming(280, { duration: 300 });
-      await publicationsTs.search({ collection: "publications" });
-    }
-  };
+    router.push({
+      pathname: "/(bottomTabs)/Home/SearchAll",
+      params: { query: searchText, type: "tattoos" },
+    });
 
-  // When the search field is cleared, fade the artists section back in
-  useEffect(() => {
-    if (searchText.trim() === "") {
-      setSearchMode(false);
-      artistsOpacity.value = withTiming(1, { duration: 300 });
-      artistsTranslateY.value = withTiming(0, { duration: 300 });
-      artistsHeight.value = withTiming(280, { duration: 300 });
-      publicationsTs.search({ collection: "publications" });
-    }
-  }, [searchText]);
+    dispatch(addSearch({ text: searchText, type: "tattoos" }));
+    setSearchText("");
+  };
 
   // Initial publications search on mount
   useEffect(() => {
     publicationsTs.search({ collection: "publications" });
   }, [publicationsTs.search]);
 
-  console.log("results", publicationsTs.results);
   // Fetch artists on mount or when typesense dependency changes
   useEffect(() => {
     fetchUsers();
@@ -192,9 +156,7 @@ const Home = () => {
         color="#FBF6FA"
         style={{ marginTop: 24, marginBottom: 8 }}
       >
-        {searchText && searchMode
-          ? `Showing ${publicationsTs.results?.length} results for ${searchText}`
-          : "Find Your Inspiration"}
+        Find Your Inspiration
       </Text>
       <ImageGallery images={publicationsTs.results} />
     </ScrollView>

@@ -27,6 +27,7 @@ const BottomTabsLayout = () => {
         <Tabs.Screen
           name="Home"
           options={{
+            headerShown: false,
             title: "",
             tabBarIcon: ({ focused }) =>
               focused ? (
@@ -42,42 +43,6 @@ const BottomTabsLayout = () => {
                   style={{ height: 24, width: 24 }}
                 />
               ),
-            headerStyle: {
-              backgroundColor: "#000",
-              shadowOpacity: 0,
-            },
-            headerLeftContainerStyle: {
-              paddingLeft: 16,
-            },
-            headerRightContainerStyle: {
-              paddingRight: 16,
-            },
-            headerLeft: () => (
-              <Image
-                source={require("../../../assets/images/tattoo masters.png")}
-                resizeMode="cover"
-                style={{
-                  height: 27,
-                  marginTop: 10,
-                  width: 180,
-                }}
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                onPress={() => {
-                  navigation.dispatch(DrawerActions.toggleDrawer());
-                }}
-              >
-                <Image
-                  source={require("../../../assets/images/menu.png")}
-                  resizeMode="cover"
-                  style={{ height: 13, width: 19 }}
-                />
-              </TouchableOpacity>
-            ),
-            // headerRight: () => <DrawerToggleButton tintColor="white" ></DrawerToggleButton>,
           }}
         />
         <Tabs.Screen

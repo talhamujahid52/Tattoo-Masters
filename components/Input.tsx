@@ -4,6 +4,7 @@ import {
   TextInput,
   TouchableOpacity,
   TextInputProps,
+  TouchableWithoutFeedback,
 } from "react-native";
 import React, { useMemo, useState } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
@@ -44,7 +45,7 @@ const Input = ({
   onSubmitEditing,
 }: InputProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
+  const inputRef = React.useRef<TextInput>(null);
   const shouldAutoCap = useMemo(() => {
     switch (inputMode) {
       case "email":
@@ -64,57 +65,71 @@ const Input = ({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: backgroundColour }]}>
-      {leftIcon && (
-        <Ionicons name={leftIcon} size={24} color="white" style={styles.icon} />
-      )}
-      <TextInput
-        {...textInputProps}
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#A29F93"
-        value={value} // Set the value prop
-        onChangeText={onChangeText}
-        selectionColor="#A29F93"
-        secureTextEntry={inputMode === "password" && !isPasswordVisible}
-        inputMode={inputMode === "email" ? "email" : "text"}
-        autoCapitalize={shouldAutoCap}
-        onSubmitEditing={onSubmitEditing}
-        keyboardType={
-          inputMode === "email"
-            ? "email-address"
-            : inputMode === "tel"
-              ? "phone-pad"
-              : "default"
+    <TouchableWithoutFeedback
+      onPress={() => {
+        if (editable !== false && inputRef.current) {
+          inputRef.current.focus();
         }
-        editable={editable}
-        onPress={onPress}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onSubmitEditing={onSubmitEditing}
-      />
-      {inputMode === "password" ? (
-        <TouchableOpacity onPress={togglePasswordVisibility}>
-          <MaterialIcons
-            name={isPasswordVisible ? "visibility" : "visibility-off"}
+        if (onPress) onPress();
+      }}
+      disabled={editable === false}
+    >
+      <View style={[styles.container, { backgroundColor: backgroundColour }]}>
+        {leftIcon && (
+          <Ionicons
+            name={leftIcon}
             size={24}
-            color="#B1AFA1"
+            color="white"
             style={styles.icon}
           />
-        </TouchableOpacity>
-      ) : (
-        rightIcon && (
-          <TouchableOpacity onPress={rightIconOnPress}>
+        )}
+        <TextInput
+          ref={inputRef}
+          {...textInputProps}
+          style={styles.input}
+          placeholder={placeholder}
+          placeholderTextColor="#A29F93"
+          value={value}
+          onChangeText={onChangeText}
+          selectionColor="#A29F93"
+          secureTextEntry={inputMode === "password" && !isPasswordVisible}
+          inputMode={inputMode === "email" ? "email" : "text"}
+          autoCapitalize={shouldAutoCap}
+          onSubmitEditing={onSubmitEditing}
+          keyboardType={
+            inputMode === "email"
+              ? "email-address"
+              : inputMode === "tel"
+                ? "phone-pad"
+                : "default"
+          }
+          editable={editable}
+          onFocus={onFocus}
+          onBlur={onBlur}
+        />
+        {inputMode === "password" ? (
+          <TouchableOpacity onPress={togglePasswordVisibility}>
             <MaterialIcons
-              name={rightIcon}
+              name={isPasswordVisible ? "visibility" : "visibility-off"}
               size={24}
               color="#B1AFA1"
               style={styles.icon}
             />
           </TouchableOpacity>
-        )
-      )}
-    </View>
+        ) : (
+          rightIcon && (
+            <TouchableOpacity onPress={rightIconOnPress}>
+              <MaterialIcons
+                name={rightIcon}
+                size={24}
+                color="#B1AFA1"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          )
+        )}
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
