@@ -45,6 +45,13 @@ export const filters: FilterOption[] = [
   { title: "Artists", type: "artists" },
   { title: "Studios", type: "studios" },
 ];
+interface FilterOptions {
+  radiusEnabled: boolean;
+  radiusValue: number;
+  rating: number | null;
+  studioTypes: string[]; // e.g. ["Studio","Freelancer"]
+  styles: string[]; // e.g. ["Tribal","Geometric"]
+}
 export default function SearchAll() {
   const { query: initialQuery, type: searchTypeInitial } =
     useLocalSearchParams<{ query?: string; type?: SearchType }>();
@@ -56,7 +63,20 @@ export default function SearchAll() {
   const [searchText, setSearchText] = useState(initialQuery || "");
   const [searchedText, setSearchedText] = useState(initialQuery || "");
   const { width } = Dimensions.get("window");
+
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const adjustedWidth = width - 42;
+
+  // … your existing useState calls …
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    radiusEnabled: false,
+    radiusValue: 50,
+    rating: null,
+    studioTypes: [],
+    styles: [],
+  });
 
   const [loading, setLoading] = useState(false);
   const { BottomSheet, show, hide } = useBottomSheet();
@@ -135,6 +155,16 @@ export default function SearchAll() {
       setSelectedFilter(value);
     }
   };
+
+  useEffect(() => {
+    // you can swap in your preferred geolocation API
+    // navigator.geolocation.getCurrentPosition(
+    //   ({ coords }) =>
+    //     setLocation({ lat: coords.latitude, lng: coords.longitude }),
+    //   (err) => console.warn("geo error", err),
+    //   { enableHighAccuracy: true },
+    // );
+  }, []);
 
   useEffect(() => {
     doSearch(searchedText);
