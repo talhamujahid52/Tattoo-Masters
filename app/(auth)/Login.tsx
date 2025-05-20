@@ -222,7 +222,7 @@ const Login = () => {
             router.push("/(auth)/PrivacyPolicy")
           }}>
             <Text size="small" weight="normal" color="#FBF6FA">
-              Privacy Policy
+              Privacy Policy.
             </Text>
           </TouchableOpacity>
         </View>
