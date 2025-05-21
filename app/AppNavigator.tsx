@@ -402,18 +402,18 @@ const AppNavigator = () => {
               headerTintColor: "#fff",
             }}
           />
-          <Stack.Screen
-            name="artist/SearchArtistProfiles"
-            options={{
-              headerShown: false,
-              // headerTitle: "Add location",
-              headerTitleStyle: { color: "#fff" },
-              headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
-              headerBackButtonMenuEnabled: false,
-              headerTintColor: "#fff",
-            }}
-          />
+          {/* <Stack.Screen */}
+          {/*   name="artist/SearchArtistProfiles" */}
+          {/*   options={{ */}
+          {/*     headerShown: false, */}
+          {/*     // headerTitle: "Add location", */}
+          {/*     headerTitleStyle: { color: "#fff" }, */}
+          {/*     headerStyle: { backgroundColor: "#000" }, */}
+          {/*     headerBackTitleVisible: false, */}
+          {/*     headerBackButtonMenuEnabled: false, */}
+          {/*     headerTintColor: "#fff", */}
+          {/*   }} */}
+          {/* /> */}
           <Stack.Screen
             name="artist/ShareProfile"
             options={{
