@@ -5,40 +5,66 @@ import { useRouter } from "expo-router";
 import { TypesenseResult, Publication } from "@/hooks/useTypesense";
 
 interface Props {
-  images: TypesenseResult<Publication>[];
+  images?: TypesenseResult<Publication>[];
+  imageUris?: string[];
 }
 
-const ImageGallery = ({ images }: Props) => {
+const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
   const router = useRouter();
-  const renderItem = useCallback(({ item }: { item: TypesenseResult<any> }) => {
-    const doc = item.document;
+  const renderTypesenseItem = useCallback(
+    ({ item }: { item: TypesenseResult<any> }) => {
+      const doc = item.document;
+      return (
+        <TouchableOpacity
+          style={styles.boxContainer}
+          onPress={() => {
+            router.push({
+              pathname: "/artist/TattooDetail",
+              params: {
+                photoUrlVeryHigh: encodeURIComponent(
+                  doc?.downloadUrls?.veryHigh
+                ),
+                photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+                id: doc.id,
+                caption: doc.caption,
+                styles: doc.styles,
+                userId: doc.userId,
+                timestamp: doc.timestamp,
+              },
+            });
+          }}
+        >
+          <Image
+            source={{ uri: item?.document?.downloadUrls?.small }}
+            key={item?.document?.downloadUrls?.small}
+            style={styles.box}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      );
+    },
+    []
+  );
+
+  const renderUriItem = useCallback(({ item }: { item: { uri: string } }) => {
     return (
-      <TouchableOpacity
-        style={styles.boxContainer}
-        onPress={() => {
-          router.push({
-            pathname: "/artist/TattooDetail",
-            params: {
-              photoUrlVeryHigh: encodeURIComponent(doc?.downloadUrls?.veryHigh),
-              photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
-              id: doc.id,
-              caption: doc.caption,
-              styles: doc.styles,
-              userId: doc.userId,
-              timestamp: doc.timestamp,
-            },
-          });
-        }}
-      >
+      <View style={styles.boxContainer}>
         <Image
-          source={{ uri: item?.document?.downloadUrls?.small }}
-          key={item?.document?.downloadUrls?.small}
+          source={{ uri: item.uri }}
+          key={item?.uri}
           style={styles.box}
           resizeMode="cover"
         />
-      </TouchableOpacity>
+      </View>
     );
   }, []);
+
+  const isTypesense = images.length > 0;
+  const data = isTypesense
+    ? images.map((item) => ({ ...item, widthRatio: 1, heightRatio: 1 }))
+    : imageUris.map((uri) => ({ uri, widthRatio: 1, heightRatio: 1 }));
+  const renderItem = isTypesense ? renderTypesenseItem : renderUriItem;
+
   return (
     <View
       style={{
@@ -47,7 +73,7 @@ const ImageGallery = ({ images }: Props) => {
     >
       <ResponsiveGrid
         maxItemsPerColumn={3}
-        data={images ?? []}
+        data={data}
         renderItem={renderItem}
         showScrollIndicator={false}
       />

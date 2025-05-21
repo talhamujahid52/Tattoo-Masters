@@ -22,12 +22,16 @@ import { useSelector } from "react-redux";
 
 const Step1: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
-
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
     { label: "Homeartist", value: "homeArtist" },
   ];
+  const [tattooStyles, setTattooStyles] = useState([
+    { title: "Tribal", selected: false },
+    { title: "Geometric", selected: false },
+    { title: "Black and White", selected: false },
+  ]);
 
   const defaultLocation = {
     latitude: 33.664286,
@@ -37,10 +41,10 @@ const Step1: React.FC = () => {
   };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
 
   // Prepopulate the full name field if it is not already set.
@@ -92,16 +96,19 @@ const Step1: React.FC = () => {
     title: string;
     selected: boolean;
   }) => {
-    const updatedTattooStyles = formData.tattooStyles.map((item) =>
+    const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item,
+        : item
     );
-    setFormData((prev) => ({ ...prev, tattooStyles: updatedTattooStyles }));
+    setTattooStyles(updatedTattooStyles);
+    const selectedTattooStyles = updatedTattooStyles.filter(
+      (item) => item.selected
+    );
+    setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
   };
 
   useEffect(() => {
-    console.log("Location Changed in Step1");
     setRegion({
       latitude: formData.location?.latitude || defaultLocation.latitude,
       longitude: formData.location?.longitude || defaultLocation.longitude,
@@ -232,7 +239,7 @@ const Step1: React.FC = () => {
             Styles
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {formData.tattooStyles.map((item, idx) => (
+            {tattooStyles.map((item, idx) => (
               <TouchableOpacity
                 key={idx}
                 activeOpacity={1}
@@ -270,7 +277,7 @@ const Step1: React.FC = () => {
             multiline
             value={formData.aboutYou}
             style={styles.textArea}
-            maxLength={100}
+            maxLength={500}
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, aboutYou: text }))
             }
@@ -281,7 +288,7 @@ const Step1: React.FC = () => {
             color="#A7A7A7"
             style={{ textAlign: "right", marginTop: 4 }}
           >
-            {formData.aboutYou.length} / 100
+            {formData.aboutYou.length} / 500
           </Text>
         </View>
         <View style={{ marginBottom: 70 }}>
@@ -345,6 +352,8 @@ const styles = StyleSheet.create({
     width: 114,
     height: 114,
     resizeMode: "cover",
+    borderWidth: 1,
+    borderColor: "#333333",
   },
   ratingButtonsRow: {
     marginTop: 16,

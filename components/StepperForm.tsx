@@ -67,7 +67,7 @@ const StepperForm: React.FC = () => {
         await changeProfilePicture(
           currentUserId,
           formData?.profilePicture,
-          "profile.jpeg",
+          "profile.jpeg"
         );
       }
 
@@ -104,7 +104,7 @@ const StepperForm: React.FC = () => {
           {i < totalSteps && (
             <View style={[styles.line, { width: width / 5 }]} />
           )}
-        </View>,
+        </View>
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;
@@ -162,7 +162,13 @@ const StepperForm: React.FC = () => {
           </View>
         ) : (
           <View style={{ width: 84 }}>
-            <Button loading={loading} title="Done" onPress={submitForm} />
+            <Button
+              loading={loading}
+              title="Done"
+              onPress={() => {
+                router.push("/artist/CreateReviewPassword");
+              }}
+            />
           </View>
         )}
       </View>

@@ -293,6 +293,31 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="artist/CreateReviewPassword"
+            options={{
+              headerShown: true,
+              headerTitle: "Register as artist",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+              headerLeft: () => (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.back();
+                  }}
+                >
+                  <Image
+                    source={require("../assets/images/close.png")}
+                    resizeMode="cover"
+                    style={{ height: 13, width: 13 }}
+                  />
+                </TouchableOpacity>
+              ),
+            }}
+          />
+          <Stack.Screen
             name="artist/EditProfile"
             options={{
               headerShown: true,
@@ -358,6 +383,40 @@ const AppNavigator = () => {
             options={{
               headerShown: true,
               headerTitle: "Add location",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/SearchArtistProfiles"
+            options={{
+              headerShown: false,
+              // headerTitle: "Add location",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/ShareProfile"
+            options={{
+              headerShown: false,
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/ShareReviewPassword"
+            options={{
+              headerShown: false,
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

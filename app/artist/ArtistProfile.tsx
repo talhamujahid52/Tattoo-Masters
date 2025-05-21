@@ -7,7 +7,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -19,6 +19,9 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import useTypesense from "@/hooks/useTypesense";
+import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
+import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 
 interface StudioItem {
   title: string;
@@ -43,15 +46,22 @@ const ArtistProfile = () => {
     show: showReportSheet,
     hide: hideReportSheet,
   } = useBottomSheet();
+  const {
+    BottomSheet: LoggingInBottomSheet,
+    show: showLoggingInBottomSheet,
+    hide: hideLoggingInBottomSheet,
+  } = useBottomSheet();
+
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
+  console.log("Artist is: ", artist);
   const [isExpanded, setIsExpanded] = useState(false);
   const content =
     artist?.data?.aboutYou ||
     "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
 
   const handleToggle = () => {
-    setIsExpanded(!isExpanded); // Toggle the state
+    setIsExpanded(!isExpanded);
   };
 
   const insets = useSafeAreaInsets();
@@ -62,12 +72,19 @@ const ArtistProfile = () => {
     longitudeDelta: 0.02,
   };
 
-  const [region, setRegion] = useState<Region>({
-    latitude: defaultLocation.latitude,
-    longitude: defaultLocation.longitude,
-    latitudeDelta: defaultLocation.latitudeDelta,
-    longitudeDelta: defaultLocation.longitudeDelta,
-  });
+  // const [region, setRegion] = useState<Region>({
+  //   latitude: defaultLocation.latitude,
+  //   longitude: defaultLocation.longitude,
+  //   latitudeDelta: defaultLocation.latitudeDelta,
+  //   longitudeDelta: defaultLocation.longitudeDelta,
+  // });
+
+  const region = {
+    latitude: artist?.data?.location?.latitude || defaultLocation.latitude,
+    longitude: artist?.data?.location?.longitude || defaultLocation.longitude,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  };
 
   const [studio, setStudio] = useState<StudioItem[]>([
     { title: "Studio", value: 1, selected: false },
@@ -115,14 +132,47 @@ const ArtistProfile = () => {
     </TouchableOpacity>
   );
 
+  const publicationsTs = useTypesense();
+
+  // Function to fetch publications on button click
+  const handleFetchPublications = async () => {
+    try {
+      // Triggering the publication search when the button is clicked
+      const hits = await publicationsTs.search({
+        collection: "publications", // Your collection name
+        query: artistId, // You can adjust the query here
+        queryBy: "userId", // Modify according to your schema
+      });
+
+      // Update the state with the fetched publications (assuming it's stored in a state)
+      console.log("Fetched Publications: ", hits);
+
+      // Set the fetched publications to a state to display
+      // Assuming publications state is defined below
+      // setPublications(hits);
+    } catch (err) {
+      console.error("Error fetching publications:", err);
+    }
+  };
+
+  useEffect(() => {
+    // handleFetchPublications();
+  }, [artistId]);
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
     >
+      <LoggingInBottomSheet
+        InsideComponent={
+          <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
+        }
+      />
       <ShareSheet
         InsideComponent={
           <ShareArtistProfileBottomSheet
+            showLoginBottomSheet={showLoggingInBottomSheet}
             hideShareSheet={hideShareSheet}
             showReportSheet={showReportSheet}
           />
@@ -149,12 +199,14 @@ const ArtistProfile = () => {
           />
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
+              {artist?.data?.name ? artist?.data?.name : ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.studio?.name
-                ? artist?.data?.studio?.name
-                : "No Studio"}
+              {artist?.data?.studio === "studio"
+                ? artist?.data?.studioName
+                : artist?.data?.studio === "freelancer"
+                ? "Freelancer"
+                : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {artist?.data?.city ? artist?.data?.city : "Oslo"}
@@ -199,7 +251,7 @@ const ArtistProfile = () => {
           source={require("../../assets/images/favorite-white.png")}
         />
         <Text size="p" weight="normal" color="#FBF6FA">
-          {artist?.data?.followersCount ? artist?.data?.followersCount : 420}
+          {artist?.data?.followersCount ? artist?.data?.followersCount : 0}
         </Text>
       </View>
       <View style={styles.tattooStylesRow}>
@@ -256,7 +308,12 @@ const ArtistProfile = () => {
           }}
         />
       </View>
-      <ReviewOnProfile ArtistId={artistId}></ReviewOnProfile>
+      {artist?.data?.latestReview ? (
+        <ReviewOnProfile ArtistId={artistId} />
+      ) : (
+        <ReviewOnProfileBlur />
+      )}
+
       <View style={{ marginTop: 24 }}>
         <Text
           size="h4"
@@ -272,9 +329,7 @@ const ArtistProfile = () => {
           color="#A7A7A7"
           style={{ marginBottom: 10 }}
         >
-          {artist?.data?.address
-            ? artist?.data?.address
-            : "S#251, Street 24, Phuket, Thailand"}
+          {artist?.data?.address ? artist?.data?.address : ""}
         </Text>
       </View>
       <View
@@ -291,9 +346,7 @@ const ArtistProfile = () => {
           mapType="terrain"
           region={region}
           zoomEnabled={false}
-        >
-          {/* <Marker coordinate={region} title="Location" />  */}
-        </MapView>
+        ></MapView>
       </View>
       <Text size="h4" weight="semibold" color="white" style={{ marginTop: 24 }}>
         Portfolio

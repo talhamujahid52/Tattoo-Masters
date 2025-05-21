@@ -42,10 +42,7 @@ const ArtistProfileBottomSheet = () => {
   }, [artist]);
 
   return (
-    <View
-      // contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
           <Image style={styles.profilePicture} source={profilePicture} />

@@ -3,7 +3,11 @@ import React from "react";
 import { router } from "expo-router";
 import Text from "../Text";
 
-const LoginBottomSheet = () => {
+interface LoginBottomSheetProps {
+  hideLoginBottomSheet: () => void;
+}
+
+const LoginBottomSheet = ({ hideLoginBottomSheet }: LoginBottomSheetProps) => {
   return (
     <>
       <View style={styles.contentContainer}>
@@ -34,6 +38,7 @@ const LoginBottomSheet = () => {
         <TouchableOpacity
           style={styles.LoginOrRegisterButton}
           onPress={() => {
+            hideLoginBottomSheet();
             router.push({
               pathname: "/(auth)/Login",
             });

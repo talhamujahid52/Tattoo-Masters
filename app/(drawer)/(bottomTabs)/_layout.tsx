@@ -1,19 +1,41 @@
-import { StyleSheet, Image, StatusBar, TouchableOpacity } from "react-native";
-import Text from "@/components/Text";
-import React, { useRef, useCallback, useState } from "react";
-import { Tabs, useRouter } from "expo-router";
+import {
+  StyleSheet,
+  Image,
+  StatusBar,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
+import React from "react";
+import { Tabs } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 const BottomTabsLayout = () => {
   const navigation = useNavigation();
   const { BottomSheet, show, hide } = useBottomSheet();
   const insets = useSafeAreaInsets();
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user
+  );
+
+  const handleTabPress = (tab: string) => {
+    if (!loggedInUser) {
+      show();
+    } else {
+      navigation.navigate(tab);
+    }
+  };
+
   return (
     <>
       <StatusBar barStyle="light-content" />
+      <BottomSheet
+        InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
+      />
       <Tabs
         screenOptions={{
           tabBarStyle: {
@@ -43,6 +65,44 @@ const BottomTabsLayout = () => {
                   style={{ height: 24, width: 24 }}
                 />
               ),
+            headerStyle: {
+              backgroundColor: "#000",
+              shadowOpacity: 0,
+            },
+            headerLeftContainerStyle: {
+              paddingLeft: 16,
+            },
+            headerRightContainerStyle: {
+              paddingRight: 16,
+            },
+            headerLeft: () => (
+              <Image
+                source={require("../../../assets/images/tattoo masters.png")}
+                resizeMode="cover"
+                style={{
+                  height: 27,
+                  marginTop: 10,
+                  width: 180,
+                }}
+              />
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                onPress={() => {
+                  loggedInUser
+                    ? navigation.dispatch(DrawerActions.toggleDrawer())
+                    : show();
+                }}
+              >
+                <Image
+                  source={require("../../../assets/images/menu.png")}
+                  resizeMode="cover"
+                  style={{ height: 13, width: 19 }}
+                />
+              </TouchableOpacity>
+            ),
+            // headerRight: () => <DrawerToggleButton tintColor="white" ></DrawerToggleButton>,
           }}
         />
         <Tabs.Screen
@@ -110,10 +170,9 @@ const BottomTabsLayout = () => {
                 />
               ),
             headerShown: false,
-            // headerStyle: {
-            //   backgroundColor: "#000",
-            //   // borderBottomWidth: 0,
-            // },
+            tabBarButton: (props) => (
+              <Pressable {...props} onPress={() => handleTabPress("Likes")} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -135,10 +194,12 @@ const BottomTabsLayout = () => {
                 />
               ),
             headerShown: false,
+            tabBarButton: (props) => (
+              <Pressable {...props} onPress={() => handleTabPress("Chat")} />
+            ),
           }}
         />
       </Tabs>
-      <BottomSheet InsideComponent={<LoginBottomSheet />} />
     </>
   );
 };
