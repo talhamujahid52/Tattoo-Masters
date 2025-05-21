@@ -187,7 +187,7 @@ const Register: React.FC = () => {
               }}
             >
               <Text size="small" weight="normal" color="#FBF6FA">
-                Privacy Policy
+                Privacy Policy.
               </Text>
             </TouchableOpacity>
           </View>

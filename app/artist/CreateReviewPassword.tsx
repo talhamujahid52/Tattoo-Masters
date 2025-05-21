@@ -1,16 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { StyleSheet, View, Image } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import { router } from "expo-router";
+import { FormContext } from "../../context/FormContext";
+import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import { useSelector, useDispatch } from "react-redux";
+import { updateUserProfile } from "@/utils/firebase/userFunctions";
+import { UserProfileFormData } from "@/types/user";
+import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+import { setUserFirestoreData } from "@/redux/slices/userSlice";
 
 const CreateReviewPassword = () => {
   const [reviewPassword, setReviewPassword] = useState<string>("");
   const [confirmReviewPassword, setConfirmReviewPassword] =
     useState<string>("");
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const currentUserId = loggedInUser?.uid;
+  const { uploadImages } = useFirebaseImage({
+    uniqueFilePrefix: currentUserId,
+  });
+  const dispatch = useDispatch();
+  const { formData, setFormData } = useContext(FormContext)!;
 
   const handleCreateAccount = () => {
     if (!reviewPassword || !confirmReviewPassword) {
@@ -23,8 +40,45 @@ const CreateReviewPassword = () => {
     }
 
     setError("");
+    submitForm();
     // Proceed with account creation logic here
     console.log("Account created with password:", reviewPassword);
+  };
+
+  const submitForm = async () => {
+    try {
+      setLoading(true);
+      const imgs = formData.images.filter((img) => img && img.uri);
+      console.log("Form Data : ", formData);
+      const updatedFormData = {
+        ...formData,
+        reviewPassword,
+        tattooStyles: formData.tattooStyles.map((style) => style.title),
+      };
+      console.log("updatedFormData : ", updatedFormData);
+      await uploadImages(imgs); // upload publications images and add to publication collection as well
+      await updateUserProfile(currentUserId, {
+        ...updatedFormData,
+        isArtist: true, //make the user an artist
+      } as UserProfileFormData);
+      // update the user profile picture as well if it has been changed
+      if (formData?.profilePicture) {
+        await changeProfilePicture(
+          currentUserId,
+          formData?.profilePicture,
+          "profile.jpeg"
+        );
+      }
+
+      const updatedUser = await getUpdatedUser(currentUserId);
+      dispatch(setUserFirestoreData(updatedUser));
+      console.log("profile updated successfully");
+      router.push("/artist/ShareProfile");
+    } catch (error) {
+      console.log("error", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -111,9 +165,10 @@ const CreateReviewPassword = () => {
           onChangeText={setConfirmReviewPassword}
         />
         <Button
+          loading={loading}
           title="Create Account"
           onPress={() => {
-            router.push("/artist/ShareProfile");
+            handleCreateAccount();
           }}
         />
       </View>

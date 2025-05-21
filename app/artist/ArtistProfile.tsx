@@ -134,30 +134,13 @@ const ArtistProfile = () => {
 
   const publicationsTs = useTypesense();
 
-  // Function to fetch publications on button click
-  const handleFetchPublications = async () => {
-    try {
-      // Triggering the publication search when the button is clicked
-      const hits = await publicationsTs.search({
-        collection: "publications", // Your collection name
-        query: artistId, // You can adjust the query here
-        queryBy: "userId", // Modify according to your schema
-      });
-
-      // Update the state with the fetched publications (assuming it's stored in a state)
-      console.log("Fetched Publications: ", hits);
-
-      // Set the fetched publications to a state to display
-      // Assuming publications state is defined below
-      // setPublications(hits);
-    } catch (err) {
-      console.error("Error fetching publications:", err);
-    }
-  };
-
   useEffect(() => {
-    // handleFetchPublications();
-  }, [artistId]);
+    publicationsTs.search({
+      collection: "publications", // Your collection name
+      query: artistId, // You can adjust the query here
+      queryBy: "userId", // Modify according to your schema
+    });
+  }, []);
 
   return (
     <ScrollView
@@ -360,7 +343,7 @@ const ArtistProfile = () => {
           contentContainerStyle={{ gap: 10 }}
         />
       </View>
-      <ImageGallery></ImageGallery>
+      <ImageGallery images={publicationsTs.results}></ImageGallery>
     </ScrollView>
   );
 };

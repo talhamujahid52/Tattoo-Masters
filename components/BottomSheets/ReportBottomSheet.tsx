@@ -37,6 +37,11 @@ const ReportBottomSheet = ({
 
   const handleReportClick = async () => {
     setLoading(true);
+    console.log("reportedBy:", currentUserId);
+    console.log("type:", title);
+    console.log("targetId:", reportItem);
+    console.log("reason:", reasonForReport);
+    console.log("createdAt:", firestore.FieldValue.serverTimestamp());
     try {
       await firestore().collection("ReportedItems").add({
         reportedBy: currentUserId,

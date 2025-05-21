@@ -6,7 +6,12 @@ import { TypesenseResult, Publication } from "@/hooks/useTypesense";
 
 interface Props {
   images?: TypesenseResult<Publication>[];
-  imageUris?: string[];
+  imageUris?: {
+    uri: string;
+    name: string;
+    caption: string;
+    styles: string[];
+  }[];
 }
 
 const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
@@ -62,7 +67,11 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
   const isTypesense = images.length > 0;
   const data = isTypesense
     ? images.map((item) => ({ ...item, widthRatio: 1, heightRatio: 1 }))
-    : imageUris.map((uri) => ({ uri, widthRatio: 1, heightRatio: 1 }));
+    : imageUris.map((item) => ({
+        uri: item?.uri,
+        widthRatio: 1,
+        heightRatio: 1,
+      }));
   const renderItem = isTypesense ? renderTypesenseItem : renderUriItem;
 
   return (

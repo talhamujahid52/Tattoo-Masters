@@ -52,7 +52,12 @@ export interface UserProfileFormData {
   aboutYou: string;
   city: string;
   name: string;
-  images: string[];
+  images: {
+    uri: string;
+    name: string;
+    caption: string;
+    styles: string[];
+  }[];
   location: LocationData;
   address: string;
   profilePicture: string;

@@ -2,24 +2,31 @@ import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
 import Text from "../Text";
 import React from "react";
 import { useRouter } from "expo-router";
-import ReportBottomSheet from "./ReportBottomSheet";
-import useBottomSheet from "@/hooks/useBottomSheet";
+import { useSelector } from "react-redux";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 interface bottomSheetProps {
   hideImageActionsSheet: () => void;
   showReportSheet: () => void;
+  showLoggingInBottomSheet: () => void;
 }
 
 const ImageActionsBottomSheet = ({
   hideImageActionsSheet,
   showReportSheet,
+  showLoggingInBottomSheet,
 }: bottomSheetProps) => {
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user
+  );
+  const currentUserId = loggedInUser?.uid;
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
-          hideImageActionsSheet();
-          showReportSheet();
+          loggedInUser
+            ? (hideImageActionsSheet(), showReportSheet())
+            : (hideImageActionsSheet(), showLoggingInBottomSheet());
         }}
         style={styles.drawerItem}
       >
@@ -31,7 +38,14 @@ const ImageActionsBottomSheet = ({
           Report
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => {}} style={styles.drawerItem}>
+      <TouchableOpacity
+        onPress={() => {
+          loggedInUser
+            ? hideImageActionsSheet()
+            : (hideImageActionsSheet(), showLoggingInBottomSheet());
+        }}
+        style={styles.drawerItem}
+      >
         <Image
           style={styles.icon}
           source={require("../../assets/images/feedback.png")}
