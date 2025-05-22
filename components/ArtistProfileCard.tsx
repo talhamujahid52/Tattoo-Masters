@@ -35,6 +35,7 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
           height: 170,
           borderRadius: 12,
           resizeMode: "cover",
+          backgroundColor: "#202020",
         }}
       />
       <View style={styles.RatingAndLocation}>

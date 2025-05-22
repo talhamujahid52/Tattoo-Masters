@@ -143,9 +143,9 @@ const CustomDrawerContent = () => {
                   <Text size="profileName" weight="semibold" color="white">
                     {name}
                   </Text>
-                  <Text size="p" weight="normal" color="#A7A7A7">
+                  {/* <Text size="p" weight="normal" color="#A7A7A7">
                     My Profile
-                  </Text>
+                  </Text> */}
                 </View>
               </View>
             </View>
@@ -339,7 +339,7 @@ const CustomDrawerContent = () => {
               }}
             >
               <Text size="small" weight="normal" color="#FBF6FA">
-                Privacy Policy
+                Privacy Policy.
               </Text>
             </TouchableOpacity>
           </View>
@@ -419,6 +419,9 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     borderRadius: 50,
     marginRight: 16,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   icon: {
     height: 24,

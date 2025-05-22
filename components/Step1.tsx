@@ -185,30 +185,6 @@ const Step1: React.FC = () => {
         >
           Pin your location
         </Text>
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 10,
-          }}
-        >
-          <Text
-            size="h4"
-            weight="normal"
-            color="#FBF6FA"
-            style={{ marginBottom: 10 }}
-          >
-            Show city only
-          </Text>
-          <Switch
-            trackColor={{ false: "#767577", true: "#44e52c" }}
-            thumbColor={formData.showCityOnly ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={formData.showCityOnly}
-          />
-        </View>
         {!formData.showCityOnly && (
           <TouchableOpacity
             onPress={() => {
@@ -234,6 +210,30 @@ const Step1: React.FC = () => {
             </MapView>
           </TouchableOpacity>
         )}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 10,
+          }}
+        >
+          <Text
+            size="h4"
+            weight="normal"
+            color="#FBF6FA"
+            style={{ marginBottom: 10 }}
+          >
+            Show city only
+          </Text>
+          <Switch
+            trackColor={{ false: "#767577", true: "#44e52c" }}
+            thumbColor={formData.showCityOnly ? "#fff" : "#f4f3f4"}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleSwitch}
+            value={formData.showCityOnly}
+          />
+        </View>
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles
@@ -354,6 +354,7 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     borderWidth: 1,
     borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   ratingButtonsRow: {
     marginTop: 16,

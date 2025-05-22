@@ -234,6 +234,9 @@ const styles = StyleSheet.create({
     width: 114,
     height: 114,
     resizeMode: "cover",
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   ratingButtonsRow: {
     marginTop: 16,

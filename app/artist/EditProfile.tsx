@@ -430,6 +430,9 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     overflow: "hidden",
     borderRadius: 100,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   ratingButtonsRow: {
     marginTop: 16,

@@ -1,12 +1,16 @@
-import React from "react";
-import { View, Pressable, StyleSheet, Image } from "react-native";
+import React, { useContext } from "react";
+import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
+import { router } from "expo-router";
+import { FormContext } from "@/context/FormContext";
+
 type Props = {
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
+  const { formData, setFormData } = useContext(FormContext)!;
   return (
     <View style={styles.modalContent}>
       <Image
@@ -43,7 +47,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
               transform: [{ translateX: -30 }, { translateY: -23 }],
             },
           ]}
-          source={require("../../assets/images/profilePicture.png")}
+          source={{ uri: formData?.profilePicture }}
         />
       </View>
       {/* <Image
@@ -70,12 +74,19 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
         Great! Now you can share your new profile on social media and have your
         old clients, friends and followers find you here as well.
       </Text>
-      <Button
-        title="Share Profile"
+      <Button title="Share Profile" onPress={() => {}} />
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => {
-          onClose();
+          router.push({
+            pathname: "/artist/ShareReviewPassword",
+          });
         }}
-      />
+      >
+        <Text size="h4" weight="normal" color="#FBF6FA">
+          Skip
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -103,10 +114,14 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   button: {
-    backgroundColor: "#000",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    height: 48,
+    width: "100%",
+    borderRadius: 30,
+    backgroundColor: "#20201E",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
   },
   buttonText: {
     color: "#fff",
@@ -115,7 +130,9 @@ const styles = StyleSheet.create({
   headerImage: {
     height: 60,
     width: 60,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
   },
 });

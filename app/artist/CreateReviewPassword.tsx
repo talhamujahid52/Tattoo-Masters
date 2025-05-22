@@ -110,7 +110,7 @@ const CreateReviewPassword = () => {
               transform: [{ translateX: -34 }, { translateY: -34 }],
             },
           ]}
-          source={require("../../assets/images/profilePicture.png")}
+          source={{ uri: formData?.profilePicture }}
         />
       </View>
 
@@ -188,8 +188,10 @@ const styles = StyleSheet.create({
   headerImage: {
     height: 68,
     width: 68,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
   },
   descriptionText: {
     marginBottom: 16,
