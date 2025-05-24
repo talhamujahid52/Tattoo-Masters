@@ -6,6 +6,7 @@ import artistSlice from "./slices/artistSlice";
 import chatSlice from "./slices/chatSlice";
 import recentSearchesSlice from "./slices/recentSearchesSlice";
 import tattooSlice from "./slices/tattooSlice";
+import filterSlices from "./slices/filterSlices";
 
 // Persist configuration
 const persistConfig = {
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   chats: chatSlice,
   recentSearches: recentSearchesSlice,
   tattoos: tattooSlice,
+  filter: filterSlices,
 });
 
 // Create persisted reducer

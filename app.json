@@ -60,6 +60,12 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Tattoo Masters to use your location to determine nearby tattoo artists and studios."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

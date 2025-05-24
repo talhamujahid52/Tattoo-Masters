@@ -1,192 +1,282 @@
-import { StyleSheet, View, TouchableOpacity, Switch } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Switch,
+  Alert,
+  Linking,
+} from "react-native";
 import Slider from "@react-native-community/slider";
+import * as Location from "expo-location";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectFilter,
+  setRadiusEnabled,
+  setRadiusValue,
+  setRatings as setRatingsAction,
+  setStudio as setStudioAction,
+  setStyles as setStylesAction,
+} from "@/redux/slices/filterSlices";
 import Text from "../Text";
-import React, { useState } from "react";
 import Button from "../Button";
 
 const FilterBottomSheet = () => {
-  const [isEnabledRadius, setIsEnabledRadius] = useState(false);
-  const [radiusValue, setRadiusValue] = useState(50);
+  const dispatch = useDispatch();
 
-  const [ratings, setRatings] = useState([
-    { title: "1 star", value: 1, selected: true },
-    { title: "2 stars", value: 2, selected: false },
-    { title: "3 stars", value: 3, selected: false },
-    { title: "4 stars", value: 4, selected: false },
-    { title: "5 stars", value: 5, selected: false },
+  /** ──────────────────────────
+   *  1. Pull current persisted filters
+   *  ────────────────────────── */
+  const {
+    isEnabledRadius: persistedRadiusEnabled,
+    radiusValue: persistedRadiusValue,
+    ratings: persistedRatings,
+    studio: persistedStudio,
+    styles: persistedStyles,
+  } = useSelector(selectFilter);
+
+  /** ──────────────────────────
+   *  2. Local “draft” state
+   *  ────────────────────────── */
+  const [radiusEnabled, setRadiusEnabledLocal] = useState(
+    persistedRadiusEnabled,
+  );
+  const [radiusValue, setRadiusValueLocal] = useState(persistedRadiusValue);
+  const [ratings, setRatingsLocal] = useState(persistedRatings);
+  const [studio, setStudioLocal] = useState(persistedStudio);
+  const [tattooStyles, setStylesLocal] = useState(persistedStyles);
+
+  /** ──────────────────────────
+   *  3. Sync local state when sheet is reopened
+   *     (important if the user applied filters earlier,
+   *      closed the sheet, then opens it again)
+   *  ────────────────────────── */
+  useEffect(() => {
+    setRadiusEnabledLocal(persistedRadiusEnabled);
+    setRadiusValueLocal(persistedRadiusValue);
+    setRatingsLocal(persistedRatings);
+    setStudioLocal(persistedStudio);
+    setStylesLocal(persistedStyles);
+  }, [
+    persistedRadiusEnabled,
+    persistedRadiusValue,
+    persistedRatings,
+    persistedStudio,
+    persistedStyles,
   ]);
 
-  const [studio, setStudio] = useState([
-    { title: "Studio", value: 1, selected: false },
-    { title: "Freelancer", value: 2, selected: false },
-    { title: "Home Artist", value: 3, selected: false },
-  ]);
-
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", value: 1, selected: false },
-    { title: "Geometric", value: 2, selected: false },
-    { title: "Black and White", value: 3, selected: false },
-  ]);
-
-  const toggleSwitch = () =>
-    setIsEnabledRadius((previousState) => !previousState);
-  const toggleRating = (value: number) => {
-    const updatedRatings = ratings.map(
-      (item) =>
-        item.value === value
-          ? { ...item, selected: true } // Set clicked item to selected
-          : { ...item, selected: false }, // Deselect all other items
-    );
-    setRatings(updatedRatings);
+  /** ──────────────────────────
+   *  4. Handlers that only touch local state
+   *  ────────────────────────── */
+  const toggleRadius = async () => {
+    if (!radiusEnabled) {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Location permissions are disabled. Please enable them in the Settings app.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
+    }
+    setRadiusEnabledLocal(!radiusEnabled);
   };
-  const toggleStudio = (value: number) => {
-    const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+
+  const selectRating = (value: number) =>
+    setRatingsLocal((curr) =>
+      curr.map((r) => ({ ...r, selected: r.value === value })),
     );
 
-    setStudio(updatedstudio);
-  };
-  const toggleTattooStyles = (value: number) => {
-    const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+  const toggleStudio = (value: number) =>
+    setStudioLocal((curr) =>
+      curr.map((s) =>
+        s.value === value ? { ...s, selected: !s.selected } : s,
+      ),
     );
 
-    setTattooStyles(updatedTattooStyles);
+  const toggleStyle = (value: number) =>
+    setStylesLocal((curr) =>
+      curr.map((s) =>
+        s.value === value ? { ...s, selected: !s.selected } : s,
+      ),
+    );
+
+  /** ──────────────────────────
+   *  5. Commit staged values
+   *  ────────────────────────── */
+  const handleApply = useCallback(() => {
+    dispatch(setRadiusEnabled(radiusEnabled));
+    dispatch(setRadiusValue(radiusValue));
+    dispatch(setRatingsAction(ratings));
+    dispatch(setStudioAction(studio));
+    dispatch(setStylesAction(tattooStyles));
+    // close sheet here if you’re controlling it from parent
+  }, [dispatch, radiusEnabled, radiusValue, ratings, studio, tattooStyles]);
+
+  /** ──────────────────────────
+   *  6. Clear all (local + redux so list clears right away)
+   *  ────────────────────────── */
+  const handleClearAll = () => {
+    const resetRatings = ratings.map((r) => ({ ...r, selected: false }));
+    const resetStudio = studio.map((s) => ({ ...s, selected: false }));
+    const resetStyles = tattooStyles.map((s) => ({ ...s, selected: false }));
+
+    // reset local
+    setRadiusEnabledLocal(false);
+    setRadiusValueLocal(50);
+    setRatingsLocal(resetRatings);
+    setStudioLocal(resetStudio);
+    setStylesLocal(resetStyles);
+
+    // reset persisted
+    dispatch(setRadiusEnabled(false));
+    dispatch(setRadiusValue(50));
+    dispatch(setRatingsAction(resetRatings));
+    dispatch(setStudioAction(resetStudio));
+    dispatch(setStylesAction(resetStyles));
   };
+
+  /** ──────────────────────────
+   *  7. Render
+   *  ────────────────────────── */
   return (
     <View style={styles.container}>
+      {/* title row */}
       <View style={styles.titleRow}>
-        <View style={{ width: 70, height: 2 }}></View>
+        <View style={{ width: 70, height: 2 }} />
         <Text size="h4" weight="medium" color="#FFF">
           Filters
         </Text>
-        <TouchableOpacity style={{ width: 70 }}>
+        <TouchableOpacity style={{ width: 70 }} onPress={handleClearAll}>
           <Text size="h4" weight="normal" color="#DAB769">
             Clear all
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* content */}
       <View style={styles.contentContainer}>
+        {/* radius toggle */}
         <View style={styles.toggleButtonRow}>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Within your radius
           </Text>
           <Switch
             trackColor={{ false: "#767577", true: "#44e52c" }}
-            thumbColor={isEnabledRadius ? "#fff" : "#f4f3f4"}
+            thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
             ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={isEnabledRadius}
+            onValueChange={toggleRadius}
+            value={radiusEnabled}
           />
         </View>
 
+        {/* radius slider */}
         <View style={styles.sliderRow}>
           <Slider
             style={{ width: "80%", height: 40 }}
             value={radiusValue}
-            onValueChange={(value) => {
-              setRadiusValue(value);
-            }}
+            onValueChange={setRadiusValueLocal}
             minimumValue={0}
             maximumValue={100}
             minimumTrackTintColor="#F2D189"
             maximumTrackTintColor="#FFFFFF26"
             thumbTintColor="#F2D189"
-            disabled={!isEnabledRadius}
+            disabled={!radiusEnabled}
           />
           <Text size="p" weight="normal" color="#A7A7A7">
             {radiusValue.toFixed()} Km
           </Text>
         </View>
-        <View>
-          <Text size="h4" weight="semibold" color="#A7A7A7">
-            Rating
-          </Text>
-          <View style={styles.ratingButtonsRow}>
-            {ratings.map((item, idx) => {
-              return (
-                <TouchableOpacity
-                  key={item.value}
-                  activeOpacity={1}
-                  style={{
-                    padding: 6,
-                    borderRadius: 6,
-                    backgroundColor: item.selected ? "#DAB769" : "#262526",
-                  }}
-                  onPress={() => toggleRating(item.value)}
-                >
-                  <Text
-                    size="p"
-                    weight="normal"
-                    color={item.selected ? "#22221F" : "#A7A7A7"}
-                  >
-                    {item.title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+
+        {/* rating */}
+        <Text size="h4" weight="semibold" color="#A7A7A7">
+          Rating
+        </Text>
+        <View style={styles.ratingButtonsRow}>
+          {ratings.map((r) => (
+            <TouchableOpacity
+              key={r.value}
+              style={[
+                styles.chip,
+                { backgroundColor: r.selected ? "#DAB769" : "#262526" },
+              ]}
+              onPress={() => selectRating(r.value)}
+              activeOpacity={1}
+            >
+              <Text
+                size="p"
+                weight="normal"
+                color={r.selected ? "#22221F" : "#A7A7A7"}
+              >
+                {r.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
+
+        {/* studio */}
         <View style={styles.studioRow}>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Studio
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {studio.map((item, idx) => {
-              return (
-                <TouchableOpacity
-                  key={item.value}
-                  activeOpacity={1}
-                  style={{
-                    padding: 6,
-                    borderRadius: 6,
-                    backgroundColor: item.selected ? "#DAB769" : "#262526",
-                  }}
-                  onPress={() => toggleStudio(item.value)}
+            {studio.map((s) => (
+              <TouchableOpacity
+                key={s.value}
+                style={[
+                  styles.chip,
+                  { backgroundColor: s.selected ? "#DAB769" : "#262526" },
+                ]}
+                onPress={() => toggleStudio(s.value)}
+                activeOpacity={1}
+              >
+                <Text
+                  size="p"
+                  weight="normal"
+                  color={s.selected ? "#22221F" : "#A7A7A7"}
                 >
-                  <Text
-                    size="p"
-                    weight="normal"
-                    color={item.selected ? "#22221F" : "#A7A7A7"}
-                  >
-                    {item.title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  {s.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
+
+        {/* styles */}
         <View style={styles.tattooStylesRow}>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {tattooStyles.map((item, idx) => {
-              return (
-                <TouchableOpacity
-                  key={item.value}
-                  activeOpacity={1}
-                  style={{
-                    padding: 6,
-                    borderRadius: 6,
-                    backgroundColor: item.selected ? "#DAB769" : "#262526",
-                  }}
-                  onPress={() => toggleTattooStyles(item.value)}
+            {tattooStyles.map((s) => (
+              <TouchableOpacity
+                key={s.value}
+                style={[
+                  styles.chip,
+                  { backgroundColor: s.selected ? "#DAB769" : "#262526" },
+                ]}
+                onPress={() => toggleStyle(s.value)}
+                activeOpacity={1}
+              >
+                <Text
+                  size="p"
+                  weight="normal"
+                  color={s.selected ? "#22221F" : "#A7A7A7"}
                 >
-                  <Text
-                    size="p"
-                    weight="normal"
-                    color={item.selected ? "#22221F" : "#A7A7A7"}
-                  >
-                    {item.title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  {s.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
+
+        {/* apply */}
         <View style={{ marginVertical: 32 }}>
-          <Button title="Apply"></Button>
+          <Button title="Apply" onPress={handleApply} />
         </View>
       </View>
     </View>
@@ -195,15 +285,13 @@ const FilterBottomSheet = () => {
 
 export default FilterBottomSheet;
 
+/** ──────────────────────────
+ *  Styles unchanged except tiny helper
+ *  ────────────────────────── */
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#000",
-    // paddingHorizontal: 16,
-    // height: 400,
-  },
+  container: { backgroundColor: "#000" },
   titleRow: {
     height: 46,
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -211,18 +299,14 @@ const styles = StyleSheet.create({
     borderBottomColor: "#FFFFFF26",
     paddingHorizontal: 16,
   },
-  contentContainer: {
-    paddingHorizontal: 16,
-  },
+  contentContainer: { paddingHorizontal: 16 },
   toggleButtonRow: {
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 24,
   },
   sliderRow: {
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -230,14 +314,12 @@ const styles = StyleSheet.create({
   },
   ratingButtonsRow: {
     marginTop: 16,
-    display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
   },
-  studioRow: {
-    marginVertical: 32,
-  },
+  chip: { padding: 6, borderRadius: 6 },
+  studioRow: { marginVertical: 32 },
   tattooStylesRow: {
     paddingBottom: 32,
     borderBottomWidth: 1,
