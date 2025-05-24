@@ -46,7 +46,7 @@ const TattooDetail: React.FC = () => {
   const scale = useSharedValue(1);
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const currentUserId = loggedInUser?.uid;
 
@@ -125,7 +125,7 @@ const TattooDetail: React.FC = () => {
           setUserDetails(doc);
         })
         .catch((err) =>
-          console.error("Error fetching user details from Typesense:", err)
+          console.error("Error fetching user details from Typesense:", err),
         );
     }
   }, [userId, getDocument]);

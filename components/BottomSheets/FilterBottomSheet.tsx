@@ -20,10 +20,12 @@ import {
 } from "@/redux/slices/filterSlices";
 import Text from "../Text";
 import Button from "../Button";
+import { useBottomSheet } from "@gorhom/bottom-sheet";
 
 const FilterBottomSheet = () => {
   const dispatch = useDispatch();
 
+  const bottomSheet = useBottomSheet();
   /** ──────────────────────────
    *  1. Pull current persisted filters
    *  ────────────────────────── */
@@ -114,6 +116,7 @@ const FilterBottomSheet = () => {
     dispatch(setRatingsAction(ratings));
     dispatch(setStudioAction(studio));
     dispatch(setStylesAction(tattooStyles));
+    bottomSheet.close(); // close the bottom sheet after applying filters
     // close sheet here if you’re controlling it from parent
   }, [dispatch, radiusEnabled, radiusValue, ratings, studio, tattooStyles]);
 
