@@ -1,8 +1,36 @@
 // store/filterSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Rating, Studio, Style } from "../types"; // define these item types
 import { RootState } from "../store";
 
+// Define filter-related types here
+export interface Rating {
+  title: string;
+  value: number;
+  selected: boolean;
+}
+
+export interface Studio {
+  title: string;
+  value: number;
+  selected: boolean;
+  name: string;
+}
+
+export interface Style {
+  title: string;
+  value: number;
+  selected: boolean;
+}
+
+interface FilterState {
+  isEnabledRadius: boolean;
+  permissionDenied: boolean;
+  radiusValue: number;
+  ratings: Rating[];
+  studio: Studio[];
+  currentLocation?: { latitude: number; longitude: number };
+  styles: Style[];
+}
 interface FilterState {
   isEnabledRadius: boolean;
   permissionDenied: boolean;
@@ -25,9 +53,9 @@ const initialState: FilterState = {
     { title: "5 stars", value: 5, selected: false },
   ],
   studio: [
-    { title: "Studio", value: 1, selected: false },
-    { title: "Freelancer", value: 2, selected: false },
-    { title: "Home Artist", value: 3, selected: false },
+    { title: "Studio", value: 1, selected: false, name: "studio" },
+    { title: "Freelancer", value: 2, selected: false, name: "freelancer" },
+    { title: "Home Artist", value: 3, selected: false, name: "homeArtist" },
   ],
   styles: [
     { title: "Tribal", value: 1, selected: false },

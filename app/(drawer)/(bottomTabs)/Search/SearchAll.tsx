@@ -96,69 +96,130 @@ export default function SearchAll() {
   const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
     () => searchTypeInitial || null,
   );
-  // Perform a Typesense search and dispatch results
-  const doSearch = async (q: string) => {
-    try {
-      setLoading(true);
+  // HELPER: build filterBy string for Typesense
+  const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
+    const facets: string[] = [];
 
-      const query = q.trim() === "" ? "*" : q;
-      let hits = null;
-
-      if (selectedFilter === "studios") {
-        hits = await searchAll.search({
-          collection: "Users",
-          query,
-          queryBy: "studio,studioName",
-          filterBy: "isArtist:=true",
-        });
-
-        const docs = hits.map((h: any) => h.document);
-
-        dispatch(
-          updateSearchResults(
-            docs.map(({ id, ...data }: any) => ({ id, data })),
-          ),
-        );
-
-        dispatch(addSearch({ text: query, type: "studios" }));
-      } else if (selectedFilter === "artists") {
-        hits = await searchAll.search({
-          collection: "Users",
-          query,
-          queryBy: "name",
-          // filterBy: "isArtist:=true",
-          filterBy: "location:(33.7115769, 73.0397898, 20 km)",
-        });
-
-        const docs = hits.map((h: any) => h.document);
-
-        dispatch(
-          updateSearchResults(
-            docs.map(({ id, ...data }: any) => ({ id, data })),
-          ),
-        );
-
-        dispatch(addSearch({ text: query, type: "artists" }));
-      } else {
-        dispatch(setTattooLoading(true));
-        console.log("no filter specified using publications");
-        hits = await searchAll.search({
-          collection: "publications",
-          query,
-          queryBy: "styles,caption", // adjust to match your publications schema
-        });
-        dispatch(addSearch({ text: query, type: "tattoos" }));
-
-        dispatch(setTattooSearchResults(hits as TattooSearchResult[]));
+    if (type === "artists") {
+      const selectedRatings = persistedRatings
+        .filter((r) => r.selected)
+        .map((r) => r.value);
+      if (selectedRatings.length > 0) {
+        if (selectedRatings.length === 1) {
+          facets.push(
+            `rating:>=${selectedRatings[0] - 0.1} && rating:<=${selectedRatings[0] + 0.1}`,
+          );
+        }
       }
 
-      setSearchedText(searchText);
+      const studioFilter = persistedStudio.filter((s) => s.selected);
+      if (studioFilter.length) {
+        facets.push(
+          `studio: [${studioFilter.map((s) => `${s.name}`).join(",")}]`,
+        );
+      }
+    }
+    if (type === "tattoos") {
+      const stylesFiltered = persistedStyles.filter((s) => s.selected);
+      if (stylesFiltered.length)
+        facets.push(
+          `styles: [${stylesFiltered.map((s) => `${s.title}`).join(",")}]`,
+        );
+    }
+    return facets;
+  };
+
+  // HELPER: perform studios search
+  const searchStudios = async (query: string) => {
+    const geoFilter =
+      persistedRadiusEnabled && currentLocation
+        ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
+        : null;
+    const filterBy = [
+      `isArtist:=${true}`,
+      geoFilter,
+      ...buildFacetFilters("artists").filter(Boolean).join(" && "),
+    ]
+      .filter(Boolean)
+      .join(" && ");
+
+    const hits = await searchAll.search({
+      collection: "Users",
+      query,
+      queryBy: "studio,studioName",
+      filterBy,
+    });
+    dispatch(
+      updateSearchResults(
+        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
+      ),
+    );
+    dispatch(addSearch({ text: query, type: "studios" }));
+  };
+
+  // HELPER: perform artists search
+  const searchArtists = async (query: string) => {
+    const geoFilter =
+      persistedRadiusEnabled && currentLocation
+        ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
+        : null;
+    const filterBy = [
+      `isArtist:=${true}`,
+      geoFilter,
+      ...buildFacetFilters("artists"),
+    ]
+      .filter(Boolean)
+      .join(" && ");
+    const hits = await searchAll.search({
+      collection: "Users",
+      query,
+      queryBy: "name",
+      filterBy: filterBy,
+    });
+    dispatch(
+      updateSearchResults(
+        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
+      ),
+    );
+    dispatch(addSearch({ text: query, type: "artists" }));
+  };
+
+  // HELPER: perform tattoos search
+  const searchTattoos = async (query: string) => {
+    dispatch(setTattooLoading(true));
+    const filterBy = buildFacetFilters("tattoos").filter(Boolean).join(" && ");
+
+    const hits = await searchAll.search({
+      collection: "publications",
+      query,
+      queryBy: "styles,caption",
+      filterBy,
+    });
+    dispatch(setTattooSearchResults(hits as TattooSearchResult[]));
+    dispatch(addSearch({ text: query, type: "tattoos" }));
+  };
+  // MAIN DO SEARCH
+  const doSearch = async (text: string) => {
+    // if (!text.trim() && text !== "*") {
+    //   dispatch(resetSearchResults());
+    //   return;
+    // }
+    const query = text.trim() === "" ? "*" : text;
+    setLoading(true);
+    try {
+      if (selectedFilter === "studios") {
+        await searchStudios(query);
+      } else if (selectedFilter === "artists") {
+        await searchArtists(query);
+      } else {
+        await searchTattoos(query);
+      }
     } catch (err) {
       console.error("Search error:", err);
       dispatch(resetSearchResults());
     } finally {
       setLoading(false);
-      setTattooLoading(false);
+      dispatch(setTattooLoading(false));
     }
   };
   const toggleFilter = (value: SearchType) => {
@@ -207,17 +268,19 @@ export default function SearchAll() {
       cancelled = true;
     };
   }, [dispatch]);
-  useEffect(() => {
-    console.log("currentLocation", currentLocation);
-  }, [currentLocation]);
 
+  // MAIN SEARCH
   useEffect(() => {
     doSearch(searchedText);
-  }, [selectedFilter, searchedText]);
-
-  // useEffect(() => {
-  //   console.log("searchall--results", results);
-  // }, [results]);
+  }, [
+    selectedFilter,
+    searchedText,
+    persistedRadiusEnabled,
+    persistedRadiusValue,
+    persistedRatings,
+    persistedStudio,
+    persistedStyles,
+  ]);
 
   return (
     <SafeAreaView style={styles.container}>

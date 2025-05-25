@@ -37,7 +37,6 @@ const store = configureStore({
 
 // Persistor
 const persistor = persistStore(store);
-
 export { store, persistor };
 
 export type RootState = ReturnType<typeof rootReducer>; // Infers the shape of the Redux state

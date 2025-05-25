@@ -22,7 +22,11 @@ import Text from "../Text";
 import Button from "../Button";
 import { useBottomSheet } from "@gorhom/bottom-sheet";
 
-const FilterBottomSheet = () => {
+const FilterBottomSheet = ({
+  searchActiveFor,
+}: {
+  searchActiveFor: "tattoos" | "artists";
+}) => {
   const dispatch = useDispatch();
 
   const bottomSheet = useBottomSheet();
@@ -141,6 +145,7 @@ const FilterBottomSheet = () => {
     dispatch(setRatingsAction(resetRatings));
     dispatch(setStudioAction(resetStudio));
     dispatch(setStylesAction(resetStyles));
+    bottomSheet.close(); // close the bottom sheet after clearing
   };
 
   /** ──────────────────────────
