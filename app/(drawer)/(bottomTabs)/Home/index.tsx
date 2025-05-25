@@ -72,7 +72,7 @@ const Home = () => {
   // Handler for when the user submits the search
   const handleSearchSubmit = async () => {
     router.push({
-      pathname: "/(bottomTabs)/Home/SearchAll",
+      pathname: "/(bottomTabs)/Home/SearchAllHome",
       params: { query: searchText, type: "tattoos" },
     });
 

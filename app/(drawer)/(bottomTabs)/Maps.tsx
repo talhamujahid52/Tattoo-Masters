@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -61,7 +61,6 @@ const FullScreenMapWithSearch: React.FC = () => {
   const artists = useSelector((s: any) => s.artist.searchResults);
   const dispatch = useDispatch();
   const mapRef = useRef<MapView>(null);
-
   const [searchedText, setSearchedText] = useState("");
   const zoomIn = () => {
     mapRef.current?.animateToRegion({
@@ -97,6 +96,25 @@ const FullScreenMapWithSearch: React.FC = () => {
     // styles: persistedStyles,
     currentLocation,
   } = useSelector(selectFilter);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+
+    // 1. Radius toggle
+    if (persistedRadiusEnabled) {
+      count++;
+    }
+
+    // 2. Rating chips
+    count += persistedRatings.filter((r) => r.selected).length;
+
+    // 3. Studio chips
+    count += persistedStudio.filter((s) => s.selected).length;
+
+    // 4. Style chips
+
+    return count;
+  }, [persistedRadiusEnabled, persistedRatings, persistedStudio]);
   useEffect(() => {
     if (!mapRef.current || artists.length === 0) return;
 
@@ -187,19 +205,21 @@ const FullScreenMapWithSearch: React.FC = () => {
       }
 
       const studioFilter = persistedStudio.filter((s) => s.selected);
+
       if (studioFilter.length) {
-        facets.push(
-          `studio: [${studioFilter.map((s) => `${s.name}`).join(",")}]`,
-        );
+        let studioFilterArr = [];
+        for (const s of studioFilter) {
+          if (s.name === "homeArtist") {
+            studioFilterArr.push(`studio:homeArtist`);
+          } else if (s.name === "freelancer") {
+            studioFilterArr.push(`studio:freelancer`);
+          } else if (s.name === "studio") {
+            studioFilterArr.push(`studio:studio`);
+          }
+        }
+        facets.push(`${studioFilterArr.join(" || ")}`);
       }
     }
-    // if (type === "tattoos") {
-    //   const stylesFiltered = persistedStyles.filter((s) => s.selected);
-    //   if (stylesFiltered.length)
-    //     facets.push(
-    //       `styles: [${stylesFiltered.map((s) => `${s.title}`).join(",")}]`,
-    //     );
-    // }
     return facets;
   };
   const searchArtists = async (query: string) => {
@@ -287,7 +307,34 @@ const FullScreenMapWithSearch: React.FC = () => {
             backgroundColour="#242424"
           />
         </View>
-        <TouchableOpacity onPress={show} style={styles.filterButton}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={show}
+          style={styles.filterButton}
+        >
+          {activeFiltersCount > 0 && (
+            <Text
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                backgroundColor: "white",
+                height: 20,
+                width: 20,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                display: "flex",
+                textAlign: "center",
+                fontSize: 13,
+                lineHeight: 20,
+                borderRadius: 10,
+              }}
+            >
+              {activeFiltersCount}
+            </Text>
+          )}
           <Image
             source={require("../../../assets/images/filter.png")}
             resizeMode="contain"
@@ -382,6 +429,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   filterButton: {
+    position: "relative",
     alignItems: "center",
     justifyContent: "center",
     height: 48,

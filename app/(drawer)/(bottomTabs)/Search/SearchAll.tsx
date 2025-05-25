@@ -1,5 +1,11 @@
 // app / artist / SearchAll.tsx;
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import {
   SafeAreaView,
   View,
@@ -113,18 +119,30 @@ export default function SearchAll() {
       }
 
       const studioFilter = persistedStudio.filter((s) => s.selected);
+
       if (studioFilter.length) {
-        facets.push(
-          `studio: [${studioFilter.map((s) => `${s.name}`).join(",")}]`,
-        );
+        let studioFilterArr = [];
+        for (const s of studioFilter) {
+          if (s.name === "homeArtist") {
+            studioFilterArr.push(`studio:homeArtist`);
+          } else if (s.name === "freelancer") {
+            studioFilterArr.push(`studio:freelancer`);
+          } else if (s.name === "studio") {
+            studioFilterArr.push(`studio:studio`);
+          }
+        }
+        facets.push(`${studioFilterArr.join(" || ")}`);
       }
     }
     if (type === "tattoos") {
       const stylesFiltered = persistedStyles.filter((s) => s.selected);
-      if (stylesFiltered.length)
-        facets.push(
-          `styles: [${stylesFiltered.map((s) => `${s.title}`).join(",")}]`,
-        );
+      let stylesFilterArr = [];
+      if (stylesFiltered.length) {
+        for (const s of stylesFiltered) {
+          stylesFilterArr.push(`styles:${s.title}`);
+        }
+        facets.push(`${stylesFilterArr.join(" || ")}`);
+      }
     }
     return facets;
   };
@@ -136,13 +154,12 @@ export default function SearchAll() {
         ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
         : null;
     const filterBy = [
-      `isArtist:=${true}`,
+      "isArtist:=true",
       geoFilter,
-      ...buildFacetFilters("artists").filter(Boolean).join(" && "),
+      ...buildFacetFilters("artists"),
     ]
       .filter(Boolean)
       .join(" && ");
-
     const hits = await searchAll.search({
       collection: "Users",
       query,
@@ -164,7 +181,7 @@ export default function SearchAll() {
         ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
         : null;
     const filterBy = [
-      `isArtist:=${true}`,
+      "isArtist:=true",
       geoFilter,
       ...buildFacetFilters("artists"),
     ]
@@ -184,11 +201,37 @@ export default function SearchAll() {
     dispatch(addSearch({ text: query, type: "artists" }));
   };
 
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+
+    // 1. Radius toggle
+    if (persistedRadiusEnabled) {
+      count++;
+    }
+    if (selectedFilter === "tattoos" || selectedFilter === null) {
+      count += persistedStyles.filter((s) => s.selected).length;
+    } else {
+      // 2. Rating chips
+      count += persistedRatings.filter((r) => r.selected).length;
+
+      // 3. Studio chips
+      count += persistedStudio.filter((s) => s.selected).length;
+    }
+
+    // 4. Style chips
+
+    return count;
+  }, [
+    persistedRadiusEnabled,
+    persistedRatings,
+    persistedStyles,
+    persistedStudio,
+    selectedFilter,
+  ]);
   // HELPER: perform tattoos search
   const searchTattoos = async (query: string) => {
     dispatch(setTattooLoading(true));
     const filterBy = buildFacetFilters("tattoos").filter(Boolean).join(" && ");
-
     const hits = await searchAll.search({
       collection: "publications",
       query,
@@ -325,6 +368,30 @@ export default function SearchAll() {
             resizeMode="contain"
             style={styles.filterIcon}
           />
+
+          {activeFiltersCount > 0 && (
+            <Text
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                backgroundColor: "white",
+                height: 20,
+                width: 20,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                display: "flex",
+                textAlign: "center",
+                fontSize: 13,
+                lineHeight: 20,
+                borderRadius: 10,
+              }}
+            >
+              {activeFiltersCount}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
