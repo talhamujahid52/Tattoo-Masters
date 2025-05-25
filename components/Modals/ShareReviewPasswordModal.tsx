@@ -1,12 +1,39 @@
-import React from "react";
-import { View, Pressable, StyleSheet, Image } from "react-native";
+import React, { useContext } from "react";
+import { View, StyleSheet, Image, TouchableOpacity, Share } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
+import { router } from "expo-router";
+import { FormContext } from "@/context/FormContext";
+import { useSelector } from "react-redux";
+
 type Props = {
-  onClose: () => void;
+  onClose?: () => void;
 };
 
 const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
+  const { formData, setFormData } = useContext(FormContext)!;
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `Here's my review password: ${formData?.reviewPassword}`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log("Activity Type:", result.activityType);
+        } else {
+          console.log("Shared successfully.");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log("Share Sheet dismissed.");
+      }
+    } catch (error) {
+      console.log("Error opening Share Sheet:", error);
+    }
+  };
+
   return (
     <View style={styles.modalContent}>
       <Image
@@ -44,7 +71,7 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
               transform: [{ translateX: -34 }, { translateY: -34 }],
             },
           ]}
-          source={require("../../assets/images/profilePicture.png")}
+          source={{ uri: formData?.profilePicture }}
         />
       </View>
       <Text
@@ -71,9 +98,21 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
       <Button
         title="Share Review Password"
         onPress={() => {
-          onClose();
+          onShare();
         }}
       />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          router.push({
+            pathname: "/(bottomTabs)/Home",
+          });
+        }}
+      >
+        <Text size="h4" weight="normal" color="#FBF6FA">
+          Skip
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -101,10 +140,14 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   button: {
-    backgroundColor: "#000",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    height: 48,
+    width: "100%",
+    borderRadius: 30,
+    backgroundColor: "#20201E",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
   },
   buttonText: {
     color: "#fff",
@@ -113,7 +156,9 @@ const styles = StyleSheet.create({
   headerImage: {
     height: 68,
     width: 68,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
   },
 });

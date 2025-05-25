@@ -225,8 +225,11 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   icon: {
     height: 24,

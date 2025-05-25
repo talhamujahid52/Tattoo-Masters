@@ -241,6 +241,9 @@ const styles = StyleSheet.create({
     width: 82,
     resizeMode: "contain",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   stylesRow: {
     marginTop: 16,

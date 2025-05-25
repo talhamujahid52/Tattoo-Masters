@@ -10,7 +10,6 @@ import {
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Button from "@/components/Button";
 import Text from "@/components/Text";
 import ShareProfileIntroModal from "@/components/Modals/ShareProfileIntroModal";
 
@@ -36,47 +35,9 @@ const ShareProfile = () => {
         colors={["rgba(25, 25, 23, 0.1)", "rgba(25, 25, 23, 0.1)", "#171715"]}
       />
 
-      <View style={[styles.buttonContainer, { bottom: insets.bottom }]}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            router.push({
-              pathname: "/artist/ShareReviewPassword",
-            });
-          }}
-        >
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Skip
-          </Text>
-        </TouchableOpacity>
-        {/* <Button
-          title="Skip"
-          onPress={() => {
-            router.push({
-              pathname: "/artist/ShareReviewPassword",
-            });
-          }}
-        /> */}
+      <View style={styles.modalWrapper}>
+        <ShareProfileIntroModal></ShareProfileIntroModal>
       </View>
-
-      <Modal
-        visible={modalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setModalVisible(false)}
-        >
-          <Pressable
-            style={styles.modalContainer}
-            onPress={() => {}} // prevent closing when tapping inside
-          >
-            <ShareProfileIntroModal onClose={() => setModalVisible(false)} />
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 };
@@ -128,5 +89,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
+  },
+  modalWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999, // Ensure it's higher than gradientOverlay's zIndex: 1
+    elevation: 10, // For Android shadow layering
   },
 });

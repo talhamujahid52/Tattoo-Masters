@@ -4,6 +4,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import Text from "@/components/Text";
 import React, { useState } from "react";
@@ -137,14 +138,29 @@ const PublishReview = () => {
       </View>
 
       <View style={styles.content}>
-        <Text
-          size="h4"
-          weight="semibold"
-          color="#A7A7A7"
-          style={{ marginTop: 24, marginBottom: 16 }}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 24,
+            paddingBottom: 16,
+          }}
         >
-          Review
-        </Text>
+          <Text size="h4" weight="semibold" color="#A7A7A7">
+            Review
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              router.back();
+            }}
+          >
+            <Text size="h4" weight="semibold" color="#DAB769">
+              Edit Review?
+            </Text>
+          </TouchableOpacity>
+        </View>
         <Review
           rating={rating as string}
           tattooFeedback={tattooFeedback as string}
@@ -199,6 +215,9 @@ const styles = StyleSheet.create({
     width: 82,
     resizeMode: "contain",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   content: {
     flex: 1,

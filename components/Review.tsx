@@ -94,6 +94,7 @@ const Review: React.FC<Review> = ({
               height: "100%",
               width: "100%",
               resizeMode: "cover",
+              backgroundColor: "#202020",
             }}
             source={
               tattooImage
@@ -146,6 +147,9 @@ const styles = StyleSheet.create({
     width: 42,
     resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   seprator: {
     height: 1,
