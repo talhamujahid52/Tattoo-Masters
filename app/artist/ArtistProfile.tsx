@@ -54,7 +54,6 @@ const ArtistProfile = () => {
 
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
-  console.log("Artist is: ", artist);
   const [isExpanded, setIsExpanded] = useState(false);
   const content =
     artist?.data?.aboutYou ||
@@ -188,8 +187,8 @@ const ArtistProfile = () => {
               {artist?.data?.studio === "studio"
                 ? artist?.data?.studioName
                 : artist?.data?.studio === "freelancer"
-                ? "Freelancer"
-                : "HomeArtist"}
+                  ? "Freelancer"
+                  : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {artist?.data?.city ? artist?.data?.city : "Oslo"}

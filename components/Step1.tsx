@@ -41,10 +41,10 @@ const Step1: React.FC = () => {
   };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
 
   // Prepopulate the full name field if it is not already set.
@@ -99,11 +99,11 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item
+        : item,
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected
+      (item) => item.selected,
     );
     setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
   };

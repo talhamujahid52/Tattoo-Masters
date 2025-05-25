@@ -1,7 +1,11 @@
 import React, { useState, useRef, useContext } from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import {
+  GooglePlaceData,
+  GooglePlaceDetail,
+  GooglePlacesAutocomplete,
+} from "react-native-google-places-autocomplete";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Button from "@/components/Button";
@@ -29,7 +33,10 @@ const SearchLocation: React.FC = () => {
 
   const [address, setAddress] = useState<string>(formData.address || "");
 
-  const handleLocationSelect = (data: any, details: any) => {
+  const handleLocationSelect = (
+    data: GooglePlaceData,
+    details: GooglePlaceDetail,
+  ) => {
     if (details && details.geometry) {
       const { lat, lng } = details.geometry.location;
       const newRegion = {
@@ -41,13 +48,13 @@ const SearchLocation: React.FC = () => {
 
       setRegion(newRegion);
       setAddress(data.description);
-
       setFormData({
         ...formData,
         location: {
           latitude: lat,
           longitude: lng,
         },
+        locationT: [lat, lng],
         address: data.description,
       });
 

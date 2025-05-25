@@ -10,10 +10,22 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+
+import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import useTypesense from "@/hooks/useTypesense";
+
+import {
+  selectFilter,
+  setRadiusEnabled,
+  setRadiusValue,
+  setRatings as setRatingsAction,
+  setStudio as setStudioAction,
+  setStyles as setStylesAction,
+  setCurrentLocation,
+} from "@/redux/slices/filterSlices";
 import {
   updateSearchResults,
   resetSearchResults,
@@ -64,19 +76,19 @@ export default function SearchAll() {
   const [searchedText, setSearchedText] = useState(initialQuery || "");
   const { width } = Dimensions.get("window");
 
+  const {
+    isEnabledRadius: persistedRadiusEnabled,
+    radiusValue: persistedRadiusValue,
+    ratings: persistedRatings,
+    studio: persistedStudio,
+    styles: persistedStyles,
+    currentLocation,
+  } = useSelector(selectFilter);
+
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null,
   );
   const adjustedWidth = width - 42;
-
-  // … your existing useState calls …
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    radiusEnabled: false,
-    radiusValue: 50,
-    rating: null,
-    studioTypes: [],
-    styles: [],
-  });
 
   const [loading, setLoading] = useState(false);
   const { BottomSheet, show, hide } = useBottomSheet();
@@ -114,7 +126,8 @@ export default function SearchAll() {
           collection: "Users",
           query,
           queryBy: "name",
-          filterBy: "isArtist:=true",
+          // filterBy: "isArtist:=true",
+          filterBy: "location:(33.7115769, 73.0397898, 20 km)",
         });
 
         const docs = hits.map((h: any) => h.document);
@@ -155,16 +168,48 @@ export default function SearchAll() {
       setSelectedFilter(value);
     }
   };
-
+  // 2) inside the component body
   useEffect(() => {
-    // you can swap in your preferred geolocation API
-    // navigator.geolocation.getCurrentPosition(
-    //   ({ coords }) =>
-    //     setLocation({ lat: coords.latitude, lng: coords.longitude }),
-    //   (err) => console.warn("geo error", err),
-    //   { enableHighAccuracy: true },
-    // );
-  }, []);
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // Ask for foreground permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (cancelled) return;
+
+        if (status !== "granted") {
+          // dispatch(setPermissionDenied(true));
+          return;
+        }
+
+        // dispatch(setPermissionDenied(false));
+
+        // Get the device’s current position
+        const {
+          coords: { latitude, longitude },
+        } = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+
+        if (!cancelled) {
+          dispatch(setCurrentLocation({ latitude, longitude }));
+        }
+      } catch (err) {
+        console.warn("Location error:", err);
+        // if (!cancelled) dispatch(setPermissionDenied(true));
+      }
+    })();
+
+    // cleanup to avoid state updates if component unmounts mid-request
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
+  useEffect(() => {
+    console.log("currentLocation", currentLocation);
+  }, [currentLocation]);
 
   useEffect(() => {
     doSearch(searchedText);

@@ -9,6 +9,7 @@ interface FilterState {
   radiusValue: number;
   ratings: Rating[];
   studio: Studio[];
+  currentLocation?: { latitude: number; longitude: number };
   styles: Style[];
 }
 
@@ -57,6 +58,12 @@ const filterSlice = createSlice({
     setStyles(state, action: PayloadAction<Style[]>) {
       state.styles = action.payload;
     },
+    setCurrentLocation(
+      state,
+      action: PayloadAction<{ latitude: number; longitude: number }>,
+    ) {
+      state.currentLocation = action.payload;
+    },
   },
 });
 
@@ -67,6 +74,7 @@ export const {
   setRatings,
   setStudio,
   setStyles,
+  setCurrentLocation,
 } = filterSlice.actions;
 
 export const selectFilter = (state: RootState) => state.filter;

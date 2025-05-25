@@ -19,7 +19,7 @@ type ImageObject = {
 };
 
 type FormData = {
-  profilePicture: string;
+  profilePicture: string | null;
   name: string;
   studio: string;
   studioName: string;
@@ -49,7 +49,7 @@ type FormProviderProps = {
 
 const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
   const [formData, setFormData] = useState<FormData>({
-    profilePicture: "",
+    profilePicture: null,
     name: "",
     studio: "",
     studioName: "",
