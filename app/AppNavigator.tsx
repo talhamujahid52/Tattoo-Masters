@@ -15,6 +15,7 @@ const AppNavigator = () => {
   const [initializing, setInitializing] = useState(true);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
   const router = useRouter();
+  console.log("updating...");
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     // console.log("App Navigator : ", user);

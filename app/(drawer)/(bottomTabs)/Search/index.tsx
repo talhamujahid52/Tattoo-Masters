@@ -78,7 +78,6 @@ const Search: React.FC = () => {
 
   const onRecentPress = (term: { type: string; text: string }) => {
     Keyboard.dismiss();
-
     router.push({
       pathname: "/(bottomTabs)/Search/SearchAll",
       params: { query: term.text, type: term.type },

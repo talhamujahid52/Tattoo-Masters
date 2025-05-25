@@ -28,6 +28,7 @@ const FilterBottomSheet = ({
   searchActiveFor: "tattoos" | "artists";
 }) => {
   const dispatch = useDispatch();
+  const stylesEnabled = searchActiveFor === "tattoos"; // styles only apply to tattoos
 
   const bottomSheet = useBottomSheet();
   /** ──────────────────────────
@@ -174,6 +175,7 @@ const FilterBottomSheet = ({
             Within your radius
           </Text>
           <Switch
+            disabled={stylesEnabled} // block toggling whenever styles are on
             trackColor={{ false: "#767577", true: "#44e52c" }}
             thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
             ios_backgroundColor="#3e3e3e"
@@ -185,7 +187,11 @@ const FilterBottomSheet = ({
         {/* radius slider */}
         <View style={styles.sliderRow}>
           <Slider
-            style={{ width: "80%", height: 40 }}
+            style={{
+              width: "80%",
+              height: 40,
+              opacity: !radiusEnabled || stylesEnabled ? 0.5 : 1,
+            }}
             value={radiusValue}
             onValueChange={setRadiusValueLocal}
             minimumValue={0}
@@ -193,7 +199,7 @@ const FilterBottomSheet = ({
             minimumTrackTintColor="#F2D189"
             maximumTrackTintColor="#FFFFFF26"
             thumbTintColor="#F2D189"
-            disabled={!radiusEnabled}
+            disabled={!radiusEnabled || stylesEnabled}
           />
           <Text size="p" weight="normal" color="#A7A7A7">
             {radiusValue.toFixed()} Km
@@ -208,12 +214,16 @@ const FilterBottomSheet = ({
           {ratings.map((r) => (
             <TouchableOpacity
               key={r.value}
-              style={[
-                styles.chip,
-                { backgroundColor: r.selected ? "#DAB769" : "#262526" },
-              ]}
+              disabled={stylesEnabled} // disable when any style is selected
               onPress={() => selectRating(r.value)}
               activeOpacity={1}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: r.selected ? "#DAB769" : "#262526",
+                  opacity: stylesEnabled ? 0.5 : 1,
+                },
+              ]}
             >
               <Text
                 size="p"
@@ -235,12 +245,16 @@ const FilterBottomSheet = ({
             {studio.map((s) => (
               <TouchableOpacity
                 key={s.value}
-                style={[
-                  styles.chip,
-                  { backgroundColor: s.selected ? "#DAB769" : "#262526" },
-                ]}
+                disabled={stylesEnabled}
                 onPress={() => toggleStudio(s.value)}
                 activeOpacity={1}
+                style={[
+                  styles.chip,
+                  {
+                    backgroundColor: s.selected ? "#DAB769" : "#262526",
+                    opacity: stylesEnabled ? 0.5 : 1,
+                  },
+                ]}
               >
                 <Text
                   size="p"
@@ -265,8 +279,14 @@ const FilterBottomSheet = ({
                 key={s.value}
                 style={[
                   styles.chip,
-                  { backgroundColor: s.selected ? "#DAB769" : "#262526" },
+                  {
+                    backgroundColor: s.selected ? "#DAB769" : "#262526",
+                    // if the group is disabled, fade it out:
+                    opacity: stylesEnabled ? 1 : 0.5,
+                  },
                 ]}
+                // block presses when disabled
+                disabled={!stylesEnabled}
                 onPress={() => toggleStyle(s.value)}
                 activeOpacity={1}
               >

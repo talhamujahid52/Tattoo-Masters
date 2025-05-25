@@ -62,7 +62,7 @@ const HomeLayout = () => {
         // }}
       />
       <Stack.Screen
-        name="SearchAll"
+        name="SearchAllHome"
         options={{
           // animation: "fade",
           headerShown: false,

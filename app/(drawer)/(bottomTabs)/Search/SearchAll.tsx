@@ -1,4 +1,4 @@
-// app/artist/SearchAll.tsx
+// app / artist / SearchAll.tsx;
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import {
   SafeAreaView,
@@ -19,8 +19,8 @@ import useTypesense from "@/hooks/useTypesense";
 
 import {
   selectFilter,
-  setRadiusEnabled,
-  setRadiusValue,
+  // setRadiusEnabled,
+  // setRadiusValue,
   setRatings as setRatingsAction,
   setStudio as setStudioAction,
   setStyles as setStylesAction,
@@ -284,7 +284,17 @@ export default function SearchAll() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BottomSheet InsideComponent={<FilterBottomSheet />} />
+      <BottomSheet
+        InsideComponent={
+          <FilterBottomSheet
+            searchActiveFor={
+              !selectedFilter || selectedFilter === "tattoos"
+                ? "tattoos"
+                : "artists"
+            }
+          />
+        }
+      />
       <View style={styles.inputHeader}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -292,20 +302,20 @@ export default function SearchAll() {
         <View style={{ flex: 1 }}>
           <Input
             value={searchText}
-            style={{ flex: 1, borderWidth: 1, borderColor: "red" }}
             onChangeText={setSearchText}
-            placeholder="Search for artists and studios"
-            leftIcon="search"
             rightIcon={searchText ? "cancel" : undefined}
             rightIconOnPress={() => {
               setSearchText("");
               setSearchedText("");
             }}
-            returnKeyType="search"
             onSubmitEditing={() => {
               Keyboard.dismiss();
               setSearchedText(searchText);
             }}
+            leftIcon="search"
+            returnKeyType="search"
+            style={{ flex: 1, borderWidth: 1, borderColor: "red" }}
+            placeholder="Search for artists and studios"
             autoFocus
           />
         </View>
