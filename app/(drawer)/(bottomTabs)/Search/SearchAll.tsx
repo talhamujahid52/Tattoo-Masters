@@ -247,7 +247,7 @@ export default function SearchAll() {
     //   dispatch(resetSearchResults());
     //   return;
     // }
-    const query = text.trim();
+    const query = text.trim() === "" ? "*" : text;
     setLoading(true);
     try {
       if (selectedFilter === "studios") {
