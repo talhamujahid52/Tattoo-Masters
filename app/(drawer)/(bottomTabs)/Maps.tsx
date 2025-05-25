@@ -249,7 +249,7 @@ const FullScreenMapWithSearch: React.FC = () => {
   };
 
   const doSearch = async (text: string) => {
-    const query = text.trim() === "" ? "*" : text;
+    const query = text;
     setLoading(true);
     try {
       await searchArtists(query);
