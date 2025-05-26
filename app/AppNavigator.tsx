@@ -49,11 +49,8 @@ const AppNavigator = () => {
     if (initializing) {
       return;
     }
-    if (userId) {
-      router.replace("/(bottomTabs)/Home");
-    } else {
-      router.replace("/(auth)/Welcome");
-    }
+
+    router.replace("/(bottomTabs)/Home");
   }, [userId, initializing]);
 
   if (initializing) {

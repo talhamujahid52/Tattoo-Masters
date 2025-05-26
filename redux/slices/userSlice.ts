@@ -24,6 +24,7 @@ const userSlice = createSlice({
     },
     resetUser: (state) => {
       state.user = null; // Reset user to null
+      state.userFirestore = null; // Reset userFirestore to null
     },
   },
 });

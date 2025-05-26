@@ -17,18 +17,34 @@ interface ArtistProfileBottomSheetProps {
   selectedArtistId: string;
 }
 
+import { selectFilter } from "@/redux/slices/filterSlices";
+
+import { useSelector } from "react-redux";
+import useTypesense from "@/hooks/useTypesense";
+
 const ArtistProfileBottomSheet = () => {
   const artist = useGetArtist(1);
   const [isExpanded, setIsExpanded] = useState(false);
   const insets = useSafeAreaInsets();
-
-  const content =
-    artist?.data?.aboutYou ||
-    "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
+  const { currentlyViewingArtist } = useSelector(selectFilter);
+  const { getDocument } = useTypesense();
+  const content = artist?.data?.aboutYou;
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
+  useEffect(() => {
+    if (currentlyViewingArtist) {
+      getDocument({ collection: "Users", documentId: currentlyViewingArtist })
+        .then((doc) => {
+          console.log("user details", doc);
+          // setUserDetails(doc);
+        })
+        .catch((err) =>
+          console.error("Error fetching user details from Typesense:", err),
+        );
+    }
+  }, [currentlyViewingArtist]);
 
   const profilePicture = useMemo(() => {
     const profileSmall = artist?.data?.profilePictureSmall;
@@ -48,6 +64,7 @@ const ArtistProfileBottomSheet = () => {
           <Image style={styles.profilePicture} source={profilePicture} />
           <View>
             <Text size="h3" weight="semibold" color="white">
+              {/* {artist?.data?.name || "Martin Luis"} */}
               {artist?.data?.name || "Martin Luis"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
@@ -89,7 +106,7 @@ const ArtistProfileBottomSheet = () => {
 
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content.slice(0, 100)}...`}
+          {isExpanded ? content : `${content?.slice(0, 100)}...`}
         </Text>
       </Pressable>
 

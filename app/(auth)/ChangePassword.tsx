@@ -31,7 +31,7 @@ const ChangePassword = () => {
               router.back();
             },
           },
-        ]
+        ],
       );
     } catch (error: any) {
       // Handle errors here
@@ -110,6 +110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   passwordFieldsContainer: {
+    width: "100%",
     rowGap: 16,
     marginBottom: 24,
   },

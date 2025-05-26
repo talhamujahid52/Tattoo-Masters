@@ -75,34 +75,6 @@ const BottomTabsLayout = () => {
             headerRightContainerStyle: {
               paddingRight: 16,
             },
-            headerLeft: () => (
-              <Image
-                source={require("../../../assets/images/tattoo masters.png")}
-                resizeMode="cover"
-                style={{
-                  height: 27,
-                  marginTop: 10,
-                  width: 180,
-                }}
-              />
-            ),
-            headerRight: () => (
-              <TouchableOpacity
-                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                onPress={() => {
-                  loggedInUser
-                    ? navigation.dispatch(DrawerActions.toggleDrawer())
-                    : show();
-                }}
-              >
-                <Image
-                  source={require("../../../assets/images/menu.png")}
-                  resizeMode="cover"
-                  style={{ height: 13, width: 19 }}
-                />
-              </TouchableOpacity>
-            ),
-            // headerRight: () => <DrawerToggleButton tintColor="white" ></DrawerToggleButton>,
           }}
         />
         <Tabs.Screen

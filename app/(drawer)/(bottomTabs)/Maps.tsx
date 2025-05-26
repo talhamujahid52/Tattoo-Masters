@@ -24,6 +24,7 @@ import {
   setStudio as setStudioAction,
   setStyles as setStylesAction,
   setCurrentLocation,
+  setCurrentlyViewingArtist,
 } from "@/redux/slices/filterSlices";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -371,7 +372,7 @@ const FullScreenMapWithSearch: React.FC = () => {
               }}
               title={artist?.data?.name || "Artist"}
               onPress={() => {
-                // setSelectedArtistId(artist?.data?.id);
+                dispatch(setCurrentlyViewingArtist(artist?.data?.id));
                 showMapProfileBottomSheet();
               }}
             >

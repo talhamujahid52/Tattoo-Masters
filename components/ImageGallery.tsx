@@ -27,7 +27,7 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
               pathname: "/artist/TattooDetail",
               params: {
                 photoUrlVeryHigh: encodeURIComponent(
-                  doc?.downloadUrls?.veryHigh
+                  doc?.downloadUrls?.veryHigh,
                 ),
                 photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
                 id: doc.id,
@@ -48,7 +48,7 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
         </TouchableOpacity>
       );
     },
-    []
+    [],
   );
 
   const renderUriItem = useCallback(({ item }: { item: { uri: string } }) => {

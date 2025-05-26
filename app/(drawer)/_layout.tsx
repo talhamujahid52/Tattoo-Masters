@@ -23,10 +23,10 @@ const CustomDrawerContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
   const profileImage = useMemo(() => {
     return {
@@ -344,8 +344,8 @@ const CustomDrawerContent = () => {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            onPress={() => {
-              auth().signOut();
+            onPress={async () => {
+              await auth().signOut();
               dispatch(resetUser());
             }}
             style={styles.logoutButton}

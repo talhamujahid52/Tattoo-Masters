@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   },
   passwordFieldsContainer: {
     rowGap: 16,
+    width: "100%",
     marginVertical: 24,
   },
 });

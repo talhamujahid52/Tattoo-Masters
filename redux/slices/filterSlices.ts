@@ -33,6 +33,7 @@ interface FilterState {
 }
 interface FilterState {
   isEnabledRadius: boolean;
+  currentlyViewingArtist?: string;
   permissionDenied: boolean;
   radiusValue: number;
   ratings: Rating[];
@@ -68,6 +69,9 @@ const filterSlice = createSlice({
   name: "filter",
   initialState,
   reducers: {
+    setCurrentlyViewingArtist: (state, action: PayloadAction<string>) => {
+      state.currentlyViewingArtist = action.payload;
+    },
     setRadiusEnabled(state, action: PayloadAction<boolean>) {
       state.isEnabledRadius = action.payload;
     },
@@ -103,6 +107,7 @@ export const {
   setStudio,
   setStyles,
   setCurrentLocation,
+  setCurrentlyViewingArtist,
 } = filterSlice.actions;
 
 export const selectFilter = (state: RootState) => state.filter;

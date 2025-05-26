@@ -94,6 +94,7 @@ const useTypesense = () => {
             q: query ?? "",
             query_by: queryBy ?? "caption,styles",
             filter_by: filterBy, // pass the filterBy parameter here
+            limit: 100, // Adjust limit as needed
           });
         const hits = response.hits as TypesenseResult<any>[];
         setResults(hits);
