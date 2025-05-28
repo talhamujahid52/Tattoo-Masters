@@ -128,7 +128,7 @@ const FullScreenMapWithSearch: React.FC = () => {
           Array.isArray(loc) &&
           loc.length === 2 &&
           typeof loc[0] === "number" &&
-          typeof loc[1] === "number",
+          typeof loc[1] === "number"
       )
       // here TS knows latitude and longitude are numbers
       .map(([latitude, longitude]: LatLngArray) => ({
@@ -200,7 +200,9 @@ const FullScreenMapWithSearch: React.FC = () => {
       if (selectedRatings.length > 0) {
         if (selectedRatings.length === 1) {
           facets.push(
-            `rating:>=${selectedRatings[0] - 0.1} && rating:<=${selectedRatings[0] + 0.1}`,
+            `rating:>=${selectedRatings[0] - 0.1} && rating:<=${
+              selectedRatings[0] + 0.1
+            }`
           );
         }
       }
@@ -243,8 +245,8 @@ const FullScreenMapWithSearch: React.FC = () => {
     });
     dispatch(
       updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
-      ),
+        hits.map((h: any) => ({ id: h.document.id, data: h.document }))
+      )
     );
     dispatch(addSearch({ text: query, type: "artists" }));
   };
@@ -280,7 +282,9 @@ const FullScreenMapWithSearch: React.FC = () => {
       <MapProfileBottomSheet
         InsideComponent={
           // <FilterBottomSheet />
-          <ArtistProfileBottomSheet />
+          <ArtistProfileBottomSheet
+            hideMapProfileBottomSheet={hideMapProfileBottomSheet}
+          />
         }
       />
 
@@ -346,7 +350,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
       {/* Map */}
       <MapView
-        provider={PROVIDER_GOOGLE}
+        // provider={PROVIDER_GOOGLE}
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         region={region}
@@ -372,16 +376,11 @@ const FullScreenMapWithSearch: React.FC = () => {
               }}
               title={artist?.data?.name || "Artist"}
               onPress={() => {
-                dispatch(setCurrentlyViewingArtist(artist?.data?.id));
+                dispatch(setCurrentlyViewingArtist(artist?.data));
                 showMapProfileBottomSheet();
               }}
             >
-              <Pressable
-                onPress={() => {
-                  console.log("artist pressed: ", artist);
-                }}
-                style={{ alignItems: "center" }}
-              >
+              <Pressable style={{ alignItems: "center" }}>
                 <Image
                   source={{
                     uri: profilePic

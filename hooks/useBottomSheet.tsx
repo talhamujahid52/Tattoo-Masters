@@ -5,6 +5,7 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
+import { ScrollView } from "react-native";
 
 // Custom hook to manage the BottomSheet visibility and content
 const useBottomSheet = () => {
@@ -24,7 +25,7 @@ const useBottomSheet = () => {
         hide();
       }
     },
-    [hide],
+    [hide]
   );
 
   // Custom backdrop that darkens the screen and closes on press
@@ -38,7 +39,7 @@ const useBottomSheet = () => {
         pressBehavior="close"
       />
     ),
-    [],
+    []
   );
 
   const BottomSheet = useCallback(
@@ -56,10 +57,12 @@ const useBottomSheet = () => {
         }}
         handleIndicatorStyle={{ backgroundColor: "#838383" }}
       >
-        <BottomSheetView>{InsideComponent}</BottomSheetView>
+        <BottomSheetView style={{ backgroundColor: "#000" }}>
+          <ScrollView>{InsideComponent}</ScrollView>
+        </BottomSheetView>
       </BottomSheetModal>
     ),
-    [hide, handleSheetChanges, renderBackdrop],
+    [hide, handleSheetChanges, renderBackdrop]
   );
 
   return { BottomSheet, show, hide };
