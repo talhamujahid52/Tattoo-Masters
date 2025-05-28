@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -20,6 +20,18 @@ const AddReview = () => {
   const insets = useSafeAreaInsets();
   const { artistId } = useLocalSearchParams();
   const artist = useGetArtist(artistId);
+
+  const profilePicture = useMemo(() => {
+    const profileSmall = artist?.data?.profilePictureSmall;
+    const profileDefault = artist?.data?.profilePicture;
+    if (profileSmall) {
+      return { uri: profileSmall };
+    } else if (artist?.data?.profilePicture) {
+      return { uri: profileDefault };
+    }
+
+    return require("../../assets/images/Artist.png");
+  }, [artistId]);
 
   // State hooks
   const [overallRating, setOverallRating] = useState<number>(0);
@@ -58,6 +70,13 @@ const AddReview = () => {
     }
   };
 
+  const isFormComplete =
+    overallRating > 0 &&
+    qualityOfTattoo > 0 &&
+    tattooAsImagined > 0 &&
+    feedback.trim().length > 0 &&
+    attachment;
+
   // Render content
   return (
     <ScrollView
@@ -66,22 +85,17 @@ const AddReview = () => {
     >
       {/* Artist Profile Section */}
       <View style={styles.artistProfileTile}>
-        <Image
-          style={styles.profilePicture}
-          source={
-            artist?.data?.profilePicture
-              ? { uri: artist?.data?.profilePicture }
-              : require("../../assets/images/Artist.png")
-          }
-        />
+        <Image style={styles.profilePicture} source={profilePicture} />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            {artist?.data?.name ? artist?.data?.name : "Martin Luis"}
+            {artist?.data?.name ? artist?.data?.name : ""}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
-            {artist?.data?.studio
-              ? artist?.data?.studio?.name
-              : "Luis Arts Studio"}
+            {artist?.data?.studio === "studio"
+              ? artist?.data?.studioName
+              : artist?.data?.studio === "freelancer"
+              ? "Freelancer"
+              : "HomeArtist"}
           </Text>
           <Text
             size="p"
@@ -89,7 +103,7 @@ const AddReview = () => {
             color="#A7A7A7"
             style={{ width: "70%" }}
           >
-            {artist?.data?.city ? artist?.data?.city : "Phuket, Thailand"}
+            {artist?.data?.city ? artist?.data?.city : ""}
           </Text>
         </View>
       </View>
@@ -123,7 +137,7 @@ const AddReview = () => {
           multiline
           value={feedback}
           style={styles.textArea}
-          maxLength={200}
+          maxLength={500}
           onChangeText={setFeedback}
         />
         <Text
@@ -132,7 +146,7 @@ const AddReview = () => {
           color="#A7A7A7"
           style={styles.charCount}
         >
-          {feedback.length} / 200
+          {feedback.length} / 500
         </Text>
       </View>
 
@@ -197,6 +211,8 @@ const AddReview = () => {
       {/* Next Button */}
       <Button
         title="Next"
+        disabled={!isFormComplete}
+        variant={!isFormComplete ? "secondary" : "primary"}
         onPress={() => {
           router.push({
             pathname: "/artist/PublishReview",
@@ -220,6 +236,9 @@ export default AddReview;
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    backgroundColor: "#080808",
+    borderTopColor: "#282828",
+    borderTopWidth: 1,
   },
   scrollViewContent: {
     paddingBottom: 32,
@@ -239,7 +258,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
     borderWidth: 1,
     borderColor: "#333333",

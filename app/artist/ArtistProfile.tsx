@@ -20,7 +20,7 @@ import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
-import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
+import NoReviews from "@/components/NoReviews";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 
 interface StudioItem {
@@ -90,7 +90,7 @@ const ArtistProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+      item.value === value ? { ...item, selected: !item.selected } : item
     );
 
     setStudio(updatedstudio);
@@ -184,11 +184,11 @@ const ArtistProfile = () => {
               {artist?.data?.studio === "studio"
                 ? artist?.data?.studioName
                 : artist?.data?.studio === "freelancer"
-                  ? "Freelancer"
-                  : "HomeArtist"}
+                ? "Freelancer"
+                : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.city ? artist?.data?.city : "Oslo"}
+              {artist?.data?.city ? artist?.data?.city : ""}
             </Text>
           </View>
         </View>
@@ -230,7 +230,9 @@ const ArtistProfile = () => {
           source={require("../../assets/images/favorite-white.png")}
         />
         <Text size="p" weight="normal" color="#FBF6FA">
-          {artist?.data?.followersCount ? artist?.data?.followersCount : 0}
+          {artist?.data?.followersCount
+            ? artist?.data?.followersCount
+            : "Not favourited yet"}
         </Text>
       </View>
       <View style={styles.tattooStylesRow}>
@@ -290,7 +292,7 @@ const ArtistProfile = () => {
       {artist?.data?.latestReview ? (
         <ReviewOnProfile ArtistId={artistId} />
       ) : (
-        <ReviewOnProfileBlur />
+        <NoReviews ArtistId={artistId} />
       )}
 
       <View style={{ marginTop: 24 }}>

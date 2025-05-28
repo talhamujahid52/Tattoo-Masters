@@ -52,7 +52,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
       <View style={styles.messageContainer}>
         <View style={styles.row1}>
           <Text size="p" weight="semibold" color="#ffffff">
-            {otherUserName ? otherUserName : "Jasper Frost"}
+            {otherUserName ? otherUserName : ""}
           </Text>
           <Text size="p" weight="normal" color="#B2B2B2">
             {date ? formatMessageDate(date) : ""}
