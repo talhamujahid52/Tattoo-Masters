@@ -16,16 +16,16 @@ import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtist
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
 import NoReviews from "@/components/NoReviews";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 
-interface StudioItem {
+interface StyleItem {
   title: string;
-  value: number;
+  count: number;
   selected: boolean;
 }
 const options = [
@@ -68,13 +68,6 @@ const ArtistProfile = () => {
     longitudeDelta: 0.02,
   };
 
-  // const [region, setRegion] = useState<Region>({
-  //   latitude: defaultLocation.latitude,
-  //   longitude: defaultLocation.longitude,
-  //   latitudeDelta: defaultLocation.latitudeDelta,
-  //   longitudeDelta: defaultLocation.longitudeDelta,
-  // });
-
   const region = {
     latitude: artist?.data?.location?.latitude || defaultLocation.latitude,
     longitude: artist?.data?.location?.longitude || defaultLocation.longitude,
@@ -82,19 +75,6 @@ const ArtistProfile = () => {
     longitudeDelta: 0.02,
   };
 
-  const [studio, setStudio] = useState<StudioItem[]>([
-    { title: "Studio", value: 1, selected: false },
-    { title: "Freelancer", value: 2, selected: false },
-    { title: "Home Artist", value: 3, selected: false },
-  ]);
-
-  const toggleStudio = (value: number) => {
-    const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
-    );
-
-    setStudio(updatedstudio);
-  };
   const profilePicture = useMemo(() => {
     const profileSmall = artist?.data?.profilePictureSmall;
     const profileDefault = artist?.data?.profilePicture;
@@ -107,20 +87,106 @@ const ArtistProfile = () => {
     return require("../../assets/images/Artist.png");
   }, [artist]);
 
-  const renderItem = ({ item }: { item: StudioItem }) => (
+  const publicationsTs = useTypesense();
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
+
+  useEffect(() => {
+    const fetchPublications = async () => {
+      try {
+        const response = await publicationsTs.search({
+          collection: "publications",
+          query: artistId,
+          queryBy: "userId",
+        });
+        setSearchResults(response || []);
+      } catch (error) {
+        console.error("Error fetching publications:", error);
+      }
+    };
+
+    fetchPublications();
+  }, [artistId]);
+
+  useEffect(() => {
+    if (!searchResults.length) {
+      setStyleFilters([]);
+      return;
+    }
+
+    const styleCountMap: Record<string, number> = {};
+    searchResults.forEach((doc) => {
+      if (Array.isArray(doc.document.styles)) {
+        doc.document.styles.forEach((style) => {
+          styleCountMap[style] = (styleCountMap[style] || 0) + 1;
+        });
+      }
+    });
+
+    const stylesArray: StyleItem[] = [
+      {
+        title: "All",
+        count: searchResults.length,
+        selected: true, // Default selection
+      },
+      ...Object.entries(styleCountMap).map(([title, count]) => ({
+        title,
+        count,
+        selected: false,
+      })),
+    ];
+
+    setStyleFilters(stylesArray);
+  }, [searchResults]);
+
+  const toggleStyleFilter = (title: string) => {
+    setStyleFilters((prevFilters) =>
+      prevFilters.map((item) => ({
+        ...item,
+        selected: item.title === title,
+      }))
+    );
+  };
+
+  const filteredResults = useMemo(() => {
+    const selectedFilter = styleFilters.find((item) => item.selected);
+    if (!selectedFilter || selectedFilter.title === "All") return searchResults;
+
+    return searchResults.filter(
+      (doc) =>
+        Array.isArray(doc.document.styles) &&
+        doc.document.styles.includes(selectedFilter.title)
+    );
+  }, [searchResults, styleFilters]);
+
+  const renderItem = ({ item }: { item: StyleItem }) => (
     <TouchableOpacity
-      key={item.value}
+      key={item.title}
       activeOpacity={1}
       style={{
         padding: 6,
+        paddingHorizontal: 12,
         borderRadius: 6,
         backgroundColor: item.selected ? "#DAB769" : "#262526",
+        flexDirection: "row",
+        alignItems: "center",
       }}
-      onPress={() => toggleStudio(item.value)} // Toggle selected state on press
+      onPress={() => toggleStyleFilter(item.title)}
     >
+      {item.title !== "All" && (
+        <Text
+          style={{
+            color: item.selected ? "#22221F" : "#A7A7A7",
+            marginLeft: 6,
+          }}
+        >
+          {item.count}
+        </Text>
+      )}
       <Text
         style={{
           color: item.selected ? "#22221F" : "#A7A7A7",
+          marginLeft: item.title !== "All" ? 4 : 0, // spacing adjustment
         }}
       >
         {item.title}
@@ -128,21 +194,12 @@ const ArtistProfile = () => {
     </TouchableOpacity>
   );
 
-  const publicationsTs = useTypesense();
-
-  useEffect(() => {
-    publicationsTs.search({
-      collection: "publications", // Your collection name
-      query: artistId, // You can adjust the query here
-      queryBy: "userId", // Modify according to your schema
-    });
-  }, []);
-
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
     >
+      {/* BottomSheets */}
       <LoggingInBottomSheet
         InsideComponent={
           <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
@@ -157,7 +214,6 @@ const ArtistProfile = () => {
           />
         }
       />
-
       <ReportSheet
         InsideComponent={
           <ReportBottomSheet
@@ -171,14 +227,18 @@ const ArtistProfile = () => {
 
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
-          <Image
-            style={styles.profilePicture}
-            source={profilePicture}
-            // source={require("../../assets/images/Artist.png")}
-          />
-          <View>
+          <Image style={styles.profilePicture} source={profilePicture} />
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-around",
+              height:"100%",
+              paddingVertical:5
+            }}
+          >
             <Text size="h3" weight="semibold" color="white">
-              {artist?.data?.name ? artist?.data?.name : ""}
+              {artist?.data?.name || ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {artist?.data?.studio === "studio"
@@ -188,14 +248,12 @@ const ArtistProfile = () => {
                 : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.city ? artist?.data?.city : ""}
+              {artist?.data?.city || ""}
             </Text>
           </View>
         </View>
         <TouchableOpacity
-          onPress={() => {
-            showShareSheet();
-          }}
+          onPress={showShareSheet}
           style={styles.moreIconContainer}
         >
           <Image
@@ -230,9 +288,7 @@ const ArtistProfile = () => {
           source={require("../../assets/images/favorite-white.png")}
         />
         <Text size="p" weight="normal" color="#FBF6FA">
-          {artist?.data?.followersCount
-            ? artist?.data?.followersCount
-            : "Not favourited yet"}
+          {artist?.data?.followersCount || "Not favourited yet"}
         </Text>
       </View>
       <View style={styles.tattooStylesRow}>
@@ -240,28 +296,25 @@ const ArtistProfile = () => {
           style={styles.icon}
           source={require("../../assets/images/draw.png")}
         />
-        {artist?.data?.tattooStyles?.map((item: any, idx: any) => {
-          return (
-            <View
-              key={idx}
-              style={{
-                backgroundColor: "#262526",
-                paddingHorizontal: 5,
-                paddingVertical: 2,
-                borderRadius: 6,
-              }}
-            >
-              <Text size="p" weight="normal" color="#D7D7C9">
-                {item}
-              </Text>
-            </View>
-          );
-        })}
+        {artist?.data?.tattooStyles?.map((item: any, idx: number) => (
+          <View
+            key={idx}
+            style={{
+              backgroundColor: "#262526",
+              paddingHorizontal: 5,
+              paddingVertical: 2,
+              borderRadius: 6,
+            }}
+          >
+            <Text size="p" weight="normal" color="#D7D7C9">
+              {item}
+            </Text>
+          </View>
+        ))}
       </View>
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content.slice(0, 100)}...`}{" "}
-          {/* Show a snippet or full content */}
+          {isExpanded ? content : `${content?.slice(0, 100)}...`}
         </Text>
       </Pressable>
 
@@ -269,11 +322,7 @@ const ArtistProfile = () => {
         <IconButton
           title="Favorite"
           icon={require("../../assets/images/favorite-black.png")}
-          iconStyle={{
-            height: 20,
-            width: 20,
-            resizeMode: "contain",
-          }}
+          iconStyle={{ height: 20, width: 20, resizeMode: "contain" }}
           variant="Secondary"
           onPress={() => {}}
         />
@@ -281,12 +330,12 @@ const ArtistProfile = () => {
           title="Message"
           icon={require("../../assets/images/message.png")}
           variant="Primary"
-          onPress={() => {
+          onPress={() =>
             router.push({
               pathname: "/artist/IndividualChat",
               params: { selectedArtistId: artistId },
-            });
-          }}
+            })
+          }
         />
       </View>
       {artist?.data?.latestReview ? (
@@ -305,12 +354,12 @@ const ArtistProfile = () => {
           Location
         </Text>
         <Text
-          size="medium"
+          size="large"
           weight="normal"
           color="#A7A7A7"
           style={{ marginBottom: 10 }}
         >
-          {artist?.data?.address ? artist?.data?.address : ""}
+          {artist?.data?.address || ""}
         </Text>
       </View>
       <View
@@ -322,26 +371,26 @@ const ArtistProfile = () => {
         }}
       >
         <MapView
-          provider={PROVIDER_GOOGLE}
           style={styles.map}
           mapType="terrain"
           region={region}
           zoomEnabled={false}
-        ></MapView>
+        />
       </View>
       <Text size="h4" weight="semibold" color="white" style={{ marginTop: 24 }}>
         Portfolio
       </Text>
       <View style={styles.stylesFilterRow}>
         <FlatList
-          data={studio}
+          data={styleFilters}
           renderItem={renderItem}
-          keyExtractor={(item) => item.value.toString()}
+          keyExtractor={(item) => item.title}
           horizontal={true}
           contentContainerStyle={{ gap: 10 }}
+          showsHorizontalScrollIndicator={false}
         />
       </View>
-      <ImageGallery images={publicationsTs.results}></ImageGallery>
+      <ImageGallery images={filteredResults} />
     </ScrollView>
   );
 };
@@ -354,13 +403,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 16,
     borderTopWidth: 0.33,
-    borderColor: "#2D2D2D",
+    borderColor: "#282828",
   },
   userProfileRow: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    height: 82,
   },
   pictureAndName: {
     display: "flex",

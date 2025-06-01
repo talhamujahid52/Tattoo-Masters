@@ -51,7 +51,7 @@ const useBottomSheet = () => {
         onDismiss={hide}
         onChange={handleSheetChanges}
         handleStyle={{
-          backgroundColor: "#000000",
+          backgroundColor: "#080808",
           borderTopLeftRadius: 15,
           borderTopRightRadius: 15,
         }}

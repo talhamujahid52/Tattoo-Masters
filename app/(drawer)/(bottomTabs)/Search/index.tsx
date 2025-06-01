@@ -42,7 +42,7 @@ const Search: React.FC = () => {
       const docs = hits.map((h: any) => h.document);
       dispatch(resetAllArtists());
       dispatch(
-        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
+        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data })))
       );
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -73,7 +73,7 @@ const Search: React.FC = () => {
   }, [isFocused, fadeAnim]);
 
   const recentSearches = useSelector(
-    (state: any) => state.recentSearches.items,
+    (state: any) => state.recentSearches.items
   );
 
   const onRecentPress = (term: { type: string; text: string }) => {
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 11,
     borderBottomWidth: 0.33,
-    borderColor: "#FFFFFF56",
+    borderBottomColor: "#2E2E2E",
   },
   overlay: {
     position: "absolute",

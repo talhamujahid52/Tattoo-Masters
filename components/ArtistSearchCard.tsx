@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   imageStyle: {
     width: "100%",
     height: 148,
-    borderRadius: 12,
+    borderRadius: 8,
     resizeMode: "cover",
   },
   greenOnlineDot: {

@@ -47,23 +47,22 @@ const ArtistProfileBottomSheet = ({
     <View style={styles.container}>
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
-          <Image style={styles.profilePicture} source={profilePicture} />
+          <TouchableOpacity
+            onPress={() => {
+              hideMapProfileBottomSheet();
+              router.push({
+                pathname: "/artist/ArtistProfile",
+                params: { artistId: currentlyViewingArtist?.id },
+              });
+            }}
+          >
+            <Image style={styles.profilePicture} source={profilePicture} />
+          </TouchableOpacity>
+
           <View>
-            <TouchableOpacity
-              onPress={() => {
-                hideMapProfileBottomSheet();
-                router.push({
-                  pathname: "/artist/ArtistProfile",
-                  params: { artistId: currentlyViewingArtist?.id },
-                });
-              }}
-            >
-              <Text size="h3" weight="semibold" color="white">
-                {currentlyViewingArtist?.name
-                  ? currentlyViewingArtist.name
-                  : ""}
-              </Text>
-            </TouchableOpacity>
+            <Text size="h3" weight="semibold" color="white">
+              {currentlyViewingArtist?.name ? currentlyViewingArtist.name : ""}
+            </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {currentlyViewingArtist?.studio === "studio"
                 ? currentlyViewingArtist?.studioName
@@ -144,10 +143,8 @@ export default ArtistProfileBottomSheet;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#080808",
     padding: 16,
-    borderTopWidth: 0.33,
-    borderColor: "#2D2D2D",
   },
   userProfileRow: {
     flexDirection: "row",
@@ -164,6 +161,9 @@ const styles = StyleSheet.create({
     width: 82,
     resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   icon: {
     height: 24,

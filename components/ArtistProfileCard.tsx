@@ -39,6 +39,14 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
           backgroundColor: "#202020",
         }}
       />
+      <Text
+        size="large"
+        weight="medium"
+        color="#FFFFFF"
+        style={{ marginTop: 8 }}
+      >
+        {artist.data.name ? artist.data.name : ""}
+      </Text>
       <View style={styles.RatingAndLocation}>
         {artist.data.rating && (
           <>
@@ -67,9 +75,6 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
           </Text>
         </View>
       </View>
-      <Text size="large" weight="medium" color="#FFFFFF">
-        {artist.data.name ? artist.data.name : ""}
-      </Text>
     </TouchableOpacity>
   );
 };
@@ -78,7 +83,7 @@ export default ArtistProfileCard;
 
 const styles = StyleSheet.create({
   RatingAndLocation: {
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 4,
     display: "flex",
     overflow: "hidden",

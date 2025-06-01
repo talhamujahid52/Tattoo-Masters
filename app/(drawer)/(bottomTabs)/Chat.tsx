@@ -36,12 +36,6 @@ const Chat = () => {
     return () => unsubscribe();
   }, []);
 
-  const onOnlineArtistClick = async (selectedArtistId: any) => {
-    router.push({
-      pathname: "/artist/IndividualChat",
-      params: { selectedArtistId },
-    });
-  };
 
   return (
     <View
@@ -61,55 +55,6 @@ const Chat = () => {
           onChangeText={(text) => setSearchText(text)}
           rightIcon={searchText !== "" && "cancel"}
           rightIconOnPress={() => setSearchText("")}
-        />
-      </View>
-      <Text
-        size="h4"
-        weight="semibold"
-        color="#a7a7a7"
-        style={{ marginVertical: 16 }}
-      >
-        Online Artists
-      </Text>
-      <View>
-        <FlatList
-          data={artists}
-          renderItem={({ item, index }) => (
-            <Pressable onPress={() => onOnlineArtistClick(item.id)}>
-              <View
-                style={{
-                  height: adjustedWidth / 4,
-                  width: adjustedWidth / 4,
-                  borderRadius: 50,
-                  overflow: "hidden",
-                }}
-              >
-                <Image
-                  style={{ width: "100%", height: "100%" }}
-                  source={{
-                    uri:
-                      item?.data?.profilePictureSmall ??
-                      item?.data?.profilePicture,
-                  }}
-                />
-              </View>
-              <Text
-                size="medium"
-                weight="normal"
-                color="#ffffff"
-                style={{
-                  width: adjustedWidth / 4,
-                  textAlign: "center",
-                  marginTop: 5,
-                }}
-              >
-                {item?.data?.name ? item?.data?.name : "Jasper Frost"}
-              </Text>
-            </Pressable>
-          )}
-          keyExtractor={(item) => item.id}
-          horizontal
-          contentContainerStyle={{ gap: 16 }}
         />
       </View>
       <Text

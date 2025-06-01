@@ -388,11 +388,12 @@ const FullScreenMapWithSearch: React.FC = () => {
                       : "https://lh3.googleusercontent.com/a/ACg8ocLJTuqJGXUSEPryOs9uSZWlMHe5YwjDWb_vRiYSJKm46KmQM-Sj=s96-c",
                   }}
                   style={{
-                    width: 60,
-                    height: 60,
+                    width: 48,
+                    height: 48,
                     borderRadius: 40,
-                    borderWidth: 2,
+                    borderWidth: 1,
                     borderColor: "#fff",
+                    backgroundColor: "#202020",
                   }}
                 />
               </Pressable>

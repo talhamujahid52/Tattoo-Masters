@@ -45,7 +45,14 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
               ? { uri: otherUserProfilePicture }
               : require("../assets/images/Artist.png")
           }
-          style={{ height: "100%", width: "100%", borderRadius: 50 }}
+          style={{
+            height: "100%",
+            width: "100%",
+            borderRadius: 50,
+            borderWidth: 1,
+            borderColor: "#333333",
+            backgroundColor: "#202020",
+          }}
           resizeMode="cover"
         />
       </View>
@@ -83,8 +90,8 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "center",
     alignSelf: "stretch",
-    borderBottomColor: "#FFFFFF4D",
-    borderBottomWidth: 1,
+    borderBottomColor: "#525252",
+    borderBottomWidth: 0.5,
   },
   row1: {
     justifyContent: "space-between",
