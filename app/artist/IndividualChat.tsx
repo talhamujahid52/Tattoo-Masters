@@ -22,6 +22,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 
 const IndividualChat: React.FC = () => {
+  const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatID, setChatID] = useState<any>();
   const [messageRecieverName, setMessageRecieverName] = useState("");
@@ -127,16 +128,17 @@ const IndividualChat: React.FC = () => {
 
   // Custom rendering functions
   const renderBubble = (props: any) => {
+    const isSent = props.position === "right";
+
     const getTime = (createdAt: any) => {
       if (!createdAt) return "";
 
-      // Handle both timestamp and date object cases
       const messageDate =
         typeof createdAt === "number"
           ? new Date(createdAt)
           : createdAt instanceof Date
-            ? createdAt
-            : new Date(createdAt);
+          ? createdAt
+          : new Date(createdAt);
 
       if (isNaN(messageDate.getTime())) return "";
 
@@ -153,13 +155,21 @@ const IndividualChat: React.FC = () => {
         wrapperStyle={{
           right: {
             backgroundColor: "#514D33",
-            padding: 5,
+            padding: 8,
             marginVertical: 3,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: 4,
           },
           left: {
             backgroundColor: "#292929",
-            padding: 5,
+            padding: 8,
             marginVertical: 3,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            borderBottomRightRadius: 16,
+            borderBottomLeftRadius: 4,
           },
         }}
         textStyle={{
@@ -170,103 +180,80 @@ const IndividualChat: React.FC = () => {
             color: "#FBF6FA",
           },
         }}
-        bottomContainerStyle={{
-          right: {
-            marginBottom: 4,
-            marginRight: 10,
-          },
-          left: {
-            marginBottom: 4,
-            marginLeft: 10,
-          },
-        }}
         renderTime={() => {
           const time = getTime(props.currentMessage.createdAt);
           return time ? (
-            <View
+            <Text
               style={{
-                marginLeft: 10,
-                marginRight: 10,
-                marginBottom: 5,
+                color: "#C1C1C1",
+                fontSize: 10,
+                textAlign: isSent ? "right" : "left",
+                marginTop: 4,
               }}
             >
-              <Text
-                style={{
-                  color: "#C1C1C1",
-                  fontSize: 10,
-                  textAlign: props.position === "right" ? "right" : "left",
-                }}
-              >
-                {time}
-              </Text>
-            </View>
+              {time}
+            </Text>
           ) : null;
         }}
       />
     );
   };
-
   const renderInputToolbar = (props: any) => {
-    return (
-      <InputToolbar
-        {...props}
-        containerStyle={{
-          backgroundColor: "#080808",
-        }}
-      />
-    );
-  };
+    const height = Math.min(Math.max(composerHeight + 8, 44), 100);
+    const isMultiline = height >= 52;
 
-  const renderComposer = (props: any) => {
     return (
-      <Composer
-        {...props}
-        textInputStyle={{
+      <View
+        style={{
           backgroundColor: "#303030",
-          color: "white",
-          borderRadius: 25,
-          overflow: "hidden",
-          marginLeft: 16,
-          minHeight: 44, // Increased minimum height
-          maxHeight: 100, // Maximum height before scrolling
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-        }}
-        textInputProps={{
-          cursorColor: "green",
-        }}
-        placeholderTextColor="#C1C1C1"
-        placeholder="Send Message"
-        multiline={true} // Explicitly enable multiline
-      />
-    );
-  };
-
-  const renderSend = (props: any) => {
-    return (
-      <Send
-        {...props}
-        containerStyle={{
-          width: 44,
-          height: 44,
-          display: "flex",
+          borderRadius: isMultiline ? 20 : 100,
           flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
+          alignItems: "flex-end",
+          height,
+          marginHorizontal: 8,
         }}
       >
-        <View
-          style={{
-            width: 32,
-            height: 32,
-          }}
-        >
-          <Image
-            style={{ height: "100%", width: "100%" }}
-            source={require("../../assets/images/sendMessage.png")}
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Composer
+            {...props}
+            placeholder="Send message"
+            placeholderTextColor="#C1C1C1"
+            textInputStyle={{
+              color: "white",
+              fontSize: 16,
+              backgroundColor: "transparent",
+              paddingLeft: 8,
+            }}
+            multiline
+            scrollEnabled={composerHeight >= 100}
+            textInputProps={{
+              selectionColor: "white",
+              showsVerticalScrollIndicator: false,
+            }}
+            onInputSizeChanged={(e) => {
+              setComposerHeight(e.height);
+            }}
           />
         </View>
-      </Send>
+
+        <Send
+          {...props}
+          containerStyle={{
+            width: 44,
+            height: 44,
+            alignItems: "center",
+            justifyContent: "center",
+            alignSelf: isMultiline ? "flex-end" : "center",
+          }}
+        >
+          <View style={{ width: 32, height: 32 }}>
+            <Image
+              style={{ height: "100%", width: "100%" }}
+              source={require("../../assets/images/sendMessage.png")}
+            />
+          </View>
+        </Send>
+      </View>
     );
   };
 
@@ -317,22 +304,20 @@ const IndividualChat: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <GiftedChat
-        messages={messages}
-        onSend={(newMessages) => onSend(newMessages)}
-        user={{
-          _id: loggedInUser.uid,
-        }}
-        renderBubble={renderBubble}
-        renderInputToolbar={renderInputToolbar}
-        renderComposer={renderComposer}
-        renderSend={renderSend}
-        scrollToBottom
-        dateFormat="MMM DD, YYYY"
-        messagesContainerStyle={{ paddingVertical: 20 }}
-        alwaysShowSend={true}
-        inverted={true}
-      />
+        <GiftedChat
+          messages={messages}
+          onSend={(newMessages) => onSend(newMessages)}
+          user={{
+            _id: loggedInUser.uid,
+          }}
+          renderBubble={renderBubble}
+          renderInputToolbar={renderInputToolbar}
+          scrollToBottom
+          dateFormat="MMM DD, YYYY"
+          renderAvatar={null}
+          alwaysShowSend={true}
+          inverted={true}
+        />
     </SafeAreaView>
   );
 };
