@@ -20,7 +20,7 @@ import {
 } from "react-native-gifted-chat";
 import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
-
+import uuid from "react-native-uuid";
 const IndividualChat: React.FC = () => {
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
@@ -74,11 +74,11 @@ const IndividualChat: React.FC = () => {
           if (artistChat?.exists) {
             setChatID(artistChat.id);
             setMessageRecieverName(
-              artistChat?.data()?.[selectedArtistId]?.name,
+              artistChat?.data()?.[selectedArtistId]?.name
             );
             setRecieverProfilePicture(
               artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
-                artistChat?.data()?.[selectedArtistId]?.profilePicture,
+                artistChat?.data()?.[selectedArtistId]?.profilePicture
             );
             const chatMessages = await fetchChatMessages(artistChat.id);
             setMessages(formatMessages(chatMessages));
@@ -86,7 +86,7 @@ const IndividualChat: React.FC = () => {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
               artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
-                artistChat?.data()?.[selectedArtistId]?.profilePicture,
+                artistChat?.data()?.[selectedArtistId]?.profilePicture
             );
           }
         } catch (error) {
@@ -120,10 +120,10 @@ const IndividualChat: React.FC = () => {
       }
       await addMessageToChat(newMessages, currentChatID);
       setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, newMessages),
+        GiftedChat.append(previousMessages, newMessages)
       );
     },
-    [chatID],
+    [chatID]
   );
 
   // Custom rendering functions
@@ -155,7 +155,6 @@ const IndividualChat: React.FC = () => {
         wrapperStyle={{
           right: {
             backgroundColor: "#514D33",
-            padding: 8,
             marginVertical: 3,
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
@@ -164,7 +163,6 @@ const IndividualChat: React.FC = () => {
           },
           left: {
             backgroundColor: "#292929",
-            padding: 8,
             marginVertical: 3,
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
@@ -172,9 +170,20 @@ const IndividualChat: React.FC = () => {
             borderBottomLeftRadius: 4,
           },
         }}
+        bottomContainerStyle={{
+          right: {
+            paddingHorizontal: 8,
+            paddingBottom: 8,
+          },
+          left: {
+            paddingHorizontal: 8,
+            paddingBottom: 8,
+          },
+        }}
         textStyle={{
           right: {
             color: "#FBF6FA",
+            textAlign: "right",
           },
           left: {
             color: "#FBF6FA",
@@ -296,7 +305,7 @@ const IndividualChat: React.FC = () => {
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={{ height: 31, width: 31 }}>
+        <TouchableOpacity style={{ height: 18, width: 18 }}>
           <Image
             source={require("../../assets/images/call.png")}
             style={{ height: "100%", width: "100%", resizeMode: "contain" }}
@@ -304,20 +313,20 @@ const IndividualChat: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-        <GiftedChat
-          messages={messages}
-          onSend={(newMessages) => onSend(newMessages)}
-          user={{
-            _id: loggedInUser.uid,
-          }}
-          renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar}
-          scrollToBottom
-          dateFormat="MMM DD, YYYY"
-          renderAvatar={null}
-          alwaysShowSend={true}
-          inverted={true}
-        />
+      <GiftedChat
+        messageIdGenerator={() => uuid.v4() as string}
+        messages={messages}
+        onSend={(newMessages) => onSend(newMessages)}
+        user={{
+          _id: loggedInUser.uid,
+        }}
+        renderBubble={renderBubble}
+        renderInputToolbar={renderInputToolbar}
+        dateFormat="MMM DD, YYYY"
+        renderAvatar={null}
+        alwaysShowSend={true}
+        inverted={true}
+      />
     </SafeAreaView>
   );
 };
@@ -332,8 +341,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 5,
     gap: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#2E2E2D",
+    borderBottomWidth: 0.33,
+    borderBottomColor: "#2D2D2D",
   },
   avatar: {
     width: 48,

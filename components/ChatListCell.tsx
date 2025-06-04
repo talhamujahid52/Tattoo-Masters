@@ -3,7 +3,6 @@ import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
-import { formatMessageDate } from "@/utils/helperFunctions";
 interface ChatListCellProps {
   chat: any;
 }
@@ -23,6 +22,31 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   const date = new Date(
     lastMessageTime.seconds * 1000 + lastMessageTime.nanoseconds / 1000000
   );
+
+  function formatMessageDate(dateString: string): string {
+    const messageDate = new Date(dateString);
+    const today = new Date();
+
+    // Zero out time parts
+    messageDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const msInDay = 1000 * 60 * 60 * 24;
+    const dayDiff = Math.round(
+      (today.getTime() - messageDate.getTime()) / msInDay
+    );
+
+    if (dayDiff === 0) return "Today";
+    if (dayDiff === 1) return "Yesterday";
+    if (dayDiff < 7) {
+      return messageDate.toLocaleDateString("en-US", { weekday: "long" }); // e.g. "Monday"
+    }
+
+    return messageDate.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    }); // e.g. "June 3"
+  }
 
   return (
     <TouchableOpacity
