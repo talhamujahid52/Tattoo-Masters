@@ -22,6 +22,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
 import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
+import useFollowArtist from "@/hooks/useFollowArtist";
+import { useSelector } from "react-redux";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface StudioItem {
   title: string;
@@ -59,6 +62,10 @@ const ArtistProfile = () => {
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
+
+  const userFirestore = useSelector((state: any) => state.user.userFirestore);
+  const { toggleFollow, isFollowing } = useFollowArtist();
+  const [isFollowingArtist, setIsFollowingArtist] = useState(false);
 
   const insets = useSafeAreaInsets();
   const defaultLocation = {
@@ -137,6 +144,26 @@ const ArtistProfile = () => {
       queryBy: "userId", // Modify according to your schema
     });
   }, []);
+
+  useEffect(() => {
+    if (artistId) {
+      setIsFollowingArtist(isFollowing(artistId) || false);
+    }
+  }, [artistId, isFollowing]);
+
+  const handleFollow = async () => {
+    if (!userFirestore) {
+      showLoggingInBottomSheet();
+      return;
+    }
+
+    try {
+      const newFollowState = await toggleFollow(artistId);
+      setIsFollowingArtist(newFollowState);
+    } catch (error) {
+      console.error("Error following artist:", error);
+    }
+  };
 
   return (
     <ScrollView
@@ -225,9 +252,10 @@ const ArtistProfile = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.artistFavoriteRow}>
-        <Image
-          style={styles.icon}
-          source={require("../../assets/images/favorite-white.png")}
+        <MaterialCommunityIcons
+          name="heart"
+          size={20}
+          color="#FBF6FA"
         />
         <Text size="p" weight="normal" color="#FBF6FA">
           {artist?.data?.followersCount ? artist?.data?.followersCount : 0}
@@ -258,22 +286,23 @@ const ArtistProfile = () => {
       </View>
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content.slice(0, 100)}...`}{" "}
+          {isExpanded ? content : `${content?.slice(0, 100)}...`}{" "}
           {/* Show a snippet or full content */}
         </Text>
       </Pressable>
 
       <View style={styles.buttonRow}>
         <IconButton
-          title="Favorite"
-          icon={require("../../assets/images/favorite-black.png")}
-          iconStyle={{
-            height: 20,
-            width: 20,
-            resizeMode: "contain",
-          }}
+          title={isFollowingArtist ? "Unfavorite" : "Favorite"}
+          icon={
+            <MaterialCommunityIcons
+              name={isFollowingArtist ? "heart" : "heart-outline"}
+              size={20}
+              color="#22221F"
+            />
+          }
           variant="Secondary"
-          onPress={() => {}}
+          onPress={handleFollow}
         />
         <IconButton
           title="Message"

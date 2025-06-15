@@ -31,7 +31,7 @@ const MyProfile = () => {
   const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
 
   const myId = loggedInUser?.uid;
@@ -56,7 +56,7 @@ const MyProfile = () => {
 
   const toggleStudio = (value: number) => {
     const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item
+      item.value === value ? { ...item, selected: !item.selected } : item,
     );
 
     setStudio(updatedstudio);
@@ -221,7 +221,7 @@ const MyProfile = () => {
       </Text> */}
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content.slice(0, 100)}...`}{" "}
+          {isExpanded ? content : `${content?.slice(0, 100)}...`}{" "}
           {/* Show a snippet or full content */}
         </Text>
       </Pressable>

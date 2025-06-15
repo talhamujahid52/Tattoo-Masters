@@ -8,7 +8,13 @@ const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
-  const artists = useSelector((state: any) => state.artist.allArtists);
+  const allArtists = useSelector((state: any) => state.artist.allArtists);
+  const userFirestore = useSelector((state: any) => state.user.userFirestore);
+
+  // Filter artists to only show favorited ones
+  const favoritedArtists = allArtists.filter((artist: any) =>
+    userFirestore?.followedArtists?.includes(artist.id)
+  );
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
@@ -20,31 +26,52 @@ const FavouriteArtists = () => {
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7">
-          8 Favourite Artists
+          {favoritedArtists.length} Favourite {favoritedArtists.length === 1 ? "Artist" : "Artists"}
         </Text>
       </View>
-      <FlatList
-        data={artists}
-        renderItem={({ item, index }) => (
-          <View
-            style={{
-              width: adjustedWidth / 3,
-              marginRight: index % 3 === 0 ? 5 : 0, // Right margin for the 1st column
-              marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
-            }}
-          >
-            <ArtistSearchCard artist={item} />
-          </View>
-        )}
-        keyExtractor={(item) => item.id}
-        numColumns={3}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 16 }}
-      />
+      {favoritedArtists.length > 0 ? (
+        <FlatList
+          data={favoritedArtists}
+          renderItem={({ item, index }) => (
+            <View
+              style={{
+                width: adjustedWidth / 3,
+                marginRight: index % 3 === 0 ? 5 : 0, // Right margin for the 1st column
+                marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
+              }}
+            >
+              <ArtistSearchCard artist={item} />
+            </View>
+          )}
+          keyExtractor={(item) => item.id}
+          numColumns={3}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 16 }}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text size="h4" weight="medium" color="#A7A7A7">
+            No Favourite Artists Yet
+          </Text>
+          <Text size="p" weight="normal" color="#A7A7A7" style={styles.emptyText}>
+            Artists you favorite will appear here
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
 
 export default FavouriteArtists;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  emptyText: {
+    textAlign: "center",
+  },
+});

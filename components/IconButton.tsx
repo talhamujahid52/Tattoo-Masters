@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  View,
 } from "react-native";
 import Text from "./Text";
 
@@ -22,6 +23,13 @@ const IconButton = ({
   variant,
   onPress,
 }: ButtonProps) => {
+  const renderIcon = () => {
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+    return <Image style={iconStyle ? iconStyle : styles.icon} source={icon} />;
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -30,7 +38,7 @@ const IconButton = ({
         { backgroundColor: variant === "Primary" ? "#262526" : "#DAB769" },
       ]}
     >
-      <Image style={iconStyle ? iconStyle : styles.icon} source={icon} />
+      {renderIcon()}
       <Text
         size="h4"
         weight="medium"

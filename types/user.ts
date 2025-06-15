@@ -36,6 +36,7 @@ export interface UserFirestore {
   studioName: string;
   tattooStyles: string[];
   uid: string;
+  followersCount?: number;
 }
 
 export interface LocationData {
