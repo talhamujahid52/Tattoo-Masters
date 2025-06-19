@@ -39,7 +39,7 @@ const AddTattoo = () => {
 
   const toggleTattooStyles = (value: number) => {
     const updatedTattooStyles = tattooStyles.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+      item.value === value ? { ...item, selected: !item.selected } : item
     );
     setTattooStyles(updatedTattooStyles);
   };
@@ -129,7 +129,7 @@ const AddTattoo = () => {
           multiline
           value={caption}
           style={styles.textArea}
-          maxLength={200}
+          maxLength={500}
           onChangeText={(text) => {
             setCaption(text);
           }}
@@ -140,7 +140,7 @@ const AddTattoo = () => {
           color="#A7A7A7"
           style={{ textAlign: "right", marginTop: 4 }}
         >
-          {caption.length} / 200
+          {caption.length} / 500
         </Text>
       </View>
 

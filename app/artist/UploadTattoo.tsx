@@ -115,7 +115,7 @@ const UploadTattoo = () => {
         multiline
         value={caption}
         style={styles.textArea}
-        maxLength={200}
+        maxLength={500}
         onChangeText={setCaption}
       />
       <Text
@@ -124,7 +124,7 @@ const UploadTattoo = () => {
         color="#A7A7A7"
         style={{ textAlign: "right", marginTop: 4 }}
       >
-        {caption.length} / 200
+        {caption.length} / 500
       </Text>
 
       <Text

@@ -19,19 +19,25 @@ import { FormContext } from "../context/FormContext";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
+import firestore from "@react-native-firebase/firestore";
+import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
+import useBottomSheet from "@/hooks/useBottomSheet";
 
 const Step1: React.FC = () => {
+  const {
+    BottomSheet: TattooStylesSheet,
+    show: showTattooStylesSheet,
+    hide: hideTattooStylesSheet,
+  } = useBottomSheet();
   const { formData, setFormData } = useContext(FormContext)!;
+  const [tattooStyles, setTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
     { label: "Homeartist", value: "homeArtist" },
   ];
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", selected: false },
-    { title: "Geometric", selected: false },
-    { title: "Black and White", selected: false },
-  ]);
 
   const defaultLocation = {
     latitude: 33.664286,
@@ -56,6 +62,31 @@ const Step1: React.FC = () => {
       }));
     }
   }, [loggedInUserFirestore, formData.name, setFormData]);
+
+  useEffect(() => {
+    const fetchTattooStyles = async () => {
+      try {
+        const doc = await firestore()
+          .collection("Configurations")
+          .doc("TattooStyles")
+          .get();
+
+        const data = doc.data();
+        if (data?.styles && Array.isArray(data.styles)) {
+          // Ensure "selected" is set to false
+          const formattedStyles = data.styles.map((style: any) => ({
+            title: style.title,
+            selected: false,
+          }));
+          setTattooStyles(formattedStyles);
+        }
+      } catch (error) {
+        console.error("Error fetching tattoo styles:", error);
+      }
+    };
+
+    fetchTattooStyles();
+  }, []);
 
   const localImage = useMemo(() => {
     return {
@@ -108,6 +139,14 @@ const Step1: React.FC = () => {
     setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
   };
 
+  const setSelectedTattooStyles = (
+    updatedStyles: { title: string; selected: boolean }[]
+  ) => {
+    setTattooStyles(updatedStyles);
+    const selected = updatedStyles.filter((item) => item.selected);
+    setFormData((prev) => ({ ...prev, tattooStyles: selected }));
+  };
+
   useEffect(() => {
     setRegion({
       latitude: formData.location?.latitude || defaultLocation.latitude,
@@ -119,6 +158,15 @@ const Step1: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <TattooStylesSheet
+        InsideComponent={
+          <StylesBottomSheet
+            tattooStyles={tattooStyles}
+            setSelectedTattooStyles={setSelectedTattooStyles}
+            hideTattooStylesSheet={hideTattooStylesSheet}
+          />
+        }
+      />
       <View style={styles.profilePictureRow}>
         <Image style={styles.profilePicture} source={localImage} />
         <TouchableOpacity onPress={handleProfilePictureSelection}>
@@ -239,7 +287,7 @@ const Step1: React.FC = () => {
             Styles
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {tattooStyles.map((item, idx) => (
+            {tattooStyles.slice(0, 6).map((item, idx) => (
               <TouchableOpacity
                 key={idx}
                 activeOpacity={1}
@@ -259,6 +307,29 @@ const Step1: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             ))}
+            {tattooStyles.length > 6 && (
+              <TouchableOpacity
+                onPress={() => {
+                  showTattooStylesSheet();
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 6,
+                }}
+              >
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {"See More"}
+                </Text>
+                <View style={{ width: 24, height: 24 }}>
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../assets/images/arrow_down.png")}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View style={{ marginTop: 16, marginBottom: 16 }}>

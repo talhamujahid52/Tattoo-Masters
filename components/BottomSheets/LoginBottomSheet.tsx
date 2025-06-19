@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     alignItems: "center",
     paddingHorizontal: 16,
-    backgroundColor: "#000000",
+    backgroundColor: "#080808",
   },
   Logo: {
     height: 165,

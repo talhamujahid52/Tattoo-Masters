@@ -197,7 +197,6 @@ const IndividualChat: React.FC = () => {
                 color: "#C1C1C1",
                 fontSize: 10,
                 textAlign: isSent ? "right" : "left",
-                marginTop: 4,
               }}
             >
               {time}

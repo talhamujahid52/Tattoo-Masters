@@ -185,7 +185,7 @@ const AppNavigator = () => {
             name="artist/AddTattoo"
             options={{
               headerShown: true,
-              headerTitle: "Add Tattoo",
+              headerTitle: "Add tattoo",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -197,7 +197,7 @@ const AppNavigator = () => {
             name="artist/UploadTattoo"
             options={{
               headerShown: true,
-              headerTitle: "Add Tattoo",
+              headerTitle: "Add tattoo",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

@@ -43,7 +43,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     }
 
     return messageDate.toLocaleDateString("en-US", {
-      month: "long",
+      month: "short",
       day: "numeric",
     }); // e.g. "June 3"
   }

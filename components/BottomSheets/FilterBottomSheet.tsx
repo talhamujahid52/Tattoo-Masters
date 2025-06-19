@@ -317,7 +317,7 @@ export default FilterBottomSheet;
  *  Styles unchanged except tiny helper
  *  ────────────────────────── */
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#000" },
+  container: { backgroundColor: "#080808" },
   titleRow: {
     height: 46,
     flexDirection: "row",

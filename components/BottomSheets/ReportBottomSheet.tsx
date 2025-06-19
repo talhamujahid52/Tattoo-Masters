@@ -126,7 +126,7 @@ export default ReportBottomSheet;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#000",
+    backgroundColor: "#080808",
     paddingBottom: 20,
   },
   drawerItem: {
