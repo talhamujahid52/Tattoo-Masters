@@ -73,7 +73,7 @@ const CreateReviewPassword = () => {
       const updatedUser = await getUpdatedUser(currentUserId);
       dispatch(setUserFirestoreData(updatedUser));
       console.log("profile updated successfully");
-      router.push("/artist/ShareProfile");
+      router.push("/artist/SubscriptionInfo");
     } catch (error) {
       console.log("error", error);
     } finally {
@@ -120,7 +120,7 @@ const CreateReviewPassword = () => {
         color="#FBF6FA"
         style={{ marginVertical: 16 }}
       >
-        Last Step
+        Last step
       </Text>
       <Text color="#A7A7A7" style={styles.descriptionText}>
         In order to get reviewed on Tattoo Masters{"\n"} your clients must enter
@@ -154,22 +154,29 @@ const CreateReviewPassword = () => {
         )}
         <Input
           inputMode="password"
-          placeholder="Create Review Password"
+          placeholder="Create review password"
           value={reviewPassword}
           onChangeText={setReviewPassword}
         />
         <Input
           inputMode="password"
-          placeholder="Confirm Review Password"
+          placeholder="Confirm review password"
           value={confirmReviewPassword}
           onChangeText={setConfirmReviewPassword}
         />
         <Button
           loading={loading}
-          title="Create Account"
+          title="Create account"
           onPress={() => {
             handleCreateAccount();
           }}
+        />
+        <Button
+          title="Back"
+          onPress={() => {
+            router.back();
+          }}
+          variant="secondary"
         />
       </View>
     </KeyboardAwareScrollView>
@@ -208,8 +215,8 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   warningIcon: {
-    height: 20,
-    width: 20,
+    height: 24,
+    width: 24,
     marginRight: 16,
   },
   inputSection: {

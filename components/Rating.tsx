@@ -27,18 +27,22 @@ const Rating: React.FC<RatingProps> = ({
           display: "flex",
           flexDirection: "row",
           justifyContent: "center",
-          columnGap: 8,
+          gap: 12,
           marginTop: 10,
         }}
       >
         {Array(5)
           .fill(0)
           .map((_, idx) => {
+            const source =
+              idx < (selectedStar ?? -1)
+                ? require("../assets/images/yellowStar.png")
+                : require("../assets/images/greyStar.png");
             const tintColor =
               idx < (selectedStar ?? -1) ? "#DAB769" : "#2D2D2D"; // Use the selectedStar prop to determine color
             return (
               <TouchableOpacity
-                style={{ height: 42, width: 42 }}
+                style={{ height: 29, width: 30 }}
                 key={idx}
                 onPress={() => {
                   handleStarPress(idx + 1);
@@ -48,9 +52,9 @@ const Rating: React.FC<RatingProps> = ({
                   style={{
                     width: "100%",
                     height: "100%",
-                    tintColor: tintColor,
+                    resizeMode: "contain",
                   }}
-                  source={require("../assets/images/star.png")}
+                  source={source}
                 />
               </TouchableOpacity>
             );

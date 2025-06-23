@@ -104,8 +104,19 @@ const PublishReview = () => {
           });
         }
       }
-
-      router.back();
+      Alert.alert("Success", "Your review has been published successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            // router.replace({
+            //   pathname: "/artist/ArtistProfile",
+            //   params: { artistId: artistId },
+            // });
+            router.back();
+            router.back();
+          },
+        },
+      ]);
     } catch (err) {
       console.error("Error publishing review:", err);
       Alert.alert(
@@ -192,7 +203,7 @@ const PublishReview = () => {
             loading ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              "Publish Review"
+              "Publish review"
             )
           }
           onPress={handlePublishReview}

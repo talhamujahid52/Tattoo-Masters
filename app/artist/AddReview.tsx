@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -15,6 +15,11 @@ import Rating from "@/components/Rating";
 import Button from "@/components/Button";
 import { useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
+import StylesBottomSheet from "@/components/BottomSheets/StylesBottomSheet";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Input from "@/components/Input";
+import firestore from "@react-native-firebase/firestore";
+import useBottomSheet from "@/hooks/useBottomSheet";
 
 const AddReview = () => {
   const insets = useSafeAreaInsets();
@@ -39,23 +44,30 @@ const AddReview = () => {
   const [tattooAsImagined, setTattooAsImagined] = useState<number>(0);
   const [feedback, setFeedback] = useState("");
   const [attachment, setAttachment] = useState<string | null>("");
+  const [hashtags, setHashtags] = useState<string>("");
 
   // Tattoo styles state and toggling function
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", value: 1, selected: false },
-    { title: "Geometric", value: 2, selected: false },
-    { title: "Black and White", value: 3, selected: false },
-    { title: "Tribal", value: 4, selected: false },
-    { title: "Geometric", value: 5, selected: false },
-    { title: "Black and White", value: 6, selected: false },
-  ]);
+  const [tattooStyles, setTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
+  const [selectedTattooStyles, setSelectedTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
 
-  const toggleTattooStyles = (value: number) => {
-    setTattooStyles((prevState) =>
-      prevState.map((item) =>
-        item.value === value ? { ...item, selected: !item.selected } : item
-      )
+  const toggleTattooStyles = (tattooStyle: {
+    title: string;
+    selected: boolean;
+  }) => {
+    const updatedTattooStyles = tattooStyles.map((item) =>
+      item.title === tattooStyle.title
+        ? { ...item, selected: !item.selected }
+        : item
     );
+    setTattooStyles(updatedTattooStyles);
+    const selectedTattooStyles = updatedTattooStyles.filter(
+      (item) => item.selected
+    );
+    setSelectedTattooStyles(selectedTattooStyles);
   };
 
   // Handle image selection
@@ -75,14 +87,64 @@ const AddReview = () => {
     qualityOfTattoo > 0 &&
     tattooAsImagined > 0 &&
     feedback.trim().length > 0 &&
-    attachment;
+    attachment &&
+    hashtags &&
+    selectedTattooStyles.length > 0;
+
+  const {
+    BottomSheet: TattooStylesSheet,
+    show: showTattooStylesSheet,
+    hide: hideTattooStylesSheet,
+  } = useBottomSheet();
+
+  useEffect(() => {
+    const fetchTattooStyles = async () => {
+      try {
+        const doc = await firestore()
+          .collection("Configurations")
+          .doc("TattooStyles")
+          .get();
+
+        const data = doc.data();
+        if (data?.styles && Array.isArray(data.styles)) {
+          // Ensure "selected" is set to false
+          const formattedStyles = data.styles.map((style: any) => ({
+            title: style.title,
+            selected: false,
+          }));
+          setTattooStyles(formattedStyles);
+        }
+      } catch (error) {
+        console.error("Error fetching tattoo styles:", error);
+      }
+    };
+
+    fetchTattooStyles();
+  }, []);
+
+  const setSelectedTattooStylesinBottomSheet = (
+    updatedStyles: { title: string; selected: boolean }[]
+  ) => {
+    setTattooStyles(updatedStyles);
+    const selected = updatedStyles.filter((item) => item.selected);
+    setSelectedTattooStyles(selected);
+  };
 
   // Render content
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={[styles.container, { marginBottom: insets.bottom + 16 }]}
       contentContainerStyle={styles.scrollViewContent}
     >
+      <TattooStylesSheet
+        InsideComponent={
+          <StylesBottomSheet
+            tattooStyles={tattooStyles}
+            setSelectedTattooStyles={setSelectedTattooStylesinBottomSheet}
+            hideTattooStylesSheet={hideTattooStylesSheet}
+          />
+        }
+      />
       {/* Artist Profile Section */}
       <View style={styles.artistProfileTile}>
         <Image style={styles.profilePicture} source={profilePicture} />
@@ -180,21 +242,42 @@ const AddReview = () => {
         </TouchableOpacity>
       </View>
 
+      <View>
+        <Text
+          size="h4"
+          weight="semibold"
+          color="#A7A7A7"
+          style={{ marginBottom: 16 }}
+        >
+          Tags
+        </Text>
+        <Input
+          placeholder="# Enter tags"
+          value={hashtags}
+          onChangeText={(text) => {
+            setHashtags(text);
+          }}
+        ></Input>
+      </View>
+
       {/* Styles Section */}
       <View>
         <Text size="h4" weight="semibold" color="#A7A7A7">
-          Styles
+          Styles{" "}
+          {selectedTattooStyles?.length > 0
+            ? "(" + selectedTattooStyles?.length + " selected)"
+            : ""}
         </Text>
         <View style={styles.stylesRow}>
-          {tattooStyles.map((item) => (
+          {tattooStyles.slice(0, 6).map((item, idx) => (
             <TouchableOpacity
-              key={item.value}
+              key={idx}
               activeOpacity={1}
               style={[
                 styles.styleButton,
                 { backgroundColor: item.selected ? "#DAB769" : "#22221F" },
               ]}
-              onPress={() => toggleTattooStyles(item.value)}
+              onPress={() => toggleTattooStyles(item)}
             >
               <Text
                 size="p"
@@ -205,6 +288,29 @@ const AddReview = () => {
               </Text>
             </TouchableOpacity>
           ))}
+          {tattooStyles.length > 6 && (
+            <TouchableOpacity
+              onPress={() => {
+                showTattooStylesSheet();
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 6,
+              }}
+            >
+              <Text size="p" weight="normal" color="#FBF6FA">
+                {"See More"}
+              </Text>
+              <View style={{ width: 24, height: 24 }}>
+                <Image
+                  style={{ width: "100%", height: "100%" }}
+                  source={require("../../assets/images/arrow_down.png")}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -227,7 +333,7 @@ const AddReview = () => {
           });
         }}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

@@ -4,7 +4,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { SplashScreen, Stack, useRouter } from "expo-router";
+import { SplashScreen, Stack, useRouter, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, Image } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -15,6 +15,7 @@ const AppNavigator = () => {
   const [initializing, setInitializing] = useState(true);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
   const router = useRouter();
+  const pathname = usePathname();
   console.log("updating...");
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
@@ -49,8 +50,9 @@ const AppNavigator = () => {
     if (initializing) {
       return;
     }
-
-    router.replace("/(bottomTabs)/Home");
+    if (pathname !== "/Home") {
+      router.replace("/(bottomTabs)/Home");
+    }
   }, [userId, initializing]);
 
   if (initializing) {
@@ -325,6 +327,18 @@ const AppNavigator = () => {
                   />
                 </TouchableOpacity>
               ),
+            }}
+          />
+          <Stack.Screen
+            name="artist/SubscriptionInfo"
+            options={{
+              headerShown: false,
+              headerTitle: "Register as artist",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
             }}
           />
           <Stack.Screen

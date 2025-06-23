@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import Text from "@/components/Text";
 import React, { useMemo } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { Dimensions } from "react-native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,6 +20,7 @@ import { resetUser } from "@/redux/slices/userSlice";
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const CustomDrawerContent = () => {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -384,6 +386,7 @@ const CustomDrawerContent = () => {
             onPress={async () => {
               await auth().signOut();
               dispatch(resetUser());
+              navigation.dispatch(DrawerActions.toggleDrawer())
             }}
             style={styles.logoutButton}
           >

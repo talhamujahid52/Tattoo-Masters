@@ -78,7 +78,7 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
         size="profileName"
         weight="semibold"
         color="#FBF6FA"
-        style={{ marginBottom: 8 }}
+        style={{ marginBottom: 8, textAlign: "center" }}
       >
         Let's{" "}
         <Text size="profileName" weight="semibold" color="#CEAC61">

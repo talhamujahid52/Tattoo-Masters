@@ -16,7 +16,7 @@ import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtist
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
-import MapView from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
@@ -194,6 +194,62 @@ const ArtistProfile = () => {
     </TouchableOpacity>
   );
 
+  const googleDarkModeStyle = [
+    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+    {
+      featureType: "administrative.country",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#4b6878" }],
+    },
+    {
+      featureType: "administrative.land_parcel",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#64779e" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#6f9ba5" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "geometry.fill",
+      stylers: [{ color: "#023e58" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#3C7680" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry",
+      stylers: [{ color: "#304a7d" }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#0e1626" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#4e6d70" }],
+    },
+  ];
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
@@ -233,8 +289,8 @@ const ArtistProfile = () => {
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-around",
-              height:"100%",
-              paddingVertical:5
+              height: "100%",
+              paddingVertical: 5,
             }}
           >
             <Text size="h3" weight="semibold" color="white">
@@ -263,24 +319,30 @@ const ArtistProfile = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.userSocialsRow}>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/facebook_2.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/instagram.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/twitter.png")}
-          />
-        </TouchableOpacity>
+        {artist?.data?.facebookProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/facebook_2.png")}
+            />
+          </TouchableOpacity>
+        )}
+        {artist?.data?.instagramProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/instagram.png")}
+            />
+          </TouchableOpacity>
+        )}
+        {artist?.data?.twitterProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/twitter.png")}
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.artistFavoriteRow}>
         <Image
@@ -371,8 +433,11 @@ const ArtistProfile = () => {
         }}
       >
         <MapView
+          provider={PROVIDER_GOOGLE}
+          customMapStyle={googleDarkModeStyle}
+          scrollEnabled={false}
           style={styles.map}
-          mapType="terrain"
+          mapType="standard"
           region={region}
           zoomEnabled={false}
         />
