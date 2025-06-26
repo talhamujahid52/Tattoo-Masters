@@ -32,6 +32,9 @@ type FormData = {
   images: ImageObject[];
   reviewPassword: string;
   followersCount: number;
+  facebookProfile: string;
+  instagramProfile: string;
+  twitterProfile: string;
 };
 
 type FormContextType = {
@@ -67,6 +70,9 @@ const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
     ],
     reviewPassword: "",
     followersCount: 0,
+    facebookProfile: "",
+    instagramProfile: "",
+    twitterProfile: "",
   });
 
   const [step, setStep] = useState<number>(1);

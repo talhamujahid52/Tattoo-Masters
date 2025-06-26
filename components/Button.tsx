@@ -14,6 +14,7 @@ interface ButtonProps {
   onPress?: (event: GestureResponderEvent) => void;
   loading?: boolean;
   disabled?: boolean;
+  variant?: "primary" | "secondary";
 }
 
 const Button = ({
@@ -21,7 +22,10 @@ const Button = ({
   onPress,
   loading,
   disabled,
+  variant = "primary",
 }: ButtonProps) => {
+  const isPrimary = variant === "primary";
+
   const colorList = [
     { offset: "0%", color: "#FFD982", opacity: "1" },
     { offset: "100%", color: "#927639", opacity: "1" },
@@ -31,23 +35,32 @@ const Button = ({
     <TouchableOpacity
       disabled={disabled}
       onPress={onPress}
-      style={styles.button}
+      style={[styles.button, !isPrimary && styles.secondaryButton]}
     >
-      <View style={[styles.gradientContainer, disabled && styles.disabled]}>
-        <RadialGradient
-          x="53.8%" // Center position (horizontal)
-          y="50%" // Center position (vertical)
-          rx="46.2%" // Horizontal radius
-          ry="307.19%" // Vertical radius
-          colorList={!disabled ? colorList : []}
-        />
-      </View>
+      {isPrimary && (
+        <View style={styles.gradientContainer}>
+          <RadialGradient
+            x="53.8%"
+            y="50%"
+            rx="46.2%"
+            ry="307.19%"
+            colorList={colorList}
+          />
+        </View>
+      )}
+
       {loading ? (
-        <ActivityIndicator color={"black"} />
-      ) : (
-        <Text size="h4" weight="semibold">
+        <ActivityIndicator color={isPrimary ? "black" : "white"} />
+      ) : typeof title === "string" ? (
+        <Text
+          size="h4"
+          weight="semibold"
+          color={isPrimary ? "#22221F" : "#A7A7A7"}
+        >
           {title}
         </Text>
+      ) : (
+        title
       )}
     </TouchableOpacity>
   );
@@ -61,6 +74,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
+    position: "relative",
   },
   gradientContainer: {
     position: "absolute",
@@ -71,8 +85,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: "#927639",
   },
-  disabled: {
-    // backgroundColor: "grey",
+  secondaryButton: {
+    backgroundColor: "#444444",
   },
 });
 

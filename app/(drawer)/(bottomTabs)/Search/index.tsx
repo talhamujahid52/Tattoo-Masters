@@ -8,6 +8,9 @@ import {
   SafeAreaView,
   Animated,
   Keyboard,
+  Image,
+  TextInput,
+  Platform,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -16,14 +19,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { router } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
-import { addSearch } from "@/redux/slices/recentSearchesSlice";
+import { addSearch, clearSearches } from "@/redux/slices/recentSearchesSlice";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
+import { Ionicons } from "@expo/vector-icons";
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef<TextInput>(null);
 
   const dispatch = useDispatch();
   const artistsTs = useTypesense();
@@ -42,7 +47,7 @@ const Search: React.FC = () => {
       const docs = hits.map((h: any) => h.document);
       dispatch(resetAllArtists());
       dispatch(
-        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
+        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data })))
       );
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -73,7 +78,7 @@ const Search: React.FC = () => {
   }, [isFocused, fadeAnim]);
 
   const recentSearches = useSelector(
-    (state: any) => state.recentSearches.items,
+    (state: any) => state.recentSearches.items
   );
 
   const onRecentPress = (term: { type: string; text: string }) => {
@@ -90,33 +95,79 @@ const Search: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
         <View style={styles.inputHeaderContainer}>
-          <Input
-            style={{ flex: 1 }}
-            value={searchText}
-            returnKeyLabel="Search"
-            returnKeyType="search"
-            onSubmitEditing={() => {
-              router.push({
-                pathname: "/(bottomTabs)/Search/SearchAll",
-                params: { query: searchText, type: "artists" },
-              });
-
-              dispatch(addSearch({ text: searchText, type: "artists" }));
-              setSearchText("");
+          <TouchableOpacity
+            onPress={() => {
+              if (isFocused) {
+                setIsFocused(false);
+                if (searchInputRef.current) {
+                  searchInputRef.current.blur();
+                }
+              } else {
+                router.back();
+              }
             }}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            inputMode="text"
-            placeholder="Search for artists and studios"
-            leftIcon="search"
-            rightIcon={searchText ? "cancel" : undefined}
-            rightIconOnPress={() => setSearchText("")}
-            onChangeText={setSearchText}
-          />
+          >
+            {Platform.OS === "android" && (
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            )}
+            {Platform.OS === "ios" && (
+              <Image
+                style={{ width: 24, height: 24, resizeMode: "contain" }}
+                source={require("../../../../assets/images/iosBackIcon.png")}
+              />
+            )}
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Input
+              value={searchText}
+              returnKeyLabel="Search"
+              returnKeyType="search"
+              onSubmitEditing={() => {
+                router.push({
+                  pathname: "/(bottomTabs)/Search/SearchAll",
+                  params: { query: searchText, type: "artists" },
+                });
+
+                dispatch(addSearch({ text: searchText, type: "artists" }));
+                setSearchText("");
+              }}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              inputMode="text"
+              placeholder="Search for artists and studios"
+              leftIcon="search"
+              rightIcon={searchText ? "cancel" : undefined}
+              rightIconOnPress={() => setSearchText("")}
+              onChangeText={setSearchText}
+              ref={searchInputRef}
+            />
+          </View>
         </View>
 
         {showOverlay && (
           <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 16,
+              }}
+            >
+              <Text size="p" weight="semibold" color="#B1AFA4">
+                Recent searches
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  dispatch(clearSearches());
+                }}
+              >
+                <Text size="p" weight="normal" color="#DAB769">
+                  Clear all
+                </Text>
+              </TouchableOpacity>
+            </View>
             <KeyboardAwareFlatList
               data={recentSearches}
               keyExtractor={(item, i) => `${item}-${i}`}
@@ -125,12 +176,21 @@ const Search: React.FC = () => {
                   style={styles.recentItem}
                   onPress={() => onRecentPress(item)}
                 >
+                  <Image
+                    style={{
+                      width: 16,
+                      height: 16,
+                      resizeMode: "contain",
+                      marginRight: 10,
+                    }}
+                    source={require("../../../../assets/images/historyIcon.png")}
+                  />
                   <Text style={{ color: "#fff" }} size="p">
                     {item.text}
                   </Text>
                 </TouchableOpacity>
               )}
-              ItemSeparatorComponent={() => <View style={styles.sep} />}
+              // ItemSeparatorComponent={() => <View style={styles.sep} />}
               keyboardShouldPersistTaps="handled"
             />
           </Animated.View>
@@ -191,7 +251,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 11,
     borderBottomWidth: 0.33,
-    borderColor: "#FFFFFF56",
+    borderBottomColor: "#2E2E2E",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
   overlay: {
     position: "absolute",
@@ -201,10 +265,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.7)",
     paddingHorizontal: 16,
-    paddingTop: 8,
     zIndex: 1,
   },
   recentItem: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
   },
   sep: {

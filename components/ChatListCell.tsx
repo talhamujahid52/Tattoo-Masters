@@ -3,7 +3,6 @@ import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
-import { formatMessageDate } from "@/utils/helperFunctions";
 interface ChatListCellProps {
   chat: any;
 }
@@ -23,6 +22,31 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   const date = new Date(
     lastMessageTime.seconds * 1000 + lastMessageTime.nanoseconds / 1000000
   );
+
+  function formatMessageDate(dateString: string): string {
+    const messageDate = new Date(dateString);
+    const today = new Date();
+
+    // Zero out time parts
+    messageDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const msInDay = 1000 * 60 * 60 * 24;
+    const dayDiff = Math.round(
+      (today.getTime() - messageDate.getTime()) / msInDay
+    );
+
+    if (dayDiff === 0) return "Today";
+    if (dayDiff === 1) return "Yesterday";
+    if (dayDiff < 7) {
+      return messageDate.toLocaleDateString("en-US", { weekday: "long" }); // e.g. "Monday"
+    }
+
+    return messageDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }); // e.g. "June 3"
+  }
 
   return (
     <TouchableOpacity
@@ -45,14 +69,21 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
               ? { uri: otherUserProfilePicture }
               : require("../assets/images/Artist.png")
           }
-          style={{ height: "100%", width: "100%", borderRadius: 50 }}
+          style={{
+            height: "100%",
+            width: "100%",
+            borderRadius: 50,
+            borderWidth: 1,
+            borderColor: "#333333",
+            backgroundColor: "#202020",
+          }}
           resizeMode="cover"
         />
       </View>
       <View style={styles.messageContainer}>
         <View style={styles.row1}>
           <Text size="p" weight="semibold" color="#ffffff">
-            {otherUserName ? otherUserName : "Jasper Frost"}
+            {otherUserName ? otherUserName : ""}
           </Text>
           <Text size="p" weight="normal" color="#B2B2B2">
             {date ? formatMessageDate(date) : ""}
@@ -83,8 +114,8 @@ const styles = StyleSheet.create({
     gap: 4,
     justifyContent: "center",
     alignSelf: "stretch",
-    borderBottomColor: "#FFFFFF4D",
-    borderBottomWidth: 1,
+    borderBottomColor: "#525252",
+    borderBottomWidth: 0.5,
   },
   row1: {
     justifyContent: "space-between",

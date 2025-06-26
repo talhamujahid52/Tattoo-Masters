@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import Text from "@/components/Text";
 import React, { useMemo } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { Dimensions } from "react-native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,14 +20,15 @@ import { resetUser } from "@/redux/slices/userSlice";
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const CustomDrawerContent = () => {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const profileImage = useMemo(() => {
     return {
@@ -54,16 +56,22 @@ const CustomDrawerContent = () => {
           marginBottom: 16,
         }}
       >
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: 30,
+          }}
+        >
           <TouchableOpacity
             onPress={() => {
               router.back();
             }}
-            style={{ height: 30, width: 30 }}
           >
             <Image
-              style={{ height: 13, width: 20 }}
-              source={require("../../assets/images/back-arrow.png")}
+              style={{ height: 15, width: 16 }}
+              source={require("../../assets/images/android_back_arrow.png")}
             />
           </TouchableOpacity>
           <Text weight="medium" size="h4" color="white">
@@ -112,10 +120,16 @@ const CustomDrawerContent = () => {
                 source={require("../../assets/images/rightArrow.png")}
               />
             </TouchableOpacity>
-            <View style={styles.seprator}></View>
+            <View
+              style={[styles.seprator, { backgroundColor: "#473E2B" }]}
+            ></View>
             <View style={styles.artistFavoriteRow}>
               <Image
-                style={styles.icon}
+                style={{
+                  height: 14.5,
+                  width: 16,
+                  resizeMode: "contain",
+                }}
                 source={require("../../assets/images/favorite.png")}
               />
               {loggedInUserFirestore?.followersCount ? (
@@ -123,14 +137,9 @@ const CustomDrawerContent = () => {
                   {loggedInUserFirestore?.followersCount}
                 </Text>
               ) : (
-                <View
-                  style={{
-                    height: 11,
-                    width: 31,
-                    borderRadius: 6,
-                    backgroundColor: "#A7A7A7",
-                  }}
-                ></View>
+                <Text size="p" weight="normal" color="#A7A7A7">
+                  0
+                </Text>
               )}
             </View>
           </View>
@@ -302,17 +311,47 @@ const CustomDrawerContent = () => {
         <View style={styles.registerArtistContainer}>
           {!isArtist && (
             <TouchableOpacity
+              style={{ height: 132 }}
               onPress={() => {
                 router.push({
                   pathname: "/artist/RegisterArtist",
                 });
               }}
             >
-              {/* Register as an artist */}
-              <Image
-                style={styles.registerArtist}
-                source={require("../../assets/images/registerartist.png")}
-              />
+              <View style={{ position: "relative" }}>
+                <Image
+                  style={styles.registerArtist}
+                  source={require("../../assets/images/registerArtistBackground.png")}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                  }}
+                >
+                  <Text weight="semibold" color="#FBF6FA">
+                    Register as an artist
+                  </Text>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text weight="semibold" color="#A7A7A7" style={{ flex: 1 }}>
+                      Get registered as an artist and become{"\n"}a Tattoo
+                      Master for customers to find.
+                    </Text>
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/rightArrow.png")}
+                    />
+                  </View>
+                </View>
+              </View>
             </TouchableOpacity>
           )}
           <View style={styles.TermsOfServiceContainer}>
@@ -347,6 +386,7 @@ const CustomDrawerContent = () => {
             onPress={async () => {
               await auth().signOut();
               dispatch(resetUser());
+              navigation.dispatch(DrawerActions.toggleDrawer())
             }}
             style={styles.logoutButton}
           >
@@ -448,7 +488,7 @@ const styles = StyleSheet.create({
     marginTop: "20%",
   },
   registerArtist: {
-    height: 132,
+    height: "100%",
     width: "100%",
     resizeMode: "contain",
   },

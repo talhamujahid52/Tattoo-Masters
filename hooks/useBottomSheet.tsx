@@ -5,6 +5,7 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
+import { ScrollView, View, StyleSheet } from "react-native";
 
 // Custom hook to manage the BottomSheet visibility and content
 const useBottomSheet = () => {
@@ -24,10 +25,9 @@ const useBottomSheet = () => {
         hide();
       }
     },
-    [hide],
+    [hide]
   );
 
-  // Custom backdrop that darkens the screen and closes on press
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -38,7 +38,18 @@ const useBottomSheet = () => {
         pressBehavior="close"
       />
     ),
-    [],
+    []
+  );
+
+  const renderHandle = useCallback(
+    () => (
+      <View style={styles.handleWrapper}>
+        <View style={styles.handleInner}>
+          <View style={styles.handleIndicator} />
+        </View>
+      </View>
+    ),
+    []
   );
 
   const BottomSheet = useCallback(
@@ -46,23 +57,43 @@ const useBottomSheet = () => {
       <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
-        backdropComponent={renderBackdrop} // ← add this
+        backdropComponent={renderBackdrop}
         onDismiss={hide}
         onChange={handleSheetChanges}
-        handleStyle={{
-          backgroundColor: "#000000",
-          borderTopLeftRadius: 15,
-          borderTopRightRadius: 15,
-        }}
-        handleIndicatorStyle={{ backgroundColor: "#838383" }}
+        handleComponent={renderHandle}
       >
-        <BottomSheetView>{InsideComponent}</BottomSheetView>
+        <BottomSheetView style={{ backgroundColor: "#080808" }}>
+          <ScrollView>{InsideComponent}</ScrollView>
+        </BottomSheetView>
       </BottomSheetModal>
     ),
-    [hide, handleSheetChanges, renderBackdrop],
+    [hide, handleSheetChanges, renderBackdrop]
   );
 
   return { BottomSheet, show, hide };
 };
+
+const styles = StyleSheet.create({
+  handleWrapper: {
+    paddingTop: 2,
+    backgroundColor: "#2D2D2D", // border color
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    overflow: "hidden",
+  },
+  handleInner: {
+    backgroundColor: "#080808",
+    borderTopLeftRadius: 13,
+    borderTopRightRadius: 13,
+    alignItems: "center",
+    padding: 10,
+  },
+  handleIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#838383",
+    borderRadius: 2,
+  },
+});
 
 export default useBottomSheet;

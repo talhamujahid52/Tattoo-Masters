@@ -11,7 +11,6 @@ export const useSignInWithGoogle = () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo: any = await GoogleSignin.signIn();
-      console.log("User Info : ", userInfo);
 
       const idToken: string = userInfo.data.idToken as string;
       let userCredential;
@@ -19,7 +18,7 @@ export const useSignInWithGoogle = () => {
         const accessToken: string = userInfo.accessToken as string;
         const googleCredential = auth.GoogleAuthProvider.credential(
           null,
-          accessToken
+          accessToken,
         );
         userCredential = await auth().signInWithCredential(googleCredential);
       } else {
@@ -57,7 +56,7 @@ export const useSignInWithGoogle = () => {
       dispatch(setUser(userDoc.data()));
 
       console.log("User signed in and data saved to Firestore!");
-    //   return userData;
+      //   return userData;
     } catch (error) {
       alert(error);
       console.log("Google Sign-In error:", error);

@@ -60,9 +60,9 @@ const Login = () => {
 
       // Check if the email is verified
       if (user.emailVerified) {
-        router.push({
-          pathname: "/(bottomTabs)/Home",
-        });
+        // router.push({
+        //   pathname: "/(bottomTabs)/Home",
+        // });
         dispatch(setUser(userDoc.data()));
         console.log("User signed in!");
       } else {

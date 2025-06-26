@@ -68,6 +68,63 @@ const step3: React.FC = () => {
       </Text>
     </View>
   );
+
+  const googleDarkModeStyle = [
+    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+    {
+      featureType: "administrative.country",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#4b6878" }],
+    },
+    {
+      featureType: "administrative.land_parcel",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#64779e" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#6f9ba5" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "geometry.fill",
+      stylers: [{ color: "#023e58" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#3C7680" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry",
+      stylers: [{ color: "#304a7d" }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#0e1626" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#4e6d70" }],
+    },
+  ];
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.pictureAndName}>
@@ -89,24 +146,30 @@ const step3: React.FC = () => {
         </View>
       </View>
       <View style={styles.userSocialsRow}>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/facebook_2.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/instagram.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/twitter.png")}
-          />
-        </TouchableOpacity>
+        {formData?.facebookProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/facebook_2.png")}
+            />
+          </TouchableOpacity>
+        )}
+        {formData?.instagramProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/instagram.png")}
+            />
+          </TouchableOpacity>
+        )}
+        {formData?.twitterProfile && (
+          <TouchableOpacity>
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/twitter.png")}
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.artistFavoriteRow}>
         <Image
@@ -171,7 +234,8 @@ const step3: React.FC = () => {
           <MapView
             provider={PROVIDER_GOOGLE}
             style={styles.map}
-            mapType="terrain"
+            customMapStyle={googleDarkModeStyle}
+            mapType="standard"
             region={region}
             scrollEnabled={false}
             zoomEnabled={false}

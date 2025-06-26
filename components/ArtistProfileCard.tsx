@@ -39,16 +39,30 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
           backgroundColor: "#202020",
         }}
       />
+      <Text
+        size="large"
+        weight="medium"
+        color="#FFFFFF"
+        style={{ marginTop: 8 }}
+      >
+        {artist.data.name ? artist.data.name : ""}
+      </Text>
       <View style={styles.RatingAndLocation}>
-        <Image
-          source={require("../assets/images/star.png")}
-          style={{ height: 16, width: 16, resizeMode: "contain" }}
-        />
-        <Text size="small" weight="normal" color="#FBF6FA">
-          {artist.data.rating ? Number(artist.data.rating).toFixed(1) : "4.8"} (
-          {artist.data?.reviewsCount ? artist.data?.reviewsCount : "5"})
-        </Text>
-        <View style={styles.SeparatorDot}></View>
+        {artist.data.rating && (
+          <>
+            <Image
+              source={require("../assets/images/star.png")}
+              style={{ height: 16, width: 16, resizeMode: "contain" }}
+            />
+            <Text size="small" weight="normal" color="#FBF6FA">
+              {artist.data.rating ? Number(artist.data.rating).toFixed(1) : ""}
+              {artist.data?.reviewsCount
+                ? ` (${artist.data?.reviewsCount})`
+                : ""}
+            </Text>
+            <View style={styles.SeparatorDot}></View>
+          </>
+        )}
         <View style={{ flex: 1 }}>
           <Text
             size="small"
@@ -57,13 +71,10 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {artist.data.city ? artist.data.city : "Phuket"}
+            {artist.data.city ? artist.data.city : ""}
           </Text>
         </View>
       </View>
-      <Text size="large" weight="medium" color="#FFFFFF">
-        {artist.data.name ? artist.data.name : "Martin Luis"}
-      </Text>
     </TouchableOpacity>
   );
 };
@@ -72,7 +83,7 @@ export default ArtistProfileCard;
 
 const styles = StyleSheet.create({
   RatingAndLocation: {
-    marginTop: 8,
+    marginTop: 4,
     marginBottom: 4,
     display: "flex",
     overflow: "hidden",

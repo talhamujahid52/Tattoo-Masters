@@ -61,7 +61,7 @@ const App = () => {
         </View>
         <View style={{ width: "80%", rowGap: 4 }}>
           <Text size="h4" weight="normal" color="#FBF6FA">
-            Leave Feedback
+            Leave feedback
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             Help us improve the app by sharing your valuable feedback.

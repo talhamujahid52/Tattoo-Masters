@@ -40,11 +40,11 @@ const CONSTANT_TATTOO_STYLES: TattooStyle[] = [
 
 const EditProfile = () => {
   const loggedInUserAuth: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const dispatch = useDispatch();
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const currentUserId = loggedInUserAuth?.uid;
   // Convert the Firebase tattooStyles (array of strings) into our object format.
@@ -54,7 +54,7 @@ const EditProfile = () => {
       selected: loggedInUser?.tattooStyles
         ? loggedInUser.tattooStyles.includes(style.title)
         : false,
-    }),
+    })
   );
 
   const [formData, setFormData] = useState({
@@ -86,7 +86,7 @@ const EditProfile = () => {
     setFormData((prev) => ({
       ...prev,
       tattooStyles: prev.tattooStyles.map((item: TattooStyle) =>
-        item.value === value ? { ...item, selected: !item.selected } : item,
+        item.value === value ? { ...item, selected: !item.selected } : item
       ),
     }));
   };
@@ -124,8 +124,8 @@ const EditProfile = () => {
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error("Profile picture update timed out!")),
-        TIMEOUT_MS,
-      ),
+        TIMEOUT_MS
+      )
     );
 
     try {
@@ -152,7 +152,7 @@ const EditProfile = () => {
       const firebaseTattooStyles = formData.tattooStyles
         .filter(
           (style: { selected: boolean; title: string; value: number }) =>
-            style.selected,
+            style.selected
         )
         .map((style: { title: string }) => style.title);
 
@@ -164,7 +164,7 @@ const EditProfile = () => {
             ...formData,
             tattooStyles: firebaseTattooStyles,
           },
-          { merge: true },
+          { merge: true }
         );
       if (newImage?.uri) {
         await handleProfilePictureChange(newImage.uri);
@@ -197,9 +197,65 @@ const EditProfile = () => {
             setNewImage(asset);
           }
         }
-      },
+      }
     );
   };
+
+  const googleDarkModeStyle = [
+    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+    {
+      featureType: "administrative.country",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#4b6878" }],
+    },
+    {
+      featureType: "administrative.land_parcel",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#64779e" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#6f9ba5" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "geometry.fill",
+      stylers: [{ color: "#023e58" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#3C7680" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry",
+      stylers: [{ color: "#304a7d" }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#0e1626" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#4e6d70" }],
+    },
+  ];
 
   return (
     <ScrollView style={styles.container}>
@@ -273,6 +329,28 @@ const EditProfile = () => {
         >
           Pin your exact location
         </Text>
+        {!formData.showCityOnly && (
+          <TouchableOpacity
+            onPress={() => {
+              router.push({ pathname: "/artist/SearchLocation" });
+            }}
+            style={{
+              height: 130,
+              borderRadius: 20,
+              overflow: "hidden",
+              marginTop: 8,
+              marginBottom: 16,
+            }}
+          >
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={styles.map}
+              customMapStyle={googleDarkModeStyle}
+              mapType="standard"
+              region={region}
+            />
+          </TouchableOpacity>
+        )}
         <View
           style={{
             flexDirection: "row",
@@ -296,27 +374,6 @@ const EditProfile = () => {
             value={formData.showCityOnly}
           />
         </View>
-        {!formData.showCityOnly && (
-          <TouchableOpacity
-            onPress={() => {
-              router.push({ pathname: "/artist/SearchLocation" });
-            }}
-            style={{
-              height: 130,
-              borderRadius: 20,
-              overflow: "hidden",
-              marginTop: 8,
-              marginBottom: 16,
-            }}
-          >
-            <MapView
-              provider={PROVIDER_GOOGLE}
-              style={styles.map}
-              mapType="terrain"
-              region={region}
-            />
-          </TouchableOpacity>
-        )}
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles
@@ -360,7 +417,7 @@ const EditProfile = () => {
             multiline
             value={formData.aboutYou}
             style={styles.textArea}
-            maxLength={100}
+            maxLength={500}
             onChangeText={(text) =>
               setFormData((prev) => ({ ...prev, aboutYou: text }))
             }
@@ -371,7 +428,7 @@ const EditProfile = () => {
             color="#A7A7A7"
             style={{ textAlign: "right", marginTop: 4 }}
           >
-            {formData.aboutYou.length} / 100
+            {formData.aboutYou.length} / 500
           </Text>
         </View>
         <View style={{ marginBottom: 70 }}>

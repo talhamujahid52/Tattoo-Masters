@@ -7,7 +7,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
@@ -21,9 +21,9 @@ import { UserFirestore } from "@/types/user";
 import useTypesense from "@/hooks/useTypesense";
 import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 
-interface StudioItem {
+interface StyleItem {
   title: string;
-  value: number;
+  count: number;
   selected: boolean;
 }
 
@@ -40,6 +40,9 @@ const MyProfile = () => {
   console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
+
   const content =
     loggedInUser?.aboutYou ||
     "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
@@ -48,34 +51,43 @@ const MyProfile = () => {
     setIsExpanded(!isExpanded); // Toggle the state
   };
 
-  const [studio, setStudio] = useState<StudioItem[]>([
-    { title: "Studio", value: 1, selected: false },
-    { title: "Freelancer", value: 2, selected: false },
-    { title: "Home Artist", value: 3, selected: false },
-  ]);
-
-  const toggleStudio = (value: number) => {
-    const updatedstudio = studio.map((item) =>
-      item.value === value ? { ...item, selected: !item.selected } : item,
+  const toggleStyleFilter = (title: string) => {
+    setStyleFilters((prevFilters) =>
+      prevFilters.map((item) => ({
+        ...item,
+        selected: item.title === title,
+      }))
     );
-
-    setStudio(updatedstudio);
   };
 
-  const renderItem = ({ item }: { item: StudioItem }) => (
+  const renderItem = ({ item }: { item: StyleItem }) => (
     <TouchableOpacity
-      key={item.value}
+      key={item.title}
       activeOpacity={1}
       style={{
         padding: 6,
+        paddingHorizontal: 12,
         borderRadius: 6,
         backgroundColor: item.selected ? "#DAB769" : "#262526",
+        flexDirection: "row",
+        alignItems: "center",
       }}
-      onPress={() => toggleStudio(item.value)} // Toggle selected state on press
+      onPress={() => toggleStyleFilter(item.title)}
     >
+      {item.title !== "All" && (
+        <Text
+          style={{
+            color: item.selected ? "#22221F" : "#A7A7A7",
+            marginLeft: 6,
+          }}
+        >
+          {item.count}
+        </Text>
+      )}
       <Text
         style={{
           color: item.selected ? "#22221F" : "#A7A7A7",
+          marginLeft: item.title !== "All" ? 4 : 0, // spacing adjustment
         }}
       >
         {item.title}
@@ -85,34 +97,64 @@ const MyProfile = () => {
 
   const publicationsTs = useTypesense();
 
-  const handleFetchPublications = async () => {
-    try {
-      // Triggering the publication search when the button is clicked
-      const hits = await publicationsTs.search({
-        collection: "publications", // Your collection name
-        query: myId, // You can adjust the query here
-        queryBy: "userId", // Modify according to your schema
-      });
+  useEffect(() => {
+    const fetchPublications = async () => {
+      try {
+        const response = await publicationsTs.search({
+          collection: "publications",
+          query: myId,
+          queryBy: "userId",
+        });
+        setSearchResults(response || []);
+      } catch (error) {
+        console.error("Error fetching publications:", error);
+      }
+    };
 
-      // Update the state with the fetched publications (assuming it's stored in a state)
-      console.log("Fetched Publications: ", hits);
-
-      // Set the fetched publications to a state to display
-      // Assuming publications state is defined below
-      // setPublications(hits);
-    } catch (err) {
-      console.error("Error fetching publications:", err);
-    }
-  };
+    fetchPublications();
+  }, [myId]);
 
   useEffect(() => {
-    publicationsTs.search({
-      collection: "publications", // Your collection name
-      query: myId, // You can adjust the query here
-      queryBy: "userId", // Modify according to your schema
+    if (!searchResults.length) {
+      setStyleFilters([]);
+      return;
+    }
+
+    const styleCountMap: Record<string, number> = {};
+    searchResults.forEach((doc) => {
+      if (Array.isArray(doc.document.styles)) {
+        doc.document.styles.forEach((style) => {
+          styleCountMap[style] = (styleCountMap[style] || 0) + 1;
+        });
+      }
     });
-    // handleFetchPublications();
-  }, []);
+
+    const stylesArray: StyleItem[] = [
+      {
+        title: "All",
+        count: searchResults.length,
+        selected: true, // Default selection
+      },
+      ...Object.entries(styleCountMap).map(([title, count]) => ({
+        title,
+        count,
+        selected: false,
+      })),
+    ];
+
+    setStyleFilters(stylesArray);
+  }, [searchResults]);
+
+  const filteredResults = useMemo(() => {
+    const selectedFilter = styleFilters.find((item) => item.selected);
+    if (!selectedFilter || selectedFilter.title === "All") return searchResults;
+
+    return searchResults.filter(
+      (doc) =>
+        Array.isArray(doc.document.styles) &&
+        doc.document.styles.includes(selectedFilter.title)
+    );
+  }, [searchResults, styleFilters]);
 
   return (
     <ScrollView style={styles.container}>
@@ -246,20 +288,22 @@ const MyProfile = () => {
         />
       </View>
       {loggedInUser?.latestReview ? (
-        <ReviewOnProfile isMyProfile={true} />
+        <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
       ) : (
         <ReviewOnProfileBlur />
       )}
       <View style={styles.stylesFilterRow}>
         <FlatList
-          data={studio}
+          data={styleFilters}
           renderItem={renderItem}
-          keyExtractor={(item) => item.value.toString()}
+          keyExtractor={(item) => item.title}
           horizontal={true}
           contentContainerStyle={{ gap: 10 }}
         />
       </View>
-      <ImageGallery images={publicationsTs.results}></ImageGallery>
+      <View style={{ paddingBottom: 60 }}>
+        <ImageGallery images={filteredResults}></ImageGallery>
+      </View>
     </ScrollView>
   );
 };

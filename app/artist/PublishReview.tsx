@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Text from "@/components/Text";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Review from "@/components/Review";
 import Button from "@/components/Button";
 import { router, useLocalSearchParams } from "expo-router";
@@ -22,6 +22,18 @@ const PublishReview = () => {
   const artist = useGetArtist(artistId);
   const currentUserId = firebase?.auth()?.currentUser?.uid;
   const [loading, setLoading] = useState(false);
+
+  const profilePicture = useMemo(() => {
+    const profileSmall = artist?.data?.profilePictureSmall;
+    const profileDefault = artist?.data?.profilePicture;
+    if (profileSmall) {
+      return { uri: profileSmall };
+    } else if (artist?.data?.profilePicture) {
+      return { uri: profileDefault };
+    }
+
+    return require("../../assets/images/Artist.png");
+  }, [artistId]);
 
   const handlePublishReview = async () => {
     setLoading(true);
@@ -92,8 +104,19 @@ const PublishReview = () => {
           });
         }
       }
-
-      router.back();
+      Alert.alert("Success", "Your review has been published successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            // router.replace({
+            //   pathname: "/artist/ArtistProfile",
+            //   params: { artistId: artistId },
+            // });
+            router.back();
+            router.back();
+          },
+        },
+      ]);
     } catch (err) {
       console.error("Error publishing review:", err);
       Alert.alert(
@@ -111,20 +134,17 @@ const PublishReview = () => {
   return (
     <View style={styles.container}>
       <View style={styles.artistProfileTile}>
-        <Image
-          style={styles.profilePicture}
-          source={
-            artist?.data?.profilePicture
-              ? { uri: artist?.data?.profilePicture }
-              : require("../../assets/images/Artist.png")
-          }
-        />
+        <Image style={styles.profilePicture} source={profilePicture} />
         <View>
           <Text size="h3" weight="semibold" color="white">
-            {artist?.data?.name || "Martin Luis"}
+            {artist?.data?.name ? artist?.data?.name : ""}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
-            {artist?.data?.studio?.name || "Luis Arts Studio"}
+            {artist?.data?.studio === "studio"
+              ? artist?.data?.studioName
+              : artist?.data?.studio === "freelancer"
+              ? "Freelancer"
+              : "HomeArtist"}
           </Text>
           <Text
             size="p"
@@ -132,7 +152,7 @@ const PublishReview = () => {
             color="#A7A7A7"
             style={{ width: "70%" }}
           >
-            {artist?.data?.city || "Phuket, Thailand"}
+            {artist?.data?.city ? artist?.data?.city : ""}
           </Text>
         </View>
       </View>
@@ -183,7 +203,7 @@ const PublishReview = () => {
             loading ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              "Publish Review"
+              "Publish review"
             )
           }
           onPress={handlePublishReview}
@@ -201,6 +221,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     justifyContent: "space-between",
+    backgroundColor: "#080808",
+    borderTopColor: "#282828",
+    borderTopWidth: 1,
   },
   artistProfileTile: {
     flexDirection: "row",
@@ -213,7 +236,7 @@ const styles = StyleSheet.create({
   profilePicture: {
     height: 82,
     width: 82,
-    resizeMode: "contain",
+    resizeMode: "cover",
     borderRadius: 50,
     borderWidth: 1,
     borderColor: "#333333",

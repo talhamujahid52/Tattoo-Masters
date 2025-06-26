@@ -4,6 +4,7 @@ import Text from "./Text";
 import { router } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ShareReviewPasswordBottomSheet from "./BottomSheets/ShareReviewPasswordBottomSheet";
+import ShareReviewPasswordNote from "./BottomSheets/ShareReviewPasswordNote";
 import useGetArtist from "@/hooks/useGetArtist";
 import { formatDistanceToNow } from "date-fns";
 import firestore from "@react-native-firebase/firestore";
@@ -22,6 +23,13 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
     show,
     hide: hideShareReviewPasswordBottomSheet,
   } = useBottomSheet();
+
+  const {
+    BottomSheet: ReviewPasswordNoteBottomSheet,
+    show: showReviewPasswordNoteBottomSheet,
+    hide: hideReviewPasswordNoteBottomSheet,
+  } = useBottomSheet();
+
   const artist = useGetArtist(ArtistId);
 
   const artistRating = artist?.data?.rating;
@@ -88,16 +96,27 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
           />
         }
       />
+      <ReviewPasswordNoteBottomSheet
+        InsideComponent={<ShareReviewPasswordNote />}
+      />
       <View style={styles.container}>
         <View style={styles.topRow}>
           <View style={styles.midRow}>
             <Text size="profileName" weight="semibold" color="#FBF6FA">
               Reviews
             </Text>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/help.png")}
-            />
+            {isMyProfile && (
+              <TouchableOpacity
+                onPress={() => {
+                  showReviewPasswordNoteBottomSheet();
+                }}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../assets/images/help.png")}
+                />
+              </TouchableOpacity>
+            )}
           </View>
           {isMyProfile ? (
             <TouchableOpacity

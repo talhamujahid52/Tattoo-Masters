@@ -61,7 +61,7 @@ export default ShareProfileBottomSheet;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#000",
+    backgroundColor: "#080808",
     paddingHorizontal: 16,
     paddingBottom: 20,
   },

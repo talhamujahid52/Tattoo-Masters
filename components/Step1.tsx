@@ -19,19 +19,25 @@ import { FormContext } from "../context/FormContext";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
+import firestore from "@react-native-firebase/firestore";
+import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
+import useBottomSheet from "@/hooks/useBottomSheet";
 
 const Step1: React.FC = () => {
+  const {
+    BottomSheet: TattooStylesSheet,
+    show: showTattooStylesSheet,
+    hide: hideTattooStylesSheet,
+  } = useBottomSheet();
   const { formData, setFormData } = useContext(FormContext)!;
+  const [tattooStyles, setTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
     { label: "Homeartist", value: "homeArtist" },
   ];
-  const [tattooStyles, setTattooStyles] = useState([
-    { title: "Tribal", selected: false },
-    { title: "Geometric", selected: false },
-    { title: "Black and White", selected: false },
-  ]);
 
   const defaultLocation = {
     latitude: 33.664286,
@@ -41,21 +47,68 @@ const Step1: React.FC = () => {
   };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
 
   // Prepopulate the full name field if it is not already set.
   useEffect(() => {
-    if (loggedInUserFirestore?.name && !formData.name && formData.name !== "") {
+    if (loggedInUserFirestore?.name && formData?.name == "") {
       setFormData((prev) => ({
         ...prev,
         name: loggedInUserFirestore.name,
       }));
     }
-  }, [loggedInUserFirestore, formData.name, setFormData]);
+
+    // Set profile picture if not already set
+    if (
+      !formData.profilePicture &&
+      (loggedInUserFirestore?.profilePictureSmall ||
+        loggedInUserFirestore?.profilePicture ||
+        loggedInUser?.photoURL)
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture:
+          loggedInUserFirestore?.profilePictureSmall ??
+          loggedInUserFirestore?.profilePicture ??
+          loggedInUser?.photoURL,
+      }));
+    }
+  }, [
+    loggedInUserFirestore,
+    loggedInUser,
+    formData.name,
+    formData.profilePicture,
+    setFormData,
+  ]);
+
+  useEffect(() => {
+    const fetchTattooStyles = async () => {
+      try {
+        const doc = await firestore()
+          .collection("Configurations")
+          .doc("TattooStyles")
+          .get();
+
+        const data = doc.data();
+        if (data?.styles && Array.isArray(data.styles)) {
+          // Ensure "selected" is set to false
+          const formattedStyles = data.styles.map((style: any) => ({
+            title: style.title,
+            selected: false,
+          }));
+          setTattooStyles(formattedStyles);
+        }
+      } catch (error) {
+        console.error("Error fetching tattoo styles:", error);
+      }
+    };
+
+    fetchTattooStyles();
+  }, []);
 
   const localImage = useMemo(() => {
     return {
@@ -99,13 +152,21 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item,
+        : item
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected,
+      (item) => item.selected
     );
     setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
+  };
+
+  const setSelectedTattooStyles = (
+    updatedStyles: { title: string; selected: boolean }[]
+  ) => {
+    setTattooStyles(updatedStyles);
+    const selected = updatedStyles.filter((item) => item.selected);
+    setFormData((prev) => ({ ...prev, tattooStyles: selected }));
   };
 
   useEffect(() => {
@@ -117,8 +178,73 @@ const Step1: React.FC = () => {
     });
   }, [formData.location]);
 
+  const googleDarkModeStyle = [
+    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+    {
+      featureType: "administrative.country",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#4b6878" }],
+    },
+    {
+      featureType: "administrative.land_parcel",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#64779e" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#6f9ba5" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "geometry.fill",
+      stylers: [{ color: "#023e58" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#3C7680" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry",
+      stylers: [{ color: "#304a7d" }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#98a5be" }],
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#0e1626" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#4e6d70" }],
+    },
+  ];
+
   return (
     <ScrollView style={styles.container}>
+      <TattooStylesSheet
+        InsideComponent={
+          <StylesBottomSheet
+            tattooStyles={tattooStyles}
+            setSelectedTattooStyles={setSelectedTattooStyles}
+            hideTattooStylesSheet={hideTattooStylesSheet}
+          />
+        }
+      />
       <View style={styles.profilePictureRow}>
         <Image style={styles.profilePicture} source={localImage} />
         <TouchableOpacity onPress={handleProfilePictureSelection}>
@@ -203,8 +329,10 @@ const Step1: React.FC = () => {
             <MapView
               provider={PROVIDER_GOOGLE}
               style={styles.map}
-              mapType="terrain"
+              mapType="standard"
+              customMapStyle={googleDarkModeStyle}
               region={region}
+              scrollEnabled={false}
             >
               {/* <Marker coordinate={region} title="Location" />  */}
             </MapView>
@@ -236,10 +364,13 @@ const Step1: React.FC = () => {
         </View>
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
-            Styles
+            Styles{" "}
+            {formData?.tattooStyles?.length > 0
+              ? "(" + formData?.tattooStyles?.length + " selected)"
+              : ""}
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {tattooStyles.map((item, idx) => (
+            {tattooStyles.slice(0, 6).map((item, idx) => (
               <TouchableOpacity
                 key={idx}
                 activeOpacity={1}
@@ -259,6 +390,29 @@ const Step1: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             ))}
+            {tattooStyles.length > 6 && (
+              <TouchableOpacity
+                onPress={() => {
+                  showTattooStylesSheet();
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 6,
+                }}
+              >
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {"See More"}
+                </Text>
+                <View style={{ width: 24, height: 24 }}>
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../assets/images/arrow_down.png")}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View style={{ marginTop: 16, marginBottom: 16 }}>
@@ -303,7 +457,32 @@ const Step1: React.FC = () => {
               marginBottom: 24,
             }}
           >
-            <ConnectSocialMediaButton
+            <Input
+              inputMode="text"
+              placeholder="Facebook profile"
+              value={formData.facebookProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, facebookProfile: text }))
+              }
+            />
+            <Input
+              inputMode="text"
+              placeholder="Instagram profile"
+              value={formData.instagramProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, instagramProfiel: text }))
+              }
+            />
+            <Input
+              inputMode="text"
+              placeholder="Twitter profile"
+              value={formData.twitterProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, twitterProfile: text }))
+              }
+            />
+
+            {/* <ConnectSocialMediaButton
               title="Facebook Connected"
               icon={require("../assets/images/facebook_2.png")}
               onConnect={() => {
@@ -313,8 +492,8 @@ const Step1: React.FC = () => {
                 alert("This Functionality is not Available.");
               }}
               isConnected={true}
-            />
-            <ConnectSocialMediaButton
+            /> */}
+            {/* <ConnectSocialMediaButton
               title="Connect Instagram"
               icon={require("../assets/images/instagram.png")}
               onConnect={() => {
@@ -324,7 +503,7 @@ const Step1: React.FC = () => {
                 alert("This Functionality is not Available.");
               }}
               isConnected={false}
-            />
+            /> */}
           </View>
         </View>
       </View>

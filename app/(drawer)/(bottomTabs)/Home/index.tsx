@@ -61,8 +61,8 @@ const Home = () => {
           fetchedArtists.map(({ id, ...data }) => ({
             data,
             id,
-          })),
-        ),
+          }))
+        )
       );
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -139,22 +139,24 @@ const Home = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={artists}
-          renderItem={({ item }) => <ArtistProfileCard artist={item} />}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          // Remove fixed height so the container's animated height controls the space
-          contentContainerStyle={{ gap: 16 }}
-        />
+        <View style={{ paddingLeft: 16 }}>
+          <FlatList
+            data={artists}
+            renderItem={({ item }) => <ArtistProfileCard artist={item} />}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            // Remove fixed height so the container's animated height controls the space
+            contentContainerStyle={{ gap: 16 }}
+          />
+        </View>
       </Animated.View>
 
       <Text
         size="h4"
         weight="semibold"
         color="#FBF6FA"
-        style={{ marginTop: 24, marginBottom: 8 }}
+        style={{ marginTop: 24, marginBottom: 8, paddingLeft: 16 }}
       >
         Find Your Inspiration
       </Text>
@@ -168,7 +170,7 @@ export default Home;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#000",
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
     paddingTop: 15,
   },
   flatlistHeadingContainer: {
@@ -177,5 +179,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
     marginTop: 24,
+    paddingHorizontal: 16,
   },
 });

@@ -37,7 +37,7 @@ const StepperForm: React.FC = () => {
     uniqueFilePrefix: currentUserId,
   });
 
-  const stepLabels = ["Profile", "Tattoo Portfolio", "Preview"];
+  const stepLabels = ["Profile", "Tattoo portfolio", "Preview"];
 
   const handleNext = () => {
     setStep((prevStep: number) => Math.min(prevStep + 1, totalSteps));
@@ -162,7 +162,7 @@ const StepperForm: React.FC = () => {
           <View style={{ width: 84 }}>
             <Button
               loading={loading}
-              title="Done"
+              title="Next"
               onPress={() => {
                 router.push("/artist/CreateReviewPassword");
               }}

@@ -128,7 +128,7 @@ const FullScreenMapWithSearch: React.FC = () => {
           Array.isArray(loc) &&
           loc.length === 2 &&
           typeof loc[0] === "number" &&
-          typeof loc[1] === "number",
+          typeof loc[1] === "number"
       )
       // here TS knows latitude and longitude are numbers
       .map(([latitude, longitude]: LatLngArray) => ({
@@ -200,7 +200,9 @@ const FullScreenMapWithSearch: React.FC = () => {
       if (selectedRatings.length > 0) {
         if (selectedRatings.length === 1) {
           facets.push(
-            `rating:>=${selectedRatings[0] - 0.1} && rating:<=${selectedRatings[0] + 0.1}`,
+            `rating:>=${selectedRatings[0] - 0.1} && rating:<=${
+              selectedRatings[0] + 0.1
+            }`
           );
         }
       }
@@ -243,8 +245,8 @@ const FullScreenMapWithSearch: React.FC = () => {
     });
     dispatch(
       updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
-      ),
+        hits.map((h: any) => ({ id: h.document.id, data: h.document }))
+      )
     );
     dispatch(addSearch({ text: query, type: "artists" }));
   };
@@ -280,7 +282,9 @@ const FullScreenMapWithSearch: React.FC = () => {
       <MapProfileBottomSheet
         InsideComponent={
           // <FilterBottomSheet />
-          <ArtistProfileBottomSheet />
+          <ArtistProfileBottomSheet
+            hideMapProfileBottomSheet={hideMapProfileBottomSheet}
+          />
         }
       />
 
@@ -372,16 +376,11 @@ const FullScreenMapWithSearch: React.FC = () => {
               }}
               title={artist?.data?.name || "Artist"}
               onPress={() => {
-                dispatch(setCurrentlyViewingArtist(artist?.data?.id));
+                dispatch(setCurrentlyViewingArtist(artist?.data));
                 showMapProfileBottomSheet();
               }}
             >
-              <Pressable
-                onPress={() => {
-                  console.log("artist pressed: ", artist);
-                }}
-                style={{ alignItems: "center" }}
-              >
+              <Pressable style={{ alignItems: "center" }}>
                 <Image
                   source={{
                     uri: profilePic
@@ -389,11 +388,12 @@ const FullScreenMapWithSearch: React.FC = () => {
                       : "https://lh3.googleusercontent.com/a/ACg8ocLJTuqJGXUSEPryOs9uSZWlMHe5YwjDWb_vRiYSJKm46KmQM-Sj=s96-c",
                   }}
                   style={{
-                    width: 60,
-                    height: 60,
+                    width: 48,
+                    height: 48,
                     borderRadius: 40,
-                    borderWidth: 2,
+                    borderWidth: 1,
                     borderColor: "#fff",
+                    backgroundColor: "#202020",
                   }}
                 />
               </Pressable>
@@ -471,108 +471,57 @@ const styles = StyleSheet.create({
 export default FullScreenMapWithSearch;
 
 const googleDarkModeStyle = [
+  { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
   {
-    elementType: "geometry",
-    stylers: [{ color: "#242f3e" }], // Dark blue-gray background
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#242f3e" }],
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#a5b1c2" }], // Light gray text
-  },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d3d8e0" }], // Lighter for location names
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#6b7b8e" }], // Medium light gray roads
-  },
-  {
-    featureType: "road",
+    featureType: "administrative.country",
     elementType: "geometry.stroke",
-    stylers: [{ color: "#5c6a7d" }], // Stroke for roads
+    stylers: [{ color: "#4b6878" }],
   },
   {
-    featureType: "road",
+    featureType: "administrative.land_parcel",
     elementType: "labels.text.fill",
-    stylers: [{ color: "#ffffff" }], // White text for road names
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#8696ac" }], // Lighter for highways
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#788ca1" }],
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "geometry",
-    stylers: [{ color: "#717e90" }], // Medium for arterial roads
-  },
-  {
-    featureType: "road.local",
-    elementType: "geometry",
-    stylers: [{ color: "#5d6b7e" }], // Darker for local roads
+    stylers: [{ color: "#64779e" }],
   },
   {
     featureType: "poi",
     elementType: "labels.text.fill",
-    stylers: [{ color: "#d5d5d5" }],
+    stylers: [{ color: "#6f9ba5" }],
   },
   {
     featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#1c3a28" }], // Dark green for parks
+    elementType: "geometry.fill",
+    stylers: [{ color: "#023e58" }],
   },
   {
     featureType: "poi.park",
     elementType: "labels.text.fill",
-    stylers: [{ color: "#8ab77a" }], // Light green for park labels
+    stylers: [{ color: "#3C7680" }],
   },
   {
-    featureType: "water",
+    featureType: "road",
     elementType: "geometry",
-    stylers: [{ color: "#17263c" }], // Darker blue for water
+    stylers: [{ color: "#304a7d" }],
   },
   {
-    featureType: "water",
+    featureType: "road",
     elementType: "labels.text.fill",
-    stylers: [{ color: "#79a6cf" }], // Blue for water labels
+    stylers: [{ color: "#98a5be" }],
   },
   {
     featureType: "transit",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#98a5be" }],
+  },
+  {
+    featureType: "water",
     elementType: "geometry",
-    stylers: [{ color: "#2f3948" }],
+    stylers: [{ color: "#0e1626" }],
   },
   {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [{ color: "#283242" }], // POIs slightly lighter than background
-  },
-  {
-    featureType: "poi.business",
-    stylers: [{ visibility: "on" }], // Make businesses visible
-  },
-  {
-    featureType: "poi.attraction",
-    stylers: [{ visibility: "on" }], // Make attractions visible
-  },
-  {
-    featureType: "transit.station",
-    elementType: "labels.icon",
-    stylers: [{ visibility: "on" }], // Show transit icons
-  },
-  {
-    elementType: "labels.icon",
-    stylers: [{ visibility: "on" }], // Show other icons
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#4e6d70" }],
   },
 ];

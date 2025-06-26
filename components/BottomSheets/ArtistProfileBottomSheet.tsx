@@ -6,81 +6,81 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import { router } from "expo-router";
-import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-interface ArtistProfileBottomSheetProps {
-  selectedArtistId: string;
-}
+import { useSelector } from "react-redux";
 
 import { selectFilter } from "@/redux/slices/filterSlices";
 
-import { useSelector } from "react-redux";
-import useTypesense from "@/hooks/useTypesense";
-
-const ArtistProfileBottomSheet = () => {
-  const artist = useGetArtist(1);
+type ArtistProfileBottomSheetProps = {
+  hideMapProfileBottomSheet: () => void;
+};
+const ArtistProfileBottomSheet = ({
+  hideMapProfileBottomSheet,
+}: ArtistProfileBottomSheetProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const insets = useSafeAreaInsets();
   const { currentlyViewingArtist } = useSelector(selectFilter);
-  const { getDocument } = useTypesense();
-  const content = artist?.data?.aboutYou;
+
+  const content = currentlyViewingArtist?.aboutYou
+    ? currentlyViewingArtist.aboutYou
+    : "No description available.";
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
-  useEffect(() => {
-    if (currentlyViewingArtist) {
-      getDocument({ collection: "Users", documentId: currentlyViewingArtist })
-        .then((doc) => {
-          console.log("user details", doc);
-          // setUserDetails(doc);
-        })
-        .catch((err) =>
-          console.error("Error fetching user details from Typesense:", err),
-        );
-    }
-  }, [currentlyViewingArtist]);
 
   const profilePicture = useMemo(() => {
-    const profileSmall = artist?.data?.profilePictureSmall;
-    const profileDefault = artist?.data?.profilePicture;
-    if (profileSmall) {
-      return { uri: profileSmall };
-    } else if (profileDefault) {
-      return { uri: profileDefault };
-    }
-    return require("../../assets/images/Artist.png");
-  }, [artist]);
+    const profileSmall = currentlyViewingArtist?.profilePictureSmall;
+    const profileDefault = currentlyViewingArtist?.profilePicture;
+    return profileSmall
+      ? { uri: profileSmall }
+      : profileDefault
+      ? { uri: profileDefault }
+      : require("../../assets/images/Artist.png");
+  }, [currentlyViewingArtist]);
 
   return (
     <View style={styles.container}>
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
-          <Image style={styles.profilePicture} source={profilePicture} />
+          <TouchableOpacity
+            onPress={() => {
+              hideMapProfileBottomSheet();
+              router.push({
+                pathname: "/artist/ArtistProfile",
+                params: { artistId: currentlyViewingArtist?.id },
+              });
+            }}
+          >
+            <Image style={styles.profilePicture} source={profilePicture} />
+          </TouchableOpacity>
+
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {/* {artist?.data?.name || "Martin Luis"} */}
-              {artist?.data?.name || "Martin Luis"}
+              {currentlyViewingArtist?.name ? currentlyViewingArtist.name : ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.studio?.name || "No Studio"}
+              {currentlyViewingArtist?.studio === "studio"
+                ? currentlyViewingArtist?.studioName
+                : currentlyViewingArtist?.studio === "freelancer"
+                ? "Freelancer"
+                : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.city || "Oslo"}
+              {currentlyViewingArtist?.city ? currentlyViewingArtist.city : ""}
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.moreIconContainer}>
+        {/* <TouchableOpacity style={styles.moreIconContainer}>
           <Image
             style={styles.icon}
             source={require("../../assets/images/more_vert.png")}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <View style={styles.userSocialsRow}>
@@ -122,12 +122,16 @@ const ArtistProfileBottomSheet = () => {
           title="Message"
           icon={require("../../assets/images/message.png")}
           variant="Primary"
-          //   onPress={() => {
-          //     router.push({
-          //       pathname: "/artist/IndividualChat",
-          //       params: { selectedArtistId },
-          //     });
-          //   }}
+          onPress={() => {
+            router.push({
+              pathname: "/artist/IndividualChat",
+              params: {
+                selectedArtistId: currentlyViewingArtist?.id
+                  ? currentlyViewingArtist.id
+                  : "",
+              },
+            });
+          }}
         />
       </View>
     </View>
@@ -139,10 +143,8 @@ export default ArtistProfileBottomSheet;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#080808",
     padding: 16,
-    borderTopWidth: 0.33,
-    borderColor: "#2D2D2D",
   },
   userProfileRow: {
     flexDirection: "row",
@@ -159,6 +161,9 @@ const styles = StyleSheet.create({
     width: 82,
     resizeMode: "cover",
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: "#202020",
   },
   icon: {
     height: 24,
