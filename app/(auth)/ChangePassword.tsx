@@ -1,26 +1,33 @@
-import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  Image,
-  Alert,
-  Platform,
-} from "react-native";
+import { StyleSheet, View, Image, Alert } from "react-native";
 import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import Button from "@/components/Button";
-import auth from "@react-native-firebase/auth";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { router } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSelector } from "react-redux";
 
 const ChangePassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user
+  );
+
+  const loggedInUserEmail = loggedInUser?.email;
+  const isLoggedIn = !!loggedInUserEmail;
+
   const handlePasswordReset = async () => {
     if (!email) {
       Alert.alert("Error", "Please enter your email address");
+      return;
+    }
+
+    // Check if user is logged in and entered a different email
+    if (isLoggedIn && email.toLowerCase() !== loggedInUserEmail?.toLowerCase()) {
+      Alert.alert("Error", "Entered email does not match the logged-in user's email.");
       return;
     }
 
@@ -75,9 +82,13 @@ const ChangePassword = () => {
           onChangeText={(text) => setEmail(text)}
           inputMode="email"
           placeholder="Email"
-        ></Input>
+        />
       </View>
-      <Button title="Confirm" onPress={handlePasswordReset}></Button>
+      <Button
+        title={"Confirm"}
+        onPress={handlePasswordReset}
+        disabled={loading}
+      />
     </KeyboardAwareScrollView>
   );
 };
@@ -100,9 +111,6 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: 10,
     marginTop: 24,
-  },
-  description1: {
-    textAlign: "center",
   },
   description2: {
     textAlign: "center",

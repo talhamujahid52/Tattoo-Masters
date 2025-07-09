@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import Text from "@/components/Text";
 import React, { useMemo } from "react";
@@ -69,10 +70,18 @@ const CustomDrawerContent = () => {
               router.back();
             }}
           >
-            <Image
-              style={{ height: 15, width: 16 }}
-              source={require("../../assets/images/android_back_arrow.png")}
-            />
+            {Platform.OS === "android" && (
+              <Image
+                source={require("../../assets/images/android_back_arrow.png")}
+                style={{ height: 15, width: 16, resizeMode: "contain" }}
+              />
+            )}
+            {Platform.OS === "ios" && (
+              <Image
+                style={{ height: 24, width: 24, resizeMode: "contain" }}
+                source={require("../../assets/images/iosBackIcon.png")}
+              />
+            )}
           </TouchableOpacity>
           <Text weight="medium" size="h4" color="white">
             Menu
@@ -422,6 +431,7 @@ const DrawerLayout: React.FC = () => {
           backgroundColor: "black",
         },
         swipeEnabled: loggedInUser ? true : false,
+        drawerPosition: "right",
       }}
     ></Drawer>
   );
