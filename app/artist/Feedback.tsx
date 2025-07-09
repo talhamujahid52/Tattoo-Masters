@@ -16,6 +16,7 @@ import { uploadFeedbackImage } from "@/utils/firebase/uploadFeedbackImage";
 import { firebase } from "@react-native-firebase/firestore";
 import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const Feedback = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null); // Track the selected option
@@ -45,22 +46,30 @@ const Feedback = () => {
     setLoading(true);
 
     try {
-      const imageURLs = await uploadFeedbackImage(
-        attachment as string,
-        currentUserId as string,
-        "feedbackImage.jpeg"
-      );
+      let imageUrl = null;
 
-      if (!imageURLs?.downloadUrlSmall) {
-        throw new Error("Failed to upload image");
+      // Only upload image if there is an attachment
+      if (attachment) {
+        const imageURLs = await uploadFeedbackImage(
+          attachment,
+          currentUserId as string,
+          "feedbackImage.jpeg"
+        );
+
+        if (!imageURLs?.downloadUrlSmall) {
+          throw new Error("Failed to upload image");
+        }
+
+        imageUrl = imageURLs.downloadUrlSmall;
       }
 
+      // Save feedback regardless of image presence
       await firestore().collection("feedback").add({
         feedbackType: selectedOption,
         date: new Date(),
         feedback: content,
         user: currentUserId,
-        imageUrl: imageURLs.downloadUrlSmall,
+        imageUrl: imageUrl, // null if not uploaded
       });
       Alert.alert("Success", "Your Feedback has been submitted Successfully.", [
         {
@@ -83,11 +92,12 @@ const Feedback = () => {
       setLoading(false);
     }
   };
+  const canSubmit = loading || selectedOption !== null;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <Text size="h4" weight="semibold" color="#A7A7A7">
-        Feedback Type
+        Feedback type
       </Text>
 
       <View style={styles.optionContainer}>
@@ -114,7 +124,7 @@ const Feedback = () => {
             color="#A7A7A7"
             style={{ textAlign: "center" }}
           >
-            I have a suggestion or feature request.
+            I have a suggestion{"\n"} or feature request.
           </Text>
         </Pressable>
 
@@ -148,12 +158,12 @@ const Feedback = () => {
 
       <View style={{ paddingTop: 16 }}>
         <Text size="h4" weight="semibold" color="#A7A7A7">
-          Message
+          Feedback
         </Text>
         <TextInput
           selectionColor="#A29F93"
           placeholderTextColor="#A29F93"
-          placeholder="Enter Feedback"
+          placeholder="Enter message"
           multiline
           value={content}
           style={styles.textArea}
@@ -174,14 +184,17 @@ const Feedback = () => {
 
       <View>
         <Text size="h4" weight="semibold" color="#A7A7A7">
-          Attachment
+          Attachment {}
+          <Text size="medium" weight="normal" color="#A7A7A7">
+            (optional)
+          </Text>
         </Text>
         <TouchableOpacity
           style={{
             height: 150,
             width: "100%",
             borderWidth: 1,
-            borderColor: "#262626",
+            borderColor: "#2D2D2D",
             borderRadius: 12,
             marginTop: 16,
             flexDirection: "column",
@@ -199,14 +212,14 @@ const Feedback = () => {
             />
           ) : (
             <>
-              <View style={{ height: 24, width: 24 }}>
+              <View style={{ height: 18, width: 18 }}>
                 <Image
                   style={{ height: "100%", width: "100%" }}
-                  source={require("../../assets/images/add_photo_alternate-2.png")}
+                  source={require("../../assets/images/add_photo_white.png")}
                 />
               </View>
-              <Text size="h4" weight="medium" color="#D7D7C9">
-                Add Tattoo
+              <Text size="p" weight="normal" color="#D7D7C9">
+                Add photo
               </Text>
             </>
           )}
@@ -224,10 +237,11 @@ const Feedback = () => {
             )
           }
           onPress={handleSubmitFeedback}
-          disabled={loading}
+          disabled={!canSubmit}
+          variant={selectedOption ? "primary" : "secondary"}
         />
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -235,9 +249,9 @@ export default Feedback;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Ensure the container takes up the entire screen height
+    flexGrow: 1,
     padding: 16,
-    justifyContent: "space-between", // Push button to the bottom by spacing out elements
+    justifyContent: "space-between",
   },
   optionContainer: {
     flexDirection: "row",
@@ -259,8 +273,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2D1891A",
   },
   imageContainer: {
-    height: 40, // Increased image container size for better visibility
-    width: 40, // Increased image container size for better visibility
+    height: 27, // Increased image container size for better visibility
+    width: 27, // Increased image container size for better visibility
     marginBottom: 8, // Added margin for spacing
   },
   image: {

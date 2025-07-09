@@ -6,7 +6,7 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import Text from "@/components/Text";
 import { launchImageLibrary } from "react-native-image-picker";
 import Button from "@/components/Button";
@@ -15,6 +15,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { FormContext } from "../../context/FormContext";
 import { getFileName } from "@/utils/helperFunctions";
+import firestore from "@react-native-firebase/firestore";
+import StylesBottomSheet from "@/components/BottomSheets/StylesBottomSheet";
+import useBottomSheet from "@/hooks/useBottomSheet";
 
 const UploadTattoo = () => {
   const [attachment, setAttachment] = useState<string | null>(null);
@@ -26,16 +29,27 @@ const UploadTattoo = () => {
   const insets = useSafeAreaInsets();
   const { setFormData } = useContext(FormContext)!;
 
-  const tattooStyles = [
-    { title: "Tribal", value: 1 },
-    { title: "Geometric", value: 2 },
-    { title: "Black and White", value: 3 },
-  ];
+  const [tattooStyles, setTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
+  const [selectedTattooStyles, setSelectedTattooStyles] = useState<
+    { title: string; selected: boolean }[]
+  >([]);
 
-  const toggleStyle = (value: number) => {
-    setSelectedStyles((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+  const toggleTattooStyles = (tattooStyle: {
+    title: string;
+    selected: boolean;
+  }) => {
+    const updatedTattooStyles = tattooStyles.map((item) =>
+      item.title === tattooStyle.title
+        ? { ...item, selected: !item.selected }
+        : item
     );
+    setTattooStyles(updatedTattooStyles);
+    const selectedTattooStyles = updatedTattooStyles.filter(
+      (item) => item.selected
+    );
+    setSelectedTattooStyles(selectedTattooStyles);
   };
 
   const handleSelectImage = async () => {
@@ -57,8 +71,8 @@ const UploadTattoo = () => {
 
       const imageIndex = parseInt(index as string);
 
-      const selectedStyleTitles = tattooStyles
-        .filter((style) => selectedStyles.includes(style.value))
+      const selectedStyleTitles = selectedTattooStyles
+        .filter((style) => style.selected)
         .map((style) => style.title);
 
       // Build image object
@@ -83,10 +97,58 @@ const UploadTattoo = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchTattooStyles = async () => {
+      try {
+        const doc = await firestore()
+          .collection("Configurations")
+          .doc("TattooStyles")
+          .get();
+
+        const data = doc.data();
+        if (data?.styles && Array.isArray(data.styles)) {
+          // Ensure "selected" is set to false
+          const formattedStyles = data.styles.map((style: any) => ({
+            title: style.title,
+            selected: false,
+          }));
+          setTattooStyles(formattedStyles);
+        }
+      } catch (error) {
+        console.error("Error fetching tattoo styles:", error);
+      }
+    };
+
+    fetchTattooStyles();
+  }, []);
+
+  const {
+    BottomSheet: TattooStylesSheet,
+    show: showTattooStylesSheet,
+    hide: hideTattooStylesSheet,
+  } = useBottomSheet();
+
+  const setSelectedTattooStylesinBottomSheet = (
+    updatedStyles: { title: string; selected: boolean }[]
+  ) => {
+    setTattooStyles(updatedStyles);
+    const selected = updatedStyles.filter((item) => item.selected);
+    setSelectedTattooStyles(selected);
+  };
+
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
     >
+      <TattooStylesSheet
+        InsideComponent={
+          <StylesBottomSheet
+            tattooStyles={tattooStyles}
+            setSelectedTattooStyles={setSelectedTattooStylesinBottomSheet}
+            hideTattooStylesSheet={hideTattooStylesSheet}
+          />
+        }
+      />
       <TouchableOpacity style={styles.imagePicker} onPress={handleSelectImage}>
         {attachment ? (
           <Image
@@ -127,38 +189,57 @@ const UploadTattoo = () => {
         {caption.length} / 500
       </Text>
 
-      <Text
-        size="h4"
-        weight="semibold"
-        color="#A7A7A7"
-        style={{ marginTop: 16 }}
-      >
-        Styles
-      </Text>
-      <View style={styles.stylesRow}>
-        {tattooStyles.map((style) => (
-          <TouchableOpacity
-            key={style.value}
-            onPress={() => toggleStyle(style.value)}
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              backgroundColor: selectedStyles.includes(style.value)
-                ? "#DAB769"
-                : "#262526",
-            }}
-          >
-            <Text
-              size="p"
-              weight="normal"
-              color={
-                selectedStyles.includes(style.value) ? "#22221F" : "#A7A7A7"
-              }
+      <View>
+        <Text size="h4" weight="semibold" color="#A7A7A7">
+          Styles{" "}
+          {selectedTattooStyles?.length > 0
+            ? "(" + selectedTattooStyles?.length + " selected)"
+            : ""}
+        </Text>
+        <View style={styles.stylesRow}>
+          {tattooStyles.slice(0, 6).map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              activeOpacity={1}
+              style={[
+                styles.styleButton,
+                { backgroundColor: item.selected ? "#DAB769" : "#22221F" },
+              ]}
+              onPress={() => toggleTattooStyles(item)}
             >
-              {style.title}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                size="p"
+                weight="normal"
+                color={item.selected ? "#22221F" : "#A7A7A7"}
+              >
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {tattooStyles.length > 6 && (
+            <TouchableOpacity
+              onPress={() => {
+                showTattooStylesSheet();
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 6,
+              }}
+            >
+              <Text size="p" weight="normal" color="#FBF6FA">
+                {"See More"}
+              </Text>
+              <View style={{ width: 24, height: 24 }}>
+                <Image
+                  style={{ width: "100%", height: "100%" }}
+                  source={require("../../assets/images/arrow_down.png")}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View
@@ -167,6 +248,7 @@ const UploadTattoo = () => {
         <Button
           loading={loading}
           disabled={!attachment}
+          variant={attachment ? "primary" : "secondary"}
           onPress={publishTattoo}
           title="Publish"
         />
@@ -212,5 +294,9 @@ const styles = StyleSheet.create({
     bottom: 10,
     left: 16,
     right: 16,
+  },
+  styleButton: {
+    padding: 6,
+    borderRadius: 6,
   },
 });

@@ -111,17 +111,19 @@ const Home = () => {
         />
       }
     >
-      <Input
-        value={searchText}
-        inputMode="text"
-        placeholder="Search for ideas"
-        leftIcon={"search"}
-        onChangeText={(text) => setSearchText(text)}
-        onSubmitEditing={handleSearchSubmit}
-        rightIcon={searchText !== "" && "cancel"}
-        rightIconOnPress={() => setSearchText("")}
-        backgroundColour="#151515"
-      />
+      <View style={{ paddingHorizontal: 16 }}>
+        <Input
+          value={searchText}
+          inputMode="text"
+          placeholder="Search for ideas"
+          leftIcon={"search"}
+          onChangeText={(text) => setSearchText(text)}
+          onSubmitEditing={handleSearchSubmit}
+          rightIcon={searchText !== "" && "cancel"}
+          rightIconOnPress={() => setSearchText("")}
+          backgroundColour="#151515"
+        />
+      </View>
 
       {/* Animated container for the popular artists section */}
       <Animated.View style={[animatedArtistsStyle, { overflow: "hidden" }]}>
@@ -139,7 +141,7 @@ const Home = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={{ paddingLeft: 16 }}>
+        <View>
           <FlatList
             data={artists}
             renderItem={({ item }) => <ArtistProfileCard artist={item} />}
@@ -147,7 +149,7 @@ const Home = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             // Remove fixed height so the container's animated height controls the space
-            contentContainerStyle={{ gap: 16 }}
+            contentContainerStyle={{ gap: 16, paddingLeft: 16 }}
           />
         </View>
       </Animated.View>
@@ -158,7 +160,7 @@ const Home = () => {
         color="#FBF6FA"
         style={{ marginTop: 24, marginBottom: 8, paddingLeft: 16 }}
       >
-        Find Your Inspiration
+        Find your inspiration
       </Text>
       <ImageGallery images={publicationsTs.results} />
     </ScrollView>

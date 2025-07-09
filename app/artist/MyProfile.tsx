@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { UserFirestore } from "@/types/user";
 import useTypesense from "@/hooks/useTypesense";
 import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
+import NoReviewsOnMyProfile from "@/components/NoReviewsOnMyProfile";
 
 interface StyleItem {
   title: string;
@@ -31,7 +32,7 @@ const MyProfile = () => {
   const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
 
   const myId = loggedInUser?.uid;
@@ -158,7 +159,7 @@ const MyProfile = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <BottomSheet InsideComponent={<ShareProfileBottomSheet hide={hide} />} />
+      <BottomSheet InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />} />
 
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>
@@ -263,8 +264,9 @@ const MyProfile = () => {
       </Text> */}
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content?.slice(0, 100)}...`}{" "}
-          {/* Show a snippet or full content */}
+          {isExpanded || content?.length <= 120
+            ? content
+            : `${content?.slice(0, 100)}...`}
         </Text>
       </Pressable>
       <View style={styles.buttonRow}>
@@ -290,7 +292,7 @@ const MyProfile = () => {
       {loggedInUser?.latestReview ? (
         <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
       ) : (
-        <ReviewOnProfileBlur />
+        <NoReviewsOnMyProfile />
       )}
       <View style={styles.stylesFilterRow}>
         <FlatList

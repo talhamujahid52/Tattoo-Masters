@@ -273,12 +273,20 @@ const IndividualChat: React.FC = () => {
           onPress={() => {
             router.back();
           }}
-          style={{ height: 25, width: 25 }}
+          // style={{ height: 15, width: 16 }}
         >
-          <Image
-            source={require("../../assets/images/back-arrow.png")}
-            style={{ height: "100%", width: "100%", resizeMode: "contain" }}
-          />
+          {Platform.OS === "android" && (
+            <Image
+              source={require("../../assets/images/android_back_arrow.png")}
+              style={{ height: 15, width: 16, resizeMode: "contain" }}
+            />
+          )}
+          {Platform.OS === "ios" && (
+            <Image
+              style={{ height: 24, width: 24, resizeMode: "contain" }}
+              source={require("../../assets/images/iosBackIcon.png")}
+            />
+          )}
         </TouchableOpacity>
         <View
           style={{

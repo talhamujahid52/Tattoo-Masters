@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import Text from "@/components/Text";
+import { router } from "expo-router";
 const App = () => {
   // State to track which FAQ is expanded (index-based)
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -42,7 +43,7 @@ const App = () => {
 
   return (
     <View style={styles.container}>
-      <View
+      <TouchableOpacity
         style={{
           display: "flex",
           flexDirection: "row",
@@ -51,6 +52,9 @@ const App = () => {
           marginBottom: 24,
           borderBottomWidth: 1,
           borderBottomColor: "#262626",
+        }}
+        onPress={() => {
+          router.push("/artist/Feedback");
         }}
       >
         <View style={{ width: 44, height: 44 }}>
@@ -67,7 +71,7 @@ const App = () => {
             Help us improve the app by sharing your valuable feedback.
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
       <Text size="h3" color="#FBF6FA" weight="medium">
         FAQ
       </Text>

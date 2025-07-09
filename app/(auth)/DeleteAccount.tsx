@@ -4,6 +4,7 @@ import Input from "@/components/Input";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
 import Button from "@/components/Button";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const DeleteAccount = () => {
   const [password, setPassword] = useState("");
@@ -52,7 +53,7 @@ const DeleteAccount = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container} ß>
       <Image
         style={styles.image}
         source={require("../../assets/images/sentiment_sad.png")}
@@ -105,7 +106,7 @@ const DeleteAccount = () => {
           {loading ? "Deleting..." : "I wanna miss out"}
         </Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -113,13 +114,18 @@ export default DeleteAccount;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",
     padding: 16,
   },
-  image: { height: 44, width: 44, resizeMode: "contain", marginBottom: 16 },
+  image: {
+    height: 44,
+    width: 44,
+    resizeMode: "contain",
+    marginBottom: 16,
+  },
   title: {
     textAlign: "center",
     marginBottom: 10,

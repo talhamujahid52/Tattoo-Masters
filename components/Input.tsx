@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInputProps,
   TouchableWithoutFeedback,
+  Image,
 } from "react-native";
 import React, { useMemo, useState, useRef, forwardRef } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
@@ -15,6 +16,7 @@ interface InputProps extends TextInputProps {
   value?: string; // Added value prop
   onChangeText?: (text: string) => void;
   leftIcon?: any;
+  leftIconCustom?: any;
   rightIcon?: any;
   isNameField?: boolean;
   textInputProps?: TextInputProps;
@@ -34,6 +36,7 @@ const Input = forwardRef<TextInput, InputProps>(
       value = "", // Default value
       onChangeText,
       leftIcon,
+      leftIconCustom,
       rightIcon,
       rightIconOnPress,
       inputMode = "text", // Default input mode
@@ -87,6 +90,9 @@ const Input = forwardRef<TextInput, InputProps>(
               color="white"
               style={styles.icon}
             />
+          )}
+          {leftIconCustom && (
+            <Image source={leftIconCustom} style={{ width: 24, height: 24 }} />
           )}
           <TextInput
             ref={inputRef}

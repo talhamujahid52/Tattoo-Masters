@@ -252,7 +252,8 @@ const AddReview = () => {
           Tags
         </Text>
         <Input
-          placeholder="# Enter tags"
+          leftIconCustom={require("../../assets/images/tag.png")}
+          placeholder="Enter tags"
           value={hashtags}
           onChangeText={(text) => {
             setHashtags(text);

@@ -75,7 +75,7 @@ const AppNavigator = () => {
             name="(auth)/DeleteAccount"
             options={{
               headerShown: true,
-              headerTitle: "Delete Account",
+              headerTitle: "Delete account",
               headerTitleStyle: { color: "#fff" },
               headerTitleAlign: "center",
               headerStyle: { backgroundColor: "#000" },
@@ -222,7 +222,7 @@ const AppNavigator = () => {
             name="artist/HelpAndSupport"
             options={{
               headerShown: true,
-              headerTitle: "Help and Support",
+              headerTitle: "Help and support",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -344,7 +344,7 @@ const AppNavigator = () => {
             name="artist/EditProfile"
             options={{
               headerShown: true,
-              headerTitle: "Edit Profile",
+              headerTitle: "Edit profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -356,7 +356,7 @@ const AppNavigator = () => {
             name="artist/EditProfileUser"
             options={{
               headerShown: true,
-              headerTitle: "Edit Profile",
+              headerTitle: "Edit profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

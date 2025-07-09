@@ -16,7 +16,7 @@ const FavouriteTattoos = () => {
   const totalLiked = likedPublicationsData?.likedPublications?.length ?? 0;
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={{ flex: 1, paddingVertical: 16 }}>
       <View
         style={{
           flexDirection: "row",

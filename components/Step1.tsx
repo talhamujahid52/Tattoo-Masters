@@ -470,7 +470,7 @@ const Step1: React.FC = () => {
               placeholder="Instagram profile"
               value={formData.instagramProfile}
               onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, instagramProfiel: text }))
+                setFormData((prev) => ({ ...prev, instagramProfile: text }))
               }
             />
             <Input

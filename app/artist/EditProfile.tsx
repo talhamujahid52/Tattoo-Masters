@@ -7,7 +7,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
@@ -24,21 +24,21 @@ import { useDispatch } from "react-redux";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
+import StylesBottomSheet from "../../components/BottomSheets/StylesBottomSheet";
+import useBottomSheet from "@/hooks/useBottomSheet";
 
 type TattooStyle = {
   title: string;
-  value: number;
   selected: boolean;
 };
 
-// Constant master list of available tattoo styles.
-const CONSTANT_TATTOO_STYLES: TattooStyle[] = [
-  { title: "Tribal", value: 1, selected: false },
-  { title: "Geometric", value: 2, selected: false },
-  { title: "Black and White", value: 3, selected: false },
-];
-
 const EditProfile = () => {
+  const {
+    BottomSheet: TattooStylesSheet,
+    show: showTattooStylesSheet,
+    hide: hideTattooStylesSheet,
+  } = useBottomSheet();
+
   const loggedInUserAuth: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
   );
@@ -47,16 +47,8 @@ const EditProfile = () => {
     (state: any) => state?.user?.userFirestore
   );
   const currentUserId = loggedInUserAuth?.uid;
-  // Convert the Firebase tattooStyles (array of strings) into our object format.
-  const initialTattooStyles: TattooStyle[] = CONSTANT_TATTOO_STYLES.map(
-    (style) => ({
-      ...style,
-      selected: loggedInUser?.tattooStyles
-        ? loggedInUser.tattooStyles.includes(style.title)
-        : false,
-    })
-  );
 
+  const [tattooStyles, setTattooStyles] = useState<TattooStyle[]>([]);
   const [formData, setFormData] = useState({
     profilePicture:
       loggedInUser?.profilePictureSmall ?? loggedInUser.profilePicture,
@@ -70,10 +62,17 @@ const EditProfile = () => {
     },
     showCityOnly: true,
     address: loggedInUser?.address ? loggedInUser?.address : "",
-    tattooStyles: loggedInUser?.tattooStyles
-      ? initialTattooStyles
-      : CONSTANT_TATTOO_STYLES,
+    tattooStyles: [] as TattooStyle[],
     aboutYou: loggedInUser?.aboutYou ? loggedInUser?.aboutYou : "",
+    facebookProfile: loggedInUser?.facebookProfile
+      ? loggedInUser?.facebookProfile
+      : "",
+    instagramProfile: loggedInUser?.instagramProfile
+      ? loggedInUser?.instagramProfile
+      : "",
+    twitterProfile: loggedInUser?.twitterProfile
+      ? loggedInUser?.twitterProfile
+      : "",
   });
 
   const options = [
@@ -82,13 +81,60 @@ const EditProfile = () => {
     { label: "Homeartist", value: "homeArtist" },
   ];
 
-  const toggleTattooStyles = (value: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      tattooStyles: prev.tattooStyles.map((item: TattooStyle) =>
-        item.value === value ? { ...item, selected: !item.selected } : item
-      ),
-    }));
+  // Fetch tattoo styles from Firestore
+  useEffect(() => {
+    const fetchTattooStyles = async () => {
+      try {
+        const doc = await firestore()
+          .collection("Configurations")
+          .doc("TattooStyles")
+          .get();
+
+        const data = doc.data();
+        if (data?.styles && Array.isArray(data.styles)) {
+          // Format styles and mark selected ones based on user's existing selections
+          const formattedStyles = data.styles.map((style: any) => ({
+            title: style.title,
+            selected: loggedInUser?.tattooStyles
+              ? loggedInUser.tattooStyles.includes(style.title)
+              : false,
+          }));
+          setTattooStyles(formattedStyles);
+
+          // Update form data with selected styles
+          const selectedStyles = formattedStyles.filter(
+            (style: TattooStyle) => style.selected
+          );
+          setFormData((prev) => ({
+            ...prev,
+            tattooStyles: selectedStyles,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching tattoo styles:", error);
+      }
+    };
+
+    fetchTattooStyles();
+  }, [loggedInUser?.tattooStyles]);
+
+  const toggleTattooStyles = (tattooStyle: TattooStyle) => {
+    const updatedTattooStyles = tattooStyles.map((item) =>
+      item.title === tattooStyle.title
+        ? { ...item, selected: !item.selected }
+        : item
+    );
+    setTattooStyles(updatedTattooStyles);
+    const selectedTattooStyles = updatedTattooStyles.filter(
+      (item) => item.selected
+    );
+    setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
+  };
+
+  const setSelectedTattooStyles = (updatedStyles: TattooStyle[]) => {
+    setTattooStyles(updatedStyles);
+    const selected = updatedStyles.filter((item) => item.selected);
+    setFormData((prev) => ({ ...prev, tattooStyles: selected }));
   };
 
   const [newImage, setNewImage] = useState<Asset>();
@@ -149,12 +195,9 @@ const EditProfile = () => {
     try {
       setLoading(true);
       // Transform the array to include only the titles for which selected is true:
-      const firebaseTattooStyles = formData.tattooStyles
-        .filter(
-          (style: { selected: boolean; title: string; value: number }) =>
-            style.selected
-        )
-        .map((style: { title: string }) => style.title);
+      const firebaseTattooStyles = formData.tattooStyles.map(
+        (style: TattooStyle) => style.title
+      );
 
       await firestore()
         .collection("Users")
@@ -259,6 +302,15 @@ const EditProfile = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <TattooStylesSheet
+        InsideComponent={
+          <StylesBottomSheet
+            tattooStyles={tattooStyles}
+            setSelectedTattooStyles={setSelectedTattooStyles}
+            hideTattooStylesSheet={hideTattooStylesSheet}
+          />
+        }
+      />
       <View style={styles.profilePictureRow}>
         <Image
           style={styles.profilePicture}
@@ -376,10 +428,13 @@ const EditProfile = () => {
         </View>
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
-            Styles
+            Styles{" "}
+            {formData?.tattooStyles?.length > 0
+              ? "(" + formData?.tattooStyles?.length + " selected)"
+              : ""}
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {formData.tattooStyles.map((item: TattooStyle, idx: number) => (
+            {tattooStyles.slice(0, 6).map((item, idx) => (
               <TouchableOpacity
                 key={idx}
                 activeOpacity={1}
@@ -388,7 +443,7 @@ const EditProfile = () => {
                   borderRadius: 6,
                   backgroundColor: item.selected ? "#DAB769" : "#262526",
                 }}
-                onPress={() => toggleTattooStyles(item.value)}
+                onPress={() => toggleTattooStyles(item)}
               >
                 <Text
                   size="p"
@@ -399,6 +454,29 @@ const EditProfile = () => {
                 </Text>
               </TouchableOpacity>
             ))}
+            {tattooStyles.length > 6 && (
+              <TouchableOpacity
+                onPress={() => {
+                  showTattooStylesSheet();
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 6,
+                }}
+              >
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {"See More"}
+                </Text>
+                <View style={{ width: 24, height: 24 }}>
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../../assets/images/arrow_down.png")}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View style={{ marginTop: 16, marginBottom: 16 }}>
@@ -443,7 +521,31 @@ const EditProfile = () => {
               marginBottom: 24,
             }}
           >
-            <ConnectSocialMediaButton
+            <Input
+              inputMode="text"
+              placeholder="Facebook profile"
+              value={formData.facebookProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, facebookProfile: text }))
+              }
+            />
+            <Input
+              inputMode="text"
+              placeholder="Instagram profile"
+              value={formData.instagramProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, instagramProfile: text }))
+              }
+            />
+            <Input
+              inputMode="text"
+              placeholder="Twitter profile"
+              value={formData.twitterProfile}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, twitterProfile: text }))
+              }
+            />
+            {/* <ConnectSocialMediaButton
               title="Facebook Connected"
               icon={require("../../assets/images/facebook_2.png")}
               onConnect={() => alert("This Functionality is not Available.")}
@@ -456,7 +558,7 @@ const EditProfile = () => {
               onConnect={() => alert("This Functionality is not Available.")}
               onDisconnect={() => alert("This Functionality is not Available.")}
               isConnected={false}
-            />
+            /> */}
           </View>
           <Button loading={loading} title="Save" onPress={updateProfile} />
         </View>

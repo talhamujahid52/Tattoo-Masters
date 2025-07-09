@@ -56,7 +56,7 @@ const TabViewExample: React.FC = () => {
         alignSelf: "center",
       }}
       activeColor="black"
-      inactiveColor="white"
+      inactiveColor="#B1AFA4"
       indicatorContainerStyle={{
         backgroundColor: "#1A1A1A",
         borderRadius: 40,

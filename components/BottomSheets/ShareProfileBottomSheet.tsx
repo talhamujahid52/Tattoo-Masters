@@ -4,28 +4,53 @@ import {
   TouchableOpacity,
   Switch,
   Image,
+  Share,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import Text from "../Text";
 import React, { useState } from "react";
 import Button from "../Button";
 import { useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 
 interface bottomSheetProps {
   hide: () => void;
+  myId: string;
 }
 
-const ShareProfileBottomSheet = ({ hide }: bottomSheetProps) => {
+const ShareProfileBottomSheet = ({ hide, myId }: bottomSheetProps) => {
   const router = useRouter();
+  const shareArtistProfile = async (myId: any) => {
+    try {
+      // This will use your "myapp" scheme
+      const baseUrl = Linking.createURL("artist/ArtistProfile");
+      const url = `${baseUrl}?artistId=${myId}`;
+      console.log("Generated URL:", url); // Important for testing!
+
+      const canOpen = await Linking.canOpenURL(url);
+      console.log("Can open URL:", canOpen);
+
+      // if (canOpen) {
+      //   await Linking.openURL(url);
+      //   console.log("✅ URL opened successfully!");
+      // } else {
+      //   // Alert.alert('Error', 'Cannot open this URL');
+      // }
+      await Share.share({
+        message: `Check out this artist profile: ${url}`,
+        url: url,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
           hide();
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
+          shareArtistProfile(myId);
         }}
         style={styles.drawerItem}
       >
@@ -39,9 +64,10 @@ const ShareProfileBottomSheet = ({ hide }: bottomSheetProps) => {
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
-          //   router.push({
-          //     pathname: "/(auth)/ReviewPassword",
-          //   });
+          hide();
+          router.push({
+            pathname: "/artist/Feedback",
+          });
         }}
         style={styles.drawerItem}
       >

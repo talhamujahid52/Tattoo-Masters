@@ -183,7 +183,7 @@ const CustomDrawerContent = () => {
                 source={require("../../assets/images/person_edit.png")}
               />
               <Text size="h4" weight="normal" color="#FBF6FA">
-                Edit Profile
+                Edit profile
               </Text>
             </TouchableOpacity>
             {isArtist && (
@@ -270,7 +270,7 @@ const CustomDrawerContent = () => {
                 source={require("../../assets/images/support_agent.png")}
               />
               <Text size="h4" weight="normal" color="#FBF6FA">
-                Help and Support
+                Help and support
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -304,7 +304,7 @@ const CustomDrawerContent = () => {
               color="#A7A7A7"
               style={{ textDecorationLine: "underline" }}
             >
-              Delete Account
+              Delete account
             </Text>
           </TouchableOpacity>
         </View>
@@ -386,7 +386,7 @@ const CustomDrawerContent = () => {
             onPress={async () => {
               await auth().signOut();
               dispatch(resetUser());
-              navigation.dispatch(DrawerActions.toggleDrawer())
+              navigation.dispatch(DrawerActions.toggleDrawer());
             }}
             style={styles.logoutButton}
           >

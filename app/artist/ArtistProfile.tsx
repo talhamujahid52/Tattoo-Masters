@@ -6,6 +6,7 @@ import {
   Image,
   FlatList,
   Pressable,
+  Linking,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -277,6 +278,18 @@ const ArtistProfile = () => {
     }
   };
 
+  const openInGoogleMaps = () => {
+    const latitude =
+      artist?.data?.location?.latitude || defaultLocation.latitude;
+    const longitude =
+      artist?.data?.location?.longitude || defaultLocation.longitude;
+    const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+
+    Linking.openURL(url).catch((err) => {
+      console.error("Failed to open Google Maps:", err);
+    });
+  };
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
@@ -294,6 +307,7 @@ const ArtistProfile = () => {
             showLoginBottomSheet={showLoggingInBottomSheet}
             hideShareSheet={hideShareSheet}
             showReportSheet={showReportSheet}
+            artistId={artistId}
           />
         }
       />
@@ -372,11 +386,7 @@ const ArtistProfile = () => {
         )}
       </View>
       <View style={styles.artistFavoriteRow}>
-        <MaterialCommunityIcons
-          name="heart"
-          size={20}
-          color="#FBF6FA"
-        />
+        <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
         <Text size="p" weight="normal" color="#FBF6FA">
           {artist?.data?.followersCount || "Not favourited yet"}
         </Text>
@@ -404,7 +414,9 @@ const ArtistProfile = () => {
       </View>
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content?.slice(0, 100)}...`}
+          {isExpanded || content?.length <= 120
+            ? content
+            : `${content?.slice(0, 100)}...`}
         </Text>
       </Pressable>
 
@@ -457,7 +469,8 @@ const ArtistProfile = () => {
           {artist?.data?.address || ""}
         </Text>
       </View>
-      <View
+      <Pressable
+        onPress={openInGoogleMaps}
         style={{
           height: 130,
           borderRadius: 20,
@@ -474,7 +487,7 @@ const ArtistProfile = () => {
           region={region}
           zoomEnabled={false}
         />
-      </View>
+      </Pressable>
       <Text size="h4" weight="semibold" color="white" style={{ marginTop: 24 }}>
         Portfolio
       </Text>
