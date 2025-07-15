@@ -13,6 +13,7 @@ import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ChatListCell from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
+import useLastSeen from "@/hooks/useLastSeen";
 import { router } from "expo-router";
 
 const Chat = () => {
@@ -23,7 +24,7 @@ const Chat = () => {
   const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
   const artists = useSelector((state: any) => state?.artist?.allArtists); // get Artists
   const chats = useSelector((state: any) => state?.chats?.allChats); // get Chats
-
+  useLastSeen();
   const { fetchChats } = useChats(loggedInUser?.uid);
 
   const [searchText, setSearchText] = useState("");
@@ -35,7 +36,6 @@ const Chat = () => {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-
 
   return (
     <View

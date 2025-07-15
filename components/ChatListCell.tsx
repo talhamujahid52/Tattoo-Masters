@@ -57,6 +57,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
             existingChatId: chat.item.id,
             otherUserName: otherUserName,
             otherUserProfilePicture: otherUserProfilePicture,
+            otherUser,
           },
         });
       }}

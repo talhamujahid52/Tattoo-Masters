@@ -21,22 +21,26 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import uuid from "react-native-uuid";
+import firestore from "@react-native-firebase/firestore";
+
 const IndividualChat: React.FC = () => {
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatID, setChatID] = useState<any>();
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
-  console.log("recieverProfilePicture", recieverProfilePicture);
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const { checkIfChatExists, fetchChatMessages, createChat, addMessageToChat } =
     useChats(loggedInUser.uid);
+  const [isOnline, setIsOnline] = useState(false);
+  const [lastSeen, setLastSeen] = useState<Date | null>(null);
 
   const {
     selectedArtistId,
     existingChatId,
     otherUserName,
     otherUserProfilePicture,
+    otherUser,
   } = useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
 
@@ -265,6 +269,41 @@ const IndividualChat: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    const receiverId = selectedArtistId || otherUser; // adjust if you have direct receiver UID
+
+    const unsubscribe = firestore()
+      .collection("Users")
+      .doc(receiverId)
+      .onSnapshot((doc) => {
+        const data = doc.data();
+        if (data) {
+          setIsOnline(data.isOnline || false);
+          setLastSeen(data.lastSeen?.toDate?.() || null);
+        }
+      });
+
+    return () => unsubscribe();
+  }, [selectedArtistId, existingChatId]);
+
+  const getTimeAgo = (timestamp: Date): string => {
+    const now = new Date();
+    const diffInSeconds = Math.floor(
+      (now.getTime() - timestamp.getTime()) / 1000
+    );
+
+    if (diffInSeconds < 60) return "just now";
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} min ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} hour${
+        Math.floor(diffInSeconds / 3600) === 1 ? "" : "s"
+      } ago`;
+    return `${Math.floor(diffInSeconds / 86400)} day${
+      Math.floor(diffInSeconds / 86400) === 1 ? "" : "s"
+    } ago`;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -305,10 +344,14 @@ const IndividualChat: React.FC = () => {
           />
           <View>
             <Text size="p" weight="normal" color="#FBF6FA">
-              {messageRecieverName ? messageRecieverName : "Martin Luis"}
+              {messageRecieverName ? messageRecieverName : ""}
             </Text>
             <Text size="medium" weight="normal" color="#A7A7A7">
-              Last seen 2m ago
+              {isOnline
+                ? "Online"
+                : lastSeen
+                ? `Last seen ${getTimeAgo(lastSeen)}`
+                : ""}
             </Text>
           </View>
         </View>
