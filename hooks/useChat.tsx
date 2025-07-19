@@ -77,6 +77,35 @@ const useChats = (userId: string) => {
     }
   }, []);
 
+  const listenToMessages = useCallback(
+    (chatId: string, onUpdate: (msgs: IMessage[]) => void) => {
+      return firestore()
+        .collection("Chats")
+        .doc(chatId)
+        .collection("messages")
+        .orderBy("createdAt", "desc")
+        .onSnapshot(
+          (snapshot) => {
+            const messages = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              return {
+                _id: doc.id,
+                text: data.text,
+                createdAt: data.createdAt?.toDate?.() ?? new Date(),
+                user: data.user,
+              };
+            });
+
+            onUpdate(messages);
+          },
+          (error) => {
+            console.error("Error listening to messages:", error);
+          }
+        );
+    },
+    []
+  );
+
   const createChat = useCallback(
     async (selectedArtist: any, loggedInUser: any) => {
       try {
@@ -138,6 +167,7 @@ const useChats = (userId: string) => {
     fetchChatMessages,
     createChat,
     addMessageToChat,
+    listenToMessages, // ✅ NEW
   };
 };
 
