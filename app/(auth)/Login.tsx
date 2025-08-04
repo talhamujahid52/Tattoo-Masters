@@ -21,6 +21,7 @@ GoogleSignin.configure({
   webClientId:
     "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
 });
+import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
 
 const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
@@ -64,6 +65,13 @@ const Login = () => {
         //   pathname: "/(bottomTabs)/Home",
         // });
         dispatch(setUser(userDoc.data()));
+
+        // ✅ Register and save FCM token if not already saved
+        const token = await getFcmToken();
+        if (token) {
+          await saveFcmTokenToFirestore(user.uid, token);
+        }
+
         console.log("User signed in!");
       } else {
         alert("Please verify your email before logging in.");
@@ -197,7 +205,7 @@ const Login = () => {
           icon={require("../../assets/images/facebook.png")}
           onPress={() => {
             alert(
-              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
+              "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
             );
           }}
         />

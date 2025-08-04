@@ -3,6 +3,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { setUser } from "@/redux/slices/userSlice";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
 
 export const useSignInWithGoogle = () => {
   const dispatch = useDispatch();
@@ -54,6 +55,10 @@ export const useSignInWithGoogle = () => {
 
       // Dispatch the user data to Redux
       dispatch(setUser(userDoc.data()));
+      const token = await getFcmToken();
+      if (token) {
+        await saveFcmTokenToFirestore(user.uid, token);
+      }
 
       console.log("User signed in and data saved to Firestore!");
       //   return userData;
