@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import {
@@ -11,31 +11,63 @@ import { useRouter } from "expo-router";
 import Button from "@/components/Button";
 import { FormContext } from "../../context/FormContext";
 import Text from "@/components/Text";
+import * as Location from "expo-location";
 
 const SearchLocation: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
 
-  const defaultLocation = {
-    latitude: 33.664286,
-    longitude: 73.004291,
+  const [region, setRegion] = useState<Region>({
+    latitude: formData.location?.latitude || 0,
+    longitude: formData.location?.longitude || 0,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
-  };
-
-  const [region, setRegion] = useState<Region>({
-    latitude: formData.location?.latitude || defaultLocation.latitude,
-    longitude: formData.location?.longitude || defaultLocation.longitude,
-    latitudeDelta: defaultLocation.latitudeDelta,
-    longitudeDelta: defaultLocation.longitudeDelta,
   });
 
   const [address, setAddress] = useState<string>(formData.address || "");
 
+  useEffect(() => {
+    const getCurrentLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.warn("Permission to access location was denied");
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const currentRegion = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        };
+
+        setRegion(currentRegion);
+        mapRef.current?.animateToRegion(currentRegion, 1000);
+      } catch (error) {
+        console.error("Error getting current location:", error);
+      }
+    };
+
+    if (formData.location.latitude === 0 && formData.location.longitude === 0) {
+      console.log("Setting Region in Add Location : ", formData.location);
+      getCurrentLocation();
+    } else {
+      const existingRegion = {
+        latitude: formData.location.latitude,
+        longitude: formData.location.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      };
+      setRegion(existingRegion);
+    }
+  }, []);
+
   const handleLocationSelect = (
     data: GooglePlaceData,
-    details: GooglePlaceDetail,
+    details: GooglePlaceDetail
   ) => {
     if (details && details.geometry) {
       const { lat, lng } = details.geometry.location;
@@ -46,33 +78,50 @@ const SearchLocation: React.FC = () => {
         longitudeDelta: 0.02,
       };
 
-      setRegion(newRegion);
-      setAddress(data.description);
-      setFormData({
-        ...formData,
-        location: {
-          latitude: lat,
-          longitude: lng,
-        },
-        locationT: [lat, lng],
-        address: data.description,
-      });
+      // Helper to extract component by type
+      const getComponent = (type: string) =>
+        details.address_components.find((c) => c.types.includes(type))
+          ?.long_name || null;
 
+      // Extract city and country
+      const city =
+        getComponent("locality") || // most common
+        getComponent("administrative_area_level_2") || // fallback
+        getComponent("administrative_area_level_1"); // last resort
+
+      const country = getComponent("country");
+
+      // Set formatted address
+      const formattedAddress = [city, country].filter(Boolean).join(", ");
+      console.log("Formatted Address ", formattedAddress);
+      setAddress(formattedAddress);
+
+      // Update region and animate map
+      setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 1000);
     }
   };
 
-  const handleRegionChangeComplete = (newRegion: Region) => {
+  const handleRegionChangeComplete = async (newRegion: Region) => {
     setRegion(newRegion);
 
-    setFormData({
-      ...formData,
-      location: {
+    try {
+      const [address] = await Location.reverseGeocodeAsync({
         latitude: newRegion.latitude,
         longitude: newRegion.longitude,
-      },
-      address: address,
-    });
+      });
+
+      if (address) {
+        console.log("Dragged Address ", address);
+
+        const city = address.city || address.region || "";
+        const fullAddress = `${city}, ${address.country}`;
+        console.log("Dragged Address ", fullAddress);
+        setAddress(fullAddress);
+      }
+    } catch (error) {
+      console.error("Error during reverse geocoding:", error);
+    }
   };
 
   const googleDarkModeStyle = [
@@ -267,7 +316,8 @@ const SearchLocation: React.FC = () => {
                 latitude: region.latitude,
                 longitude: region.longitude,
               },
-              address: address,
+              city: address,
+              locationT: [region.latitude, region.longitude],
             });
             router.back();
           }}

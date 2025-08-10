@@ -12,14 +12,6 @@ import { router } from "expo-router";
 import { openInbox } from "react-native-email-link";
 
 const EmailVerification = () => {
-  const handleOpenInbox = async () => {
-    try {
-      await openInbox();
-    } catch (error) {
-      console.error("Failed to open email app:", error);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <Image
@@ -34,11 +26,13 @@ const EmailVerification = () => {
         to continue.
       </Text>
       <TouchableOpacity
-        onPress={handleOpenInbox}
+        onPress={() => {
+          router.replace("/(auth)/Login");
+        }}
         style={styles.verifyEmailButton}
       >
         <Text size="h4" weight="semibold" color="#FBF6FA">
-          Open email
+          Login
         </Text>
       </TouchableOpacity>
     </View>

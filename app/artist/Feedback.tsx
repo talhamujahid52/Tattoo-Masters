@@ -84,14 +84,7 @@ const Feedback = () => {
           ? "However, the image could not be uploaded."
           : "");
 
-      Alert.alert("Success", successMessage, [
-        {
-          text: "OK",
-          onPress: () => {
-            router.back();
-          },
-        },
-      ]);
+      router.replace("/artist/FeedbackSubmitted");
     } catch (err) {
       console.error("Error submitting feedback:", err);
       Alert.alert(

@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  Linking,
+  Alert,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -25,6 +27,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const IndividualChat: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatID, setChatID] = useState<any>();
@@ -46,10 +49,12 @@ const IndividualChat: React.FC = () => {
     selectedArtistId,
     existingChatId,
     otherUserName,
+    otherUserId,
     otherUserProfilePicture,
     otherUser,
   } = useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
+  const otherUser = useGetArtist(otherUserId);
 
   const formatMessages = (msgs: any[]) => {
     return msgs.map((msg) => {
@@ -84,18 +89,18 @@ const IndividualChat: React.FC = () => {
           const artistChat = await checkIfChatExists(selectedArtistId);
           if (artistChat?.exists) {
             setChatID(artistChat.id);
-            setMessageRecieverName(
-              artistChat?.data()?.[selectedArtistId]?.name
-            );
+            setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
-              artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
-                artistChat?.data()?.[selectedArtistId]?.profilePicture
+              selectedArtist?.data?.profilePictureSmall
+                ? selectedArtist?.data?.profilePictureSmall
+                : selectedArtist?.data?.profilePicture
             );
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
-              selectedArtist?.data?.profilePictureSmall ??
-                selectedArtist?.data?.profilePicture
+              selectedArtist?.data?.profilePictureSmall
+                ? selectedArtist?.data?.profilePictureSmall
+                : selectedArtist?.data?.profilePicture
             );
           }
         } catch (error) {
@@ -107,7 +112,11 @@ const IndividualChat: React.FC = () => {
     } else if (existingChatId) {
       setChatID(existingChatId);
       setMessageRecieverName(otherUserName);
-      setRecieverProfilePicture(otherUserProfilePicture);
+      setRecieverProfilePicture(
+        otherUser?.data?.profilePictureSmall
+          ? otherUser?.data?.profilePictureSmall
+          : otherUser?.data?.profilePicture
+      );
     }
   }, [selectedArtistId, existingChatId]);
 
@@ -275,6 +284,23 @@ const IndividualChat: React.FC = () => {
       </View>
     );
   };
+  const phoneNumber = "1234567890";
+
+  const openDialer = () => {
+    const url = `tel:${phoneNumber}`;
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(url);
+        } else {
+          Alert.alert("Error", "Unable to open dialer");
+        }
+      })
+      .catch((err) => {
+        console.error("An error occurred", err);
+        Alert.alert("Error", "Something went wrong");
+      });
+  };
 
   useEffect(() => {
     const receiverId = selectedArtistId || otherUser; // adjust if you have direct receiver UID
@@ -312,12 +338,7 @@ const IndividualChat: React.FC = () => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -367,7 +388,10 @@ const IndividualChat: React.FC = () => {
             </Text>
           </View>
         </View>
-        <TouchableOpacity style={{ height: 18, width: 18 }}>
+        <TouchableOpacity
+          onPress={openDialer}
+          style={{ height: 18, width: 18 }}
+        >
           <Image
             source={require("../../assets/images/call.png")}
             style={{ height: "100%", width: "100%", resizeMode: "contain" }}
@@ -396,6 +420,7 @@ const IndividualChat: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#000",
   },
   header: {
     flexDirection: "row",

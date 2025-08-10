@@ -14,6 +14,7 @@ interface ButtonProps {
   iconStyle?: any;
   variant: "Primary" | "Secondary";
   onPress?: (event: GestureResponderEvent) => void;
+  disabled?: boolean;
 }
 
 const IconButton = ({
@@ -22,6 +23,7 @@ const IconButton = ({
   iconStyle,
   variant,
   onPress,
+  disabled = false,
 }: ButtonProps) => {
   const renderIcon = () => {
     if (React.isValidElement(icon)) {
@@ -33,6 +35,7 @@ const IconButton = ({
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       style={[
         styles.button,
         { backgroundColor: variant === "Primary" ? "#262526" : "#DAB769" },

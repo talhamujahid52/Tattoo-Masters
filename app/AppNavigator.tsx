@@ -101,11 +101,12 @@ const AppNavigator = () => {
     }
   }, [initializing]);
 
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
   useEffect(() => {
     if (initializing) {
       return;
     }
-    if (pathname !== "/Home") {
+    if (pathname !== "/Home" && loggedInUser?.emailVerified === true) {
       router.replace("/(bottomTabs)/Home");
     }
   }, [userId, initializing]);
@@ -299,6 +300,18 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="artist/FeedbackSubmitted"
+            options={{
+              headerShown: true,
+              headerTitle: "",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
             name="(auth)/ReviewPassword"
             options={{
               headerShown: true,
@@ -442,11 +455,13 @@ const AppNavigator = () => {
               headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
+              headerTitleAlign: "center",
               headerLeft: () => (
                 <TouchableOpacity
                   onPress={() => {
                     router.back();
                   }}
+                  hitSlop={20}
                 >
                   <Image
                     source={require("../assets/images/close.png")}

@@ -5,11 +5,32 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Text from "@/components/Text";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const SubscriptionInfo = () => {
   const insets = useSafeAreaInsets();
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
+
+  let formattedTrialEndDate = "";
+  if (loggedInUserFirestore?.createdAt?.seconds) {
+    const milliseconds =
+      loggedInUserFirestore.createdAt.seconds * 1000 +
+      loggedInUserFirestore.createdAt.nanoseconds / 1e6;
+
+    const trialStartDate = new Date(milliseconds);
+    trialStartDate.setFullYear(trialStartDate.getFullYear() + 1); // Add 1 year
+
+    formattedTrialEndDate = trialStartDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
 
   return (
     <View
@@ -25,6 +46,15 @@ const SubscriptionInfo = () => {
         style={styles.backgroundImage}
         resizeMode="cover"
       />
+      <View
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: "black",
+          opacity: 0.75,
+          zIndex: 1, // higher than background image, lower than content
+        }}
+      />
+
       <LinearGradient
         style={styles.gradientOverlay}
         locations={[0, 0.17, 0.89]}
@@ -37,9 +67,9 @@ const SubscriptionInfo = () => {
       />
 
       <LinearGradient
-        colors={["#2F281A", "#3D3420", "#302A1B", "#18150F", "#080808"]}
-        locations={[0, 0.1, 0.3, 0.5, 1]}
-        start={{ x: 1, y: 0 }}
+        colors={["#403622", "#080808", "#080808"]}
+        locations={[0, 0.4423, 1]}
+        start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[
           styles.buttonContainer,
@@ -50,7 +80,7 @@ const SubscriptionInfo = () => {
           size="h2"
           weight="semibold"
           color="#FFD982"
-          style={{ marginBottom: 24 }}
+          style={{ marginBottom: 16 }}
         >
           PROFESSIONAL
         </Text>
@@ -58,7 +88,7 @@ const SubscriptionInfo = () => {
           size="h1"
           weight="medium"
           color="#FBF6FA"
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: 4 }}
         >
           $19
         </Text>
@@ -66,7 +96,7 @@ const SubscriptionInfo = () => {
           size="p"
           weight="normal"
           color="#B1AFA4"
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: 16 }}
         >
           /month
         </Text>
@@ -79,7 +109,7 @@ const SubscriptionInfo = () => {
           }}
         ></View>
 
-        <View style={{ paddingVertical: 12, gap: 4 }}>
+        <View style={{ paddingVertical: 16, gap: 8 }}>
           {[
             "Create artist profile",
             "Share your portfolio",
@@ -117,7 +147,7 @@ const SubscriptionInfo = () => {
           color="#B1AFA4"
           style={{ textAlign: "center", marginTop: 8 }}
         >
-          Your trial ends on May 25, 2026
+          Your trial ends on {formattedTrialEndDate}
         </Text>
       </LinearGradient>
     </View>
@@ -148,7 +178,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   buttonContainer: {
-    padding: 24,
+    paddingTop: 32,
+    paddingHorizontal: 24,
     zIndex: 1,
     width: "100%",
     position: "absolute",

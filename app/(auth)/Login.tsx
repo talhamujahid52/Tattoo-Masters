@@ -85,8 +85,11 @@ const Login = () => {
       } else if (error.code === "auth/wrong-password") {
         alert("Incorrect password!");
         console.log("Incorrect password!");
+      } else if (error.code === "auth/invalid-credential") {
+        alert("The supplied auth credential is malformed");
+        console.log(error);
       } else {
-        alert(error.message); // Display a general error message
+        alert(error.message);
         console.log(error);
       }
     }
@@ -136,7 +139,7 @@ const Login = () => {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            router.push({
+            router.replace({
               pathname: "/(auth)/Register",
             });
           }}

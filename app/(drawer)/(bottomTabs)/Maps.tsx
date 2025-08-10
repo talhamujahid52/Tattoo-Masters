@@ -162,27 +162,29 @@ const FullScreenMapWithSearch: React.FC = () => {
 
     (async () => {
       try {
-        // Ask for foreground permission
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (cancelled) return;
 
         if (status !== "granted") {
-          // dispatch(setPermissionDenied(true));
           return;
         }
 
-        // dispatch(setPermissionDenied(false));
-
-        // Get the device’s current position
         const {
           coords: { latitude, longitude },
         } = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
         });
-
         if (!cancelled) {
+          const newRegion = {
+            latitude,
+            longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          };
           dispatch(setCurrentLocation({ latitude, longitude }));
+          setRegion(newRegion);
+          mapRef.current?.animateToRegion(newRegion, 1000); // optional
         }
       } catch (err) {
         console.warn("Location error:", err);

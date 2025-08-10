@@ -46,6 +46,7 @@ const CreateReviewPassword = () => {
 
   const submitForm = async () => {
     try {
+      setFormData((prev)=>({ ...prev, reviewPassword }));
       setLoading(true);
       const imgs = formData.images.filter((img) => img && img.uri);
       const updatedFormData = {

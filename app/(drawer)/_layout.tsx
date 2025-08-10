@@ -45,6 +45,24 @@ const CustomDrawerContent = () => {
   const isArtist = loggedInUserFirestore?.isArtist; //Get From LoggedIn User
   const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
 
+  let formattedTrialEndDate = "";
+  if (loggedInUserFirestore?.createdAt?.seconds) {
+    const milliseconds =
+      loggedInUserFirestore.createdAt.seconds * 1000 +
+      loggedInUserFirestore.createdAt.nanoseconds / 1e6;
+
+    const trialStartDate = new Date(milliseconds);
+    trialStartDate.setFullYear(trialStartDate.getFullYear() + 1); // Add 1 year
+
+    formattedTrialEndDate = trialStartDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+
+    // console.log("Trial ends on:", formattedTrialEndDate);
+  }
+
   return (
     <>
       <View
@@ -104,55 +122,65 @@ const CustomDrawerContent = () => {
         }}
       >
         {isArtist ? (
-          <View style={styles.artistProfileCard}>
-            <TouchableOpacity
-              onPress={() => {
-                router.push({
-                  pathname: "/artist/MyProfile",
-                  params: { loggedInUser: loggedInUser },
-                });
-              }}
-              style={styles.userProfileRow}
-            >
-              <View style={styles.pictureAndName}>
-                <Image style={styles.profilePicture} source={profileImage} />
-                <View>
-                  <Text size="profileName" weight="semibold" color="white">
-                    {name}
-                  </Text>
-                  <Text size="p" weight="normal" color="#A7A7A7">
-                    My Artist Profile
-                  </Text>
-                </View>
-              </View>
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/rightArrow.png")}
-              />
-            </TouchableOpacity>
-            <View
-              style={[styles.seprator, { backgroundColor: "#473E2B" }]}
-            ></View>
-            <View style={styles.artistFavoriteRow}>
-              <Image
-                style={{
-                  height: 14.5,
-                  width: 16,
-                  resizeMode: "contain",
+          <>
+            <View style={styles.artistProfileCard}>
+              <TouchableOpacity
+                onPress={() => {
+                  router.push({
+                    pathname: "/artist/MyProfile",
+                    params: { loggedInUser: loggedInUser },
+                  });
                 }}
-                source={require("../../assets/images/favorite.png")}
-              />
-              {loggedInUserFirestore?.followersCount ? (
-                <Text size="p" weight="normal" color="#A7A7A7">
-                  {loggedInUserFirestore?.followersCount}
-                </Text>
-              ) : (
-                <Text size="p" weight="normal" color="#A7A7A7">
-                  0
-                </Text>
-              )}
+                style={styles.userProfileRow}
+              >
+                <View style={styles.pictureAndName}>
+                  <Image style={styles.profilePicture} source={profileImage} />
+                  <View>
+                    <Text size="profileName" weight="semibold" color="white">
+                      {name}
+                    </Text>
+                    <Text size="p" weight="normal" color="#A7A7A7">
+                      My Artist Profile
+                    </Text>
+                  </View>
+                </View>
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/rightArrow.png")}
+                />
+              </TouchableOpacity>
+              <View
+                style={[styles.seprator, { backgroundColor: "#473E2B" }]}
+              ></View>
+              <View style={styles.artistFavoriteRow}>
+                <Image
+                  style={{
+                    height: 14.5,
+                    width: 16,
+                    resizeMode: "contain",
+                  }}
+                  source={require("../../assets/images/favorite.png")}
+                />
+                {loggedInUserFirestore?.followersCount ? (
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    {loggedInUserFirestore?.followersCount}
+                  </Text>
+                ) : (
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    0
+                  </Text>
+                )}
+              </View>
             </View>
-          </View>
+            <Text
+              size="large"
+              weight="normal"
+              color="#B1AFA4"
+              style={{ textAlign: "center", marginTop: 8, marginBottom: 16 }}
+            >
+              Your trail ends on {formattedTrialEndDate}
+            </Text>
+          </>
         ) : (
           <View>
             <View style={styles.userProfileRow}>
@@ -450,7 +478,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#2E2206",
     padding: 16,
     borderRadius: 12,
-    marginBottom: 16,
   },
   artistFavoriteRow: {
     display: "flex",
