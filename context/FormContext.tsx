@@ -16,6 +16,9 @@ type ImageObject = {
   name: string;
   caption: string;
   styles: string[];
+  uploadStatus?: "pending" | "uploading" | "completed" | "failed";
+  uploadId?: string;
+  uploadedAt?: number;
 };
 
 type FormData = {

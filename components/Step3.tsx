@@ -24,15 +24,14 @@ interface StudioItem {
 }
 const step3: React.FC = () => {
   const { formData } = useContext(FormContext)!;
-  console.log("Form Data: ", formData);
   const tattooStyles = formData?.tattooStyles;
   const router = useRouter();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
   const profileImage = useMemo(() => {
     return {
@@ -137,8 +136,8 @@ const step3: React.FC = () => {
             {formData?.studio === "studio"
               ? formData?.studioName
               : formData?.studio === "freelancer"
-              ? "Freelancer"
-              : "HomeArtist"}
+                ? "Freelancer"
+                : "HomeArtist"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.city}

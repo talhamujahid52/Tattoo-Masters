@@ -1,5 +1,6 @@
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Text from "./Text";
+import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { useRouter } from "expo-router";
 
@@ -21,7 +22,7 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
       }}
       style={styles.card}
     >
-      <Image
+      <ExpoImage
         // source={require("../assets/images/Artist.png")}
         source={
           artist?.data?.profilePicture || artist?.data?.profilePictureSmall
@@ -33,6 +34,8 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
             : require("../assets/images/Artist.png")
         }
         style={styles.imageStyle}
+        contentFit="cover"
+        cachePolicy={"disk"}
       />
       <View style={styles.RatingAndLocation}>
         {/* {isActive && <View style={styles.greenOnlineDot} />} */}
@@ -58,7 +61,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 148,
     borderRadius: 8,
-    resizeMode: "cover",
   },
   greenOnlineDot: {
     height: 8,

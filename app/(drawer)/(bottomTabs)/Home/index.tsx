@@ -21,16 +21,24 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { addSearch } from "@/redux/slices/recentSearchesSlice";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 
 const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [searchText, setSearchText] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [lastCompletedCount, setLastCompletedCount] = useState(0);
   const artistsTs = useTypesense();
   const publicationsTs = useTypesense();
+  const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
   const artists = useSelector((state: any) => state.artist.allArtists);
+
+  // Upload tracking for auto-refresh
+  const { queue, completedCount, failedCount, pendingCount, uploadingCount } =
+    useBackgroundUpload();
+
   // Shared values for the animation of the popular artists section
   const artistsOpacity = useSharedValue(1);
   const artistsTranslateY = useSharedValue(0);
@@ -61,8 +69,8 @@ const Home = () => {
           fetchedArtists.map(({ id, ...data }) => ({
             data,
             id,
-          }))
-        )
+          })),
+        ),
       );
     } catch (err) {
       console.error("Error fetching users:", err);

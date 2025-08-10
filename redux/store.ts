@@ -7,11 +7,13 @@ import chatSlice from "./slices/chatSlice";
 import recentSearchesSlice from "./slices/recentSearchesSlice";
 import tattooSlice from "./slices/tattooSlice";
 import filterSlices from "./slices/filterSlices";
+import uploadQueueSlice from "./slices/uploadQueueSlice";
 
 // Persist configuration
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
+  blacklist: ["uploadQueue"], // Don't persist upload queue - should reset on app restart
 };
 
 const rootReducer = combineReducers({
@@ -21,6 +23,7 @@ const rootReducer = combineReducers({
   recentSearches: recentSearchesSlice,
   tattoos: tattooSlice,
   filter: filterSlices,
+  uploadQueue: uploadQueueSlice,
 });
 
 // Create persisted reducer

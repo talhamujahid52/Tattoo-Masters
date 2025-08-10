@@ -13,7 +13,7 @@ import Step2 from "./Step2";
 import Step3 from "./Step3";
 import { FormContext } from "../context/FormContext";
 import { useSelector } from "react-redux";
-import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { getFileName } from "@/utils/helperFunctions";
 import { useRouter } from "expo-router";
 import { updateProfile } from "@react-native-firebase/auth";
@@ -33,9 +33,7 @@ const StepperForm: React.FC = () => {
   const dispatch = useDispatch();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const currentUserId = loggedInUser?.uid;
-  const { uploadImages } = useFirebaseImage({
-    uniqueFilePrefix: currentUserId,
-  });
+  const { queueUpload } = useBackgroundUpload();
 
   const stepLabels = ["Profile", "Tattoo portfolio", "Preview"];
 
@@ -46,39 +44,67 @@ const StepperForm: React.FC = () => {
   const handlePrevious = () => {
     setStep((prevStep: number) => Math.max(prevStep - 1, 1));
   };
-  const submitForm = async () => {
-    try {
-      setLoading(true);
-      const imgs = formData.images.filter((img) => img && img.uri);
-      const updatedFormData = {
-        ...formData,
-        tattooStyles: formData.tattooStyles.map((style) => style.title),
-      };
-      console.log("updatedFormData", updatedFormData);
-      await uploadImages(imgs); // upload publications images and add to publication collection as well
-      await updateUserProfile(currentUserId, {
-        ...updatedFormData,
-        isArtist: true, //make the user an artist
-      } as UserProfileFormData);
-      // update the user profile picture as well if it has been changed
-      if (formData?.profilePicture) {
-        await changeProfilePicture(
-          currentUserId,
-          formData?.profilePicture,
-          "profile.jpeg"
-        );
-      }
-
-      const updatedUser = await getUpdatedUser(currentUserId);
-      dispatch(setUserFirestoreData(updatedUser));
-      console.log("profile updated successfully");
-      router.replace("/(bottomTabs)/Home");
-    } catch (error) {
-      console.log("error", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const submitForm = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const imgs = formData.images.filter((img) => img && img.uri);
+  //     const updatedFormData = {
+  //       ...formData,
+  //       tattooStyles: formData.tattooStyles.map((style) => style.title),
+  //     };
+  //     console.log("updatedFormData", updatedFormData);
+  //
+  //     // Queue images for background upload (only if not already uploaded)
+  //     const imagesToUpload = imgs.filter(
+  //       (img) => !img.uploadStatus || img.uploadStatus === "failed",
+  //     );
+  //
+  //     if (imagesToUpload.length > 0) {
+  //       console.log(
+  //         `Queueing ${imagesToUpload.length} images for background upload`,
+  //       );
+  //
+  //       for (const img of imagesToUpload) {
+  //         queueUpload({
+  //           uri: img.uri,
+  //           userId: currentUserId,
+  //           type: "publication",
+  //           caption: img.caption,
+  //           styles: img.styles,
+  //           name: img.name,
+  //         });
+  //       }
+  //     }
+  //
+  //     await updateUserProfile(currentUserId, {
+  //       ...updatedFormData,
+  //       isArtist: true, //make the user an artist
+  //     } as UserProfileFormData);
+  //
+  //     // update the user profile picture as well if it has been changed
+  //     if (formData?.profilePicture) {
+  //       const profileSuccess = await queueUpload({
+  //         uri: formData.profilePicture,
+  //         userId: currentUserId,
+  //         type: "profile",
+  //         name: "profile.jpeg",
+  //       });
+  //
+  //       if (!profileSuccess) {
+  //         console.warn("Failed to queue profile picture upload");
+  //       }
+  //     }
+  //
+  //     const updatedUser = await getUpdatedUser(currentUserId);
+  //     dispatch(setUserFirestoreData(updatedUser));
+  //     console.log("profile updated successfully");
+  //     router.replace("/(bottomTabs)/Home");
+  //   } catch (error) {
+  //     console.log("error", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const renderStepIndicator = () => {
     const indicators = [];
@@ -102,7 +128,7 @@ const StepperForm: React.FC = () => {
           {i < totalSteps && (
             <View style={[styles.line, { width: width / 5 }]} />
           )}
-        </View>
+        </View>,
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;

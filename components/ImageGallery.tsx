@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
+import { Image as ExpoImage } from "expo-image";
 import { TypesenseResult, Publication } from "@/hooks/useTypesense";
 
 interface Props {
@@ -39,11 +40,12 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
             });
           }}
         >
-          <Image
+          <ExpoImage
             source={{ uri: item?.document?.downloadUrls?.small }}
             key={item?.document?.downloadUrls?.small}
+            cachePolicy={"disk"}
             style={styles.box}
-            resizeMode="cover"
+            contentFit="cover"
           />
         </TouchableOpacity>
       );

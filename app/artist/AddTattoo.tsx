@@ -10,7 +10,7 @@ import React, { useState, useEffect } from "react";
 import Text from "@/components/Text";
 import { launchImageLibrary } from "react-native-image-picker";
 import Button from "@/components/Button";
-import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { useSelector } from "react-redux";
 import { getFileName } from "@/utils/helperFunctions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,9 +28,7 @@ const AddTattoo = () => {
   const [loading, setLoading] = useState(false);
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const currentUserId = loggedInUser?.uid;
-  const { uploadImages } = useFirebaseImage({
-    uniqueFilePrefix: currentUserId,
-  });
+  const { queueUpload } = useBackgroundUpload();
   const [tattooStyles, setTattooStyles] = useState<
     { title: string; selected: boolean }[]
   >([]);
@@ -45,11 +43,11 @@ const AddTattoo = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item
+        : item,
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected
+      (item) => item.selected,
     );
     setSelectedTattooStyles(selectedTattooStyles);
   };
@@ -66,10 +64,10 @@ const AddTattoo = () => {
     }
   };
   const publishTattoo = async () => {
-    if (!attachment) {
-      return;
-    }
     try {
+      if (!attachment) {
+        throw new Error("No image selected");
+      }
       setLoading(true);
       const styles = selectedTattooStyles?.reduce((acc: string[], item) => {
         if (item.selected) {
@@ -77,14 +75,23 @@ const AddTattoo = () => {
         }
         return acc;
       }, []);
-      await uploadImages([
-        {
-          uri: attachment,
-          name: getFileName(attachment),
-          caption,
-          styles,
-        },
-      ]); // upload publications images and add to publication collection as well
+      const uploadSuccess = await queueUpload({
+        uri: attachment,
+        userId: currentUserId,
+        type: "publication",
+        caption,
+        styles,
+        name: getFileName(attachment),
+      }); // queue image for background upload
+
+      if (!uploadSuccess) {
+        Alert.alert(
+          "Upload Error",
+          "Failed to queue image for upload. The file may no longer exist.",
+        );
+        return;
+      }
+
       router.back();
     } catch (error) {
       Alert.alert("Error adding tattoo", error as string);
@@ -124,7 +131,7 @@ const AddTattoo = () => {
   } = useBottomSheet();
 
   const setSelectedTattooStylesinBottomSheet = (
-    updatedStyles: { title: string; selected: boolean }[]
+    updatedStyles: { title: string; selected: boolean }[],
   ) => {
     setTattooStyles(updatedStyles);
     const selected = updatedStyles.filter((item) => item.selected);
@@ -259,7 +266,7 @@ const AddTattoo = () => {
       >
         <Button
           loading={loading}
-          disabled={!attachment}
+          // disabled={!attachment}
           variant={attachment ? "primary" : "secondary"}
           onPress={publishTattoo}
           title="Publish"

@@ -2,6 +2,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import React from "react";
 import { useRouter } from "expo-router";
+import { Image as ExpoImage } from "expo-image";
 
 interface ArtistProfileCardProps {
   artist: any;
@@ -24,18 +25,19 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
         height: 215,
       }}
     >
-      <Image
+      <ExpoImage
         key={artist.data?.profilePicture}
+        cachePolicy={"disk"}
         source={
           artist.data.profilePicture
             ? { uri: profilePicture }
             : require("../assets/images/Artist.png")
         }
+        contentFit="cover"
         style={{
           width: 131,
           height: 170,
           borderRadius: 12,
-          resizeMode: "cover",
           backgroundColor: "#202020",
         }}
       />

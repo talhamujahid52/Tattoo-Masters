@@ -36,7 +36,7 @@ const recentSearchesSlice = createSlice({
 
       // remove duplicate of same text+type
       const idx = state.items.findIndex(
-        (item) => item.text === trimmed && item.type === type,
+        (item) => item.text === trimmed && item.type === type
       );
       if (idx >= 0) {
         state.items.splice(idx, 1);

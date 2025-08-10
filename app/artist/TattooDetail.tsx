@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   // Alert,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 
@@ -68,7 +69,7 @@ const TattooDetail: React.FC = () => {
     () => ({
       borderRadius: 30 / scale.value,
     }),
-    [scale]
+    [scale],
   );
   const insets = useSafeAreaInsets();
   const {
@@ -121,7 +122,7 @@ const TattooDetail: React.FC = () => {
     if (userId) {
       getDocument({ collection: "Users", documentId: userId })
         .then((doc) => {
-          console.log("user details", doc);
+          // console.log("user details", doc);
           setUserDetails(doc);
         })
         .catch((err) =>
@@ -176,13 +177,13 @@ const TattooDetail: React.FC = () => {
           maxScale={MAX_SCALE}
           style={animatedStyle}
         >
-          <Image
+          <ExpoImage
             style={{
               height: "100%",
               bottom: insets.bottom,
               width: "100%",
-              resizeMode: "contain",
             }}
+            contentFit="contain"
             source={{ uri: photoUrlVeryHigh }}
           />
         </Zoomable>

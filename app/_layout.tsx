@@ -1,4 +1,4 @@
-globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
+(globalThis as any).RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -13,6 +13,7 @@ import { ErrorBoundaryProps, SplashScreen } from "expo-router";
 import { LogBox, View } from "react-native";
 import Text from "@/components/Text";
 import { Try } from "expo-router/build/views/Try";
+import UploadProgressIndicator from "@/components/UploadProgressIndicator";
 // import { useRouter } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
@@ -33,6 +34,7 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <FormProvider>
                 <AppNavigator />
+                <UploadProgressIndicator />
               </FormProvider>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>

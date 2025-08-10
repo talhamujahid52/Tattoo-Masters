@@ -5,11 +5,15 @@ import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
 import Button from "@/components/Button";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useDispatch } from "react-redux";
+import { resetUser } from "@/redux/slices/userSlice";
+import { clearSearches } from "@/redux/slices/recentSearchesSlice";
 
 const DeleteAccount = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const providerId = auth().currentUser?.providerData;
   console.log("Provider: ", providerId);
@@ -36,6 +40,11 @@ const DeleteAccount = () => {
 
       // Delete user
       await user.delete();
+
+      // Clear user data and searches
+      dispatch(resetUser());
+      dispatch(clearSearches());
+
       Alert.alert(
         "Account Deleted",
         "Your account has been permanently deleted."

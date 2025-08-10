@@ -6,13 +6,14 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import { router } from "expo-router";
 import { FormContext } from "../../context/FormContext";
-import useFirebaseImage from "@/utils/firebase/useFirebaseImage";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUserProfile } from "@/utils/firebase/userFunctions";
 import { UserProfileFormData } from "@/types/user";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
+import { getFileName } from "@/utils/helperFunctions";
 
 const CreateReviewPassword = () => {
   const [reviewPassword, setReviewPassword] = useState<string>("");
@@ -23,9 +24,7 @@ const CreateReviewPassword = () => {
 
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const currentUserId = loggedInUser?.uid;
-  const { uploadImages } = useFirebaseImage({
-    uniqueFilePrefix: currentUserId,
-  });
+  const { queueUpload } = useBackgroundUpload();
   const dispatch = useDispatch();
   const { formData, setFormData } = useContext(FormContext)!;
 
@@ -49,25 +48,54 @@ const CreateReviewPassword = () => {
     try {
       setLoading(true);
       const imgs = formData.images.filter((img) => img && img.uri);
-      console.log("Form Data : ", formData);
       const updatedFormData = {
         ...formData,
         reviewPassword,
         tattooStyles: formData.tattooStyles.map((style) => style.title),
       };
-      console.log("updatedFormData : ", updatedFormData);
-      await uploadImages(imgs); // upload publications images and add to publication collection as well
+
+      // Check if images are already queued/uploaded to prevent duplicates
+      const imagesToUpload = imgs.filter(
+        (img) => !img.uploadStatus || img.uploadStatus === "failed",
+      );
+
+      if (imagesToUpload.length > 0) {
+        console.log(
+          `Queueing ${imagesToUpload.length} images for background upload`,
+        );
+
+        for (const img of imagesToUpload) {
+          queueUpload({
+            uri: img.uri,
+            userId: currentUserId,
+            type: "publication",
+            caption: img.caption,
+            styles: img.styles,
+            name: img.name,
+          });
+        }
+      }
+
       await updateUserProfile(currentUserId, {
         ...updatedFormData,
         isArtist: true, //make the user an artist
       } as UserProfileFormData);
+
       // update the user profile picture as well if it has been changed
-      if (formData?.profilePicture) {
-        await changeProfilePicture(
-          currentUserId,
-          formData?.profilePicture,
-          "profile.jpeg"
-        );
+      if (
+        formData?.profilePicture &&
+        !formData.profilePicture.startsWith("http")
+      ) {
+        const profileSuccess = queueUpload({
+          uri: formData.profilePicture,
+          userId: currentUserId,
+          type: "profile",
+          name: getFileName(formData.profilePicture),
+        });
+
+        if (!profileSuccess) {
+          console.warn("Failed to queue profile picture upload");
+        }
       }
 
       const updatedUser = await getUpdatedUser(currentUserId);

@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { launchImageLibrary, Asset } from "react-native-image-picker"; // Ensure proper typing for launchImageLibrary
-import { uploadFeedbackImage } from "@/utils/firebase/uploadFeedbackImage";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { firebase } from "@react-native-firebase/firestore";
 import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
@@ -24,6 +24,7 @@ const Feedback = () => {
   const [attachment, setAttachment] = useState<string | null>("");
   const currentUserId = firebase?.auth()?.currentUser?.uid;
   const [loading, setLoading] = useState(false);
+  const { queueUpload } = useBackgroundUpload();
 
   const handleSelectImage = async () => {
     const result = await launchImageLibrary({
@@ -46,32 +47,44 @@ const Feedback = () => {
     setLoading(true);
 
     try {
-      let imageUrl = null;
+      let imageQueuedSuccessfully = true;
 
-      // Only upload image if there is an attachment
+      // Queue image for background upload if there is an attachment
       if (attachment) {
-        const imageURLs = await uploadFeedbackImage(
-          attachment,
-          currentUserId as string,
-          "feedbackImage.jpeg"
-        );
+        imageQueuedSuccessfully = await queueUpload({
+          uri: attachment,
+          userId: currentUserId as string,
+          type: "feedback",
+          name: "feedbackImage.jpeg",
+        });
 
-        if (!imageURLs?.downloadUrlSmall) {
-          throw new Error("Failed to upload image");
+        if (!imageQueuedSuccessfully) {
+          Alert.alert(
+            "Image Upload Warning",
+            "Your feedback will be submitted, but the image could not be queued for upload. The image file may no longer exist."
+          );
         }
-
-        imageUrl = imageURLs.downloadUrlSmall;
       }
 
-      // Save feedback regardless of image presence
+      // Save feedback immediately (image will be processed in background)
       await firestore().collection("feedback").add({
         feedbackType: selectedOption,
         date: new Date(),
         feedback: content,
         user: currentUserId,
-        imageUrl: imageUrl, // null if not uploaded
+        imageUrl: null, // Will be updated when background upload completes
+        hasAttachment: !!attachment, // Track if there should be an image
       });
-      Alert.alert("Success", "Your Feedback has been submitted Successfully.", [
+
+      const successMessage =
+        "Your Feedback has been submitted Successfully. " +
+        (attachment && imageQueuedSuccessfully
+          ? "Your image is uploading in the background."
+          : attachment && !imageQueuedSuccessfully
+          ? "However, the image could not be uploaded."
+          : "");
+
+      Alert.alert("Success", successMessage, [
         {
           text: "OK",
           onPress: () => {
@@ -80,12 +93,10 @@ const Feedback = () => {
         },
       ]);
     } catch (err) {
-      console.error("Error publishing review:", err);
+      console.error("Error submitting feedback:", err);
       Alert.alert(
         "Error",
-        err instanceof Error && err.message === "Failed to upload image"
-          ? "We couldn't upload your tattoo image. Please try again."
-          : "There was a problem publishing your review. Please try again.",
+        "There was a problem submitting your feedback. Please try again.",
         [{ text: "OK" }]
       );
     } finally {

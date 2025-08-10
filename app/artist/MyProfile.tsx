@@ -32,13 +32,13 @@ const MyProfile = () => {
   const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
 
   const myId = loggedInUser?.uid;
 
-  console.log("LoggedIn User : ", loggedInUser);
-  console.log("LoggedIn User Id: ", loggedInUser?.uid);
+  // console.log("LoggedIn User : ", loggedInUser);
+  // console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -57,7 +57,7 @@ const MyProfile = () => {
       prevFilters.map((item) => ({
         ...item,
         selected: item.title === title,
-      }))
+      })),
     );
   };
 
@@ -153,13 +153,15 @@ const MyProfile = () => {
     return searchResults.filter(
       (doc) =>
         Array.isArray(doc.document.styles) &&
-        doc.document.styles.includes(selectedFilter.title)
+        doc.document.styles.includes(selectedFilter.title),
     );
   }, [searchResults, styleFilters]);
 
   return (
     <ScrollView style={styles.container}>
-      <BottomSheet InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />} />
+      <BottomSheet
+        InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />}
+      />
 
       <View style={styles.userProfileRow}>
         <View style={styles.pictureAndName}>

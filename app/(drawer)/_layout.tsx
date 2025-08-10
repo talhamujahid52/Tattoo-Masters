@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector, useDispatch } from "react-redux";
 import { UserFirestore } from "@/types/user";
 import { resetUser } from "@/redux/slices/userSlice";
+import { clearSearches } from "@/redux/slices/recentSearchesSlice";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -26,10 +27,10 @@ const CustomDrawerContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
   const profileImage = useMemo(() => {
     return {
@@ -327,7 +328,11 @@ const CustomDrawerContent = () => {
                 });
               }}
             >
-              <View style={{ position: "relative" }}>
+              <View
+                style={{
+                  position: "relative",
+                }}
+              >
                 <Image
                   style={styles.registerArtist}
                   source={require("../../assets/images/registerArtistBackground.png")}
@@ -395,6 +400,7 @@ const CustomDrawerContent = () => {
             onPress={async () => {
               await auth().signOut();
               dispatch(resetUser());
+              dispatch(clearSearches());
               navigation.dispatch(DrawerActions.toggleDrawer());
             }}
             style={styles.logoutButton}
@@ -500,7 +506,8 @@ const styles = StyleSheet.create({
   registerArtist: {
     height: "100%",
     width: "100%",
-    resizeMode: "contain",
+    resizeMode: "cover",
+    borderRadius: 12,
   },
   TermsOfServiceContainer: {
     display: "flex",

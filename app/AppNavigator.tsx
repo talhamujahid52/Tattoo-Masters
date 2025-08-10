@@ -1,5 +1,6 @@
 import React from "react";
 import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
+import { resetUploadingStates } from "@/redux/slices/uploadQueueSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -9,6 +10,7 @@ import { useEffect, useState } from "react";
 import { TouchableOpacity, Image } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
+import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -36,6 +38,19 @@ const AppNavigator = () => {
       });
     }
   }, [userId]);
+
+  // Initialize background upload service when user is authenticated
+  useEffect(() => {
+    if (userId && !initializing) {
+      console.log("Initializing background upload service for user:", userId);
+
+      // Reset any stuck upload states from previous app sessions
+      dispatch(resetUploadingStates());
+
+      // Service is already started on creation, but ensure it's running
+      backgroundUploadService.start();
+    }
+  }, [userId, initializing]);
 
   useEffect(() => {
     if (!initializing) {

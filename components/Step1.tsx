@@ -47,10 +47,10 @@ const Step1: React.FC = () => {
   };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
 
   // Prepopulate the full name field if it is not already set.
@@ -61,29 +61,7 @@ const Step1: React.FC = () => {
         name: loggedInUserFirestore.name,
       }));
     }
-
-    // Set profile picture if not already set
-    if (
-      !formData.profilePicture &&
-      (loggedInUserFirestore?.profilePictureSmall ||
-        loggedInUserFirestore?.profilePicture ||
-        loggedInUser?.photoURL)
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture:
-          loggedInUserFirestore?.profilePictureSmall ??
-          loggedInUserFirestore?.profilePicture ??
-          loggedInUser?.photoURL,
-      }));
-    }
-  }, [
-    loggedInUserFirestore,
-    loggedInUser,
-    formData.name,
-    formData.profilePicture,
-    setFormData,
-  ]);
+  }, [loggedInUserFirestore, loggedInUser, formData.name, setFormData]);
 
   useEffect(() => {
     const fetchTattooStyles = async () => {
@@ -152,17 +130,17 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item
+        : item,
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected
+      (item) => item.selected,
     );
     setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
   };
 
   const setSelectedTattooStyles = (
-    updatedStyles: { title: string; selected: boolean }[]
+    updatedStyles: { title: string; selected: boolean }[],
   ) => {
     setTattooStyles(updatedStyles);
     const selected = updatedStyles.filter((item) => item.selected);

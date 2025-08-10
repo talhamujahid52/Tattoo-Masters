@@ -12,6 +12,11 @@ import {
 import * as Location from "expo-location";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
+import {
+  GooglePlaceData,
+  GooglePlaceDetail,
+  GooglePlacesAutocomplete,
+} from "react-native-google-places-autocomplete";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ArtistProfileBottomSheet from "@/components/BottomSheets/ArtistProfileBottomSheet";
@@ -291,25 +296,93 @@ const FullScreenMapWithSearch: React.FC = () => {
       {/* Search & Filter */}
       <View style={styles.searchContainer}>
         <View style={{ width: "85%" }}>
-          <Input
-            inputMode="text"
+          <GooglePlacesAutocomplete
             placeholder="Search by location"
-            value={searchText}
-            onChangeText={setSearchText}
-            rightIcon={searchText ? "cancel" : undefined}
-            rightIconOnPress={() => {
-              setSearchText("");
-              setSearchedText("");
+            fetchDetails
+            onPress={(
+              data: GooglePlaceData,
+              details: GooglePlaceDetail | null
+            ) => {
+              if (details && details.geometry) {
+                const { lat, lng } = details.geometry.location;
+                const newRegion = {
+                  latitude: lat,
+                  longitude: lng,
+                  latitudeDelta: 0.02,
+                  longitudeDelta: 0.02,
+                };
+
+                // Only navigate to the selected location without triggering search
+                mapRef.current?.animateToRegion(newRegion, 1000);
+                setRegion(newRegion);
+
+                // Update the search text for display purposes only
+                setSearchText(data.description);
+              }
             }}
-            onSubmitEditing={() => {
-              Keyboard.dismiss();
-              setSearchedText(searchText);
+            query={{
+              key: "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k",
+              language: "en",
             }}
-            // leftIcon="search"
-            returnKeyType="search"
-            // rightIcon="cancel"
-            leftIcon="search"
-            backgroundColour="#242424"
+            styles={{
+              textInputContainer: {
+                backgroundColor: "#242424",
+                borderRadius: 50,
+                paddingHorizontal: 12,
+                height: 48,
+              },
+              textInput: {
+                flex: 1,
+                height: 48,
+                fontSize: 16,
+                color: "#fff",
+                backgroundColor: "transparent",
+              },
+              listView: {
+                borderRadius: 20,
+                marginTop: 4,
+                backgroundColor: "#242424",
+              },
+              row: {
+                backgroundColor: "#242424",
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+              },
+              description: {
+                color: "#FBF6FA",
+                fontSize: 14,
+              },
+              predefinedPlacesDescription: {
+                color: "#aaa",
+              },
+            }}
+            textInputProps={{
+              placeholderTextColor: "#FBF6FA",
+              selectionColor: "#fff",
+              value: searchText,
+              onChangeText: setSearchText,
+              returnKeyType: "search",
+              onSubmitEditing: () => {
+                Keyboard.dismiss();
+                setSearchedText(searchText);
+              },
+              clearButtonMode: "never", // Disable native clear button for iOS
+            }}
+            renderLeftButton={() => (
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 48,
+                }}
+              >
+                <Image
+                  source={require("../../../assets/images/search.png")}
+                  style={{ width: 24, height: 24, tintColor: "#fff" }}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
           />
         </View>
         <TouchableOpacity
@@ -422,7 +495,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     position: "absolute",
     top: Platform.OS === "ios" ? 60 : 30,
     width: "100%",

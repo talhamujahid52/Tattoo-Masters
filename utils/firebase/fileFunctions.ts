@@ -7,10 +7,10 @@ import storage from "@react-native-firebase/storage";
  */
 export const uploadFileToFirebase = async (
   file: { uri: string; fileName?: string },
-  folder: string,
+  folder: string
 ): Promise<string> => {
   try {
-    const fileName = `${folder}/${Date.now()}_${file.fileName || "image.jpg"}`;
+    const fileName = `${folder}/${Date.now()}_${file.fileName || "image.jpeg"}`;
     const storageRef = storage().ref(fileName);
 
     // Convert file URI to a Blob for upload
