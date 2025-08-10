@@ -5,6 +5,7 @@ import {
   FlatList,
   ScrollView,
   RefreshControl,
+  Image,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -146,8 +147,50 @@ const Home = () => {
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
-            // Remove fixed height so the container's animated height controls the space
             contentContainerStyle={{ gap: 16 }}
+            ListFooterComponent={
+              <TouchableOpacity
+                onPress={() => {
+                  router.push("/(bottomTabs)/Search");
+                }}
+                style={{
+                  width: 170,
+                  height: 170,
+                  borderRadius: 16,
+                  overflow: "hidden", // Ensure content like rounded corners are respected
+                  position: "relative",
+                }}
+              >
+                <Image
+                  source={require("../../../../assets/images/searchMoreArtists.png")}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    resizeMode: "cover",
+                  }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 40,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // justifyContent: "center",
+                    paddingHorizontal: 16,
+                  }}
+                >
+                  <Text
+                    size="h4"
+                    weight="semibold"
+                    color="#FBF6FA"
+                    style={{ textAlign: "center" }}
+                  >
+                    Wanna find more artists?
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            }
           />
         </View>
       </Animated.View>

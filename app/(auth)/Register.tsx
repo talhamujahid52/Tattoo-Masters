@@ -11,6 +11,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import auth from "@react-native-firebase/auth";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -70,8 +71,8 @@ const Register: React.FC = () => {
       });
 
       await user.sendEmailVerification();
-      alert("Verification email sent. Please check your inbox.");
-      // router.push({ pathname: "/(auth)/Login" });
+      await auth().signOut();
+      router.replace({ pathname: "/(auth)/EmailVerification" });
     } catch (error: any) {
       if (error && error.code && error.message) {
         alert(error.message);
@@ -97,7 +98,7 @@ const Register: React.FC = () => {
             Already have an account?{" "}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push({ pathname: "/(auth)/Login" })}
+            onPress={() => router.replace({ pathname: "/(auth)/Login" })}
           >
             <Text size="p" weight="semibold" color="#FBF6FA">
               Login here.

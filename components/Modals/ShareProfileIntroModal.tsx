@@ -1,16 +1,46 @@
 import React, { useContext } from "react";
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Image, TouchableOpacity, Share } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
 import { router } from "expo-router";
 import { FormContext } from "@/context/FormContext";
-
+import dynamicLinks from "@react-native-firebase/dynamic-links";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 type Props = {
   onClose?: () => void;
 };
 
 const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
   const { formData, setFormData } = useContext(FormContext)!;
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
+
+  const myProfileId = loggedInUserFirestore?.uid;
+  const shareProfile = async () => {
+    try {
+      const fullLink = `https://tattoomasters.com/artist?artistId=${myProfileId}`;
+
+      const shortLink = await dynamicLinks().buildShortLink({
+        link: fullLink,
+        domainUriPrefix: "https://tattoomasters.page.link",
+        android: {
+          packageName: "com.ddjn.tattoomasters",
+        },
+        ios: {
+          bundleId: "com.ddjn.tattoomasters",
+        },
+      });
+
+      await Share.share({
+        message: `Check out this artist profile:\n${shortLink}`,
+      });
+    } catch (error) {
+      console.error("Error sharing dynamic link:", error);
+    }
+  };
+
   return (
     <View style={styles.modalContent}>
       <Image
@@ -74,7 +104,12 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
         Great! Now you can share your new profile on social media and have your
         old clients, friends and followers find you here as well.
       </Text>
-      <Button title="Share Profile" onPress={() => {}} />
+      <Button
+        title="Share Profile"
+        onPress={() => {
+          shareProfile();
+        }}
+      />
       <TouchableOpacity
         style={styles.button}
         onPress={() => {

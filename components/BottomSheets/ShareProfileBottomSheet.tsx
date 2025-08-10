@@ -34,7 +34,7 @@ const ShareProfileBottomSheet = ({ hide }: bottomSheetProps) => {
           source={require("../../assets/images/share.png")}
         />
         <Text size="h4" weight="normal" color="#FBF6FA">
-          Share Your Profile
+          Share your profile
         </Text>
       </TouchableOpacity>
       <TouchableOpacity

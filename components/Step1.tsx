@@ -22,6 +22,7 @@ import { useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
+import * as Location from "expo-location";
 
 const Step1: React.FC = () => {
   const {
@@ -127,6 +128,40 @@ const Step1: React.FC = () => {
     latitudeDelta: defaultLocation.latitudeDelta,
     longitudeDelta: defaultLocation.longitudeDelta,
   });
+
+  useEffect(() => {
+    console.log("Use Effect called in Step 1 : ");
+    const getCurrentLocation = async () => {
+      console.log("Setting Region in step 1: ");
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.warn("Permission to access location was denied");
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        const currentRegion: Region = {
+          latitude,
+          longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+
+        console.log("Current Region in step 1: ", currentRegion);
+
+        setRegion(currentRegion);
+      } catch (error) {
+        console.error("Error getting location:", error);
+      }
+    };
+
+    if (formData.location.latitude === 0 && formData.location.longitude === 0) {
+      getCurrentLocation();
+    }
+  }, []);
 
   const handleProfilePictureSelection = async () => {
     const result = await launchImageLibrary({
@@ -291,14 +326,14 @@ const Step1: React.FC = () => {
           color="#A7A7A7"
           style={{ marginBottom: 10 }}
         >
-          Location
+          Address
         </Text>
         <Input
           inputMode="text"
-          placeholder="Location"
-          value={formData.city}
+          placeholder="Address"
+          value={formData.address}
           onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, city: text }))
+            setFormData((prev) => ({ ...prev, address: text }))
           }
         />
       </View>
@@ -338,7 +373,7 @@ const Step1: React.FC = () => {
             </MapView>
           </TouchableOpacity>
         )}
-        <View
+        {/* <View
           style={{
             display: "flex",
             flexDirection: "row",
@@ -361,7 +396,7 @@ const Step1: React.FC = () => {
             onValueChange={toggleSwitch}
             value={formData.showCityOnly}
           />
-        </View>
+        </View> */}
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles{" "}
@@ -470,7 +505,7 @@ const Step1: React.FC = () => {
               placeholder="Instagram profile"
               value={formData.instagramProfile}
               onChangeText={(text) =>
-                setFormData((prev) => ({ ...prev, instagramProfiel: text }))
+                setFormData((prev) => ({ ...prev, instagramProfile: text }))
               }
             />
             <Input

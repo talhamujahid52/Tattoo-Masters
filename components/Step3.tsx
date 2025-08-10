@@ -147,28 +147,22 @@ const step3: React.FC = () => {
       </View>
       <View style={styles.userSocialsRow}>
         {formData?.facebookProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/facebook_2.png")}
-            />
-          </TouchableOpacity>
+          <Image
+            style={styles.icon}
+            source={require("../assets/images/facebook_2.png")}
+          />
         )}
         {formData?.instagramProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/instagram.png")}
-            />
-          </TouchableOpacity>
+          <Image
+            style={styles.icon}
+            source={require("../assets/images/instagram.png")}
+          />
         )}
         {formData?.twitterProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/twitter.png")}
-            />
-          </TouchableOpacity>
+          <Image
+            style={styles.icon}
+            source={require("../assets/images/twitter.png")}
+          />
         )}
       </View>
       <View style={styles.artistFavoriteRow}>
@@ -203,11 +197,13 @@ const step3: React.FC = () => {
               pathname: "/artist/EditProfile",
             });
           }}
+          disabled
         />
         <IconButton
           title="Message"
           icon={require("../assets/images/message.png")}
           variant="Primary"
+          disabled
         />
       </View>
       <ReviewOnProfileBlur></ReviewOnProfileBlur>

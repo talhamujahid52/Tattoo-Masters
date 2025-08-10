@@ -181,7 +181,7 @@ const EditProfile = () => {
             color="#A7A7A7"
             style={{ marginBottom: 10 }}
           >
-            Full Name
+            Full name
           </Text>
           <Input
             inputMode="text"
@@ -197,7 +197,7 @@ const EditProfile = () => {
             color="#A7A7A7"
             style={{ marginBottom: 10 }}
           >
-            Phone Number
+            Phone number
           </Text>
           <Input
             inputMode="tel"

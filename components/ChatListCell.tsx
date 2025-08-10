@@ -3,6 +3,7 @@ import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
+import useGetArtist from "@/hooks/useGetArtist";
 interface ChatListCellProps {
   chat: any;
 }
@@ -15,8 +16,14 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     (item: any) => item !== loggedInUser?.uid
   );
 
-  const otherUserName = chat?.item?.[otherUser]?.name;
-  const otherUserProfilePicture = chat?.item?.[otherUser]?.profilePicture;
+  const otherUserDetails = useGetArtist(otherUser);
+  const otherUserName = otherUserDetails?.data?.name;
+  const otherUserId = otherUserDetails?.data?.uid;
+
+  const otherUserProfilePicture = otherUserDetails?.data?.profilePictureSmall
+    ? otherUserDetails?.data?.profilePictureSmall
+    : otherUserDetails?.data?.profilePicture;
+
   const lastMessage = chat?.item?.lastMessage;
   const lastMessageTime = chat?.item?.lastMessageTime;
   const date = new Date(
@@ -56,6 +63,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           params: {
             existingChatId: chat.item.id,
             otherUserName: otherUserName,
+            otherUserId: otherUserId,
             otherUserProfilePicture: otherUserProfilePicture,
           },
         });

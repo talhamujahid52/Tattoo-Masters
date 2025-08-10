@@ -62,14 +62,7 @@ const Feedback = () => {
         user: currentUserId,
         imageUrl: imageURLs.downloadUrlSmall,
       });
-      Alert.alert("Success", "Your Feedback has been submitted Successfully.", [
-        {
-          text: "OK",
-          onPress: () => {
-            router.back();
-          },
-        },
-      ]);
+      router.replace("/artist/FeedbackSubmitted");
     } catch (err) {
       console.error("Error publishing review:", err);
       Alert.alert(
