@@ -10,12 +10,31 @@ import { useEffect, useState } from "react";
 import { TouchableOpacity, Image } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  useNotification,
+  useNotificationListeners,
+} from "@/hooks/useNotification";
+
+import dynamicLinks from "@react-native-firebase/dynamic-links";
 import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [initializing, setInitializing] = useState(true);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
+
+  useNotification(userId); // Handles token, saving, etc.
+
+  useNotificationListeners({
+    onReceive: (notification) => {
+      console.log("Received notification in foreground:", notification);
+    },
+    onRespond: (response) => {
+      console.log("User tapped notification:", response);
+      // Optional: deep linking or navigation
+    },
+  });
+
   const router = useRouter();
   const pathname = usePathname();
   // Handle user state changes
@@ -24,6 +43,28 @@ const AppNavigator = () => {
     dispatch(setUser(user));
     if (initializing) setInitializing(false);
   }
+
+  useEffect(() => {
+    const handleDynamicLink = (link: any) => {
+      console.log("URL: ", link);
+      if (link?.url) {
+        const url = new URL(link.url);
+        const artistId = url.searchParams.get("artistId");
+
+        console.log("Artist Id: ", artistId);
+
+        if (artistId) {
+          router.push(`/artist/ArtistProfile?artistId=${artistId}`);
+        }
+      }
+    };
+
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+
+    dynamicLinks().getInitialLink().then(handleDynamicLink);
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);

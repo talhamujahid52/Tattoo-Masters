@@ -22,6 +22,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import uuid from "react-native-uuid";
 import firestore from "@react-native-firebase/firestore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const IndividualChat: React.FC = () => {
   const [composerHeight, setComposerHeight] = useState(44);
@@ -30,8 +31,14 @@ const IndividualChat: React.FC = () => {
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
   const loggedInUser = useSelector((state: any) => state?.user?.user);
-  const { checkIfChatExists, fetchChatMessages, createChat, addMessageToChat } =
-    useChats(loggedInUser.uid);
+  const {
+    checkIfChatExists,
+    fetchChatMessages,
+    createChat,
+    addMessageToChat,
+    listenToMessages,
+  } = useChats(loggedInUser.uid);
+  const insets = useSafeAreaInsets();
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
 
@@ -84,13 +91,11 @@ const IndividualChat: React.FC = () => {
               artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
                 artistChat?.data()?.[selectedArtistId]?.profilePicture
             );
-            const chatMessages = await fetchChatMessages(artistChat.id);
-            setMessages(formatMessages(chatMessages));
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
-              artistChat?.data()?.[selectedArtistId]?.profilePictureSmall ??
-                artistChat?.data()?.[selectedArtistId]?.profilePicture
+              selectedArtist?.data?.profilePictureSmall ??
+                selectedArtist?.data?.profilePicture
             );
           }
         } catch (error) {
@@ -101,13 +106,18 @@ const IndividualChat: React.FC = () => {
       fetchMessagesIfChatExists();
     } else if (existingChatId) {
       setChatID(existingChatId);
-      fetchChatMessages(existingChatId).then((msgs) => {
-        setMessages(formatMessages(msgs));
-      });
       setMessageRecieverName(otherUserName);
       setRecieverProfilePicture(otherUserProfilePicture);
     }
   }, [selectedArtistId, existingChatId]);
+
+  useEffect(() => {
+    if (!chatID) return;
+    const unsubscribe = listenToMessages(chatID, (msgs) => {
+      setMessages(formatMessages(msgs));
+    });
+    return () => unsubscribe();
+  }, [chatID]);
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
@@ -123,9 +133,6 @@ const IndividualChat: React.FC = () => {
         }
       }
       await addMessageToChat(newMessages, currentChatID);
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, newMessages)
-      );
     },
     [chatID]
   );
@@ -305,7 +312,12 @@ const IndividualChat: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -377,7 +389,7 @@ const IndividualChat: React.FC = () => {
         alwaysShowSend={true}
         inverted={true}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

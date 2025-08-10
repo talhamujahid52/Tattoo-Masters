@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import * as Linking from "expo-linking";
+import dynamicLinks from "@react-native-firebase/dynamic-links";
 
 interface bottomSheetProps {
   showLoginBottomSheet: () => void;
@@ -30,27 +31,26 @@ const ShareArtistProfileBottomSheet = ({
     (state: any) => state?.user?.user
   );
 
-  const shareArtistProfile = async (artistId: any) => {
+  const shareArtistProfile = async (artistId: string) => {
     try {
-      const baseUrl = Linking.createURL("artist/ArtistProfile");
-      const url = `${baseUrl}?artistId=${artistId}`;
-      console.log("Generated URL:", url); // Important for testing!
+      const fullLink = `https://tattoomasters.com/artist?artistId=${artistId}`;
 
-      // const canOpen = await Linking.canOpenURL(url);
-      // console.log("Can open URL:", canOpen);
+      const shortLink = await dynamicLinks().buildShortLink({
+        link: fullLink,
+        domainUriPrefix: "https://tattoomasters.page.link",
+        android: {
+          packageName: "com.ddjn.tattoomasters",
+        },
+        ios: {
+          bundleId: "com.ddjn.tattoomasters",
+        },
+      });
 
-      // if (canOpen) {
-      //   await Linking.openURL(url);
-      //   console.log("✅ URL opened successfully!");
-      // } else {
-      //   Alert.alert("Error", "Cannot open this URL");
-      // }
       await Share.share({
-        message: `Check out this artist profile: ${url}`,
-        url: url,
+        message: `Check out this artist profile:\n${shortLink}`,
       });
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.error("Error sharing dynamic link:", error);
     }
   };
 

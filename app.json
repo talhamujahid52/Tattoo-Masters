@@ -21,7 +21,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "aps-environment": "production",
         "NSLocationWhenInUseUsageDescription": "This app requires access to your location when open.",
-        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images."
+        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images.",
+        "NSUserTrackingUsageDescription": "This identifier will be used to send push notifications."
       }
     },
     "android": {
@@ -30,7 +31,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ddjn.tattoomasters"
+      "package": "com.ddjn.tattoomasters",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -59,6 +64,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "expo-notifications",
       [
         "expo-location",
         {
