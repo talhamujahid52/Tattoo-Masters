@@ -69,7 +69,7 @@ const ShareArtistProfileBottomSheet = ({
           source={require("../../assets/images/share_2.png")}
         />
         <Text size="h4" weight="normal" color="#FBF6FA">
-          Share Profile
+          Share profile
         </Text>
       </TouchableOpacity>
       <TouchableOpacity

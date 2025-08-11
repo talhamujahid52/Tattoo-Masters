@@ -70,8 +70,8 @@ const Home = () => {
           fetchedArtists.map(({ id, ...data }) => ({
             data,
             id,
-          })),
-        ),
+          }))
+        )
       );
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -212,7 +212,6 @@ const Home = () => {
         style={{ marginTop: 24, marginBottom: 8, paddingLeft: 16 }}
       >
         Find your inspiration
-        Find Your Inspiration
       </Text>
       <ImageGallery images={publicationsTs.results} />
     </ScrollView>

@@ -20,7 +20,10 @@ const LoginBottomSheet = ({ hideLoginBottomSheet }: LoginBottomSheetProps) => {
         .get();
 
       const count = snapshot.data().count || 0;
-      setTotalArtists(count);
+
+      const roundedCount = Math.round(count / 1000) * 1000;
+
+      setTotalArtists(roundedCount);
     } catch (error) {
       setTotalArtists(2000); // Fallback if needed
     }

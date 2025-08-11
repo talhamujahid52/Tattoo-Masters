@@ -86,7 +86,7 @@ const Login = () => {
         alert("Incorrect password!");
         console.log("Incorrect password!");
       } else if (error.code === "auth/invalid-credential") {
-        alert("The supplied auth credential is malformed");
+        alert("The supplied auth credential is malformed or Expired.");
         console.log(error);
       } else {
         alert(error.message);

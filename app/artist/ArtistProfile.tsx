@@ -35,7 +35,7 @@ interface StyleItem {
 const options = [
   { label: "Inappropriate account", value: "Inappropriate account" },
   { label: "Impersonation", value: "Impersonation" },
-  { label: "Fake Account", value: "Fake Account" },
+  { label: "Fake account", value: "Fake account" },
   { label: "Other", value: "Other" },
 ];
 
@@ -76,9 +76,11 @@ const ArtistProfile = () => {
     longitudeDelta: 0.02,
   };
 
+  console.log("Artist Profile: ", artist);
+
   const region = {
-    latitude: artist?.data?.location?.latitude || defaultLocation.latitude,
-    longitude: artist?.data?.location?.longitude || defaultLocation.longitude,
+    latitude: artist?.data?.location[0] || defaultLocation.latitude,
+    longitude: artist?.data?.location[1] || defaultLocation.longitude,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   };
@@ -279,10 +281,8 @@ const ArtistProfile = () => {
   };
 
   const openInGoogleMaps = () => {
-    const latitude =
-      artist?.data?.location?.latitude || defaultLocation.latitude;
-    const longitude =
-      artist?.data?.location?.longitude || defaultLocation.longitude;
+    const latitude = artist?.data?.location[0] || defaultLocation.latitude;
+    const longitude = artist?.data?.location[1] || defaultLocation.longitude;
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
 
     Linking.openURL(url).catch((err) => {
