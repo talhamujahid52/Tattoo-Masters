@@ -32,10 +32,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.ddjn.tattoomasters",
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "POST_NOTIFICATIONS"
-      ]
+      "permissions": ["ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
@@ -64,7 +61,6 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "expo-notifications",
       [
         "expo-location",
         {

@@ -41,7 +41,6 @@ const IndividualChat: React.FC = () => {
     addMessageToChat,
     listenToMessages,
   } = useChats(loggedInUser.uid);
-  const insets = useSafeAreaInsets();
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
 
@@ -51,7 +50,6 @@ const IndividualChat: React.FC = () => {
     otherUserName,
     otherUserId,
     otherUserProfilePicture,
-    otherUser,
   } = useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
   const otherUser = useGetArtist(otherUserId);
@@ -93,14 +91,14 @@ const IndividualChat: React.FC = () => {
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture
+                : selectedArtist?.data?.profilePicture,
             );
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture
+                : selectedArtist?.data?.profilePicture,
             );
           }
         } catch (error) {
@@ -115,7 +113,7 @@ const IndividualChat: React.FC = () => {
       setRecieverProfilePicture(
         otherUser?.data?.profilePictureSmall
           ? otherUser?.data?.profilePictureSmall
-          : otherUser?.data?.profilePicture
+          : otherUser?.data?.profilePicture,
       );
     }
   }, [selectedArtistId, existingChatId]);
@@ -143,7 +141,7 @@ const IndividualChat: React.FC = () => {
       }
       await addMessageToChat(newMessages, currentChatID);
     },
-    [chatID]
+    [chatID],
   );
 
   // Custom rendering functions
@@ -157,8 +155,8 @@ const IndividualChat: React.FC = () => {
         typeof createdAt === "number"
           ? new Date(createdAt)
           : createdAt instanceof Date
-          ? createdAt
-          : new Date(createdAt);
+            ? createdAt
+            : new Date(createdAt);
 
       if (isNaN(messageDate.getTime())) return "";
 
@@ -322,7 +320,7 @@ const IndividualChat: React.FC = () => {
   const getTimeAgo = (timestamp: Date): string => {
     const now = new Date();
     const diffInSeconds = Math.floor(
-      (now.getTime() - timestamp.getTime()) / 1000
+      (now.getTime() - timestamp.getTime()) / 1000,
     );
 
     if (diffInSeconds < 60) return "just now";
@@ -383,8 +381,8 @@ const IndividualChat: React.FC = () => {
               {isOnline
                 ? "Online"
                 : lastSeen
-                ? `Last seen ${getTimeAgo(lastSeen)}`
-                : ""}
+                  ? `Last seen ${getTimeAgo(lastSeen)}`
+                  : ""}
             </Text>
           </View>
         </View>
@@ -413,7 +411,7 @@ const IndividualChat: React.FC = () => {
         alwaysShowSend={true}
         inverted={true}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
