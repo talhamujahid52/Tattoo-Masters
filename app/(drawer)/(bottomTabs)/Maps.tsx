@@ -460,7 +460,7 @@ const FullScreenMapWithSearch: React.FC = () => {
                   source={{
                     uri: profilePic
                       ? profilePic
-                      : "https://lh3.googleusercontent.com/a/ACg8ocLJTuqJGXUSEPryOs9uSZWlMHe5YwjDWb_vRiYSJKm46KmQM-Sj=s96-c",
+                      : require("../../../assets/images/placeholder.png"),
                   }}
                   style={{
                     width: 48,

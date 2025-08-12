@@ -28,6 +28,7 @@ import { useSelector } from "react-redux";
 import { useIsPublicationLiked } from "@/hooks/useIsPublicationLiked";
 import usePublicationLikes from "@/hooks/usePublicationLikes";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 5;
@@ -47,7 +48,7 @@ const TattooDetail: React.FC = () => {
   const scale = useSharedValue(1);
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const currentUserId = loggedInUser?.uid;
 
@@ -69,7 +70,7 @@ const TattooDetail: React.FC = () => {
     () => ({
       borderRadius: 30 / scale.value,
     }),
-    [scale],
+    [scale]
   );
   const insets = useSafeAreaInsets();
   const {
@@ -126,7 +127,7 @@ const TattooDetail: React.FC = () => {
           setUserDetails(doc);
         })
         .catch((err) =>
-          console.error("Error fetching user details from Typesense:", err),
+          console.error("Error fetching user details from Typesense:", err)
         );
     }
   }, [userId, getDocument]);
@@ -209,7 +210,15 @@ const TattooDetail: React.FC = () => {
             marginBottom: 16,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push({
+                pathname: "/artist/ArtistProfile",
+                params: { artistId: userDetails?.uid },
+              });
+            }}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
             <Image
               style={{
                 width: 42,
@@ -228,7 +237,7 @@ const TattooDetail: React.FC = () => {
             <Text size="p" weight="semibold" color="#FFF">
               {userDetails?.name}
             </Text>
-          </View>
+          </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity
               onPress={toggleLikePublicationOnHandle}

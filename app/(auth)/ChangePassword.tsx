@@ -26,8 +26,14 @@ const ChangePassword = () => {
     }
 
     // Check if user is logged in and entered a different email
-    if (isLoggedIn && email.toLowerCase() !== loggedInUserEmail?.toLowerCase()) {
-      Alert.alert("Error", "Entered email does not match the logged-in user's email.");
+    if (
+      isLoggedIn &&
+      email.toLowerCase() !== loggedInUserEmail?.toLowerCase()
+    ) {
+      Alert.alert(
+        "Error",
+        "Entered email does not match the logged-in user's email."
+      );
       return;
     }
 
@@ -66,7 +72,7 @@ const ChangePassword = () => {
         source={require("../../assets/images/lock.png")}
       />
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Reset Password
+        Reset password
       </Text>
       <Text
         size="p"

@@ -10,24 +10,33 @@ type NoReviewsProps = {
 const NoReviews: React.FC<NoReviewsProps> = ({ ArtistId }) => {
   return (
     <View style={styles.container}>
-      <Text size="profileName" weight="semibold" color="#FBF6FA">
-        Reviews
-      </Text>
-      <Text size="p" weight="normal" color="#A7A7A7">
-        The tattoo artist has no reviews yet. Want to leave a review?
-      </Text>
-      <TouchableOpacity
-        onPress={() => {
-          router.push({
-            pathname: "/artist/VerifyReviewPassword",
-            params: { artistId: ArtistId },
-          });
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
         }}
       >
-        <Text size="p" weight="normal" color="#DAB769">
-          Leave a review?
+        <Text size="profileName" weight="semibold" color="#FBF6FA">
+          Reviews
         </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/artist/VerifyReviewPassword",
+              params: { artistId: ArtistId },
+            });
+          }}
+        >
+          <Text size="p" weight="normal" color="#DAB769">
+            Leave a review?
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text size="p" weight="normal" color="#A7A7A7">
+        The tattoo artist has no reviews yet.
+      </Text>
     </View>
   );
 };
@@ -36,10 +45,9 @@ export default NoReviews;
 
 const styles = StyleSheet.create({
   container: {
-    height: 135,
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
+    rowGap: 8,
     backgroundColor: "#20201E",
     padding: 16,
     borderRadius: 12,

@@ -6,6 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   Image,
+  Pressable,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -120,7 +121,7 @@ const Home = () => {
         />
       }
     >
-      <View style={{ paddingHorizontal: 16 }}>
+      <View style={{ position: "relative", paddingHorizontal: 16 }}>
         <Input
           value={searchText}
           inputMode="text"
@@ -131,6 +132,17 @@ const Home = () => {
           rightIcon={searchText !== "" && "cancel"}
           rightIconOnPress={() => setSearchText("")}
           backgroundColour="#151515"
+        />
+        <Pressable
+          onPress={() => router.push("/Search")}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
+          }}
         />
       </View>
 
@@ -150,7 +162,7 @@ const Home = () => {
             </Text>
           </TouchableOpacity>
         </View>
-        <View>
+        <View style={{ paddingLeft: 16 }}>
           <FlatList
             data={artists}
             renderItem={({ item }) => <ArtistProfileCard artist={item} />}

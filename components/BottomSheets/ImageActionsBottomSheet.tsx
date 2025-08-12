@@ -1,7 +1,7 @@
 import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
 import Text from "../Text";
 import React from "react";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
@@ -41,7 +41,7 @@ const ImageActionsBottomSheet = ({
       <TouchableOpacity
         onPress={() => {
           loggedInUser
-            ? hideImageActionsSheet()
+            ? (hideImageActionsSheet(), router.push("/artist/Feedback"))
             : (hideImageActionsSheet(), showLoggingInBottomSheet());
         }}
         style={styles.drawerItem}

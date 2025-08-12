@@ -26,7 +26,8 @@ const FavouriteArtists = () => {
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7">
-          {favoritedArtists.length} Favourite {favoritedArtists.length === 1 ? "Artist" : "Artists"}
+          {favoritedArtists.length} favourite{" "}
+          {favoritedArtists.length === 1 ? "artist" : "artists"}
         </Text>
       </View>
       {favoritedArtists.length > 0 ? (
@@ -51,9 +52,14 @@ const FavouriteArtists = () => {
       ) : (
         <View style={styles.emptyContainer}>
           <Text size="h4" weight="medium" color="#A7A7A7">
-            No Favourite Artists Yet
+            No favourite artists yet
           </Text>
-          <Text size="p" weight="normal" color="#A7A7A7" style={styles.emptyText}>
+          <Text
+            size="p"
+            weight="normal"
+            color="#A7A7A7"
+            style={styles.emptyText}
+          >
             Artists you favorite will appear here
           </Text>
         </View>

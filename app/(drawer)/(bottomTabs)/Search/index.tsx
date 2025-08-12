@@ -1,5 +1,6 @@
 // app/Search.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   StyleSheet,
   View,
@@ -58,6 +59,15 @@ const Search: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const timeout = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 300);
+
+      return () => clearTimeout(timeout);
+    }, [])
+  );
 
   // overlay fade (if you re-enable it)
   useEffect(() => {

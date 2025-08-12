@@ -27,10 +27,10 @@ const CustomDrawerContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const profileImage = useMemo(() => {
     return {
@@ -67,13 +67,13 @@ const CustomDrawerContent = () => {
     <>
       <View
         style={{
-          height: insets.top + 30,
+          height: insets.top + 40,
           flexDirection: "column",
           justifyContent: "flex-end",
-          paddingHorizontal: 16,
+          paddingHorizontal: 5,
           borderBottomColor: "#282828",
           borderBottomWidth: 0.33,
-          marginBottom: 16,
+          // marginBottom: 16,
         }}
       >
         <View
@@ -81,7 +81,7 @@ const CustomDrawerContent = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            height: 30,
+            height: 40,
           }}
         >
           <TouchableOpacity
@@ -102,16 +102,17 @@ const CustomDrawerContent = () => {
               />
             )}
           </TouchableOpacity>
-          <Text weight="medium" size="h4" color="white">
+          <Text weight="semibold" style={{ fontSize: 20 }} color="white">
             Menu
           </Text>
-          <View style={{ width: 40 }}></View>
+          <View style={{ width: 30 }}></View>
         </View>
       </View>
       <ScrollView
         contentContainerStyle={{
           minHeight: SCREEN_HEIGHT - insets.top - 20,
           paddingBottom: insets.bottom + 20,
+          paddingTop: 16,
           justifyContent: "space-between",
           // backgroundColor:"green"
         }}
@@ -140,7 +141,7 @@ const CustomDrawerContent = () => {
                       {name}
                     </Text>
                     <Text size="p" weight="normal" color="#A7A7A7">
-                      My Artist Profile
+                      My artist profile
                     </Text>
                   </View>
                 </View>

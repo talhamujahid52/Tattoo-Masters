@@ -44,7 +44,11 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
         </Text>
       </View>
       <Text size="medium" weight="normal" color="#A7A7A7">
-        {artist?.data?.studioName}
+        {artist?.data?.studio === "studio"
+          ? artist?.data?.studioName
+          : artist?.data?.studio === "freelancer"
+          ? "Freelancer"
+          : "HomeArtist"}
       </Text>
     </TouchableOpacity>
   );

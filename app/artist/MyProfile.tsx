@@ -32,7 +32,7 @@ const MyProfile = () => {
   const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
   const loggedInUser: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
 
   const myId = loggedInUser?.uid;
@@ -57,7 +57,7 @@ const MyProfile = () => {
       prevFilters.map((item) => ({
         ...item,
         selected: item.title === title,
-      })),
+      }))
     );
   };
 
@@ -67,7 +67,7 @@ const MyProfile = () => {
       activeOpacity={1}
       style={{
         padding: 6,
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
         borderRadius: 6,
         backgroundColor: item.selected ? "#DAB769" : "#262526",
         flexDirection: "row",
@@ -79,7 +79,7 @@ const MyProfile = () => {
         <Text
           style={{
             color: item.selected ? "#22221F" : "#A7A7A7",
-            marginLeft: 6,
+            // marginLeft: 6,
           }}
         >
           {item.count}
@@ -153,7 +153,7 @@ const MyProfile = () => {
     return searchResults.filter(
       (doc) =>
         Array.isArray(doc.document.styles) &&
-        doc.document.styles.includes(selectedFilter.title),
+        doc.document.styles.includes(selectedFilter.title)
     );
   }, [searchResults, styleFilters]);
 
@@ -178,7 +178,11 @@ const MyProfile = () => {
               {loggedInUser?.name ?? ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {loggedInUser.studioName ?? ""}
+              {loggedInUser?.studio === "studio"
+                ? loggedInUser?.studioName
+                : loggedInUser?.studio === "freelancer"
+                ? "Freelancer"
+                : "HomeArtist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {loggedInUser?.city ?? ""}
@@ -303,6 +307,7 @@ const MyProfile = () => {
           keyExtractor={(item) => item.title}
           horizontal={true}
           contentContainerStyle={{ gap: 10 }}
+          showsHorizontalScrollIndicator={false}
         />
       </View>
       <View style={{ paddingBottom: 60 }}>
@@ -369,6 +374,7 @@ const styles = StyleSheet.create({
   },
   tattooStylesRow: {
     display: "flex",
+    flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

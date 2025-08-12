@@ -10,7 +10,7 @@ interface ChatListCellProps {
 
 const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
-  const participants = chat?.item?.participants;
+  const participants = chat?.participants;
 
   const otherUser = participants?.find(
     (item: any) => item !== loggedInUser?.uid
@@ -24,10 +24,10 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     ? otherUserDetails?.data?.profilePictureSmall
     : otherUserDetails?.data?.profilePicture;
 
-  const lastMessage = chat?.item?.lastMessage;
-  const lastMessageTime = chat?.item?.lastMessageTime;
+  const lastMessage = chat?.lastMessage;
+  const lastMessageTime = chat?.lastMessageTime;
   const date = new Date(
-    lastMessageTime.seconds * 1000 + lastMessageTime.nanoseconds / 1000000
+    lastMessageTime?.seconds * 1000 + lastMessageTime?.nanoseconds / 1000000
   );
 
   function formatMessageDate(dateString: string): string {
@@ -61,7 +61,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
         router.push({
           pathname: "/artist/IndividualChat",
           params: {
-            existingChatId: chat.item.id,
+            existingChatId: chat?.id,
             otherUserName: otherUserName,
             otherUserId: otherUserId,
             otherUserProfilePicture: otherUserProfilePicture,
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "stretch",
     borderBottomColor: "#525252",
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.33,
   },
   row1: {
     justifyContent: "space-between",

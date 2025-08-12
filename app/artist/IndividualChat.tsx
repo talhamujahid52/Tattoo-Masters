@@ -43,7 +43,8 @@ const IndividualChat: React.FC = () => {
   } = useChats(loggedInUser.uid);
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
-
+  const [localTime, setLocalTime] = useState<String>();
+  console.log("Local Time: ", localTime);
   const {
     selectedArtistId,
     existingChatId,
@@ -91,15 +92,23 @@ const IndividualChat: React.FC = () => {
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture,
+                : selectedArtist?.data?.profilePicture
             );
+            const localTime = await getLocalTimeFromCoordinates(
+              selectedArtist?.data?.location
+            );
+            setLocalTime(localTime);
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture,
+                : selectedArtist?.data?.profilePicture
             );
+            const localTime = await getLocalTimeFromCoordinates(
+              selectedArtist?.data?.location
+            );
+            setLocalTime(localTime);
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
@@ -108,13 +117,20 @@ const IndividualChat: React.FC = () => {
 
       fetchMessagesIfChatExists();
     } else if (existingChatId) {
-      setChatID(existingChatId);
-      setMessageRecieverName(otherUserName);
-      setRecieverProfilePicture(
-        otherUser?.data?.profilePictureSmall
-          ? otherUser?.data?.profilePictureSmall
-          : otherUser?.data?.profilePicture,
-      );
+      const chatExistsAlready = async () => {
+        setChatID(existingChatId);
+        setMessageRecieverName(otherUserName);
+        setRecieverProfilePicture(
+          otherUser?.data?.profilePictureSmall
+            ? otherUser?.data?.profilePictureSmall
+            : otherUser?.data?.profilePicture
+        );
+        const localTime = await getLocalTimeFromCoordinates(
+          otherUser?.data?.location
+        );
+        setLocalTime(localTime);
+      };
+      chatExistsAlready();
     }
   }, [selectedArtistId, existingChatId]);
 
@@ -125,6 +141,36 @@ const IndividualChat: React.FC = () => {
     });
     return () => unsubscribe();
   }, [chatID]);
+
+  const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
+
+  const getLocalTimeFromCoordinates = async ([lat, lng]) => {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const url = `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${timestamp}&key=${GOOGLE_API_KEY}`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === "OK") {
+        const date = new Date(timestamp * 1000);
+        const timeOnly = date.toLocaleTimeString("en-US", {
+          timeZone: data.timeZoneId,
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+        console.log("Time: ", timeOnly);
+        return timeOnly; // e.g., "03:15 AM"
+      } else {
+        console.error("Time Zone API Error:", data.errorMessage || data.status);
+        return null;
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      return null;
+    }
+  };
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
@@ -141,7 +187,7 @@ const IndividualChat: React.FC = () => {
       }
       await addMessageToChat(newMessages, currentChatID);
     },
-    [chatID],
+    [chatID]
   );
 
   // Custom rendering functions
@@ -155,8 +201,8 @@ const IndividualChat: React.FC = () => {
         typeof createdAt === "number"
           ? new Date(createdAt)
           : createdAt instanceof Date
-            ? createdAt
-            : new Date(createdAt);
+          ? createdAt
+          : new Date(createdAt);
 
       if (isNaN(messageDate.getTime())) return "";
 
@@ -301,7 +347,7 @@ const IndividualChat: React.FC = () => {
   };
 
   useEffect(() => {
-    const receiverId = selectedArtistId || otherUser; // adjust if you have direct receiver UID
+    const receiverId = selectedArtistId || otherUserId; // adjust if you have direct receiver UID
 
     const unsubscribe = firestore()
       .collection("Users")
@@ -309,8 +355,8 @@ const IndividualChat: React.FC = () => {
       .onSnapshot((doc) => {
         const data = doc.data();
         if (data) {
-          setIsOnline(data.isOnline || false);
-          setLastSeen(data.lastSeen?.toDate?.() || null);
+          setIsOnline(data?.isOnline || false);
+          setLastSeen(data?.lastSeen?.toDate?.() || null);
         }
       });
 
@@ -320,7 +366,7 @@ const IndividualChat: React.FC = () => {
   const getTimeAgo = (timestamp: Date): string => {
     const now = new Date();
     const diffInSeconds = Math.floor(
-      (now.getTime() - timestamp.getTime()) / 1000,
+      (now.getTime() - timestamp.getTime()) / 1000
     );
 
     if (diffInSeconds < 60) return "just now";
@@ -377,18 +423,39 @@ const IndividualChat: React.FC = () => {
             <Text size="p" weight="normal" color="#FBF6FA">
               {messageRecieverName ? messageRecieverName : ""}
             </Text>
-            <Text size="medium" weight="normal" color="#A7A7A7">
-              {isOnline
-                ? "Online"
-                : lastSeen
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                columnGap: 4,
+                marginTop: 2,
+              }}
+            >
+              <Text size="medium" weight="normal" color="#A7A7A7">
+                {isOnline
+                  ? "Online"
+                  : lastSeen
                   ? `Last seen ${getTimeAgo(lastSeen)}`
                   : ""}
-            </Text>
+              </Text>
+              <View
+                style={{
+                  height: 3,
+                  width: 3,
+                  backgroundColor: "#B1AFA4",
+                  borderRadius: 100,
+                }}
+              ></View>
+              <Text size="medium" weight="normal" color="#A7A7A7">
+                {`Local time ${localTime}`}
+              </Text>
+            </View>
           </View>
         </View>
         <TouchableOpacity
           onPress={openDialer}
-          style={{ height: 18, width: 18 }}
+          style={{ height: 24, width: 24 }}
         >
           <Image
             source={require("../../assets/images/call.png")}

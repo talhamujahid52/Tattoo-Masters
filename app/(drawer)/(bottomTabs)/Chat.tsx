@@ -65,17 +65,33 @@ const Chat = () => {
       >
         Conversations
       </Text>
-      <View style={{ height: "auto" }}>
-        <FlatList
-          data={chats}
-          renderItem={(item) => <ChatListCell chat={item} />}
-          contentContainerStyle={{ paddingBottom: 250 }}
-        />
-      </View>
+      {chats && chats.length > 0 ? (
+        <View style={{ height: "auto" }}>
+          <FlatList
+            data={chats}
+            renderItem={({ item }) => <ChatListCell chat={item} />}
+            keyExtractor={(item) => item.id.toString()} // optional but recommended
+            contentContainerStyle={{ paddingBottom: 250 }}
+          />
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text size="h4" weight="medium" color="#A7A7A7">
+            You have no chats yet
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
 
 export default Chat;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+});

@@ -381,7 +381,7 @@ const EditProfile = () => {
         >
           Pin your exact location
         </Text>
-        {!formData.showCityOnly && (
+        {formData.showCityOnly && (
           <TouchableOpacity
             onPress={() => {
               router.push({ pathname: "/artist/SearchLocation" });
@@ -403,7 +403,7 @@ const EditProfile = () => {
             />
           </TouchableOpacity>
         )}
-        <View
+        {/* <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
@@ -425,7 +425,7 @@ const EditProfile = () => {
             onValueChange={toggleSwitch}
             value={formData.showCityOnly}
           />
-        </View>
+        </View> */}
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles{" "}

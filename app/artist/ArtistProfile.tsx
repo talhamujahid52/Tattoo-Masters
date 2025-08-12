@@ -175,7 +175,7 @@ const ArtistProfile = () => {
       activeOpacity={1}
       style={{
         padding: 6,
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
         borderRadius: 6,
         backgroundColor: item.selected ? "#DAB769" : "#262526",
         flexDirection: "row",
@@ -187,7 +187,7 @@ const ArtistProfile = () => {
         <Text
           style={{
             color: item.selected ? "#22221F" : "#A7A7A7",
-            marginLeft: 6,
+            // marginLeft: 6,
           }}
         >
           {item.count}
@@ -295,212 +295,220 @@ const ArtistProfile = () => {
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
     >
-      {/* BottomSheets */}
-      <LoggingInBottomSheet
-        InsideComponent={
-          <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
-        }
-      />
-      <ShareSheet
-        InsideComponent={
-          <ShareArtistProfileBottomSheet
-            showLoginBottomSheet={showLoggingInBottomSheet}
-            hideShareSheet={hideShareSheet}
-            showReportSheet={showReportSheet}
-            artistId={artistId}
-          />
-        }
-      />
-      <ReportSheet
-        InsideComponent={
-          <ReportBottomSheet
-            hideReportSheet={hideReportSheet}
-            title="User"
-            options={options}
-            reportItem={artistId}
-          />
-        }
-      />
+      <View style={{ paddingHorizontal: 16 }}>
+        {/* BottomSheets */}
+        <LoggingInBottomSheet
+          InsideComponent={
+            <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
+          }
+        />
+        <ShareSheet
+          InsideComponent={
+            <ShareArtistProfileBottomSheet
+              showLoginBottomSheet={showLoggingInBottomSheet}
+              hideShareSheet={hideShareSheet}
+              showReportSheet={showReportSheet}
+              artistId={artistId}
+            />
+          }
+        />
+        <ReportSheet
+          InsideComponent={
+            <ReportBottomSheet
+              hideReportSheet={hideReportSheet}
+              title="User"
+              options={options}
+              reportItem={artistId}
+            />
+          }
+        />
 
-      <View style={styles.userProfileRow}>
-        <View style={styles.pictureAndName}>
-          <Image style={styles.profilePicture} source={profilePicture} />
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-around",
-              height: "100%",
-              paddingVertical: 5,
-            }}
-          >
-            <Text size="h3" weight="semibold" color="white">
-              {artist?.data?.name || ""}
-            </Text>
-            <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.studio === "studio"
-                ? artist?.data?.studioName
-                : artist?.data?.studio === "freelancer"
-                ? "Freelancer"
-                : "HomeArtist"}
-            </Text>
-            <Text size="p" weight="normal" color="#A7A7A7">
-              {artist?.data?.city || ""}
-            </Text>
+        <View style={styles.userProfileRow}>
+          <View style={styles.pictureAndName}>
+            <Image style={styles.profilePicture} source={profilePicture} />
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-around",
+                height: "100%",
+                paddingVertical: 5,
+              }}
+            >
+              <Text size="h3" weight="semibold" color="white">
+                {artist?.data?.name || ""}
+              </Text>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {artist?.data?.studio === "studio"
+                  ? artist?.data?.studioName
+                  : artist?.data?.studio === "freelancer"
+                  ? "Freelancer"
+                  : "HomeArtist"}
+              </Text>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {artist?.data?.city || ""}
+              </Text>
+            </View>
           </View>
+          <TouchableOpacity
+            onPress={showShareSheet}
+            style={styles.moreIconContainer}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/more_vert.png")}
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={showShareSheet}
-          style={styles.moreIconContainer}
-        >
+        <View style={styles.userSocialsRow}>
+          {artist?.data?.facebookProfile && (
+            <TouchableOpacity>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/facebook_2.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {artist?.data?.instagramProfile && (
+            <TouchableOpacity>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/instagram.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {artist?.data?.twitterProfile && (
+            <TouchableOpacity>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/twitter.png")}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.artistFavoriteRow}>
+          <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
+          <Text size="p" weight="normal" color="#FBF6FA">
+            {artist?.data?.followersCount || "Not favourited yet"}
+          </Text>
+        </View>
+        <View style={styles.tattooStylesRow}>
           <Image
             style={styles.icon}
-            source={require("../../assets/images/more_vert.png")}
+            source={require("../../assets/images/draw.png")}
           />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.userSocialsRow}>
-        {artist?.data?.facebookProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/facebook_2.png")}
-            />
-          </TouchableOpacity>
+          {artist?.data?.tattooStyles?.map((item: any, idx: number) => (
+            <View
+              key={idx}
+              style={{
+                backgroundColor: "#262526",
+                paddingHorizontal: 5,
+                paddingVertical: 2,
+                borderRadius: 6,
+              }}
+            >
+              <Text size="p" weight="normal" color="#D7D7C9">
+                {item}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <Pressable onPress={handleToggle}>
+          <Text size="p" weight="normal" color="#A7A7A7">
+            {isExpanded || content?.length <= 120
+              ? content
+              : `${content?.slice(0, 100)}...`}
+          </Text>
+        </Pressable>
+
+        <View style={styles.buttonRow}>
+          <IconButton
+            title={isFollowingArtist ? "Unfavorite" : "Favorite"}
+            icon={
+              <MaterialCommunityIcons
+                name={isFollowingArtist ? "heart" : "heart-outline"}
+                size={20}
+                color="#22221F"
+              />
+            }
+            variant="Secondary"
+            onPress={handleFollow}
+          />
+          <IconButton
+            title="Message"
+            icon={require("../../assets/images/message.png")}
+            variant="Primary"
+            onPress={() =>
+              router.push({
+                pathname: "/artist/IndividualChat",
+                params: { selectedArtistId: artistId },
+              })
+            }
+          />
+        </View>
+        {artist?.data?.latestReview ? (
+          <ReviewOnProfile ArtistId={artistId} />
+        ) : (
+          <NoReviews ArtistId={artistId} />
         )}
-        {artist?.data?.instagramProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/instagram.png")}
-            />
-          </TouchableOpacity>
-        )}
-        {artist?.data?.twitterProfile && (
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/twitter.png")}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-      <View style={styles.artistFavoriteRow}>
-        <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
-        <Text size="p" weight="normal" color="#FBF6FA">
-          {artist?.data?.followersCount || "Not favourited yet"}
-        </Text>
-      </View>
-      <View style={styles.tattooStylesRow}>
-        <Image
-          style={styles.icon}
-          source={require("../../assets/images/draw.png")}
-        />
-        {artist?.data?.tattooStyles?.map((item: any, idx: number) => (
-          <View
-            key={idx}
-            style={{
-              backgroundColor: "#262526",
-              paddingHorizontal: 5,
-              paddingVertical: 2,
-              borderRadius: 6,
-            }}
+
+        <View style={{ marginTop: 24 }}>
+          <Text
+            size="h4"
+            weight="semibold"
+            color="white"
+            style={{ marginBottom: 10 }}
           >
-            <Text size="p" weight="normal" color="#D7D7C9">
-              {item}
-            </Text>
-          </View>
-        ))}
-      </View>
-      <Pressable onPress={handleToggle}>
-        <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded || content?.length <= 120
-            ? content
-            : `${content?.slice(0, 100)}...`}
-        </Text>
-      </Pressable>
-
-      <View style={styles.buttonRow}>
-        <IconButton
-          title={isFollowingArtist ? "Unfavorite" : "Favorite"}
-          icon={
-            <MaterialCommunityIcons
-              name={isFollowingArtist ? "heart" : "heart-outline"}
-              size={20}
-              color="#22221F"
-            />
-          }
-          variant="Secondary"
-          onPress={handleFollow}
-        />
-        <IconButton
-          title="Message"
-          icon={require("../../assets/images/message.png")}
-          variant="Primary"
-          onPress={() =>
-            router.push({
-              pathname: "/artist/IndividualChat",
-              params: { selectedArtistId: artistId },
-            })
-          }
-        />
-      </View>
-      {artist?.data?.latestReview ? (
-        <ReviewOnProfile ArtistId={artistId} />
-      ) : (
-        <NoReviews ArtistId={artistId} />
-      )}
-
-      <View style={{ marginTop: 24 }}>
+            Location
+          </Text>
+          <Text
+            size="large"
+            weight="normal"
+            color="#A7A7A7"
+            style={{ marginBottom: 10 }}
+          >
+            {artist?.data?.address || ""}
+          </Text>
+        </View>
+        <Pressable
+          onPress={openInGoogleMaps}
+          style={{
+            height: 130,
+            borderRadius: 20,
+            overflow: "hidden",
+            marginTop: 8,
+          }}
+        >
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            customMapStyle={googleDarkModeStyle}
+            scrollEnabled={false}
+            style={styles.map}
+            mapType="standard"
+            region={region}
+            zoomEnabled={false}
+          />
+        </Pressable>
         <Text
           size="h4"
           weight="semibold"
           color="white"
-          style={{ marginBottom: 10 }}
+          style={{ marginTop: 24 }}
         >
-          Location
+          Portfolio
         </Text>
-        <Text
-          size="large"
-          weight="normal"
-          color="#A7A7A7"
-          style={{ marginBottom: 10 }}
-        >
-          {artist?.data?.address || ""}
-        </Text>
+        <View style={styles.stylesFilterRow}>
+          <FlatList
+            data={styleFilters}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.title}
+            horizontal={true}
+            contentContainerStyle={{ gap: 10 }}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       </View>
-      <Pressable
-        onPress={openInGoogleMaps}
-        style={{
-          height: 130,
-          borderRadius: 20,
-          overflow: "hidden",
-          marginTop: 8,
-        }}
-      >
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          customMapStyle={googleDarkModeStyle}
-          scrollEnabled={false}
-          style={styles.map}
-          mapType="standard"
-          region={region}
-          zoomEnabled={false}
-        />
-      </Pressable>
-      <Text size="h4" weight="semibold" color="white" style={{ marginTop: 24 }}>
-        Portfolio
-      </Text>
-      <View style={styles.stylesFilterRow}>
-        <FlatList
-          data={styleFilters}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.title}
-          horizontal={true}
-          contentContainerStyle={{ gap: 10 }}
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+
       <ImageGallery images={filteredResults} />
     </ScrollView>
   );
@@ -512,7 +520,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    padding: 16,
+    // padding: 16,
     borderTopWidth: 0.33,
     borderColor: "#282828",
   },
@@ -564,6 +572,7 @@ const styles = StyleSheet.create({
   },
   tattooStylesRow: {
     display: "flex",
+    flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

@@ -231,7 +231,7 @@ const AppNavigator = () => {
             name="(auth)/ChangePassword"
             options={{
               headerShown: true,
-              headerTitle: "Reset Password",
+              headerTitle: "Reset password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

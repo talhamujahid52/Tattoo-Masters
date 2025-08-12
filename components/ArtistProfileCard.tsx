@@ -3,6 +3,7 @@ import Text from "./Text";
 import React from "react";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
+import { useSelector } from "react-redux";
 
 interface ArtistProfileCardProps {
   artist: any;
@@ -12,13 +13,22 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
   const router = useRouter();
   const profilePicture =
     artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
   return (
     <TouchableOpacity
       onPress={() => {
-        router.push({
-          pathname: "/artist/ArtistProfile",
-          params: { artistId: artist.id },
-        });
+        if (artist?.data?.uid === loggedInUser?.uid) {
+          router.push({
+            pathname: "/artist/MyProfile",
+            params: { artistId: artist.id },
+          });
+        } else {
+          router.push({
+            pathname: "/artist/ArtistProfile",
+            params: { artistId: artist.id },
+          });
+        }
       }}
       style={{
         width: 131,
@@ -29,7 +39,7 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
         key={artist.data?.profilePicture}
         cachePolicy={"disk"}
         source={
-          artist.data.profilePicture
+          profilePicture
             ? { uri: profilePicture }
             : require("../assets/images/Artist.png")
         }
