@@ -182,7 +182,7 @@ const MyProfile = () => {
                 ? loggedInUser?.studioName
                 : loggedInUser?.studio === "freelancer"
                 ? "Freelancer"
-                : "HomeArtist"}
+                : "Home artist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {loggedInUser?.city ?? ""}

@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     width: 253,
     height: 218,
     position: "absolute",
-    top: SCREEN_HEIGHT * 0.2,
+    top: SCREEN_HEIGHT * 0.35,
     right: "auto",
     zIndex: 1,
   },

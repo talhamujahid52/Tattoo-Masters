@@ -137,7 +137,7 @@ const step3: React.FC = () => {
               ? formData?.studioName
               : formData?.studio === "freelancer"
                 ? "Freelancer"
-                : "HomeArtist"}
+                : "Home artist"}
           </Text>
           <Text size="p" weight="normal" color="#A7A7A7">
             {formData?.city}

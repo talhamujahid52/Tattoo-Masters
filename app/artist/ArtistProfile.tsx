@@ -343,7 +343,7 @@ const ArtistProfile = () => {
                   ? artist?.data?.studioName
                   : artist?.data?.studio === "freelancer"
                   ? "Freelancer"
-                  : "HomeArtist"}
+                  : "Home artist"}
               </Text>
               <Text size="p" weight="normal" color="#A7A7A7">
                 {artist?.data?.city || ""}

@@ -37,7 +37,7 @@ const Step1: React.FC = () => {
   const options = [
     { label: "Studio", value: "studio" },
     { label: "Freelancer", value: "freelancer" },
-    { label: "Homeartist", value: "homeArtist" },
+    { label: "Home artist", value: "homeArtist" },
   ];
 
   const defaultLocation = {

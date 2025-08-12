@@ -15,11 +15,13 @@ const OnboardingComponent = () => (
         width: 17,
         height: 7,
         backgroundColor: "#ECC775",
+        marginHorizontal: 4,
       }}
       paginationStyleItemInactive={{
         width: 7,
         height: 7,
         backgroundColor: "#5A4E34",
+        marginHorizontal: 4,
       }}
     >
       <View style={styles.textContainer}>
@@ -58,7 +60,7 @@ const OnboardingComponent = () => (
             color="#d0d0d0"
             style={styles.paragraphStyle}
           >
-            Search artists worldwide and find the one who can fulfill your
+            Search artists worldwide and find the one{"\n"}who can fulfill your
             wildest idea.
           </Text>
         </View>
@@ -107,8 +109,8 @@ const OnboardingComponent = () => (
               paddingHorizontal: 16,
             }}
           >
-            Scroll through artists and their portfolios. Get ideas, get inspired
-            and get inked!
+            Scroll through artists and their portfolios.{"\n"}Get ideas, get
+            inspired and get inked!
           </Text>
           <Text
             size="p"
@@ -142,7 +144,8 @@ const OnboardingComponent = () => (
             color="#d0d0d0"
             style={styles.paragraphStyle}
           >
-            Make your own profile, publish your work and let customers find you.
+            Make your own profile, publish your work{"\n"}and let customers find
+            you.
           </Text>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Text

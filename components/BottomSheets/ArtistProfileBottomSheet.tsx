@@ -68,7 +68,7 @@ const ArtistProfileBottomSheet = ({
                 ? currentlyViewingArtist?.studioName
                 : currentlyViewingArtist?.studio === "freelancer"
                 ? "Freelancer"
-                : "HomeArtist"}
+                : "Home artist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {currentlyViewingArtist?.city ? currentlyViewingArtist.city : ""}

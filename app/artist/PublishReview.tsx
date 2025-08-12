@@ -144,7 +144,7 @@ const PublishReview = () => {
               ? artist?.data?.studioName
               : artist?.data?.studio === "freelancer"
               ? "Freelancer"
-              : "HomeArtist"}
+              : "Home artist"}
           </Text>
           <Text
             size="p"

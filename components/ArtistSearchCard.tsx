@@ -48,7 +48,7 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
           ? artist?.data?.studioName
           : artist?.data?.studio === "freelancer"
           ? "Freelancer"
-          : "HomeArtist"}
+          : "Home artist"}
       </Text>
     </TouchableOpacity>
   );
