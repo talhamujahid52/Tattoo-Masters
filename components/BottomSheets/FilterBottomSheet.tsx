@@ -185,26 +185,28 @@ const FilterBottomSheet = ({
         </View>
 
         {/* radius slider */}
-        <View style={styles.sliderRow}>
-          <Slider
-            style={{
-              width: "80%",
-              height: 40,
-              opacity: !radiusEnabled || stylesEnabled ? 0.5 : 1,
-            }}
-            value={radiusValue}
-            onValueChange={setRadiusValueLocal}
-            minimumValue={0}
-            maximumValue={100}
-            minimumTrackTintColor="#F2D189"
-            maximumTrackTintColor="#FFFFFF26"
-            thumbTintColor="#F2D189"
-            disabled={!radiusEnabled || stylesEnabled}
-          />
-          <Text size="p" weight="normal" color="#A7A7A7">
-            {radiusValue.toFixed()} Km
-          </Text>
-        </View>
+        {radiusEnabled && (
+          <View style={styles.sliderRow}>
+            <Slider
+              style={{
+                width: "80%",
+                height: 40,
+                opacity: !radiusEnabled || stylesEnabled ? 0.5 : 1,
+              }}
+              value={radiusValue}
+              onValueChange={setRadiusValueLocal}
+              minimumValue={0}
+              maximumValue={100}
+              minimumTrackTintColor="#F2D189"
+              maximumTrackTintColor="#FFFFFF26"
+              thumbTintColor="#F2D189"
+              disabled={!radiusEnabled || stylesEnabled}
+            />
+            <Text size="p" weight="normal" color="#A7A7A7">
+              {radiusValue.toFixed()} Km
+            </Text>
+          </View>
+        )}
 
         {/* rating */}
         <Text size="h4" weight="semibold" color="#A7A7A7">
