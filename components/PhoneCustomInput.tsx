@@ -1,10 +1,14 @@
 import { StyleSheet } from "react-native";
 import React, { useState, useEffect } from "react";
-import PhoneInput, { ICountry } from "react-native-international-phone-number";
+import PhoneInput, {
+  ICountry,
+  getAllCountries,
+} from "react-native-international-phone-number";
+import * as Location from "expo-location";
 
 interface PhoneCustomInputProps {
   value: string;
-  onChange: (phoneNumber: string, countryCode: string) => void; // Change to accept country code
+  onChange: (phoneNumber: string, countryCode: string) => void;
 }
 
 const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
@@ -14,19 +18,89 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [inputValue, setInputValue] = useState<string>("");
 
-  // Update input value when parent changes
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
+  // Step 1: Get current coordinates
+  const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Location permission denied");
+        return null;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      return [location.coords.latitude, location.coords.longitude];
+    } catch (error) {
+      console.error("Failed to get coordinates:", error);
+      return null;
+    }
+  };
+  const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
+
+  // Step 2: Get country from lat/lng
+  const getCountryFromCoordinates = async ([lat, lng]: [number, number]) => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === "OK") {
+        const countryComponent = data.results[0].address_components.find(
+          (component) => component.types.includes("country")
+        );
+        console.log(
+          "countryComponent?.short_name ",
+          countryComponent?.short_name
+        );
+        return countryComponent?.short_name || null; // e.g., "US"
+      } else {
+        console.error("Geocoding API error:", data.status);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching country from coordinates:", error);
+      return null;
+    }
+  };
+
+  // Step 3: Detect and set initial country
+  useEffect(() => {
+    const detectCountry = async () => {
+      const coords = await getCurrentCoordinates();
+      console.log("coords : ", coords);
+      if (!coords) return;
+
+      const countryCode = await getCountryFromCoordinates(coords);
+      if (!countryCode) return;
+
+      const countries = getAllCountries();
+      console.log("countries : ", countries);
+      const matchedCountry = countries.find(
+        (country) => country.cca2 === countryCode.toUpperCase()
+      );
+
+      if (matchedCountry) {
+        setSelectedCountry(matchedCountry);
+        onChange(inputValue, matchedCountry.callingCode);
+      }
+    };
+
+    detectCountry();
+  }, []);
+
+  // Handle phone input value change
   const handleInputValue = (phoneNumber: string) => {
     setInputValue(phoneNumber);
-    const countryCode = selectedCountry ? selectedCountry.callingCode : ""; // Get the country code
-    onChange(phoneNumber, countryCode); // Pass both phone number and country code
+    const countryCode = selectedCountry ? selectedCountry.callingCode : "";
+    onChange(phoneNumber, countryCode);
   };
 
   const handleSelectedCountry = (country: ICountry) => {
     setSelectedCountry(country);
+    onChange(inputValue, country.callingCode);
   };
 
   return (

@@ -415,7 +415,7 @@ const IndividualChat: React.FC = () => {
             source={
               recieverProfilePicture
                 ? { uri: recieverProfilePicture }
-                : require("../../assets/images/Artist.png")
+                : require("../../assets/images/placeholder.png")
             }
             style={styles.avatar}
           />
@@ -439,17 +439,21 @@ const IndividualChat: React.FC = () => {
                   ? `Last seen ${getTimeAgo(lastSeen)}`
                   : ""}
               </Text>
-              <View
-                style={{
-                  height: 3,
-                  width: 3,
-                  backgroundColor: "#B1AFA4",
-                  borderRadius: 100,
-                }}
-              ></View>
-              <Text size="medium" weight="normal" color="#A7A7A7">
-                {`Local time ${localTime}`}
-              </Text>
+              {localTime && (
+                <>
+                  <View
+                    style={{
+                      height: 3,
+                      width: 3,
+                      backgroundColor: "#B1AFA4",
+                      borderRadius: 100,
+                    }}
+                  ></View>
+                  <Text size="medium" weight="normal" color="#A7A7A7">
+                    {`Local time ${localTime}`}
+                  </Text>
+                </>
+              )}
             </View>
           </View>
         </View>

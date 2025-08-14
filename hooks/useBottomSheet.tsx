@@ -61,6 +61,7 @@ const useBottomSheet = () => {
         onDismiss={hide}
         onChange={handleSheetChanges}
         handleComponent={renderHandle}
+        backgroundStyle={styles.sheetBackground}
       >
         <BottomSheetView style={{ backgroundColor: "#080808" }}>
           <ScrollView>{InsideComponent}</ScrollView>
@@ -72,27 +73,33 @@ const useBottomSheet = () => {
 
   return { BottomSheet, show, hide };
 };
+const BORDER_RADIUS = 16;
 
 const styles = StyleSheet.create({
+  sheetBackground: {
+    backgroundColor: "#080808",
+    borderTopLeftRadius: BORDER_RADIUS,
+    borderTopRightRadius: BORDER_RADIUS,
+  },
   handleWrapper: {
     paddingTop: 2,
-    backgroundColor: "#2D2D2D", // border color
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    overflow: "hidden",
+    backgroundColor: "#2D2D2D", // "border" color
+    borderTopLeftRadius: BORDER_RADIUS + 2,
+    borderTopRightRadius: BORDER_RADIUS + 2,
+    // overflow: "hidden",
   },
   handleInner: {
     backgroundColor: "#080808",
-    borderTopLeftRadius: 13,
-    borderTopRightRadius: 13,
+    borderTopLeftRadius: BORDER_RADIUS,
+    borderTopRightRadius: BORDER_RADIUS,
     alignItems: "center",
     padding: 10,
   },
   handleIndicator: {
-    width: 40,
-    height: 4,
+    width: 60,
+    height: 6,
     backgroundColor: "#838383",
-    borderRadius: 2,
+    borderRadius: 13,
   },
 });
 

@@ -76,7 +76,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           source={
             otherUserProfilePicture
               ? { uri: otherUserProfilePicture }
-              : require("../assets/images/Artist.png")
+              : require("../assets/images/placeholder.png")
           }
           style={{
             height: "100%",
