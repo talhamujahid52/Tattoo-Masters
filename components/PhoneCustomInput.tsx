@@ -63,7 +63,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
       modalStyles={{
         modal: {
           backgroundColor: "#333333",
-          borderRadius: 50,
         },
         backdrop: {},
         divider: {
@@ -80,7 +79,7 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
           height: 48,
         },
         countryButton: {
-          marginHorizontal: 20,
+          // marginHorizontal: 20,
           borderWidth: 0,
           // borderBottomWidth: 1,
           borderColor: "#F3F3F3",

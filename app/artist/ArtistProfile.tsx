@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    // padding: 16,
+    paddingTop: 16,
     borderTopWidth: 0.33,
     borderColor: "#282828",
   },
@@ -547,8 +547,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#202020",
   },
   icon: {
-    height: 20,
-    width: 20,
+    height: 24,
+    width: 24,
     resizeMode: "contain",
   },
   moreIconContainer: {
