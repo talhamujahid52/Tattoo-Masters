@@ -23,12 +23,29 @@ const CreateReviewPassword = () => {
   const [loading, setLoading] = useState(false);
 
   const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const userFirestore = useSelector((state: any) => state?.user?.userFirestore);
   const currentUserId = loggedInUser?.uid;
   const { queueUpload } = useBackgroundUpload();
   const dispatch = useDispatch();
   const { formData, setFormData } = useContext(FormContext)!;
 
   const handleCreateAccount = () => {
+    // Final validation before account creation
+    const hasProfilePicture =
+      !!formData?.profilePicture ||
+      !!userFirestore?.profilePictureSmall ||
+      !!userFirestore?.profilePicture ||
+      !!loggedInUser?.photoURL;
+    if (!hasProfilePicture) {
+      setError("Please add a profile picture.");
+      return;
+    }
+    const firstFour = formData?.images?.slice(0, 4) || [];
+    const allFourPresent = firstFour.every((img) => img && !!img.uri);
+    if (!allFourPresent) {
+      setError("Please upload 4 tattoos to continue.");
+      return;
+    }
     if (!reviewPassword || !confirmReviewPassword) {
       setError("Please fill in both fields.");
       return;

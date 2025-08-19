@@ -179,6 +179,9 @@ class BackgroundUploadService {
         case "publication":
           await this.uploadPublication(item);
           break;
+        case "publication_edit":
+          await this.uploadPublicationEdit(item);
+          break;
         case "review":
           await this.uploadReview(item);
           break;
@@ -212,6 +215,129 @@ class BackgroundUploadService {
       }
       throw error;
     }
+  }
+
+  private async uploadPublicationEdit(item: UploadItem): Promise<void> {
+    if (!item.docId) {
+      throw new Error("Missing document ID for publication edit");
+    }
+
+    const dateConst = Date.now().toString();
+    const filePath = `publications/${item.userId}${dateConst}/${item.name}`;
+
+    const reference = storage().ref(filePath);
+
+    const uploadTask = reference.putFile(item.uri);
+    uploadTask.on("state_changed", (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 50;
+      store.dispatch(
+        updateUploadStatus({
+          id: item.id,
+          status: "uploading",
+          progress: Math.round(progress),
+        }),
+      );
+    });
+    await uploadTask;
+
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 60 }),
+    );
+
+    const smallImagePath = filePath.replace(
+      item.name,
+      resizedName(item.name, "400x400"),
+    );
+    const mediumImagePath = filePath.replace(
+      item.name,
+      resizedName(item.name, "720x1280"),
+    );
+    const highImagePath = filePath.replace(
+      item.name,
+      resizedName(item.name, "1080x1920"),
+    );
+    const veryHighImagePath = filePath.replace(
+      item.name,
+      resizedName(item.name, "1440x2560"),
+    );
+
+    const downloadUrlSmall = await keepTrying(smallImagePath);
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 70 }),
+    );
+    const downloadUrlMedium = await keepTrying(mediumImagePath);
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 80 }),
+    );
+    const downloadUrlHigh = await keepTrying(highImagePath);
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 85 }),
+    );
+    const downloadUrlVeryHigh = await keepTrying(veryHighImagePath);
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 90 }),
+    );
+
+    await firestore()
+      .collection("publications")
+      .doc(item.docId)
+      .set(
+        {
+          caption: item.caption ?? "",
+          styles: item.styles ?? [],
+          downloadUrls: {
+            small: downloadUrlSmall,
+            medium: downloadUrlMedium,
+            high: downloadUrlHigh,
+            veryHigh: downloadUrlVeryHigh,
+          },
+          deleteUrls: {
+            small: smallImagePath,
+            medium: mediumImagePath,
+            high: highImagePath,
+            veryHigh: veryHighImagePath,
+          },
+        },
+        { merge: true },
+      );
+
+    const old = item.oldDeleteUrls || {};
+    const oldPaths = [old.small, old.medium, old.high, old.veryHigh].filter(
+      Boolean,
+    ) as string[];
+    await Promise.all(
+      oldPaths.map(async (p) => {
+        try {
+          await storage().ref(p).delete();
+        } catch (e) {
+          // ignore
+        }
+      }),
+    );
+
+    const firebaseImageData = {
+      downloadUrls: {
+        small: downloadUrlSmall,
+        medium: downloadUrlMedium,
+        high: downloadUrlHigh,
+        veryHigh: downloadUrlVeryHigh,
+      },
+      deleteUrls: {
+        small: smallImagePath,
+        medium: mediumImagePath,
+        high: highImagePath,
+        veryHigh: veryHighImagePath,
+      },
+    };
+    store.dispatch(updateFirebaseData({ id: item.id, firebaseImageData }));
+
+    store.dispatch(
+      updateUploadStatus({
+        id: item.id,
+        status: "completed",
+        progress: 100,
+      }),
+    );
   }
 
   private async uploadPublication(item: UploadItem): Promise<void> {

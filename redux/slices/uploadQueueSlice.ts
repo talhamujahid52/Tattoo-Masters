@@ -8,7 +8,12 @@ export interface UploadItem {
   caption?: string;
   styles?: string[];
   userId: string;
-  type: "publication" | "review" | "feedback" | "profile";
+  type:
+    | "publication"
+    | "review"
+    | "feedback"
+    | "profile"
+    | "publication_edit";
   status: "pending" | "uploading" | "completed" | "failed";
   progress: number;
   error?: string;
@@ -28,6 +33,14 @@ export interface UploadItem {
       high: string;
       veryHigh: string;
     };
+  };
+  // For edits of existing publications
+  docId?: string;
+  oldDeleteUrls?: {
+    small?: string;
+    medium?: string;
+    high?: string;
+    veryHigh?: string;
   };
 }
 

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  Alert,
 } from "react-native";
 import Text from "./Text";
 import Button from "./Button";
@@ -32,12 +33,40 @@ const StepperForm: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const userFirestore = useSelector((state: any) => state?.user?.userFirestore);
   const currentUserId = loggedInUser?.uid;
   const { queueUpload } = useBackgroundUpload();
 
   const stepLabels = ["Profile", "Tattoo portfolio", "Preview"];
 
   const handleNext = () => {
+    // Validation: Step 1 requires profile picture selected
+    if (step === 1) {
+      const hasProfilePicture =
+        !!formData?.profilePicture ||
+        !!userFirestore?.profilePictureSmall ||
+        !!userFirestore?.profilePicture ||
+        !!loggedInUser?.photoURL;
+      if (!hasProfilePicture) {
+        Alert.alert(
+          "Profile picture required",
+          "Please add a profile picture to continue.",
+        );
+        return;
+      }
+    }
+    // Validation: Step 2 requires at least 4 tattoos selected
+    if (step === 2) {
+      const firstFour = formData?.images?.slice(0, 4) || [];
+      const allFourPresent = firstFour.every((img) => img && !!img.uri);
+      if (!allFourPresent) {
+        Alert.alert(
+          "Add 4 tattoos",
+          "Please upload 4 tattoos to continue.",
+        );
+        return;
+      }
+    }
     setStep((prevStep: number) => Math.min(prevStep + 1, totalSteps));
   };
 

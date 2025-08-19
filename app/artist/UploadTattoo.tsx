@@ -16,8 +16,12 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { FormContext } from "../../context/FormContext";
 import { getFileName } from "@/utils/helperFunctions";
 import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
 import StylesBottomSheet from "@/components/BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
+import { useSelector } from "react-redux";
+import { getFileName as getNameOnly } from "@/utils/helperFunctions";
 
 const UploadTattoo = () => {
   const [attachment, setAttachment] = useState<string | null>(null);
@@ -25,9 +29,13 @@ const UploadTattoo = () => {
   const [loading, setLoading] = useState(false);
   const [selectedStyles, setSelectedStyles] = useState<number[]>([]);
   const router = useRouter();
-  const { index } = useLocalSearchParams();
+  const { index, mode, docId, existingCaption, existingStylesJson, existingImageUrl, existingDeleteUrlsJson } =
+    useLocalSearchParams<any>();
   const insets = useSafeAreaInsets();
   const { setFormData } = useContext(FormContext)!;
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const currentUserId = loggedInUser?.uid;
+  const { queueUpload } = useBackgroundUpload();
 
   const [tattooStyles, setTattooStyles] = useState<
     { title: string; selected: boolean }[]
@@ -64,6 +72,58 @@ const UploadTattoo = () => {
   };
 
   const publishTattoo = async () => {
+    // Edit flow: update only caption/styles
+    if (mode === "edit") {
+      try {
+        setLoading(true);
+        const selectedStyleTitles = selectedTattooStyles
+          .filter((style) => style.selected)
+          .map((style) => style.title);
+        const isRemote = typeof attachment === "string" && attachment.startsWith("http");
+
+        if (!isRemote && attachment) {
+          // Queue background edit upload and navigate home
+          let oldDeleteUrls: any = {};
+          try {
+            oldDeleteUrls = existingDeleteUrlsJson
+              ? JSON.parse(String(existingDeleteUrlsJson))
+              : {};
+          } catch {}
+
+          await queueUpload({
+            uri: attachment,
+            userId: currentUserId,
+            type: "publication_edit",
+            caption,
+            styles: selectedStyleTitles,
+            name: getNameOnly(attachment),
+            docId: String(docId),
+            oldDeleteUrls,
+          });
+
+          router.replace("/(bottomTabs)/Home");
+        } else {
+          // Only metadata updated
+          await firestore()
+            .collection("publications")
+            .doc(String(docId))
+            .set(
+              {
+                caption,
+                styles: selectedStyleTitles,
+              },
+              { merge: true },
+            );
+          router.replace("/(bottomTabs)/Home");
+        }
+      } catch (error) {
+        Alert.alert("Error", "Failed to update tattoo.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // Create flow: requires attachment
     if (!attachment || index === undefined) return;
 
     try {
@@ -112,7 +172,22 @@ const UploadTattoo = () => {
             title: style.title,
             selected: false,
           }));
-          setTattooStyles(formattedStyles);
+          // If in edit mode, pre-select based on existingStylesJson
+          if (mode === "edit" && existingStylesJson) {
+            try {
+              const existingStyles: string[] = JSON.parse(String(existingStylesJson));
+              const preselected = formattedStyles.map((s: any) => ({
+                ...s,
+                selected: existingStyles.includes(s.title),
+              }));
+              setTattooStyles(preselected);
+              setSelectedTattooStyles(preselected.filter((i: any) => i.selected));
+            } catch {
+              setTattooStyles(formattedStyles);
+            }
+          } else {
+            setTattooStyles(formattedStyles);
+          }
         }
       } catch (error) {
         console.error("Error fetching tattoo styles:", error);
@@ -120,7 +195,21 @@ const UploadTattoo = () => {
     };
 
     fetchTattooStyles();
-  }, []);
+  }, [mode, existingStylesJson]);
+
+  // Prefill edit values on mount
+  useEffect(() => {
+    if (mode === "edit") {
+      if (existingCaption) setCaption(String(existingCaption));
+      if (existingImageUrl) {
+        try {
+          setAttachment(decodeURIComponent(String(existingImageUrl)));
+        } catch {
+          setAttachment(String(existingImageUrl));
+        }
+      }
+    }
+  }, [mode, existingCaption, existingImageUrl]);
 
   const {
     BottomSheet: TattooStylesSheet,
@@ -247,10 +336,10 @@ const UploadTattoo = () => {
       >
         <Button
           loading={loading}
-          disabled={!attachment}
-          variant={attachment ? "primary" : "secondary"}
+          disabled={mode === "edit" ? false : !attachment}
+          variant={mode === "edit" ? "primary" : attachment ? "primary" : "secondary"}
           onPress={publishTattoo}
-          title="Publish"
+          title={mode === "edit" ? "Save" : "Publish"}
         />
       </View>
     </KeyboardAwareScrollView>

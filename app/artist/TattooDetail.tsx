@@ -4,7 +4,7 @@ import {
   Image,
   // Dimensions,
   TouchableOpacity,
-  // Alert,
+  Alert,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
@@ -29,6 +29,8 @@ import { useIsPublicationLiked } from "@/hooks/useIsPublicationLiked";
 import usePublicationLikes from "@/hooks/usePublicationLikes";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 5;
@@ -78,10 +80,26 @@ const TattooDetail: React.FC = () => {
     // photoUrlHigh,
     id,
     caption,
-    // styles,
+    stylesJson,
     userId,
     // timestamp,
+    deleteUrlsJson,
   } = useLocalSearchParams<any>();
+
+  const deleteUrls = React.useMemo(() => {
+    try {
+      return deleteUrlsJson ? JSON.parse(deleteUrlsJson) : {};
+    } catch (e) {
+      return {};
+    }
+  }, [deleteUrlsJson]);
+  const existingStylesJson = React.useMemo(() => {
+    try {
+      return stylesJson ? String(stylesJson) : "[]";
+    } catch (e) {
+      return "[]";
+    }
+  }, [stylesJson]);
 
   // const { width, height } = Dimensions.get("window");
 
@@ -146,6 +164,64 @@ const TattooDetail: React.FC = () => {
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
+            isOwner={currentUserId && userId && currentUserId === userId}
+            onEditTattoo={() => {
+              router.push({
+                pathname: "/artist/UploadTattoo",
+                params: {
+                  mode: "edit",
+                  docId: id,
+                  existingCaption: caption,
+                  existingStylesJson: existingStylesJson,
+                  existingImageUrl: encodeURIComponent(photoUrlVeryHigh),
+                  existingDeleteUrlsJson: deleteUrlsJson,
+                },
+              });
+            }}
+            onDeleteTattoo={async () => {
+              Alert.alert(
+                "Delete Tattoo",
+                "Are you sure you want to delete this tattoo? This action cannot be undone.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                      try {
+                        setLoading(true);
+                        const paths: string[] = [
+                          deleteUrls?.small,
+                          deleteUrls?.medium,
+                          deleteUrls?.high,
+                          deleteUrls?.veryHigh,
+                        ].filter(Boolean);
+                        // Attempt to delete each stored file; ignore missing ones
+                        await Promise.all(
+                          paths.map(async (p) => {
+                            try {
+                              await storage().ref(p).delete();
+                            } catch (e) {
+                              // ignore errors for missing files
+                            }
+                          }),
+                        );
+                        // Delete the Firestore document
+                        await firestore().collection("publications").doc(String(id)).delete();
+                        router.back();
+                      } catch (e) {
+                        Alert.alert(
+                          "Delete Failed",
+                          "We couldn't delete this tattoo. Please try again.",
+                        );
+                      } finally {
+                        setLoading(false);
+                      }
+                    },
+                  },
+                ],
+              );
+            }}
           />
         }
       />

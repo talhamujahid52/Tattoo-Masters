@@ -16,10 +16,23 @@ interface UseBackgroundUploadReturn {
   queueUpload: (params: {
     uri: string;
     userId: string;
-    type: "publication" | "review" | "feedback" | "profile";
+    type:
+      | "publication"
+      | "review"
+      | "feedback"
+      | "profile"
+      | "publication_edit";
     caption?: string;
     styles?: string[];
     name?: string;
+    // For edits
+    docId?: string;
+    oldDeleteUrls?: {
+      small?: string;
+      medium?: string;
+      high?: string;
+      veryHigh?: string;
+    };
   }) => Promise<boolean>;
 
   // Queue state
@@ -56,13 +69,27 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
     caption,
     styles,
     name,
+    docId,
+    oldDeleteUrls,
   }: {
     uri: string;
     userId: string;
-    type: "publication" | "review" | "feedback" | "profile";
+    type:
+      | "publication"
+      | "review"
+      | "feedback"
+      | "profile"
+      | "publication_edit";
     caption?: string;
     styles?: string[];
     name?: string;
+    docId?: string;
+    oldDeleteUrls?: {
+      small?: string;
+      medium?: string;
+      high?: string;
+      veryHigh?: string;
+    };
   }) => {
     const fileName = name || getFileName(uri);
 
@@ -85,6 +112,8 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
           styles,
           userId,
           type,
+          docId,
+          oldDeleteUrls,
         })
       );
 

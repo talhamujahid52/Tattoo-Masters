@@ -34,8 +34,10 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
                 id: doc.id,
                 caption: doc.caption,
                 styles: doc.styles,
+                stylesJson: JSON.stringify(doc?.styles || []),
                 userId: doc.userId,
                 timestamp: doc.timestamp,
+                deleteUrlsJson: JSON.stringify(doc?.deleteUrls || {}),
               },
             });
           }}
