@@ -74,8 +74,13 @@ const ShareArtistProfileBottomSheet = ({
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
-          hideShareSheet();
-          router.push({ pathname: "/artist/Feedback" });
+          if (loggedInUser) {
+            hideShareSheet();
+            router.push({ pathname: "/artist/Feedback" });
+          } else {
+            hideShareSheet();
+            showLoginBottomSheet();
+          }
         }}
         style={styles.drawerItem}
       >

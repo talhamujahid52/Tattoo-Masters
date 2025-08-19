@@ -12,7 +12,7 @@ const HomeLayout = () => {
   const navigation = useNavigation();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const { BottomSheet, show, hide } = useBottomSheet();
   return (

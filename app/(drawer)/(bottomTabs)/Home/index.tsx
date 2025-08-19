@@ -169,7 +169,7 @@ const Home = () => {
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16 }}
+            contentContainerStyle={{ gap: 10 }}
             ListFooterComponent={
               <TouchableOpacity
                 onPress={() => {

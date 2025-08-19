@@ -4,6 +4,7 @@ import { setUser } from "@/redux/slices/userSlice";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
+import { router } from "expo-router";
 
 export const useSignInWithGoogle = () => {
   const dispatch = useDispatch();
@@ -19,7 +20,7 @@ export const useSignInWithGoogle = () => {
         const accessToken: string = userInfo.accessToken as string;
         const googleCredential = auth.GoogleAuthProvider.credential(
           null,
-          accessToken,
+          accessToken
         );
         userCredential = await auth().signInWithCredential(googleCredential);
       } else {
@@ -51,10 +52,10 @@ export const useSignInWithGoogle = () => {
         console.log("User added to Firestore!");
       } else {
         console.log("User already exists in Firestore");
+        dispatch(setUser(userDoc.data()));
       }
 
       // Dispatch the user data to Redux
-      dispatch(setUser(userDoc.data()));
       const token = await getFcmToken();
       if (token) {
         await saveFcmTokenToFirestore(user.uid, token);

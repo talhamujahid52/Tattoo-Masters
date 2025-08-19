@@ -60,7 +60,7 @@ const Step2: React.FC = () => {
                   color="#D7D7C9"
                   style={{ marginTop: 4 }}
                 >
-                  Add Tattoo
+                  Add tattoo
                 </Text>
               </>
             )}

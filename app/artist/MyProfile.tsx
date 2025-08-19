@@ -6,6 +6,7 @@ import {
   Image,
   FlatList,
   Pressable,
+  Linking,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import Text from "@/components/Text";
@@ -37,7 +38,7 @@ const MyProfile = () => {
 
   const myId = loggedInUser?.uid;
 
-  // console.log("LoggedIn User : ", loggedInUser);
+  // console.log("My Profile : ", loggedInUser);
   // console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -157,6 +158,23 @@ const MyProfile = () => {
     );
   }, [searchResults, styleFilters]);
 
+  const handleOpenLink = async (url: string) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn("Can't open URL:", url);
+      }
+    } catch (error) {
+      console.error("Failed to open URL:", error);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <BottomSheet
@@ -202,24 +220,38 @@ const MyProfile = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.userSocialsRow}>
-          <TouchableOpacity onPress={() => {}}>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/facebook_2.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/instagram.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/twitter.png")}
-            />
-          </TouchableOpacity>
+          {loggedInUser?.facebookProfile && (
+            <TouchableOpacity
+              onPress={() => {
+                handleOpenLink(loggedInUser.facebookProfile);
+              }}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/facebook_2.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {loggedInUser?.instagramProfile && (
+            <TouchableOpacity
+              onPress={() => handleOpenLink(loggedInUser.instagramProfile)}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/instagram.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {loggedInUser?.twitterProfile && (
+            <TouchableOpacity
+              onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/twitter.png")}
+              />
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.artistFavoriteRow}>
           <Image

@@ -17,20 +17,15 @@ const SubscriptionInfo = () => {
   );
 
   let formattedTrialEndDate = "";
-  if (loggedInUserFirestore?.createdAt?.seconds) {
-    const milliseconds =
-      loggedInUserFirestore.createdAt.seconds * 1000 +
-      loggedInUserFirestore.createdAt.nanoseconds / 1e6;
 
-    const trialStartDate = new Date(milliseconds);
-    trialStartDate.setFullYear(trialStartDate.getFullYear() + 1); // Add 1 year
+  const now = new Date();
+  now.setFullYear(now.getFullYear() + 1);
 
-    formattedTrialEndDate = trialStartDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
+  formattedTrialEndDate = now.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
   return (
     <View

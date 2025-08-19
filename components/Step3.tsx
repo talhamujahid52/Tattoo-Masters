@@ -28,10 +28,10 @@ const step3: React.FC = () => {
   const router = useRouter();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const profileImage = useMemo(() => {
     return {
@@ -125,133 +125,142 @@ const step3: React.FC = () => {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.pictureAndName}>
-        <Image style={styles.profilePicture} source={profileImage} />
-        <View>
-          <Text size="h3" weight="semibold" color="white">
-            {formData?.name}
-          </Text>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            {formData?.studio === "studio"
-              ? formData?.studioName
-              : formData?.studio === "freelancer"
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={{ paddingHorizontal: 16 }}>
+        <View style={styles.pictureAndName}>
+          <Image style={styles.profilePicture} source={profileImage} />
+          <View>
+            <Text size="h3" weight="semibold" color="white">
+              {formData?.name}
+            </Text>
+            <Text size="p" weight="normal" color="#A7A7A7">
+              {formData?.studio === "studio"
+                ? formData?.studioName
+                : formData?.studio === "freelancer"
                 ? "Freelancer"
                 : "Home artist"}
-          </Text>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            {formData?.city}
-          </Text>
+            </Text>
+            <Text size="p" weight="normal" color="#A7A7A7">
+              {formData?.city}
+            </Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.userSocialsRow}>
-        {formData?.facebookProfile && (
+        <View style={styles.userSocialsRow}>
+          {formData?.facebookProfile && (
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/facebook_2.png")}
+            />
+          )}
+          {formData?.instagramProfile && (
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/instagram.png")}
+            />
+          )}
+          {formData?.twitterProfile && (
+            <Image
+              style={styles.icon}
+              source={require("../assets/images/twitter.png")}
+            />
+          )}
+        </View>
+        <View style={styles.artistFavoriteRow}>
           <Image
             style={styles.icon}
-            source={require("../assets/images/facebook_2.png")}
+            source={require("../assets/images/favorite-white.png")}
           />
-        )}
-        {formData?.instagramProfile && (
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/instagram.png")}
-          />
-        )}
-        {formData?.twitterProfile && (
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/twitter.png")}
-          />
-        )}
-      </View>
-      <View style={styles.artistFavoriteRow}>
-        <Image
-          style={styles.icon}
-          source={require("../assets/images/favorite-white.png")}
-        />
-        <View
-          style={{
-            height: 11,
-            width: 31,
-            borderRadius: 6,
-            backgroundColor: "#2D2D2D",
-          }}
-        ></View>
-      </View>
-      <Text size="p" weight="normal" color="#A7A7A7" style={{ marginTop: 16 }}>
-        {formData?.aboutYou}
-      </Text>
-      <View style={styles.buttonRow}>
-        <IconButton
-          title="Favorite"
-          icon={require("../assets/images/favorite-outline-white.png")}
-          iconStyle={{
-            height: 15,
-            width: 17,
-            resizeMode: "contain",
-          }}
-          variant="Primary"
-          onPress={() => {
-            router.push({
-              pathname: "/artist/EditProfile",
-            });
-          }}
-          disabled
-        />
-        <IconButton
-          title="Message"
-          icon={require("../assets/images/message.png")}
-          variant="Primary"
-          disabled
-        />
-      </View>
-      <ReviewOnProfileBlur></ReviewOnProfileBlur>
-      <View style={{ marginVertical: 24 }}>
-        <Text size="profileName" weight="semibold" color="#FBF6FA">
-          Location
-        </Text>
+          <View
+            style={{
+              height: 11,
+              width: 31,
+              borderRadius: 6,
+              backgroundColor: "#2D2D2D",
+            }}
+          ></View>
+        </View>
         <Text
-          size="medium"
+          size="p"
           weight="normal"
           color="#A7A7A7"
-          style={{ marginTop: 10 }}
+          style={{ marginTop: 16 }}
         >
-          {formData?.address}
+          {formData?.aboutYou}
         </Text>
-        <View
-          style={{
-            height: 130,
-            borderRadius: 20,
-            overflow: "hidden",
-            marginTop: 8,
-          }}
-        >
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            style={styles.map}
-            customMapStyle={googleDarkModeStyle}
-            mapType="standard"
-            region={region}
-            scrollEnabled={false}
-            zoomEnabled={false}
-          ></MapView>
+        <View style={styles.buttonRow}>
+          <IconButton
+            title="Favorite"
+            icon={require("../assets/images/favorite-outline-white.png")}
+            iconStyle={{
+              height: 20,
+              width: 20,
+              resizeMode: "contain",
+            }}
+            variant="Primary"
+            onPress={() => {
+              router.push({
+                pathname: "/artist/EditProfile",
+              });
+            }}
+            disabled
+          />
+          <IconButton
+            title="Message"
+            icon={require("../assets/images/message.png")}
+            variant="Primary"
+            disabled
+          />
+        </View>
+        <ReviewOnProfileBlur></ReviewOnProfileBlur>
+        <View style={{ marginVertical: 24 }}>
+          <Text size="profileName" weight="semibold" color="#FBF6FA">
+            Location
+          </Text>
+          <Text
+            size="medium"
+            weight="normal"
+            color="#A7A7A7"
+            style={{ marginTop: 10 }}
+          >
+            {formData?.address}
+          </Text>
+          <View
+            style={{
+              height: 130,
+              borderRadius: 20,
+              overflow: "hidden",
+              marginTop: 8,
+            }}
+          >
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={styles.map}
+              customMapStyle={googleDarkModeStyle}
+              mapType="standard"
+              region={region}
+              scrollEnabled={false}
+              zoomEnabled={false}
+            ></MapView>
+          </View>
+        </View>
+        <View>
+          <Text size="profileName" weight="semibold" color="#FBF6FA">
+            Portfolio
+          </Text>
+        </View>
+        <View style={styles.stylesFilterRow}>
+          <FlatList
+            data={tattooStyles}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.title}
+            horizontal={true}
+            contentContainerStyle={{ gap: 10 }}
+          />
         </View>
       </View>
-      <View>
-        <Text size="profileName" weight="semibold" color="#FBF6FA">
-          Portfolio
-        </Text>
+      <View style={{ paddingBottom: 40 }}>
+        <ImageGallery imageUris={formData?.images}></ImageGallery>
       </View>
-      <View style={styles.stylesFilterRow}>
-        <FlatList
-          data={tattooStyles}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.title}
-          horizontal={true}
-          contentContainerStyle={{ gap: 10 }}
-        />
-      </View>
-      <ImageGallery imageUris={formData?.images}></ImageGallery>
     </ScrollView>
   );
 };
@@ -262,7 +271,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    padding: 16,
+    paddingVertical: 16,
     borderTopWidth: 2,
     borderBottomWidth: 2,
     borderColor: "#FFFFFF56",

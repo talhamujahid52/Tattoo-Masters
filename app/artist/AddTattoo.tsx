@@ -43,11 +43,11 @@ const AddTattoo = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item,
+        : item
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected,
+      (item) => item.selected
     );
     setSelectedTattooStyles(selectedTattooStyles);
   };
@@ -87,7 +87,7 @@ const AddTattoo = () => {
       if (!uploadSuccess) {
         Alert.alert(
           "Upload Error",
-          "Failed to queue image for upload. The file may no longer exist.",
+          "Failed to queue image for upload. The file may no longer exist."
         );
         return;
       }
@@ -131,7 +131,7 @@ const AddTattoo = () => {
   } = useBottomSheet();
 
   const setSelectedTattooStylesinBottomSheet = (
-    updatedStyles: { title: string; selected: boolean }[],
+    updatedStyles: { title: string; selected: boolean }[]
   ) => {
     setTattooStyles(updatedStyles);
     const selected = updatedStyles.filter((item) => item.selected);
@@ -179,7 +179,7 @@ const AddTattoo = () => {
               />
             </View>
             <Text size="h4" weight="medium" color="#D7D7C9">
-              Add Tattoo
+              Add tattoo
             </Text>
           </>
         )}
@@ -189,7 +189,7 @@ const AddTattoo = () => {
         <TextInput
           selectionColor="#A29F93"
           placeholderTextColor="#A29F93"
-          placeholder="Write Caption"
+          placeholder="Write caption"
           multiline
           value={caption}
           style={styles.textArea}
@@ -248,7 +248,7 @@ const AddTattoo = () => {
               }}
             >
               <Text size="p" weight="normal" color="#FBF6FA">
-                {"See More"}
+                {"See more"}
               </Text>
               <View style={{ width: 24, height: 24 }}>
                 <Image
@@ -305,7 +305,12 @@ const styles = StyleSheet.create({
     right: 16,
   },
   styleButton: {
-    padding: 6,
+    height: 33,
+    paddingHorizontal: 6,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 6,
   },
 });

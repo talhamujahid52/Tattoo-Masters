@@ -21,14 +21,7 @@ const LoginBottomSheet = ({ hideLoginBottomSheet }: LoginBottomSheetProps) => {
 
       const count = snapshot.data().count || 0;
       let roundedCount = 0;
-
-      if (count < 10000) {
-        // Round up to nearest 100
-        roundedCount = Math.ceil(count / 100) * 100;
-      } else {
-        // Round up to nearest 1000
-        roundedCount = Math.ceil(count / 1000) * 1000;
-      }
+      roundedCount = Math.ceil(count / 1000) * 1000;
 
       setTotalArtists(roundedCount);
     } catch (error) {
