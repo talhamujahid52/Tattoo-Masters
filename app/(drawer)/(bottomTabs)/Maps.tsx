@@ -39,6 +39,7 @@ import {
 import { addSearch } from "@/redux/slices/recentSearchesSlice";
 import { setTattooLoading } from "@/redux/slices/tattooSlice";
 import useTypesense from "@/hooks/useTypesense";
+import { useFocusEffect } from "@react-navigation/native";
 
 type LatLngArray = [number, number];
 const FullScreenMapWithSearch: React.FC = () => {
@@ -197,6 +198,40 @@ const FullScreenMapWithSearch: React.FC = () => {
       cancelled = true;
     };
   }, [dispatch]);
+
+  // Also refocus to user's current location whenever the screen gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (cancelled) return;
+          if (status !== "granted") return;
+          const {
+            coords: { latitude, longitude },
+          } = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          if (!cancelled) {
+            const newRegion = {
+              latitude,
+              longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            };
+            dispatch(setCurrentLocation({ latitude, longitude }));
+            setRegion(newRegion);
+            mapRef.current?.animateToRegion(newRegion, 800);
+          }
+        } catch {}
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [dispatch])
+  );
   const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
     const facets: string[] = [];
 
