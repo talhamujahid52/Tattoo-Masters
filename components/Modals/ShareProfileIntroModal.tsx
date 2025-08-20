@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { View, StyleSheet, Image, TouchableOpacity, Share } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
@@ -16,6 +16,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
   const loggedInUserFirestore: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore
   );
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   const myProfileId = loggedInUserFirestore?.uid;
   const shareProfile = async () => {
@@ -41,6 +42,18 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
     }
   };
 
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
+
+  console.log("ProfileImage: ", profileImage);
   return (
     <View style={styles.modalContent}>
       <Image
@@ -77,7 +90,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
               transform: [{ translateX: -30 }, { translateY: -23 }],
             },
           ]}
-          source={{ uri: formData?.profilePicture }}
+          source={profileImage}
         />
       </View>
       {/* <Image
@@ -105,7 +118,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
         old clients, friends and followers find you here as well.
       </Text>
       <Button
-        title="Share Profile"
+        title="Share profile"
         onPress={() => {
           shareProfile();
         }}

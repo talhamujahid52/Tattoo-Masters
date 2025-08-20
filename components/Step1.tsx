@@ -48,10 +48,10 @@ const Step1: React.FC = () => {
   };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
 
   // Prepopulate the full name field if it is not already set.
@@ -62,7 +62,26 @@ const Step1: React.FC = () => {
         name: loggedInUserFirestore.name,
       }));
     }
-  }, [loggedInUserFirestore, loggedInUser, formData.name, setFormData]);
+    if (!formData.profilePicture) {
+      const profilePictureUri =
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL;
+
+      if (profilePictureUri) {
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: profilePictureUri,
+        }));
+      }
+    }
+  }, [
+    loggedInUserFirestore,
+    loggedInUser,
+    formData.name,
+    formData.profilePicture,
+    setFormData,
+  ]);
 
   useEffect(() => {
     const fetchTattooStyles = async () => {
@@ -90,14 +109,18 @@ const Step1: React.FC = () => {
   }, []);
 
   const localImage = useMemo(() => {
-    return {
-      uri:
-        formData?.profilePicture ??
-        loggedInUserFirestore?.profilePictureSmall ??
-        loggedInUserFirestore?.profilePicture ??
-        loggedInUser?.photoURL ??
-        undefined,
-    };
+    const remoteUri =
+      formData?.profilePicture ??
+      loggedInUserFirestore?.profilePictureSmall ??
+      loggedInUserFirestore?.profilePicture ??
+      loggedInUser?.photoURL;
+
+    if (remoteUri) {
+      return { uri: remoteUri };
+    }
+
+    // Fallback to local placeholder image if no image URI is available
+    return require("../assets/images/placeholder.png");
   }, [loggedInUser, loggedInUserFirestore, formData]);
 
   const [region, setRegion] = useState<Region>({
@@ -165,17 +188,17 @@ const Step1: React.FC = () => {
     const updatedTattooStyles = tattooStyles.map((item) =>
       item.title === tattooStyle.title
         ? { ...item, selected: !item.selected }
-        : item,
+        : item
     );
     setTattooStyles(updatedTattooStyles);
     const selectedTattooStyles = updatedTattooStyles.filter(
-      (item) => item.selected,
+      (item) => item.selected
     );
     setFormData((prev) => ({ ...prev, tattooStyles: selectedTattooStyles }));
   };
 
   const setSelectedTattooStyles = (
-    updatedStyles: { title: string; selected: boolean }[],
+    updatedStyles: { title: string; selected: boolean }[]
   ) => {
     setTattooStyles(updatedStyles);
     const selected = updatedStyles.filter((item) => item.selected);
@@ -388,7 +411,12 @@ const Step1: React.FC = () => {
                 key={idx}
                 activeOpacity={1}
                 style={{
-                  padding: 6,
+                  height: 33,
+                  paddingHorizontal: 6,
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
                   borderRadius: 6,
                   backgroundColor: item.selected ? "#DAB769" : "#262526",
                 }}
@@ -416,7 +444,7 @@ const Step1: React.FC = () => {
                 }}
               >
                 <Text size="p" weight="normal" color="#FBF6FA">
-                  {"See More"}
+                  {"See more"}
                 </Text>
                 <View style={{ width: 24, height: 24 }}>
                   <Image

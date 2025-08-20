@@ -439,7 +439,12 @@ const EditProfile = () => {
                 key={idx}
                 activeOpacity={1}
                 style={{
-                  padding: 6,
+                  height: 33,
+                  paddingHorizontal: 6,
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
                   borderRadius: 6,
                   backgroundColor: item.selected ? "#DAB769" : "#262526",
                 }}
@@ -467,7 +472,7 @@ const EditProfile = () => {
                 }}
               >
                 <Text size="p" weight="normal" color="#FBF6FA">
-                  {"See More"}
+                  {"See more"}
                 </Text>
                 <View style={{ width: 24, height: 24 }}>
                   <Image

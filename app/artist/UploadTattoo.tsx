@@ -253,7 +253,7 @@ const UploadTattoo = () => {
               />
             </View>
             <Text size="h4" weight="medium" color="#D7D7C9">
-              Add Tattoo
+              Add tattoo
             </Text>
           </>
         )}
@@ -262,7 +262,7 @@ const UploadTattoo = () => {
       <TextInput
         selectionColor="#A29F93"
         placeholderTextColor="#A29F93"
-        placeholder="Write Caption"
+        placeholder="Write caption"
         multiline
         value={caption}
         style={styles.textArea}
@@ -318,7 +318,7 @@ const UploadTattoo = () => {
               }}
             >
               <Text size="p" weight="normal" color="#FBF6FA">
-                {"See More"}
+                {"See more"}
               </Text>
               <View style={{ width: 24, height: 24 }}>
                 <Image
@@ -385,7 +385,12 @@ const styles = StyleSheet.create({
     right: 16,
   },
   styleButton: {
-    padding: 6,
+    height: 33,
+    paddingHorizontal: 6,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 6,
   },
 });

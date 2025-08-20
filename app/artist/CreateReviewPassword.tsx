@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import { StyleSheet, View, Image } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Text from "@/components/Text";
@@ -10,6 +10,7 @@ import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUserProfile } from "@/utils/firebase/userFunctions";
 import { UserProfileFormData } from "@/types/user";
+import { UserFirestore } from "@/types/user";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
@@ -23,7 +24,13 @@ const CreateReviewPassword = () => {
   const [loading, setLoading] = useState(false);
 
   const loggedInUser = useSelector((state: any) => state?.user?.user);
+<<<<<<< HEAD
   const userFirestore = useSelector((state: any) => state?.user?.userFirestore);
+=======
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
+>>>>>>> origin/main
   const currentUserId = loggedInUser?.uid;
   const { queueUpload } = useBackgroundUpload();
   const dispatch = useDispatch();
@@ -63,7 +70,7 @@ const CreateReviewPassword = () => {
 
   const submitForm = async () => {
     try {
-      setFormData((prev)=>({ ...prev, reviewPassword }));
+      setFormData((prev) => ({ ...prev, reviewPassword }));
       setLoading(true);
       const imgs = formData.images.filter((img) => img && img.uri);
       const updatedFormData = {
@@ -74,12 +81,12 @@ const CreateReviewPassword = () => {
 
       // Check if images are already queued/uploaded to prevent duplicates
       const imagesToUpload = imgs.filter(
-        (img) => !img.uploadStatus || img.uploadStatus === "failed",
+        (img) => !img.uploadStatus || img.uploadStatus === "failed"
       );
 
       if (imagesToUpload.length > 0) {
         console.log(
-          `Queueing ${imagesToUpload.length} images for background upload`,
+          `Queueing ${imagesToUpload.length} images for background upload`
         );
 
         for (const img of imagesToUpload) {
@@ -97,6 +104,7 @@ const CreateReviewPassword = () => {
       await updateUserProfile(currentUserId, {
         ...updatedFormData,
         isArtist: true, //make the user an artist
+        artistRegistrationDate: new Date().toISOString(),
       } as UserProfileFormData);
 
       // update the user profile picture as well if it has been changed
@@ -127,6 +135,17 @@ const CreateReviewPassword = () => {
     }
   };
 
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
+
   return (
     <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <View
@@ -156,7 +175,7 @@ const CreateReviewPassword = () => {
               transform: [{ translateX: -34 }, { translateY: -34 }],
             },
           ]}
-          source={{ uri: formData?.profilePicture }}
+          source={profileImage}
         />
       </View>
 

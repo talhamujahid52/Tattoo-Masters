@@ -45,15 +45,33 @@ const IndividualChat: React.FC = () => {
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
   const [localTime, setLocalTime] = useState<String>();
   console.log("Local Time: ", localTime);
-  const {
-    selectedArtistId,
-    existingChatId,
-    otherUserName,
-    otherUserId,
-    otherUserProfilePicture,
-  } = useLocalSearchParams<any>();
+  const { selectedArtistId, existingChatId, otherUserName, otherUserId } =
+    useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
-  const otherUser = useGetArtist(otherUserId);
+  const [otherUserDetails, setOtherUserDetails] = useState<any>();
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userDocRef = firestore().collection("Users").doc(otherUserId);
+        const userDoc = await userDocRef.get();
+
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          setOtherUserDetails(userData);
+          // Do whatever you need with userData
+          // console.log("Fetched user data:", userData);
+        } else {
+          console.warn("User not found with ID:", otherUserId);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    if (otherUserId) {
+      fetchUser();
+    }
+  }, [otherUserId]);
 
   const formatMessages = (msgs: any[]) => {
     return msgs.map((msg) => {
@@ -121,18 +139,18 @@ const IndividualChat: React.FC = () => {
         setChatID(existingChatId);
         setMessageRecieverName(otherUserName);
         setRecieverProfilePicture(
-          otherUser?.data?.profilePictureSmall
-            ? otherUser?.data?.profilePictureSmall
-            : otherUser?.data?.profilePicture
+          otherUserDetails?.profilePictureSmall
+            ? otherUserDetails?.profilePictureSmall
+            : otherUserDetails?.profilePicture
         );
         const localTime = await getLocalTimeFromCoordinates(
-          otherUser?.data?.location
+          otherUserDetails?.location
         );
         setLocalTime(localTime);
       };
       chatExistsAlready();
     }
-  }, [selectedArtistId, existingChatId]);
+  }, [selectedArtistId, existingChatId, otherUserDetails]);
 
   useEffect(() => {
     if (!chatID) return;
@@ -415,7 +433,7 @@ const IndividualChat: React.FC = () => {
             source={
               recieverProfilePicture
                 ? { uri: recieverProfilePicture }
-                : require("../../assets/images/Artist.png")
+                : require("../../assets/images/placeholder.png")
             }
             style={styles.avatar}
           />
@@ -439,17 +457,21 @@ const IndividualChat: React.FC = () => {
                   ? `Last seen ${getTimeAgo(lastSeen)}`
                   : ""}
               </Text>
-              <View
-                style={{
-                  height: 3,
-                  width: 3,
-                  backgroundColor: "#B1AFA4",
-                  borderRadius: 100,
-                }}
-              ></View>
-              <Text size="medium" weight="normal" color="#A7A7A7">
-                {`Local time ${localTime}`}
-              </Text>
+              {localTime && (
+                <>
+                  <View
+                    style={{
+                      height: 3,
+                      width: 3,
+                      backgroundColor: "#B1AFA4",
+                      borderRadius: 100,
+                    }}
+                  ></View>
+                  <Text size="medium" weight="normal" color="#A7A7A7">
+                    {`Local time ${localTime}`}
+                  </Text>
+                </>
+              )}
             </View>
           </View>
         </View>

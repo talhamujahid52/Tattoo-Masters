@@ -46,15 +46,13 @@ const CustomDrawerContent = () => {
   const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
 
   let formattedTrialEndDate = "";
-  if (loggedInUserFirestore?.createdAt?.seconds) {
-    const milliseconds =
-      loggedInUserFirestore.createdAt.seconds * 1000 +
-      loggedInUserFirestore.createdAt.nanoseconds / 1e6;
+  const artistDateRaw = loggedInUserFirestore?.artistRegistrationDate;
 
-    const trialStartDate = new Date(milliseconds);
-    trialStartDate.setFullYear(trialStartDate.getFullYear() + 1); // Add 1 year
+  if (artistDateRaw) {
+    const registrationDate = new Date(artistDateRaw);
+    registrationDate.setFullYear(registrationDate.getFullYear() + 1); // Add 1 year
 
-    formattedTrialEndDate = trialStartDate.toLocaleDateString("en-US", {
+    formattedTrialEndDate = registrationDate.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -135,7 +133,14 @@ const CustomDrawerContent = () => {
                 style={styles.userProfileRow}
               >
                 <View style={styles.pictureAndName}>
-                  <Image style={styles.profilePicture} source={profileImage} />
+                  <Image
+                    style={styles.profilePicture}
+                    source={
+                      profileImage?.uri
+                        ? profileImage
+                        : require("../../assets/images/placeholder.png")
+                    }
+                  />
                   <View>
                     <Text size="profileName" weight="semibold" color="white">
                       {name}
@@ -186,7 +191,14 @@ const CustomDrawerContent = () => {
           <View>
             <View style={styles.userProfileRow}>
               <View style={styles.pictureAndName}>
-                <Image style={styles.profilePicture} source={profileImage} />
+                <Image
+                  style={styles.profilePicture}
+                  source={
+                    profileImage?.uri
+                      ? profileImage
+                      : require("../../assets/images/placeholder.png")
+                  }
+                />
                 <View>
                   <Text size="profileName" weight="semibold" color="white">
                     {name}

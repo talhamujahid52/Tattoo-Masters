@@ -290,6 +290,23 @@ const ArtistProfile = () => {
     });
   };
 
+  const handleOpenLink = async (url: string) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn("Can't open URL:", url);
+      }
+    } catch (error) {
+      console.error("Failed to open URL:", error);
+    }
+  };
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
@@ -362,7 +379,9 @@ const ArtistProfile = () => {
         </View>
         <View style={styles.userSocialsRow}>
           {artist?.data?.facebookProfile && (
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleOpenLink(artist?.data?.facebookProfile)}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/facebook_2.png")}
@@ -370,7 +389,9 @@ const ArtistProfile = () => {
             </TouchableOpacity>
           )}
           {artist?.data?.instagramProfile && (
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleOpenLink(artist?.data?.instagramProfile)}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/instagram.png")}
@@ -378,7 +399,9 @@ const ArtistProfile = () => {
             </TouchableOpacity>
           )}
           {artist?.data?.twitterProfile && (
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleOpenLink(artist?.data?.twitterProfile)}
+            >
               <Image
                 style={styles.icon}
                 source={require("../../assets/images/twitter.png")}
@@ -438,12 +461,16 @@ const ArtistProfile = () => {
             title="Message"
             icon={require("../../assets/images/message.png")}
             variant="Primary"
-            onPress={() =>
+            onPress={() => {
+              if (!userFirestore) {
+                showLoggingInBottomSheet();
+                return;
+              }
               router.push({
                 pathname: "/artist/IndividualChat",
                 params: { selectedArtistId: artistId },
-              })
-            }
+              });
+            }}
           />
         </View>
         {artist?.data?.latestReview ? (
@@ -520,7 +547,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    // padding: 16,
+    paddingTop: 16,
     borderTopWidth: 0.33,
     borderColor: "#282828",
   },
@@ -547,8 +574,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#202020",
   },
   icon: {
-    height: 20,
-    width: 20,
+    height: 24,
+    width: 24,
     resizeMode: "contain",
   },
   moreIconContainer: {

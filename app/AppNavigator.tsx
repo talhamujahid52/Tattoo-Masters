@@ -97,7 +97,7 @@ const AppNavigator = () => {
     if (!initializing) {
       setTimeout(async () => {
         await SplashScreen.hideAsync();
-      }, 200);
+      }, 1000);
     }
   }, [initializing]);
 
@@ -106,8 +106,15 @@ const AppNavigator = () => {
     if (initializing) {
       return;
     }
-    if (pathname !== "/Home" && loggedInUser?.emailVerified === true) {
+    if (
+      pathname !== "/Home" &&
+      pathname !== "/Login" &&
+      loggedInUser?.emailVerified === true
+    ) {
       router.replace("/(bottomTabs)/Home");
+    }
+    if (pathname == "/Login" && loggedInUser?.emailVerified === true) {
+      router.back();
     }
   }, [userId, initializing]);
 

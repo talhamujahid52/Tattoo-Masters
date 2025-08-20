@@ -31,13 +31,14 @@ const recentSearchesSlice = createSlice({
      */
     addSearch: (state, action: PayloadAction<SearchItem>) => {
       const { text, type } = action.payload;
+
+      if (text == "*") return;
+
       const trimmed = text.trim();
       if (!trimmed) return;
 
       // remove duplicate of same text+type
-      const idx = state.items.findIndex(
-        (item) => item.text === trimmed && item.type === type
-      );
+      const idx = state.items.findIndex((item) => item.text === trimmed);
       if (idx >= 0) {
         state.items.splice(idx, 1);
       }

@@ -24,10 +24,10 @@ const EditProfile = () => {
   // Get auth and firestore user data from redux
   const router = useRouter();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore,
+    (state: any) => state?.user?.userFirestore
   );
   const currentUserId = loggedInUser?.uid;
   const insets = useSafeAreaInsets();
@@ -75,7 +75,7 @@ const EditProfile = () => {
             setNewImage(asset);
           }
         }
-      },
+      }
     );
   };
 
@@ -85,8 +85,8 @@ const EditProfile = () => {
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error("Profile picture update timed out!")),
-        TIMEOUT_MS,
-      ),
+        TIMEOUT_MS
+      )
     );
 
     try {
@@ -108,16 +108,18 @@ const EditProfile = () => {
   // Use the newly selected image if available, otherwise use Firestore profile picture,
   // and as a last resort, fallback to Google photo URL.
   const localImage = useMemo(() => {
-    if (!newImage) {
-      return {
-        uri:
-          loggedInUserFirestore?.profilePictureSmall ??
-          loggedInUserFirestore?.profilePicture ??
-          loggedInUser?.photoURL ??
-          undefined,
-      };
+    const remoteUri =
+      newImage?.uri ??
+      loggedInUserFirestore?.profilePictureSmall ??
+      loggedInUserFirestore?.profilePicture ??
+      loggedInUser?.photoURL;
+
+    if (remoteUri) {
+      return { uri: remoteUri };
     }
-    return { uri: newImage.uri ?? undefined };
+
+    // Fallback to local placeholder image if no image URI is found
+    return require("../../assets/images/placeholder.png");
   }, [newImage, loggedInUser, loggedInUserFirestore]);
 
   // Update profile in Firestore with the new full name, phone number, and profile picture (if changed).
@@ -132,7 +134,7 @@ const EditProfile = () => {
           name: fullName,
           phoneNumber: phoneNumber,
         },
-        { merge: true },
+        { merge: true }
       );
       if (newImage?.uri) {
         await handleProfilePictureChange(newImage.uri);
@@ -159,12 +161,7 @@ const EditProfile = () => {
     >
       <View>
         <View style={styles.profilePictureRow}>
-          <Image
-            style={styles.profilePicture}
-            source={
-              localImage ?? require("../../assets/images/profilePicture.png")
-            }
-          />
+          <Image style={styles.profilePicture} source={localImage} />
           <TouchableOpacity
             hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
             onPress={openImagePicker}

@@ -59,15 +59,15 @@ const Search: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-  useFocusEffect(
-    useCallback(() => {
-      const timeout = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 300);
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const timeout = setTimeout(() => {
+  //       searchInputRef.current?.focus();
+  //     }, 300);
 
-      return () => clearTimeout(timeout);
-    }, [])
-  );
+  //     return () => clearTimeout(timeout);
+  //   }, [])
+  // );
 
   // overlay fade (if you re-enable it)
   useEffect(() => {

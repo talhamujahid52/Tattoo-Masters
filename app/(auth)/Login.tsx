@@ -38,7 +38,7 @@ const Login = () => {
   const handleEmailChange = (input: string) => {
     setEmail(input);
     if (!validateEmail(input)) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("Can't verify email to login.");
     } else {
       setEmailError("");
     }
@@ -241,6 +241,20 @@ const Login = () => {
             </Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <Text
+            size="p"
+            weight="semibold"
+            color="#DAB769"
+            style={{ textAlign: "center", marginTop: 24 }}
+          >
+            Continue as guest
+          </Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAwareScrollView>
   );

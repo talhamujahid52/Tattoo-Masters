@@ -56,13 +56,13 @@ const BottomTabsLayout = () => {
                 <Image
                   source={require("../../../assets/images/home-filled.png")}
                   resizeMode="contain"
-                  style={{ height: 24, width: 24 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ) : (
                 <Image
                   source={require("../../../assets/images/home.png")}
                   resizeMode="contain"
-                  style={{ height: 24, width: 24 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ),
             headerStyle: {
@@ -86,13 +86,13 @@ const BottomTabsLayout = () => {
                 <Image
                   source={require("../../../assets/images/search-filled.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ) : (
                 <Image
                   source={require("../../../assets/images/search.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ),
             headerStyle: {
@@ -111,13 +111,13 @@ const BottomTabsLayout = () => {
                 <Image
                   source={require("../../../assets/images/map-filled.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ) : (
                 <Image
                   source={require("../../../assets/images/map.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ),
             headerShown: false,
@@ -132,13 +132,13 @@ const BottomTabsLayout = () => {
                 <Image
                   source={require("../../../assets/images/favorite-filled.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ) : (
                 <Image
                   source={require("../../../assets/images/favorite-outline.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ),
             headerShown: false,
@@ -156,13 +156,13 @@ const BottomTabsLayout = () => {
                 <Image
                   source={require("../../../assets/images/comment-filled.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ) : (
                 <Image
                   source={require("../../../assets/images/comment.png")}
                   resizeMode="contain"
-                  style={{ height: 26, width: 26 }}
+                  style={{ height: 28, width: 28 }}
                 />
               ),
             headerShown: false,

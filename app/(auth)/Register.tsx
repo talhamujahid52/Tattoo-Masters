@@ -55,7 +55,7 @@ const Register: React.FC = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         email,
-        password,
+        password
       );
 
       const user = userCredential.user;
@@ -92,7 +92,7 @@ const Register: React.FC = () => {
           style={styles.Logo}
           source={require("../../assets/images/logo.png")}
         />
-        <Text style={styles.PageTitle}>Registration</Text>
+        <Text style={styles.PageTitle}>Register</Text>
         <View style={styles.Row}>
           <Text size="p" weight="normal" color="#A7A7A7">
             Already have an account?{" "}
@@ -108,7 +108,7 @@ const Register: React.FC = () => {
         <View style={styles.InputContainer}>
           <Input
             inputMode="text"
-            placeholder="Full Name"
+            placeholder="Full name"
             isNameField
             textInputProps={{ autoCorrect: false }}
             value={fullName}
@@ -129,13 +129,13 @@ const Register: React.FC = () => {
           />
           <Input
             inputMode="password"
-            placeholder="Create Password"
+            placeholder="Create password"
             value={password}
             onChangeText={setPassword}
           />
           <Input
             inputMode="password"
-            placeholder="Confirm Password"
+            placeholder="Confirm password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
           />
@@ -159,7 +159,7 @@ const Register: React.FC = () => {
             icon={require("../../assets/images/facebook.png")}
             onPress={() => {
               alert(
-                "Login with Facebook is currently unavailable. We're working on it and it will be available soon!",
+                "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
               );
             }}
           />
@@ -208,8 +208,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   Logo: {
-    height: 120,
-    width: 120,
+    height: 151,
+    width: 175,
     resizeMode: "contain",
   },
   PageTitle: {

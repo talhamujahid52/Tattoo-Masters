@@ -302,7 +302,7 @@ const AddReview = () => {
               }}
             >
               <Text size="p" weight="normal" color="#FBF6FA">
-                {"See More"}
+                {"See more"}
               </Text>
               <View style={{ width: 24, height: 24 }}>
                 <Image

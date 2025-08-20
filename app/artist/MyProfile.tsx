@@ -6,6 +6,7 @@ import {
   Image,
   FlatList,
   Pressable,
+  Linking,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import Text from "@/components/Text";
@@ -37,7 +38,7 @@ const MyProfile = () => {
 
   const myId = loggedInUser?.uid;
 
-  // console.log("LoggedIn User : ", loggedInUser);
+  // console.log("My Profile : ", loggedInUser);
   // console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -157,158 +158,190 @@ const MyProfile = () => {
     );
   }, [searchResults, styleFilters]);
 
+  const handleOpenLink = async (url: string) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn("Can't open URL:", url);
+      }
+    } catch (error) {
+      console.error("Failed to open URL:", error);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <BottomSheet
         InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />}
       />
-
-      <View style={styles.userProfileRow}>
-        <View style={styles.pictureAndName}>
-          <Image
-            style={styles.profilePicture}
-            source={{
-              uri:
-                loggedInUser?.profilePictureSmall ??
-                loggedInUser?.profilePicture,
-            }}
-          />
-          <View>
-            <Text size="h3" weight="semibold" color="white">
-              {loggedInUser?.name ?? ""}
-            </Text>
-            <Text size="p" weight="normal" color="#A7A7A7">
-              {loggedInUser?.studio === "studio"
-                ? loggedInUser?.studioName
-                : loggedInUser?.studio === "freelancer"
-                ? "Freelancer"
-                : "Home artist"}
-            </Text>
-            <Text size="p" weight="normal" color="#A7A7A7">
-              {loggedInUser?.city ?? ""}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          onPress={() => {
-            show();
-          }}
-          style={styles.moreIconContainer}
-        >
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/more_vert.png")}
-          />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.userSocialsRow}>
-        <TouchableOpacity onPress={() => {}}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/facebook_2.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/instagram.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/twitter.png")}
-          />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.artistFavoriteRow}>
-        <Image
-          style={styles.icon}
-          source={require("../../assets/images/favorite-white.png")}
-        />
-
-        {loggedInUser?.followersCount ? (
-          <Text size="p" weight="normal" color="#FBF6FA">
-            {loggedInUser?.followersCount}
-          </Text>
-        ) : (
-          <View
-            style={{
-              height: 11,
-              width: 31,
-              borderRadius: 6,
-              backgroundColor: "#2D2D2D",
-            }}
-          ></View>
-        )}
-      </View>
-      <View style={styles.tattooStylesRow}>
-        <Image
-          style={styles.icon}
-          source={require("../../assets/images/draw.png")}
-        />
-        {loggedInUser?.tattooStyles?.map((item: any, idx: any) => {
-          return (
-            <View
-              key={idx}
-              style={{
-                backgroundColor: "#262526",
-                paddingHorizontal: 5,
-                paddingVertical: 2,
-                borderRadius: 6,
+      <View style={{ paddingHorizontal: 16 }}>
+        <View style={styles.userProfileRow}>
+          <View style={styles.pictureAndName}>
+            <Image
+              style={styles.profilePicture}
+              source={{
+                uri:
+                  loggedInUser?.profilePictureSmall ??
+                  loggedInUser?.profilePicture,
               }}
-            >
-              <Text size="p" weight="normal" color="#D7D7C9">
-                {item}
+            />
+            <View>
+              <Text size="h3" weight="semibold" color="white">
+                {loggedInUser?.name ?? ""}
+              </Text>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {loggedInUser?.studio === "studio"
+                  ? loggedInUser?.studioName
+                  : loggedInUser?.studio === "freelancer"
+                  ? "Freelancer"
+                  : "Home artist"}
+              </Text>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {loggedInUser?.city ?? ""}
               </Text>
             </View>
-          );
-        })}
-      </View>
-      {/* <Text size="p" weight="normal" color="#A7A7A7">
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              show();
+            }}
+            style={styles.moreIconContainer}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/more_vert.png")}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.userSocialsRow}>
+          {loggedInUser?.facebookProfile && (
+            <TouchableOpacity
+              onPress={() => {
+                handleOpenLink(loggedInUser.facebookProfile);
+              }}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/facebook_2.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {loggedInUser?.instagramProfile && (
+            <TouchableOpacity
+              onPress={() => handleOpenLink(loggedInUser.instagramProfile)}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/instagram.png")}
+              />
+            </TouchableOpacity>
+          )}
+          {loggedInUser?.twitterProfile && (
+            <TouchableOpacity
+              onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
+            >
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/twitter.png")}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.artistFavoriteRow}>
+          <Image
+            style={styles.icon}
+            source={require("../../assets/images/favorite-white.png")}
+          />
+
+          {loggedInUser?.followersCount ? (
+            <Text size="p" weight="normal" color="#FBF6FA">
+              {loggedInUser?.followersCount}
+            </Text>
+          ) : (
+            <View
+              style={{
+                height: 11,
+                width: 31,
+                borderRadius: 6,
+                backgroundColor: "#2D2D2D",
+              }}
+            ></View>
+          )}
+        </View>
+        <View style={styles.tattooStylesRow}>
+          <Image
+            style={styles.icon}
+            source={require("../../assets/images/draw.png")}
+          />
+          {loggedInUser?.tattooStyles?.map((item: any, idx: any) => {
+            return (
+              <View
+                key={idx}
+                style={{
+                  backgroundColor: "#262526",
+                  paddingHorizontal: 5,
+                  paddingVertical: 2,
+                  borderRadius: 6,
+                }}
+              >
+                <Text size="p" weight="normal" color="#D7D7C9">
+                  {item}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+        {/* <Text size="p" weight="normal" color="#A7A7A7">
         {loggedInUser?.aboutYou ?? ""}
       </Text> */}
-      <Pressable onPress={handleToggle}>
-        <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded || content?.length <= 120
-            ? content
-            : `${content?.slice(0, 100)}...`}
-        </Text>
-      </Pressable>
-      <View style={styles.buttonRow}>
-        <IconButton
-          title="Edit profile"
-          icon={require("../../assets/images/edit.png")}
-          variant="Primary"
-          onPress={() => {
-            router.push({
-              pathname: "/artist/EditProfile",
-            });
-          }}
-        />
-        <IconButton
-          title="Add tattoo"
-          icon={require("../../assets/images/add_photo_alternate-2.png")}
-          variant="Primary"
-          onPress={() => {
-            router.push("/artist/AddTattoo");
-          }}
-        />
-      </View>
-      {loggedInUser?.latestReview ? (
-        <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
-      ) : (
-        <NoReviewsOnMyProfile />
-      )}
-      <View style={styles.stylesFilterRow}>
-        <FlatList
-          data={styleFilters}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.title}
-          horizontal={true}
-          contentContainerStyle={{ gap: 10 }}
-          showsHorizontalScrollIndicator={false}
-        />
+        <Pressable onPress={handleToggle}>
+          <Text size="p" weight="normal" color="#A7A7A7">
+            {isExpanded || content?.length <= 120
+              ? content
+              : `${content?.slice(0, 100)}...`}
+          </Text>
+        </Pressable>
+        <View style={styles.buttonRow}>
+          <IconButton
+            title="Edit profile"
+            icon={require("../../assets/images/edit.png")}
+            variant="Primary"
+            onPress={() => {
+              router.push({
+                pathname: "/artist/EditProfile",
+              });
+            }}
+          />
+          <IconButton
+            title="Add tattoo"
+            icon={require("../../assets/images/add_photo_alternate-2.png")}
+            variant="Primary"
+            onPress={() => {
+              router.push("/artist/AddTattoo");
+            }}
+          />
+        </View>
+        {loggedInUser?.latestReview ? (
+          <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
+        ) : (
+          <NoReviewsOnMyProfile />
+        )}
+        <View style={styles.stylesFilterRow}>
+          <FlatList
+            data={styleFilters}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.title}
+            horizontal={true}
+            contentContainerStyle={{ gap: 10 }}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       </View>
       <View style={{ paddingBottom: 60 }}>
         <ImageGallery images={filteredResults}></ImageGallery>
@@ -323,7 +356,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    padding: 16,
+    paddingTop: 16,
     borderTopWidth: 0.33,
     borderColor: "#2D2D2D",
   },

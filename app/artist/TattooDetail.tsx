@@ -303,12 +303,17 @@ const TattooDetail: React.FC = () => {
                 backgroundColor: "white",
                 marginRight: 8,
               }}
-              source={{
-                uri:
-                  userDetails?.profilePictureSmall ??
-                  userDetails?.profilePicture,
-              }}
+              source={
+                userDetails?.profilePictureSmall || userDetails?.profilePicture
+                  ? {
+                      uri:
+                        userDetails.profilePictureSmall ??
+                        userDetails.profilePicture,
+                    }
+                  : require("../../assets/images/placeholder.png")
+              }
             />
+
             <View />
             <Text size="p" weight="semibold" color="#FFF">
               {userDetails?.name}

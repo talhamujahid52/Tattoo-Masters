@@ -154,7 +154,7 @@ const OnboardingComponent = () => (
               color="#d0d0d0"
               style={styles.paragraphStyle}
             >
-              Join and become a
+              Join and become a{" "}
             </Text>
             <Text
               size="p"
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   paragraphStyle: {
     textAlign: "center",
     marginTop: 16,
-    paddingHorizontal: 5,
+    // paddingHorizontal: 5,
   },
 });
 

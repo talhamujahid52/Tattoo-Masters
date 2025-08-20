@@ -69,7 +69,7 @@ const ShareReviewPasswordBottomSheet = ({
           color="#FFF"
           style={{ textAlign: "center" }}
         >
-          Review Password
+          Review password
         </Text>
       </View>
 
@@ -119,7 +119,7 @@ const ShareReviewPasswordBottomSheet = ({
           source={require("../../assets/images/share.png")}
         />
         <Text size="h4" weight="normal" color="#FBF6FA">
-          Share review Password
+          Share review password
         </Text>
       </TouchableOpacity>
 
@@ -137,7 +137,7 @@ const ShareReviewPasswordBottomSheet = ({
           source={require("../../assets/images/changeReviewPassword.png")}
         />
         <Text size="h4" weight="normal" color="#FBF6FA">
-          Change review Password
+          Change review password
         </Text>
       </TouchableOpacity>
     </View>

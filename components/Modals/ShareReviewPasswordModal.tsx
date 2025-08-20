@@ -1,10 +1,11 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { View, StyleSheet, Image, TouchableOpacity, Share } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
 import { router } from "expo-router";
 import { FormContext } from "@/context/FormContext";
 import { useSelector } from "react-redux";
+import { UserFirestore } from "@/types/user";
 
 type Props = {
   onClose?: () => void;
@@ -13,7 +14,9 @@ type Props = {
 const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
   const { formData, setFormData } = useContext(FormContext)!;
   const loggedInUser = useSelector((state: any) => state?.user?.user);
-
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
   const onShare = async () => {
     try {
       const result = await Share.share({
@@ -33,6 +36,17 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
       console.log("Error opening Share Sheet:", error);
     }
   };
+
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
 
   return (
     <View style={styles.modalContent}>
@@ -71,7 +85,7 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
               transform: [{ translateX: -34 }, { translateY: -34 }],
             },
           ]}
-          source={{ uri: formData?.profilePicture }}
+          source={profileImage}
         />
       </View>
       <Text
@@ -96,7 +110,7 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
         {"\n"}to grow your profile with great reviews.
       </Text>
       <Button
-        title="Share Review Password"
+        title="Share review password"
         onPress={() => {
           onShare();
         }}

@@ -1,9 +1,10 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import useGetArtist from "@/hooks/useGetArtist";
+import firestore from "@react-native-firebase/firestore";
 interface ChatListCellProps {
   chat: any;
 }
@@ -11,18 +12,42 @@ interface ChatListCellProps {
 const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
-
+  const [otherUserDetails, setOtherUserDetails] = useState<any>();
   const otherUser = participants?.find(
     (item: any) => item !== loggedInUser?.uid
   );
 
-  const otherUserDetails = useGetArtist(otherUser);
-  const otherUserName = otherUserDetails?.data?.name;
-  const otherUserId = otherUserDetails?.data?.uid;
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userDocRef = firestore().collection("Users").doc(otherUser);
+        const userDoc = await userDocRef.get();
 
-  const otherUserProfilePicture = otherUserDetails?.data?.profilePictureSmall
-    ? otherUserDetails?.data?.profilePictureSmall
-    : otherUserDetails?.data?.profilePicture;
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          setOtherUserDetails(userData);
+          // Do whatever you need with userData
+          // console.log("Fetched user data:", userData);
+        } else {
+          console.warn("User not found with ID:", otherUser);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    if (otherUser) {
+      fetchUser();
+    }
+  }, [otherUser]);
+
+  // const otherUserDetails = useGetArtist(otherUser);
+  const otherUserName = otherUserDetails?.name;
+  const otherUserId = otherUserDetails?.uid;
+
+  const otherUserProfilePicture = otherUserDetails?.profilePictureSmall
+    ? otherUserDetails?.profilePictureSmall
+    : otherUserDetails?.profilePicture;
 
   const lastMessage = chat?.lastMessage;
   const lastMessageTime = chat?.lastMessageTime;
@@ -76,7 +101,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           source={
             otherUserProfilePicture
               ? { uri: otherUserProfilePicture }
-              : require("../assets/images/Artist.png")
+              : require("../assets/images/placeholder.png")
           }
           style={{
             height: "100%",
