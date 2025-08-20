@@ -24,13 +24,9 @@ const CreateReviewPassword = () => {
   const [loading, setLoading] = useState(false);
 
   const loggedInUser = useSelector((state: any) => state?.user?.user);
-<<<<<<< HEAD
-  const userFirestore = useSelector((state: any) => state?.user?.userFirestore);
-=======
   const loggedInUserFirestore: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore
   );
->>>>>>> origin/main
   const currentUserId = loggedInUser?.uid;
   const { queueUpload } = useBackgroundUpload();
   const dispatch = useDispatch();
@@ -40,8 +36,8 @@ const CreateReviewPassword = () => {
     // Final validation before account creation
     const hasProfilePicture =
       !!formData?.profilePicture ||
-      !!userFirestore?.profilePictureSmall ||
-      !!userFirestore?.profilePicture ||
+      !!loggedInUserFirestore?.profilePictureSmall ||
+      !!loggedInUserFirestore?.profilePicture ||
       !!loggedInUser?.photoURL;
     if (!hasProfilePicture) {
       setError("Please add a profile picture.");

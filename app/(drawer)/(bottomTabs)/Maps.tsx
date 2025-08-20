@@ -41,7 +41,6 @@ import { setTattooLoading } from "@/redux/slices/tattooSlice";
 import useTypesense from "@/hooks/useTypesense";
 import { useFocusEffect } from "@react-navigation/native";
 
-type LatLngArray = [number, number];
 const FullScreenMapWithSearch: React.FC = () => {
   const { BottomSheet, show, hide } = useBottomSheet();
   const {
@@ -122,41 +121,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
     return count;
   }, [persistedRadiusEnabled, persistedRatings, persistedStudio]);
-  useEffect(() => {
-    if (!mapRef.current || artists.length === 0) return;
-
-    // build an array of LatLng objects for each artist
-    const coords: { latitude: number; longitude: number }[] = artists
-      .map((artist: any) => artist.data.location as LatLngArray | undefined)
-      // this type-guard makes sure TS knows loc is [number,number]
-      .filter(
-        (loc: unknown): loc is LatLngArray =>
-          Array.isArray(loc) &&
-          loc.length === 2 &&
-          typeof loc[0] === "number" &&
-          typeof loc[1] === "number"
-      )
-      // here TS knows latitude and longitude are numbers
-      .map(([latitude, longitude]: LatLngArray) => ({
-        latitude,
-        longitude,
-      }));
-
-    if (coords.length === 1) {
-      // if there's just one result, zoom in tightly around it
-      mapRef.current.animateToRegion({
-        ...coords[0],
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      });
-    } else if (coords.length > 1) {
-      // fit all markers in view with some padding
-      mapRef.current.fitToCoordinates(coords, {
-        edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
-        animated: true,
-      });
-    }
-  }, [artists]);
+  // Removed auto-zoom to artists; we only zoom to user's location.
 
   useEffect(() => {
     let cancelled = false;
