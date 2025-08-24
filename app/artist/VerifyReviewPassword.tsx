@@ -5,6 +5,7 @@ import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const VerifyReviewPassword = () => {
   const router = useRouter();
@@ -28,7 +29,8 @@ const VerifyReviewPassword = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
+      {/* <View style={styles.container}> */}
       <View style={{ height: 44, width: 44 }}>
         <Image
           style={styles.image}
@@ -60,7 +62,8 @@ const VerifyReviewPassword = () => {
         onPress={checkReviewPasswordClick}
         disabled={!inputReviewPassword}
       />
-    </View>
+      {/* </View> */}
+    </KeyboardAwareScrollView>
   );
 };
 

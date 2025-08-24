@@ -69,7 +69,7 @@ const PublishReview = () => {
           const {
             reviewsCount = 0,
             totalRating = 0,
-            ratingCategores = {
+            ratingCategories = {
               "5 star": 0,
               "4 star": 0,
               "3 star": 0,
@@ -83,8 +83,8 @@ const PublishReview = () => {
           const newAverageRating = newTotalRating / newReviewsCount;
           const ratingKey = `${Math.floor(Number(rating))} star`;
           const updatedRatingCategories = {
-            ...ratingCategores,
-            [ratingKey]: ratingCategores[ratingKey] + 1,
+            ...ratingCategories,
+            [ratingKey]: ratingCategories[ratingKey] + 1,
           };
 
           const latestReview = {
@@ -99,7 +99,7 @@ const PublishReview = () => {
             reviewsCount: newReviewsCount,
             totalRating: newTotalRating,
             rating: newAverageRating,
-            ratingCategores: updatedRatingCategories,
+            ratingCategories: updatedRatingCategories,
             latestReview,
           });
         }
@@ -177,7 +177,7 @@ const PublishReview = () => {
             }}
           >
             <Text size="h4" weight="semibold" color="#DAB769">
-              Edit Review?
+              Edit review?
             </Text>
           </TouchableOpacity>
         </View>

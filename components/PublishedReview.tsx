@@ -4,6 +4,8 @@ import Text from "./Text";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
+import LoginBottomSheet from "./BottomSheets/LoginBottomSheet";
+import { useSelector } from "react-redux";
 
 interface Review {
   artistId: string;
@@ -30,11 +32,18 @@ const options = [
 const PublishedReview = ({ review }: { review: Review }) => {
   const reviewDate = new Date(review.date.seconds * 1000);
   const timeAgo = formatDistanceToNow(reviewDate, { addSuffix: true });
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   const {
     BottomSheet: ReportSheet,
     show: showReportSheet,
     hide: hideReportSheet,
+  } = useBottomSheet();
+
+  const {
+    BottomSheet: LoggingInBottomSheet,
+    show: showLoggingInBottomSheet,
+    hide: hideLoggingInBottomSheet,
   } = useBottomSheet();
 
   return (
@@ -47,6 +56,11 @@ const PublishedReview = ({ review }: { review: Review }) => {
             options={options}
             reportItem={review?.id}
           />
+        }
+      />
+      <LoggingInBottomSheet
+        InsideComponent={
+          <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
         }
       />
       <View style={styles.container}>
@@ -87,7 +101,11 @@ const PublishedReview = ({ review }: { review: Review }) => {
 
           <TouchableOpacity
             onPress={() => {
-              showReportSheet();
+              if (loggedInUser) {
+                showReportSheet();
+              } else {
+                showLoggingInBottomSheet();
+              }
             }}
           >
             <Image

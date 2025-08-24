@@ -190,7 +190,7 @@ const AppNavigator = () => {
             name="artist/VerifyReviewPassword"
             options={{
               headerShown: true,
-              headerTitle: "Leave Review",
+              headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -202,7 +202,7 @@ const AppNavigator = () => {
             name="artist/AddReview"
             options={{
               headerShown: true,
-              headerTitle: "Leave Review",
+              headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -226,7 +226,7 @@ const AppNavigator = () => {
             name="artist/PublishReview"
             options={{
               headerShown: true,
-              headerTitle: "Leave Review",
+              headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

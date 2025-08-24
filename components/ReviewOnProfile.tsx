@@ -8,15 +8,18 @@ import ShareReviewPasswordNote from "./BottomSheets/ShareReviewPasswordNote";
 import useGetArtist from "@/hooks/useGetArtist";
 import { formatDistanceToNow } from "date-fns";
 import firestore from "@react-native-firebase/firestore";
+import { useSelector } from "react-redux";
 
 interface ReviewOnProfileProps {
   ArtistId?: any;
   isMyProfile?: boolean;
+  showLoginBottomSheet: () => void;
 }
 
 const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   ArtistId,
   isMyProfile = false,
+  showLoginBottomSheet,
 }) => {
   const {
     BottomSheet,
@@ -84,6 +87,7 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
     const reviewDate = new Date(timestamp * 1000); // Convert seconds to milliseconds
     return formatDistanceToNow(reviewDate, { addSuffix: true });
   };
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   return (
     <>
@@ -131,10 +135,14 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
           ) : (
             <TouchableOpacity
               onPress={() => {
-                router.push({
-                  pathname: "/artist/VerifyReviewPassword",
-                  params: { artistId: ArtistId },
-                });
+                if (loggedInUser) {
+                  router.push({
+                    pathname: "/artist/VerifyReviewPassword",
+                    params: { artistId: ArtistId },
+                  });
+                } else {
+                  showLoginBottomSheet();
+                }
               }}
             >
               <Text size="h4" weight="normal" color="#DAB769">

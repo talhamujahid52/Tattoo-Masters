@@ -88,7 +88,6 @@ const AddReview = () => {
     tattooAsImagined > 0 &&
     feedback.trim().length > 0 &&
     attachment &&
-    hashtags &&
     selectedTattooStyles.length > 0;
 
   const {
@@ -177,12 +176,12 @@ const AddReview = () => {
         setSelectedStar={setOverallRating}
       />
       <Rating
-        title="Quality of Tattoo"
+        title="Quality of tattoo"
         selectedStar={qualityOfTattoo}
         setSelectedStar={setQualityOfTattoo}
       />
       <Rating
-        title="Tattoo as Imagined"
+        title="Tattoo as imagined"
         selectedStar={tattooAsImagined}
         setSelectedStar={setTattooAsImagined}
       />
@@ -195,7 +194,7 @@ const AddReview = () => {
         <TextInput
           selectionColor="#A29F93"
           placeholderTextColor="#A29F93"
-          placeholder="Enter Feedback"
+          placeholder="Enter feedback"
           multiline
           value={feedback}
           style={styles.textArea}
@@ -225,6 +224,7 @@ const AddReview = () => {
             <Image
               style={styles.attachmentImage}
               source={{ uri: attachment }}
+              resizeMode="contain"
             />
           ) : (
             <>
@@ -235,14 +235,14 @@ const AddReview = () => {
                 />
               </View>
               <Text size="h4" weight="medium" color="#D7D7C9">
-                Add Tattoo
+                Add tattoo
               </Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
-      <View>
+      {/* <View>
         <Text
           size="h4"
           weight="semibold"
@@ -259,7 +259,7 @@ const AddReview = () => {
             setHashtags(text);
           }}
         ></Input>
-      </View>
+      </View> */}
 
       {/* Styles Section */}
       <View>
@@ -410,15 +410,20 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   addIcon: {
-    height: 24,
-    width: 24,
+    height: 20,
+    width: 20,
   },
   addIconImage: {
     height: "100%",
     width: "100%",
   },
   styleButton: {
-    padding: 6,
+    height: 33,
+    paddingHorizontal: 6,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 6,
   },
 });

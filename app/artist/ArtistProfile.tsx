@@ -26,6 +26,7 @@ import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import useFollowArtist from "@/hooks/useFollowArtist";
 import { useSelector } from "react-redux";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 interface StyleItem {
   title: string;
@@ -280,10 +281,41 @@ const ArtistProfile = () => {
     }
   };
 
-  const openInGoogleMaps = () => {
-    const latitude = artist?.data?.location[0] || defaultLocation.latitude;
-    const longitude = artist?.data?.location[1] || defaultLocation.longitude;
-    const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Location permission denied");
+        return null;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      return [location.coords.latitude, location.coords.longitude];
+    } catch (error) {
+      console.error("Failed to get coordinates:", error);
+      return null;
+    }
+  };
+
+  const openInGoogleMaps = async () => {
+    const destinationLat =
+      artist?.data?.location[0] || defaultLocation.latitude;
+    const destinationLng =
+      artist?.data?.location[1] || defaultLocation.longitude;
+
+    // console.log("destinationLat ", destinationLat);
+    // console.log("destinationLng ", destinationLng);
+
+    const currentCoords = await getCurrentCoordinates();
+    if (!currentCoords) {
+      console.warn("Unable to get current coordinates");
+      return;
+    }
+
+    const [originLat, originLng] = currentCoords;
+    // const originLat = 33.6995;
+    // const originLng = 73.0368;
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destinationLat},${destinationLng}`;
 
     Linking.openURL(url).catch((err) => {
       console.error("Failed to open Google Maps:", err);
@@ -474,9 +506,15 @@ const ArtistProfile = () => {
           />
         </View>
         {artist?.data?.latestReview ? (
-          <ReviewOnProfile ArtistId={artistId} />
+          <ReviewOnProfile
+            ArtistId={artistId}
+            showLoginBottomSheet={showLoggingInBottomSheet}
+          />
         ) : (
-          <NoReviews ArtistId={artistId} />
+          <NoReviews
+            ArtistId={artistId}
+            showLoginBottomSheet={showLoggingInBottomSheet}
+          />
         )}
 
         <View style={{ marginTop: 24 }}>
@@ -488,17 +526,33 @@ const ArtistProfile = () => {
           >
             Location
           </Text>
-          <Text
-            size="large"
-            weight="normal"
-            color="#A7A7A7"
-            style={{ marginBottom: 10 }}
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 8,
+            }}
           >
-            {artist?.data?.address || ""}
-          </Text>
+            <Text size="large" weight="normal" color="#A7A7A7">
+              {artist?.data?.address || ""}
+            </Text>
+            <Pressable
+              onPress={async () => {
+                try {
+                  await openInGoogleMaps();
+                } catch (error) {
+                  console.error("Error opening Google Maps:", error);
+                }
+              }}
+            >
+              <Text size="p" weight="semibold" color="#DAB769">
+                Directions
+              </Text>
+            </Pressable>
+          </View>
         </View>
         <Pressable
-          onPress={openInGoogleMaps}
           style={{
             height: 130,
             borderRadius: 20,

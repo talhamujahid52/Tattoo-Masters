@@ -2,12 +2,19 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import Text from "./Text";
+import { useSelector } from "react-redux";
 
 type NoReviewsProps = {
   ArtistId: string;
+  showLoginBottomSheet: () => void;
 };
 
-const NoReviews: React.FC<NoReviewsProps> = ({ ArtistId }) => {
+const NoReviews: React.FC<NoReviewsProps> = ({
+  ArtistId,
+  showLoginBottomSheet,
+}) => {
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
   return (
     <View style={styles.container}>
       <View
@@ -22,10 +29,14 @@ const NoReviews: React.FC<NoReviewsProps> = ({ ArtistId }) => {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            router.push({
-              pathname: "/artist/VerifyReviewPassword",
-              params: { artistId: ArtistId },
-            });
+            if (loggedInUser) {
+              router.push({
+                pathname: "/artist/VerifyReviewPassword",
+                params: { artistId: ArtistId },
+              });
+            } else {
+              showLoginBottomSheet();
+            }
           }}
         >
           <Text size="p" weight="normal" color="#DAB769">

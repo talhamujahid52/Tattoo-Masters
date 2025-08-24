@@ -50,7 +50,64 @@ const StepperForm: React.FC = () => {
       if (!hasProfilePicture) {
         Alert.alert(
           "Profile picture required",
-          "Please add a profile picture to continue.",
+          "Please add a profile picture to continue."
+        );
+        return;
+      }
+
+      // Full Name Validation
+      if (!formData?.name || formData.name.trim().length === 0) {
+        Alert.alert(
+          "Full Name required",
+          "Please enter your full name to continue."
+        );
+        return;
+      }
+
+      // Studio Type Validation (Must select one)
+      if (!formData?.studio) {
+        Alert.alert(
+          "Studio Type required",
+          "Please select your work type (Studio, Freelancer, or Home Artist) to continue."
+        );
+        return;
+      }
+
+      // If 'Studio' is selected, Studio Name is mandatory
+      if (
+        formData?.studio === "studio" &&
+        (!formData?.studioName || formData.studioName.trim().length === 0)
+      ) {
+        Alert.alert(
+          "Studio Name required",
+          "Please enter your studio name to continue."
+        );
+        return;
+      }
+
+      // Address Validation
+      if (!formData?.address || formData.address.trim().length === 0) {
+        Alert.alert(
+          "Address required",
+          "Please enter your address to continue."
+        );
+        return;
+      }
+
+      // Tattoo Styles Validation (At least one style selected)
+      if (!formData?.tattooStyles || formData.tattooStyles.length === 0) {
+        Alert.alert(
+          "Tattoo Style required",
+          "Please select at least one tattoo style to continue."
+        );
+        return;
+      }
+
+      // About You Validation
+      if (!formData?.aboutYou || formData.aboutYou.trim().length === 0) {
+        Alert.alert(
+          "About You required",
+          "Please provide an introduction about yourself to continue."
         );
         return;
       }
@@ -60,10 +117,7 @@ const StepperForm: React.FC = () => {
       const firstFour = formData?.images?.slice(0, 4) || [];
       const allFourPresent = firstFour.every((img) => img && !!img.uri);
       if (!allFourPresent) {
-        Alert.alert(
-          "Add 4 tattoos",
-          "Please upload 4 tattoos to continue.",
-        );
+        Alert.alert("Add 4 tattoos", "Please upload 4 tattoos to continue.");
         return;
       }
     }
@@ -157,7 +211,7 @@ const StepperForm: React.FC = () => {
           {i < totalSteps && (
             <View style={[styles.line, { width: width / 5 }]} />
           )}
-        </View>,
+        </View>
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;
