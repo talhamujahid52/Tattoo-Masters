@@ -116,6 +116,14 @@ const AppNavigator = () => {
     if (pathname == "/Login" && loggedInUser?.emailVerified === true) {
       router.back();
     }
+    const isFacebookUser = loggedInUser?.providerData?.some(
+      (provider: { providerId: string }) =>
+        provider?.providerId === "facebook.com"
+    );
+
+    if (isFacebookUser) {
+      router.back();
+    }
   }, [userId, initializing]);
 
   if (initializing) {

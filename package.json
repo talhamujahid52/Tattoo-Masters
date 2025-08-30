@@ -57,6 +57,7 @@
     "react-native": "0.74.5",
     "react-native-collapsible": "^1.6.2",
     "react-native-email-link": "^1.16.1",
+    "react-native-fbsdk-next": "^13.4.1",
     "react-native-flexible-grid": "^0.2.2",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-get-random-values": "^1.11.0",

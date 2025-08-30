@@ -40,6 +40,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugin/with-facebook-fbsdk-next.js",
+      "./plugin/with-facebook-fbsdk-next-ios.js",
       "expo-router",
       [
         "react-native-maps-expo-plugin",
