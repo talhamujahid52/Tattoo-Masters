@@ -321,6 +321,15 @@ const ArtistProfile = () => {
       console.error("Failed to open Google Maps:", err);
     });
   };
+  const openLocationInGoogleMaps = () => {
+    const latitude = artist?.data?.location[0] || defaultLocation.latitude;
+    const longitude = artist?.data?.location[1] || defaultLocation.longitude;
+    const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+
+    Linking.openURL(url).catch((err) => {
+      console.error("Failed to open Google Maps:", err);
+    });
+  };
 
   const handleOpenLink = async (url: string) => {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -553,6 +562,7 @@ const ArtistProfile = () => {
           </View>
         </View>
         <Pressable
+          onPress={openLocationInGoogleMaps}
           style={{
             height: 130,
             borderRadius: 20,

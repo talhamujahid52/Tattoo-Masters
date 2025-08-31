@@ -40,10 +40,10 @@ const ImageActionsBottomSheet = ({
           >
             <Image
               style={styles.icon}
-              source={require("../../assets/images/edit.png")}
+              source={require("../../assets/images/editTattoo.png")}
             />
-            <Text size="h4" weight="normal" color="#FBF6FA">
-              Edit Tattoo
+            <Text size="p" weight="normal" color="#FBF6FA">
+              Edit tattoo
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -55,10 +55,10 @@ const ImageActionsBottomSheet = ({
           >
             <Image
               style={styles.icon}
-              source={require("../../assets/images/close.png")}
+              source={require("../../assets/images/deleteTattoo.png")}
             />
-            <Text size="h4" weight="normal" color="#FBF6FA">
-              Delete Tattoo
+            <Text size="p" weight="normal" color="#FBF6FA">
+              Delete tattoo
             </Text>
           </TouchableOpacity>
         </>
