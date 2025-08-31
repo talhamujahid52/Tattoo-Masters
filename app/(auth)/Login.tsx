@@ -28,8 +28,12 @@ GoogleSignin.configure({
     "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
 });
 import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
-import { LoginManager, AccessToken } from "react-native-fbsdk-next";
-
+import {
+  LoginManager,
+  AccessToken,
+  AuthenticationToken,
+} from "react-native-fbsdk-next";
+import { sha256 } from "react-native-sha256";
 const Login = () => {
   const [email, setEmail] = useState<string>(""); // State for email input
   const insets = useSafeAreaInsets();
@@ -105,91 +109,138 @@ const Login = () => {
   const signInWithGoogle = useSignInWithGoogle();
   const onFacebookButtonPress = async () => {
     try {
-      const result = await LoginManager.logInWithPermissions([
-        "public_profile",
-        "email",
-      ]);
+      console.log("🔵 Starting Facebook login");
 
-      if (result.isCancelled) {
-        throw "User cancelled the login process";
+      let facebookCredential;
+      let androidAccessToken = null; // Store for reuse
+
+      if (Platform.OS === "ios") {
+        // iOS implementation with Limited Login
+        const generateNonce = () => {
+          return (
+            Math.random().toString(36).substring(2) + Date.now().toString(36)
+          );
+        };
+
+        const nonce = generateNonce();
+        const nonceSha256 = await sha256(nonce);
+
+        const result = await LoginManager.logInWithPermissions(
+          ["public_profile", "email"],
+          "limited",
+          nonceSha256
+        );
+
+        if (result.isCancelled) {
+          throw new Error("User cancelled the login process");
+        }
+
+        const data = await AuthenticationToken.getAuthenticationTokenIOS();
+        if (!data) {
+          throw new Error(
+            "Something went wrong obtaining authentication token"
+          );
+        }
+
+        facebookCredential = auth.FacebookAuthProvider.credential(
+          data.authenticationToken,
+          nonce
+        );
+      } else {
+        // Android implementation with Classic Login
+        const result = await LoginManager.logInWithPermissions([
+          "public_profile",
+          "email",
+        ]);
+
+        if (result.isCancelled) {
+          throw new Error("User cancelled the login process");
+        }
+
+        const data = await AccessToken.getCurrentAccessToken();
+        if (!data) {
+          throw new Error("Something went wrong obtaining access token");
+        }
+
+        androidAccessToken = data.accessToken; // Store for reuse
+        facebookCredential = auth.FacebookAuthProvider.credential(
+          data.accessToken
+        );
       }
 
-      const data = await AccessToken.getCurrentAccessToken();
-
-      if (!data) {
-        throw "Something went wrong obtaining access token";
-      }
-
-      const facebookCredential = auth.FacebookAuthProvider.credential(
-        data.accessToken
-      );
-
+      console.log("🔵 Signing in to Firebase...");
       const userCredential = await auth().signInWithCredential(
         facebookCredential
       );
-
       const user = userCredential.user;
-      console.log("Signed In User : ", user);
+      console.log("✅ Firebase sign-in complete. User:", user);
 
-      // Check if user exists in Firestore (in "Users" collection)
+      // Check if user exists in Firestore
       const userDocRef = firestore().collection("Users").doc(user.uid);
       const userDoc = await userDocRef.get();
-      console.log("User Doc: ", userDoc.data());
 
-      let userData;
       if (!userDoc.exists) {
-        // GET EMAIL AND HIGH-RESOLUTION PROFILE PICTURE FROM FACEBOOK GRAPH API (FIRST TIME ONLY)
-        const getFacebookUserInfo = async (accessToken) => {
-          try {
-            const response = await fetch(
-              `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
-            );
-            const userInfo = await response.json();
-            console.log("FacebookuserInfo ", userInfo);
-            return {
-              email: userInfo.email || null,
-              profilePicture: userInfo.picture?.data?.url || null,
-            };
-          } catch (error) {
-            console.log("Error fetching Facebook user info:", error);
-            return { email: null, profilePicture: null };
-          }
-        };
+        console.log("👤 New user. Creating user document...");
 
-        const facebookUserInfo = await getFacebookUserInfo(data.accessToken);
-
-        // User does not exist in Firestore, create a new user document
-        const newUserData = {
+        let userData = {
           uid: user.uid,
           name: user.displayName,
-          email: facebookUserInfo.email || user.email,
-          profilePicture: facebookUserInfo.profilePicture || user.photoURL,
+          email: user.email,
+          profilePicture: user.photoURL,
           followedArtists: [],
           likedTattoos: [],
           isArtist: false,
-          createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
+          createdAt: firestore.FieldValue.serverTimestamp(),
         };
-        await userDocRef.set(newUserData);
 
-        dispatch(setUserFirestoreData(newUserData));
-        console.log("User added to Firestore!");
+        // For Android, fetch additional info from Graph API if needed
+        if (Platform.OS === "android") {
+          const getFacebookUserInfo = async (accessToken) => {
+            try {
+              const response = await fetch(
+                `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
+              );
+              const userInfo = await response.json();
+              console.log("📘 Facebook userInfo:", userInfo);
+              return {
+                email: userInfo.email || null,
+                profilePicture: userInfo.picture?.data?.url || null,
+              };
+            } catch (error) {
+              console.log("❌ Error fetching Facebook user info:", error);
+              return { email: null, profilePicture: null };
+            }
+          };
+
+          // Reuse the access token from Android flow
+          const data = await AccessToken.getCurrentAccessToken();
+          const facebookUserInfo = await getFacebookUserInfo(data.accessToken);
+
+          userData = {
+            ...userData,
+            email: facebookUserInfo.email || user.email,
+            profilePicture: facebookUserInfo.profilePicture || user.photoURL,
+          };
+        }
+
+        await userDocRef.set(userData);
+        dispatch(setUserFirestoreData(userData));
+        console.log("✅ New user added to Firestore");
       } else {
-        console.log("User already exists in Firestore");
+        console.log("👤 Existing user found in Firestore");
         dispatch(setUser(userDoc.data()));
       }
 
-      // Dispatch the user data to Redux
-      const token = await getFcmToken();
-      if (token) {
-        await saveFcmTokenToFirestore(user.uid, token);
+      const fcmToken = await getFcmToken();
+      if (fcmToken) {
+        await saveFcmTokenToFirestore(user.uid, fcmToken);
+        console.log("📲 FCM token saved to Firestore");
       }
-      // router.back();
 
-      console.log("Facebook login successful and data saved to Firestore!");
-      //   return userData;
+      console.log("🎉 Facebook login flow complete!");
     } catch (error) {
-      alert(error);
-      console.log("Facebook login error:", error);
+      console.error("❌ Facebook login error:", error);
+      alert(error?.message || error);
     }
   };
 
@@ -302,8 +353,8 @@ const Login = () => {
         <ThirdPartyLoginButton
           title="Facebook"
           icon={require("../../assets/images/facebook.png")}
-          onPress={() => {
-            onFacebookButtonPress();
+          onPress={async () => {
+            await onFacebookButtonPress();
           }}
         />
       </View>
