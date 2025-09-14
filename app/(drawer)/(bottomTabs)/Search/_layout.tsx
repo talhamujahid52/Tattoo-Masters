@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 
 const SearchLayout = () => {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000" } }}>
       <Stack.Screen
         name="index"
         options={{

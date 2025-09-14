@@ -20,7 +20,7 @@ const HomeLayout = () => {
       <BottomSheet
         InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
       />
-      <Stack>
+      <Stack screenOptions={{ contentStyle: { backgroundColor: "#000" } }}>
         <Stack.Screen
           name="index"
           options={{

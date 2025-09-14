@@ -8074,6 +8074,11 @@ react-native-email-link@^1.16.1:
   resolved "https://registry.yarnpkg.com/react-native-email-link/-/react-native-email-link-1.16.1.tgz#e46f2f0baa1343e05618abdd1248f42e0baf8e9b"
   integrity sha512-uTolJXOa6HKPEiRAQuLKN/OhVwUA4xS++yPV6YiCtRBWxl2q3FUlrJt1G6plfMAEU4qNhmwZnH3tCJ9WNYIDhg==
 
+react-native-fbsdk-next@^13.4.1:
+  version "13.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-fbsdk-next/-/react-native-fbsdk-next-13.4.1.tgz#e2cb0d0c40ac00abcecceb2ee24473e74c9d8e18"
+  integrity sha512-Cto+oF0FJyvxKDjKyLKI5DgnLCeeRlXvVQb8qw0XesT1Xune1ijDWAnvt9fy6wXJ4G7K510xKkcSUsbK/KyPhg==
+
 react-native-flexible-grid@^0.2.2:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/react-native-flexible-grid/-/react-native-flexible-grid-0.2.3.tgz#02f30c6a85c7d689c377a06050a2de2bdbbaca0b"
@@ -8229,6 +8234,11 @@ react-native-screens@3.31.1:
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
+
+react-native-sha256@^1.4.10:
+  version "1.4.10"
+  resolved "https://registry.yarnpkg.com/react-native-sha256/-/react-native-sha256-1.4.10.tgz#b4c9990430849ee29a00dfd606fd92f08e003dc7"
+  integrity sha512-x12owcA1jQZ1GMUX2xg2+4IOVJciZChcyNvolt6IjLdAFtu1tttDF9aHsCTW1J1SbLGSoYCo/UTAoNZay/YAsg==
 
 react-native-svg-transformer@^1.5.0:
   version "1.5.0"

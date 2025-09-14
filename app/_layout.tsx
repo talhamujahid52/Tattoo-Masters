@@ -30,7 +30,7 @@ export default function RootLayout() {
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <StatusBar style="light" />
-          <GestureHandlerRootView style={{ flex: 1 }}>
+          <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000" }}>
             <BottomSheetModalProvider>
               <FormProvider>
                 <AppNavigator />

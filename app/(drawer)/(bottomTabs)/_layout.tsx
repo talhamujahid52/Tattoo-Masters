@@ -32,12 +32,13 @@ const BottomTabsLayout = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
       <BottomSheet
         InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
       />
       <Tabs
         screenOptions={{
+          sceneContainerStyle: { backgroundColor: "#000" },
           tabBarStyle: {
             backgroundColor: "#000000",
             borderTopColor: "#313232",

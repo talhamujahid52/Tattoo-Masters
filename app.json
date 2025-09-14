@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
@@ -33,6 +33,15 @@
       },
       "package": "com.ddjn.tattoomasters",
       "permissions": ["ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#000000",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#000000",
+      "barStyle": "light-content"
     },
     "web": {
       "bundler": "metro",
@@ -63,6 +72,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@react-native-firebase/messaging",
       [
         "expo-location",
         {

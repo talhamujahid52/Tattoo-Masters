@@ -29,9 +29,10 @@ const BottomTabsLayout = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
       <Tabs
         screenOptions={{
+          sceneContainerStyle: { backgroundColor: "#000" },
           tabBarStyle: {
             backgroundColor: "#000000",
             borderColor: "#FFFFFF26",

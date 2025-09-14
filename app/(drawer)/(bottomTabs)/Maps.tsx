@@ -62,6 +62,10 @@ const FullScreenMapWithSearch: React.FC = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapTypeState, setMapTypeState] = useState<
+    "standard" | "satellite" | "hybrid" | "terrain" | "none"
+  >(Platform.OS === "android" ? "none" : "standard");
 
   const [searchText, setSearchText] = useState("");
   const artists = useSelector((s: any) => s.artist.searchResults);
@@ -195,7 +199,7 @@ const FullScreenMapWithSearch: React.FC = () => {
       return () => {
         cancelled = true;
       };
-    }, [dispatch])
+    }, [dispatch]),
   );
   const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
     const facets: string[] = [];
@@ -209,7 +213,7 @@ const FullScreenMapWithSearch: React.FC = () => {
           facets.push(
             `rating:>=${selectedRatings[0] - 0.1} && rating:<=${
               selectedRatings[0] + 0.1
-            }`
+            }`,
           );
         }
       }
@@ -252,8 +256,8 @@ const FullScreenMapWithSearch: React.FC = () => {
     });
     dispatch(
       updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document }))
-      )
+        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
+      ),
     );
     dispatch(addSearch({ text: query, type: "artists" }));
   };
@@ -303,7 +307,7 @@ const FullScreenMapWithSearch: React.FC = () => {
             fetchDetails
             onPress={(
               data: GooglePlaceData,
-              details: GooglePlaceDetail | null
+              details: GooglePlaceDetail | null,
             ) => {
               if (details && details.geometry) {
                 const { lat, lng } = details.geometry.location;
@@ -426,14 +430,21 @@ const FullScreenMapWithSearch: React.FC = () => {
       {/* Map */}
       <MapView
         provider={PROVIDER_GOOGLE}
-        style={styles.map}
+        style={[styles.map, !mapReady && { opacity: 0.01 }]}
         customMapStyle={googleDarkModeStyle}
-        region={region}
-        mapType="standard"
+        initialRegion={region}
+        mapType={mapTypeState}
         showsMyLocationButton
         showsUserLocation
         zoomEnabled
         ref={mapRef}
+        loadingEnabled
+        loadingBackgroundColor="#000"
+        loadingIndicatorColor="#fff"
+        onMapLoaded={() => {
+          setMapReady(true);
+          if (mapTypeState !== "standard") setMapTypeState("standard");
+        }}
       >
         {artists.map((artist: any, index: number) => {
           const location = artist?.data?.location;
@@ -476,6 +487,8 @@ const FullScreenMapWithSearch: React.FC = () => {
           );
         })}
       </MapView>
+      {/* Black overlay placeholder to avoid any white flash before map is ready */}
+      {!mapReady && <View pointerEvents="none" style={styles.mapOverlay} />}
       <View style={styles.zoomControls}>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
           <Text style={styles.zoomText}>+</Text>
@@ -493,6 +506,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
+    backgroundColor: "#000",
   },
   searchContainer: {
     flexDirection: "row",
@@ -519,6 +533,11 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+  },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
   },
   zoomControls: {
     position: "absolute",

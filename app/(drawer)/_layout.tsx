@@ -472,6 +472,8 @@ const DrawerLayout: React.FC = () => {
       drawerContent={(props) => <CustomDrawerContent />}
       screenOptions={{
         headerShown: false,
+        sceneContainerStyle: { backgroundColor: "#000" },
+        drawerContentStyle: { backgroundColor: "#000" },
         drawerStyle: {
           width: "100%",
           // paddingHorizontal: 16,
