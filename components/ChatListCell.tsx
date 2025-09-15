@@ -13,9 +13,25 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
   const [otherUserDetails, setOtherUserDetails] = useState<any>();
-  const otherUser = participants?.find(
+  const otherFromParticipants = participants?.find(
     (item: any) => item !== loggedInUser?.uid
   );
+  const otherFromEmbedded = Object.keys(chat || {}).find((k) => {
+    if (
+      [
+        "participants",
+        "createdAt",
+        "lastMessage",
+        "lastMessageTime",
+        "id",
+      ].includes(k)
+    )
+      return false;
+    if (k === loggedInUser?.uid) return false;
+    const v: any = (chat as any)[k];
+    return v && typeof v === "object" && ("name" in v || "profilePicture" in v);
+  });
+  const otherUser = otherFromParticipants || otherFromEmbedded;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -36,18 +52,21 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
       }
     };
 
-    if (otherUser) {
+    if (otherUser && !chatOtherProfile) {
       fetchUser();
     }
-  }, [otherUser]);
+  }, [otherUser, chatOtherProfile]);
 
-  // const otherUserDetails = useGetArtist(otherUser);
-  const otherUserName = otherUserDetails?.name;
-  const otherUserId = otherUserDetails?.uid;
+  // Prefer data embedded on chat doc (set at chat creation) to avoid mismatch
+  const chatOtherProfile = otherUser ? chat?.[otherUser] : undefined;
+  const otherUserName = chatOtherProfile?.name || otherUserDetails?.name;
+  const otherUserId = otherUserDetails?.uid || otherUser;
 
-  const otherUserProfilePicture = otherUserDetails?.profilePictureSmall
-    ? otherUserDetails?.profilePictureSmall
-    : otherUserDetails?.profilePicture;
+  const otherUserProfilePicture =
+    chatOtherProfile?.profilePicture ||
+    (otherUserDetails?.profilePictureSmall
+      ? otherUserDetails?.profilePictureSmall
+      : otherUserDetails?.profilePicture);
 
   const lastMessage = chat?.lastMessage;
   const lastMessageTime = chat?.lastMessageTime;

@@ -62,6 +62,20 @@ export const saveFcmTokenToFirestore = async (
   }
 };
 
+export const removeFcmTokenFromFirestore = async (
+  userId: string,
+  token: string
+) => {
+  try {
+    const userRef = firestore().collection("Users").doc(userId);
+    await userRef.update({
+      fcmTokens: firestore.FieldValue.arrayRemove(token),
+    });
+  } catch (err) {
+    console.log("Failed to remove FCM token from Firestore", err);
+  }
+};
+
 const listenForTokenRefresh = (userId: string) => {
   return messaging().onTokenRefresh(async (newToken) => {
     console.log("FCM token refreshed:", newToken);
@@ -72,9 +86,11 @@ const listenForTokenRefresh = (userId: string) => {
 export const useNotificationListeners = ({
   onReceive,
   onRespond,
+  showForegroundAlert = true,
 }: {
   onReceive?: (notification: Notifications.Notification) => void;
   onRespond?: (response: Notifications.NotificationResponse) => void;
+  showForegroundAlert?: boolean;
 }) => {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
@@ -90,6 +106,24 @@ export const useNotificationListeners = ({
         onRespond?.(response);
       });
 
+    // Ensure foreground messages display a system notification banner
+    const unsubscribeOnMessage = messaging().onMessage(async (remoteMessage) => {
+      try {
+        if (!showForegroundAlert) return;
+        const title = remoteMessage.notification?.title || "";
+        const body = remoteMessage.notification?.body || "";
+        const data = (remoteMessage.data as any) || {};
+        await Notifications.presentNotificationAsync({
+          title,
+          body,
+          data,
+          android: { channelId: "default" as any },
+        });
+      } catch (e) {
+        // no-op
+      }
+    });
+
     return () => {
       notificationListener.current &&
         Notifications.removeNotificationSubscription(
@@ -97,8 +131,9 @@ export const useNotificationListeners = ({
         );
       responseListener.current &&
         Notifications.removeNotificationSubscription(responseListener.current);
+      unsubscribeOnMessage();
     };
-  }, []);
+  }, [showForegroundAlert]);
 };
 
 export const useNotification = (userId?: string) => {
@@ -106,6 +141,14 @@ export const useNotification = (userId?: string) => {
     if (!userId) return;
 
     const init = async () => {
+      // Ensure notification permissions are granted at the OS level
+      try {
+        const settings = await Notifications.getPermissionsAsync();
+        if (!settings.granted) {
+          await Notifications.requestPermissionsAsync();
+        }
+      } catch {}
+
       await configureNotificationChannel();
 
       const token = await getFcmToken();
@@ -119,4 +162,30 @@ export const useNotification = (userId?: string) => {
     const unsubscribe = listenForTokenRefresh(userId);
     return () => unsubscribe();
   }, [userId]);
+};
+
+// Clear FCM token on logout to stop receiving notifications on this device
+export const clearFcmTokenOnLogout = async (userId?: string) => {
+  try {
+    if (!userId) return;
+    // Get current token if any
+    let token: string | null = null;
+    try {
+      token = await messaging().getToken();
+    } catch (e) {
+      // ignore inability to fetch token
+    }
+    if (token) {
+      await removeFcmTokenFromFirestore(userId, token);
+    }
+    // Invalidate token on device
+    try {
+      await messaging().deleteToken();
+      console.log("FCM token deleted on device");
+    } catch (e) {
+      console.log("Failed to delete FCM token on device", e);
+    }
+  } catch (err) {
+    console.log("Error during FCM logout cleanup", err);
+  }
 };

@@ -3,6 +3,7 @@ import firestore from "@react-native-firebase/firestore";
 import { useDispatch } from "react-redux";
 import { updateAllChats } from "@/redux/slices/chatSlice";
 import { IMessage } from "react-native-gifted-chat";
+import { sendChatNotification } from "@/utils/notifications";
 
 const useChats = (userId: string) => {
   const dispatch = useDispatch();
@@ -152,6 +153,37 @@ const useChats = (userId: string) => {
               lastMessage: message.text,
               lastMessageTime: message.createdAt,
             });
+
+            // Determine the recipient and send a push notification via Cloud Function
+            try {
+              const chatSnap = await firestore()
+                .collection("Chats")
+                .doc(currentChatID)
+                .get();
+              const participants: string[] = chatSnap.data()?.participants || [];
+              const senderId = (message.user as any)?._id as string;
+              const recipientId = participants.find((p) => p !== senderId);
+              if (recipientId) {
+                const chatData = chatSnap.data() || {};
+                const senderProfile = chatData?.[senderId] || {};
+                const senderName =
+                  senderProfile?.name || (message.user as any)?.name || "New message";
+                const preview = (message.text || "").toString();
+                await sendChatNotification(
+                  recipientId,
+                  senderName,
+                  preview,
+                  {
+                    chatId: currentChatID,
+                    senderId,
+                    type: "chatMessage",
+                    url: `/artist/IndividualChat?existingChatId=${currentChatID}&otherUserId=${senderId}`,
+                  } as any
+                );
+              }
+            } catch (notifyErr) {
+              console.log("Failed to send chat push notification", notifyErr);
+            }
           })
         );
       } catch (error) {

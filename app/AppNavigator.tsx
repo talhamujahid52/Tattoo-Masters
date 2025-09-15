@@ -5,7 +5,9 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import messaging from "@react-native-firebase/messaging";
 import { SplashScreen, Stack, useRouter, usePathname } from "expo-router";
+import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, Image } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -17,9 +19,11 @@ import {
 
 import dynamicLinks from "@react-native-firebase/dynamic-links";
 import { backgroundUploadService } from "@/utils/BackgroundUploadService";
+import { getCurrentChatId } from "@/utils/NavState";
 
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const skipInitialHomeRef = React.useRef(false);
   const [initializing, setInitializing] = useState(true);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
 
@@ -30,13 +34,118 @@ const AppNavigator = () => {
       console.log("Received notification in foreground:", notification);
     },
     onRespond: (response) => {
-      console.log("User tapped notification:", response);
-      // Optional: deep linking or navigation
+      // Navigation is handled centrally in useNotificationObserver
+      console.log("User tapped notification", response?.notification?.request?.identifier);
     },
+    showForegroundAlert: false, // We'll manage foreground presentation conditionally below
   });
 
+  // Handle notification taps (background) and cold start here with de-dupe
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handledRef = { current: new Set<string>() } as { current: Set<string> };
+    const navigateFromData = (data: any) => {
+      if (!data) return;
+      const incomingChatId = String(data.chatId || "");
+      const incomingSenderId = String(data.senderId || "");
+      const currentChatId = getCurrentChatId();
+
+      const pushToChat = () => {
+        if (typeof data.url === "string" && data.url.length) {
+          router.push(data.url);
+        } else if (incomingChatId && incomingSenderId) {
+          router.push({
+            pathname: "/artist/IndividualChat",
+            params: {
+              existingChatId: incomingChatId,
+              otherUserId: incomingSenderId,
+            },
+          });
+        }
+      };
+
+      const replaceToChat = () => {
+        if (typeof data.url === "string" && data.url.length) {
+          router.replace(data.url);
+        } else if (incomingChatId && incomingSenderId) {
+          router.replace({
+            pathname: "/artist/IndividualChat",
+            params: {
+              existingChatId: incomingChatId,
+              otherUserId: incomingSenderId,
+            },
+          });
+        }
+      };
+
+      skipInitialHomeRef.current = true;
+
+      if (!currentChatId) {
+        // Not currently on a chat screen: push a new thread
+        pushToChat();
+        return;
+      }
+
+      if (incomingChatId && currentChatId === incomingChatId) {
+        // Already on the same thread: do nothing
+        return;
+      }
+      // On a different chat: replace the current chat with the new one
+      replaceToChat();
+    };
+
+    // Background tap
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const id = response?.notification?.request?.identifier as string | undefined;
+      if (id && handledRef.current.has(id)) return;
+      if (id) handledRef.current.add(id);
+      navigateFromData(response?.notification?.request?.content?.data);
+    });
+
+    // Background tap via Firebase Messaging
+    const unsubMsgOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
+      try {
+        const id = (remoteMessage as any)?.messageId as string | undefined;
+        if (id && handledRef.current.has(id)) return;
+        if (id) handledRef.current.add(id);
+        const raw = remoteMessage?.data || {};
+        const data = (raw as any)?.data ? (raw as any).data : raw;
+        navigateFromData(data);
+      } catch {}
+    });
+
+    return () => {
+      sub.remove();
+      unsubMsgOpen();
+    };
+  }, [router]);
+
+  // Foreground: Present banner only if user isn't currently in the same chat
+  useEffect(() => {
+    const unsub = messaging().onMessage(async (remoteMessage) => {
+      try {
+        const data: any = remoteMessage?.data || {};
+        const incomingChatId = data.chatId;
+        const currentChatId = getCurrentChatId();
+        if (incomingChatId && currentChatId && incomingChatId === currentChatId) {
+          // Suppress foreground notification for the active chat
+          return;
+        }
+        await Notifications.presentNotificationAsync({
+          title: remoteMessage.notification?.title || "",
+          body: remoteMessage.notification?.body || "",
+          data,
+          android: { channelId: "default" as any },
+        });
+      } catch (e) {
+        // ignore
+      }
+    });
+    return () => unsub();
+  }, []);
+
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     // console.log("App Navigator : ", user);
@@ -111,7 +220,9 @@ const AppNavigator = () => {
       pathname !== "/Login" &&
       loggedInUser?.emailVerified === true
     ) {
-      router.replace("/(bottomTabs)/Home");
+      if (!skipInitialHomeRef.current) {
+        router.replace("/(bottomTabs)/Home");
+      }
     }
     if (pathname == "/Login" && loggedInUser?.emailVerified === true) {
       router.back();

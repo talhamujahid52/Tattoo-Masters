@@ -10,6 +10,7 @@ import {
 import Text from "@/components/Text";
 import React, { useMemo } from "react";
 import { useRouter, useNavigation } from "expo-router";
+import { clearFcmTokenOnLogout } from "@/hooks/useNotification";
 import { DrawerActions } from "@react-navigation/native";
 import { Dimensions } from "react-native";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -27,10 +28,10 @@ const CustomDrawerContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const loggedInUserFirestore: UserFirestore = useSelector(
-    (state: any) => state?.user?.userFirestore
+    (state: any) => state?.user?.userFirestore,
   );
   const profileImage = useMemo(() => {
     return {
@@ -41,6 +42,8 @@ const CustomDrawerContent = () => {
         undefined,
     };
   }, [loggedInUser, loggedInUserFirestore]);
+  // console.log("loggedInUser", loggedInUser);
+  // console.log("loggedInUserFirestore", loggedInUserFirestore);
 
   const isArtist = loggedInUserFirestore?.isArtist; //Get From LoggedIn User
   const name = loggedInUserFirestore?.name ?? loggedInUser?.displayName;
@@ -439,6 +442,14 @@ const CustomDrawerContent = () => {
           </View>
           <TouchableOpacity
             onPress={async () => {
+              try {
+                const uid = auth().currentUser?.uid;
+                if (uid) {
+                  await clearFcmTokenOnLogout(uid);
+                }
+              } catch (e) {
+                // continue regardless
+              }
               await auth().signOut();
               dispatch(resetUser());
               dispatch(clearSearches());

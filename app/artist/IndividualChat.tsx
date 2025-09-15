@@ -25,6 +25,7 @@ import useGetArtist from "@/hooks/useGetArtist";
 import uuid from "react-native-uuid";
 import firestore from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { setCurrentChatId } from "@/utils/NavState";
 
 const IndividualChat: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -34,6 +35,9 @@ const IndividualChat: React.FC = () => {
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
   const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const loggedInUserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore,
+  );
   const {
     checkIfChatExists,
     fetchChatMessages,
@@ -44,7 +48,6 @@ const IndividualChat: React.FC = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
   const [localTime, setLocalTime] = useState<String>();
-  console.log("Local Time: ", localTime);
   const { selectedArtistId, existingChatId, otherUserName, otherUserId } =
     useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
@@ -110,23 +113,27 @@ const IndividualChat: React.FC = () => {
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture
+                : selectedArtist?.data?.profilePicture,
             );
-            const localTime = await getLocalTimeFromCoordinates(
-              selectedArtist?.data?.location
-            );
-            setLocalTime(localTime);
+            if (selectedArtist?.data?.location) {
+              const localTime = await getLocalTimeFromCoordinates(
+                selectedArtist?.data?.location,
+              );
+              if (localTime) setLocalTime(localTime);
+            }
           } else {
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
               selectedArtist?.data?.profilePictureSmall
                 ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture
+                : selectedArtist?.data?.profilePicture,
             );
-            const localTime = await getLocalTimeFromCoordinates(
-              selectedArtist?.data?.location
-            );
-            setLocalTime(localTime);
+            if (selectedArtist?.data?.location) {
+              const localTime = await getLocalTimeFromCoordinates(
+                selectedArtist?.data?.location,
+              );
+              if (localTime) setLocalTime(localTime);
+            }
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
@@ -141,12 +148,14 @@ const IndividualChat: React.FC = () => {
         setRecieverProfilePicture(
           otherUserDetails?.profilePictureSmall
             ? otherUserDetails?.profilePictureSmall
-            : otherUserDetails?.profilePicture
+            : otherUserDetails?.profilePicture,
         );
-        const localTime = await getLocalTimeFromCoordinates(
-          otherUserDetails?.location
-        );
-        setLocalTime(localTime);
+        if (otherUserDetails?.location) {
+          const localTime = await getLocalTimeFromCoordinates(
+            otherUserDetails?.location,
+          );
+          if (localTime) setLocalTime(localTime);
+        }
       };
       chatExistsAlready();
     }
@@ -157,13 +166,51 @@ const IndividualChat: React.FC = () => {
     const unsubscribe = listenToMessages(chatID, (msgs) => {
       setMessages(formatMessages(msgs));
     });
+    setCurrentChatId(chatID);
     return () => unsubscribe();
   }, [chatID]);
 
+  useEffect(() => {
+    return () => {
+      setCurrentChatId(null);
+    };
+  }, []);
+
   const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
 
-  const getLocalTimeFromCoordinates = async ([lat, lng]) => {
+  const getLocalTimeFromCoordinates = async (loc: any) => {
     try {
+      let lat: number | undefined;
+      let lng: number | undefined;
+
+      if (Array.isArray(loc) && loc.length >= 2) {
+        lat = Number(loc[0]);
+        lng = Number(loc[1]);
+      } else if (
+        loc &&
+        typeof loc === "object" &&
+        ("latitude" in loc || "lat" in loc || "_latitude" in loc)
+      ) {
+        lat = Number((loc as any).latitude ?? (loc as any).lat ?? (loc as any)._latitude);
+        lng = Number((loc as any).longitude ?? (loc as any).lng ?? (loc as any)._longitude);
+      }
+
+      // Validate coordinates
+      const inRange =
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        !Number.isNaN(lat) &&
+        !Number.isNaN(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180 &&
+        !(lat === 0 && lng === 0);
+
+      if (!inRange) {
+        return null;
+      }
+
       const timestamp = Math.floor(Date.now() / 1000);
       const url = `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${timestamp}&key=${GOOGLE_API_KEY}`;
 
@@ -180,6 +227,10 @@ const IndividualChat: React.FC = () => {
         });
         console.log("Time: ", timeOnly);
         return timeOnly; // e.g., "03:15 AM"
+      } else if (data.status === "ZERO_RESULTS") {
+        // Gracefully ignore when API cannot determine a timezone for the given location
+        console.warn("Time Zone API: ZERO_RESULTS for", lat, lng);
+        return null;
       } else {
         console.error("Time Zone API Error:", data.errorMessage || data.status);
         return null;
@@ -195,7 +246,13 @@ const IndividualChat: React.FC = () => {
       let currentChatID = chatID;
       if (!currentChatID) {
         try {
-          const newChat = await createChat(selectedArtist, loggedInUser);
+          const normalizedUser = {
+            uid: loggedInUser?.uid,
+            name:
+              loggedInUserFirestore?.name || loggedInUser?.displayName || "",
+            profilePicture: loggedInUser?.photoURL || "",
+          };
+          const newChat = await createChat(selectedArtist, normalizedUser);
           currentChatID = newChat.id;
           setChatID(currentChatID);
         } catch (error) {
@@ -205,7 +262,7 @@ const IndividualChat: React.FC = () => {
       }
       await addMessageToChat(newMessages, currentChatID);
     },
-    [chatID]
+    [chatID, loggedInUser, loggedInUserFirestore, selectedArtist],
   );
 
   // Custom rendering functions
@@ -219,8 +276,8 @@ const IndividualChat: React.FC = () => {
         typeof createdAt === "number"
           ? new Date(createdAt)
           : createdAt instanceof Date
-          ? createdAt
-          : new Date(createdAt);
+            ? createdAt
+            : new Date(createdAt);
 
       if (isNaN(messageDate.getTime())) return "";
 
@@ -384,7 +441,7 @@ const IndividualChat: React.FC = () => {
   const getTimeAgo = (timestamp: Date): string => {
     const now = new Date();
     const diffInSeconds = Math.floor(
-      (now.getTime() - timestamp.getTime()) / 1000
+      (now.getTime() - timestamp.getTime()) / 1000,
     );
 
     if (diffInSeconds < 60) return "just now";
@@ -454,8 +511,8 @@ const IndividualChat: React.FC = () => {
                 {isOnline
                   ? "Online"
                   : lastSeen
-                  ? `Last seen ${getTimeAgo(lastSeen)}`
-                  : ""}
+                    ? `Last seen ${getTimeAgo(lastSeen)}`
+                    : ""}
               </Text>
               {localTime && (
                 <>
@@ -492,6 +549,7 @@ const IndividualChat: React.FC = () => {
         onSend={(newMessages) => onSend(newMessages)}
         user={{
           _id: loggedInUser.uid,
+          name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
         }}
         renderBubble={renderBubble}
         renderInputToolbar={renderInputToolbar}

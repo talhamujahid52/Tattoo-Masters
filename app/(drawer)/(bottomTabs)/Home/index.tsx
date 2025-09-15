@@ -10,12 +10,15 @@ import {
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
+import messaging from "@react-native-firebase/messaging";
+import * as Notifications from "expo-notifications";
+import { getCurrentChatId } from "@/utils/NavState";
 import useTypesense from "@/hooks/useTypesense";
 import { UserFirestore } from "@/types/user";
 import Animated, {
@@ -99,6 +102,59 @@ const Home = () => {
   useEffect(() => {
     fetchUsers();
   }, [artistsTs.search]);
+
+  // Cold-start notification handling when arriving to Home
+  useEffect(() => {
+    let handled = false;
+    const navigateFromData = (data: any) => {
+      if (!data) return;
+      const incomingChatId = String(data?.chatId || "");
+      const incomingSenderId = String(data?.senderId || "");
+      const url = typeof data?.url === "string" ? data.url : "";
+      const currentChatId = getCurrentChatId();
+
+      if (url) {
+        router.push(url);
+        return;
+      }
+      if (incomingChatId && incomingSenderId) {
+        // If we're already in this chat, do nothing
+        if (currentChatId && currentChatId === incomingChatId) return;
+        router.push({
+          pathname: "/artist/IndividualChat",
+          params: {
+            existingChatId: incomingChatId,
+            otherUserId: incomingSenderId,
+          },
+        });
+      }
+    };
+
+    (async () => {
+      try {
+        // Prefer native FCM cold-start
+        const rm = await messaging().getInitialNotification();
+        if (rm?.data && !handled) {
+          handled = true;
+          const raw: any = rm.data || {};
+          const data = raw?.data ? raw.data : raw;
+          navigateFromData(data);
+          return;
+        }
+      } catch {}
+
+      try {
+        // Fallback to Expo last response
+        const resp = await Notifications.getLastNotificationResponseAsync();
+        if (resp?.notification && !handled) {
+          handled = true;
+          const raw: any = resp.notification.request.content.data || {};
+          const data = raw?.data ? raw.data : raw;
+          navigateFromData(data);
+        }
+      } catch {}
+    })();
+  }, []);
 
   // Pull-to-refresh handler
   const onRefresh = async () => {
