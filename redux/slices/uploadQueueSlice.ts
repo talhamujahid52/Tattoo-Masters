@@ -85,6 +85,8 @@ const uploadQueueSlice = createSlice({
         (item) =>
           item.uri === newItem.uri &&
           item.userId === newItem.userId &&
+          item.type === newItem.type &&
+          item.name === newItem.name &&
           (item.status === "pending" ||
             item.status === "uploading" ||
             item.status === "completed")

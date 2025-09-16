@@ -10,6 +10,7 @@ import storage from "@react-native-firebase/storage";
 import firestore from "@react-native-firebase/firestore";
 import { AppState, AppStateStatus } from "react-native";
 import { resizedName, keepTrying } from "./firebase/uploadHelpers";
+import * as FileSystem from "expo-file-system";
 
 class BackgroundUploadService {
   private isRunning = false;
@@ -147,11 +148,24 @@ class BackgroundUploadService {
 
   private async checkFileExists(uri: string): Promise<boolean> {
     try {
+      if (uri.startsWith("file://")) {
+        const info = await FileSystem.getInfoAsync(uri);
+        return !!info.exists;
+      }
+      if (
+        uri.startsWith("content://") ||
+        uri.startsWith("ph://") ||
+        uri.startsWith("assets-library://")
+      ) {
+        // Cannot reliably HEAD these; assume present and let storage putFile error if truly missing
+        return true;
+      }
       const response = await fetch(uri, { method: "HEAD" });
       return response.ok;
     } catch (error) {
       console.log(`File existence check failed for ${uri}:`, error);
-      return false;
+      // Be lenient and allow upload attempt; Firebase SDK will surface a clear error if missing
+      return true;
     }
   }
 

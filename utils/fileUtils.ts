@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import * as FileSystem from "expo-file-system";
 
 /**
  * Generates a unique filename to avoid conflicts
@@ -19,16 +20,25 @@ export const copyFileToAppDirectory = async (
   fileName?: string
 ): Promise<string> => {
   try {
-    // For now, we'll validate the file exists and return the original URI
-    // In a future enhancement, this could copy files to a permanent location
+    const targetName = fileName || generateUniqueFileName(".jpg");
+    const targetPath = `${FileSystem.documentDirectory || ""}${targetName}`;
 
-    // Validate the file exists
-    const testResponse = await fetch(sourceUri, { method: "HEAD" });
-    if (!testResponse.ok) {
-      throw new Error("Source file does not exist");
+    // Try a real copy for file:// and content:// (best-effort)
+    try {
+      await FileSystem.copyAsync({ from: sourceUri, to: targetPath });
+      return targetPath;
+    } catch (e) {
+      // If copy fails (e.g., ph:// on iOS), fall back to original URI
+      // We'll still attempt upload from the original URI
+      console.log("copyAsync failed; falling back to original URI", e);
     }
 
-    console.log(`File validated for upload: ${sourceUri}`);
+    // Validate the file exists via HEAD where possible; otherwise trust OS URIs
+    if (sourceUri.startsWith("http://") || sourceUri.startsWith("https://")) {
+      const testResponse = await fetch(sourceUri, { method: "HEAD" });
+      if (!testResponse.ok) throw new Error("Source file does not exist");
+    }
+
     return sourceUri;
   } catch (error) {
     console.error("Error validating file:", error);
@@ -42,6 +52,24 @@ export const copyFileToAppDirectory = async (
  */
 export const validateFileAccess = async (uri: string): Promise<boolean> => {
   try {
+    // Trust common local URI schemes which may not support HEAD
+    if (
+      uri.startsWith("file://") ||
+      uri.startsWith("content://") ||
+      uri.startsWith("ph://") ||
+      uri.startsWith("assets-library://")
+    ) {
+      // Try FileSystem existence check where available
+      try {
+        if (uri.startsWith("file://")) {
+          const info = await FileSystem.getInfoAsync(uri);
+          return !!info.exists;
+        }
+      } catch {}
+      return true;
+    }
+
+    // Fallback for http(s)
     const response = await fetch(uri, { method: "HEAD" });
     return response.ok;
   } catch (error) {

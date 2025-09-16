@@ -15,14 +15,14 @@ import Step3 from "./Step3";
 import { FormContext } from "../context/FormContext";
 import { useSelector } from "react-redux";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
-import { getFileName } from "@/utils/helperFunctions";
+// import { getFileName } from "@/utils/helperFunctions";
 import { useRouter } from "expo-router";
-import { updateProfile } from "@react-native-firebase/auth";
-import { updateUserProfile } from "@/utils/firebase/userFunctions";
-import { UserProfileFormData } from "@/types/user";
-import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
-import { setUserFirestoreData } from "@/redux/slices/userSlice";
-import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+// import { updateProfile } from "@react-native-firebase/auth";
+// import { updateUserProfile } from "@/utils/firebase/userFunctions";
+// import { UserProfileFormData } from "@/types/user";
+// import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
+// import { setUserFirestoreData } from "@/redux/slices/userSlice";
+// import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { useDispatch } from "react-redux";
 const StepperForm: React.FC = () => {
   const totalSteps = 3;
@@ -50,7 +50,7 @@ const StepperForm: React.FC = () => {
       if (!hasProfilePicture) {
         Alert.alert(
           "Profile picture required",
-          "Please add a profile picture to continue."
+          "Please add a profile picture to continue.",
         );
         return;
       }
@@ -59,7 +59,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.name || formData.name.trim().length === 0) {
         Alert.alert(
           "Full Name required",
-          "Please enter your full name to continue."
+          "Please enter your full name to continue.",
         );
         return;
       }
@@ -68,7 +68,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.studio) {
         Alert.alert(
           "Studio Type required",
-          "Please select your work type (Studio, Freelancer, or Home Artist) to continue."
+          "Please select your work type (Studio, Freelancer, or Home Artist) to continue.",
         );
         return;
       }
@@ -80,7 +80,7 @@ const StepperForm: React.FC = () => {
       ) {
         Alert.alert(
           "Studio Name required",
-          "Please enter your studio name to continue."
+          "Please enter your studio name to continue.",
         );
         return;
       }
@@ -89,7 +89,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.address || formData.address.trim().length === 0) {
         Alert.alert(
           "Address required",
-          "Please enter your address to continue."
+          "Please enter your address to continue.",
         );
         return;
       }
@@ -98,7 +98,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.tattooStyles || formData.tattooStyles.length === 0) {
         Alert.alert(
           "Tattoo Style required",
-          "Please select at least one tattoo style to continue."
+          "Please select at least one tattoo style to continue.",
         );
         return;
       }
@@ -107,7 +107,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.aboutYou || formData.aboutYou.trim().length === 0) {
         Alert.alert(
           "About You required",
-          "Please provide an introduction about yourself to continue."
+          "Please provide an introduction about yourself to continue.",
         );
         return;
       }
@@ -211,7 +211,7 @@ const StepperForm: React.FC = () => {
           {i < totalSteps && (
             <View style={[styles.line, { width: width / 5 }]} />
           )}
-        </View>
+        </View>,
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;
