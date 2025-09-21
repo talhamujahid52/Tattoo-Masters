@@ -1,5 +1,5 @@
 import React, { useState, useContext, useMemo } from "react";
-import { StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image, Pressable } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
@@ -89,7 +89,7 @@ const CreateReviewPassword = () => {
         let passed = 0;
         for (let i = 0; i < imagesToUpload.length; i++) {
           const img: any = imagesToUpload[i];
-          const baseName = (img?.name || getFileName(img.uri) || "image.jpg");
+          const baseName = img?.name || getFileName(img.uri) || "image.jpg";
           const matchExt = baseName.match(/(\.[^.]+)$/);
           const ext = matchExt ? matchExt[1] : "";
           const stem = ext ? baseName.slice(0, -ext.length) : baseName;
@@ -251,13 +251,16 @@ const CreateReviewPassword = () => {
             handleCreateAccount();
           }}
         />
-        <Button
-          title="Back"
+        <Pressable
           onPress={() => {
             router.back();
           }}
-          variant="secondary"
-        />
+          style={styles.button}
+        >
+          <Text size="h4" weight="normal" color="#FBF6FA">
+            Back
+          </Text>
+        </Pressable>
       </View>
     </KeyboardAwareScrollView>
   );
@@ -308,5 +311,14 @@ const styles = StyleSheet.create({
   errorText: {
     textAlign: "center",
     marginBottom: 8,
+  },
+  button: {
+    height: 48,
+    width: "100%",
+    borderRadius: 30,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
 });

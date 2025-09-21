@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   Pressable,
+  Linking,
 } from "react-native";
 import React, { useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -42,6 +43,23 @@ const ArtistProfileBottomSheet = ({
       ? { uri: profileDefault }
       : require("../../assets/images/Artist.png");
   }, [currentlyViewingArtist]);
+
+  const handleOpenLink = async (url: string) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.warn("Can't open URL:", url);
+      }
+    } catch (error) {
+      console.error("Failed to open URL:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -84,24 +102,43 @@ const ArtistProfileBottomSheet = ({
       </View>
 
       <View style={styles.userSocialsRow}>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/facebook_2.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/instagram.png")}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/twitter.png")}
-          />
-        </TouchableOpacity>
+        {currentlyViewingArtist?.facebookProfile && (
+          <TouchableOpacity
+            onPress={() =>
+              handleOpenLink(currentlyViewingArtist?.facebookProfile)
+            }
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/facebook_2.png")}
+            />
+          </TouchableOpacity>
+        )}
+
+        {currentlyViewingArtist?.instagramProfile && (
+          <TouchableOpacity
+            onPress={() =>
+              handleOpenLink(currentlyViewingArtist?.instagramProfile)
+            }
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/instagram.png")}
+            />
+          </TouchableOpacity>
+        )}
+        {currentlyViewingArtist?.twitterProfile && (
+          <TouchableOpacity
+            onPress={() =>
+              handleOpenLink(currentlyViewingArtist?.twitterProfile)
+            }
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/twitter.png")}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       <Pressable onPress={handleToggle}>

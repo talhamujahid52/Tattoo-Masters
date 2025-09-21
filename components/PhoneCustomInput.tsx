@@ -1,10 +1,12 @@
 import { StyleSheet } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PhoneInput, {
   ICountry,
   getAllCountries,
 } from "react-native-international-phone-number";
 import * as Location from "expo-location";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
 
 interface PhoneCustomInputProps {
   value: string;
@@ -17,6 +19,14 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<null | ICountry>(null);
   const [inputValue, setInputValue] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
+
+  // Track if we've already initialized from user data
+  const hasInitializedFromUser = useRef(false);
 
   useEffect(() => {
     setInputValue(value);
@@ -66,30 +76,83 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
     }
   };
 
-  // Step 3: Detect and set initial country
+  // Initialize phone data from logged in user or API
   useEffect(() => {
-    const detectCountry = async () => {
-      const coords = await getCurrentCoordinates();
-      console.log("coords : ", coords);
-      if (!coords) return;
-
-      const countryCode = await getCountryFromCoordinates(coords);
-      if (!countryCode) return;
+    const initializePhoneData = async () => {
+      // Prevent double initialization
+      if (hasInitializedFromUser.current) return;
+      hasInitializedFromUser.current = true;
 
       const countries = getAllCountries();
-      console.log("countries : ", countries);
-      const matchedCountry = countries.find(
-        (country) => country.cca2 === countryCode.toUpperCase()
-      );
 
-      if (matchedCountry) {
-        setSelectedCountry(matchedCountry);
-        onChange(inputValue, matchedCountry.callingCode);
+      if (loggedInUserFirestore) {
+        // Get data from logged in user
+        const storedPhoneNumber = loggedInUserFirestore.phoneNumber || "";
+
+        if (storedPhoneNumber.includes(" ")) {
+          const [code, number] = storedPhoneNumber.split(" ");
+          console.log("code ", code);
+          console.log("number ", number);
+
+          // Find country by calling code
+          const matchedCountry = countries.find(
+            (country) => country.callingCode === code
+          );
+
+          if (matchedCountry) {
+            console.log("Matched country from user data:", matchedCountry.name);
+            setSelectedCountry(matchedCountry);
+            setInputValue(number);
+
+            // Notify parent component
+            onChange(number, code);
+          }
+        } else {
+          // Fallback if improperly formatted
+          setInputValue(storedPhoneNumber);
+
+          // Notify parent component
+          onChange(storedPhoneNumber, "");
+        }
+      } else {
+        // If no logged in user data, select country from API
+        console.log("No user data found, detecting location...");
+
+        const coords = await getCurrentCoordinates();
+        console.log("coords: ", coords);
+        if (!coords) {
+          setIsInitialized(true);
+          return;
+        }
+
+        const countryCode = await getCountryFromCoordinates(coords);
+        if (!countryCode) {
+          setIsInitialized(true);
+          return;
+        }
+
+        const matchedCountry = countries.find(
+          (country) => country.cca2 === countryCode.toUpperCase()
+        );
+
+        if (matchedCountry) {
+          setSelectedCountry(matchedCountry);
+          onChange(inputValue, matchedCountry.callingCode);
+        }
       }
-    };
 
-    detectCountry();
-  }, []);
+      setIsInitialized(true);
+    };
+    console.log("loggedInUserFirestore in useeffect ", loggedInUserFirestore);
+    initializePhoneData();
+  }, [loggedInUserFirestore]); // Only depend on loggedInUserFirestore
+
+  // Reset the ref when user changes
+  useEffect(() => {
+    return () => {
+      hasInitializedFromUser.current = false;
+    };
+  }, [loggedInUserFirestore]);
 
   // Handle phone input value change
   const handleInputValue = (phoneNumber: string) => {

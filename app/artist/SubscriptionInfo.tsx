@@ -109,6 +109,7 @@ const SubscriptionInfo = () => {
             "Create artist profile",
             "Share your portfolio",
             "Get reviews",
+            "Chat with customers",
             "Get followers",
             "Get tattoo customers",
           ].map((item, index) => (

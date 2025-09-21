@@ -17,6 +17,7 @@ import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
 import ReviewOnProfileBlur from "./ReviewOnProfileBlur";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface StudioItem {
   title: string;
@@ -166,10 +167,7 @@ const step3: React.FC = () => {
           )}
         </View>
         <View style={styles.artistFavoriteRow}>
-          <Image
-            style={styles.icon}
-            source={require("../assets/images/favorite-white.png")}
-          />
+          <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
           <View
             style={{
               height: 11,
@@ -255,6 +253,7 @@ const step3: React.FC = () => {
             keyExtractor={(item) => item.title}
             horizontal={true}
             contentContainerStyle={{ gap: 10 }}
+            showsHorizontalScrollIndicator={false}
           />
         </View>
       </View>

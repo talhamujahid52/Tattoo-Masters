@@ -187,7 +187,7 @@ const CustomDrawerContent = () => {
               color="#B1AFA4"
               style={{ textAlign: "center", marginTop: 8, marginBottom: 16 }}
             >
-              Your trail ends on {formattedTrialEndDate}
+              Your trial ends on {formattedTrialEndDate}
             </Text>
           </>
         ) : (

@@ -19,6 +19,7 @@ import { UserFirestore } from "@/types/user";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
+import PhoneInput from "@/components/PhoneCustomInput";
 
 const EditProfile = () => {
   // Get auth and firestore user data from redux
@@ -38,13 +39,11 @@ const EditProfile = () => {
   const [newImage, setNewImage] = useState<Asset>();
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-
+  const [countryCode, setCountryCode] = useState<string>("");
   // When Firestore user data changes, update the input states.
   useEffect(() => {
     if (loggedInUserFirestore) {
       setFullName(loggedInUserFirestore.name || "");
-      // If phoneNumber doesn't exist, leave it empty.
-      setPhoneNumber(loggedInUserFirestore.phoneNumber || "");
     }
   }, [loggedInUserFirestore]);
 
@@ -129,10 +128,17 @@ const EditProfile = () => {
       // Update profile picture if a new image was selected.
       //
       // Update full name and phone number.
+      let fullPhoneNumber = "";
+
+      if (phoneNumber && countryCode) {
+        const cleanedNumber = phoneNumber.replace(/\s/g, ""); // Remove all spaces from number
+        fullPhoneNumber = `${countryCode} ${cleanedNumber}`; // Add space after country code
+      }
+
       await firestore().collection("Users").doc(currentUserId).set(
         {
           name: fullName,
-          phoneNumber: phoneNumber,
+          phoneNumber: fullPhoneNumber,
         },
         { merge: true }
       );
@@ -196,11 +202,12 @@ const EditProfile = () => {
           >
             Phone number
           </Text>
-          <Input
-            inputMode="tel"
-            placeholder="Phone Number"
+          <PhoneInput
             value={phoneNumber}
-            onChangeText={setPhoneNumber}
+            onChange={(phoneNumber, code) => {
+              setPhoneNumber(phoneNumber);
+              setCountryCode(code);
+            }}
           />
         </View>
       </View>
