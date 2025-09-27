@@ -19,10 +19,10 @@ import { FormContext } from "../context/FormContext";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
-import firestore from "@react-native-firebase/firestore";
 import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import * as Location from "expo-location";
+import useTattooStyles from "@/hooks/useTattooStyles";
 
 const Step1: React.FC = () => {
   const {
@@ -83,30 +83,14 @@ const Step1: React.FC = () => {
     setFormData,
   ]);
 
+  const { titles: fetchedStyleTitles } = useTattooStyles();
   useEffect(() => {
-    const fetchTattooStyles = async () => {
-      try {
-        const doc = await firestore()
-          .collection("Configurations")
-          .doc("TattooStyles")
-          .get();
-
-        const data = doc.data();
-        if (data?.styles && Array.isArray(data.styles)) {
-          // Ensure "selected" is set to false
-          const formattedStyles = data.styles.map((style: any) => ({
-            title: style.title,
-            selected: false,
-          }));
-          setTattooStyles(formattedStyles);
-        }
-      } catch (error) {
-        console.error("Error fetching tattoo styles:", error);
-      }
-    };
-
-    fetchTattooStyles();
-  }, []);
+    if (fetchedStyleTitles.length > 0) {
+      setTattooStyles(
+        fetchedStyleTitles.map((title) => ({ title, selected: false }))
+      );
+    }
+  }, [fetchedStyleTitles]);
 
   const localImage = useMemo(() => {
     const remoteUri =

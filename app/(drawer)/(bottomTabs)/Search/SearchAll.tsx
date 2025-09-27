@@ -133,6 +133,15 @@ export default function SearchAll() {
         }
         facets.push(`${studioFilterArr.join(" || ")}`);
       }
+
+      // NEW: filter artists by selected tattoo styles
+      const stylesFiltered = persistedStyles.filter((s) => s.selected);
+      if (stylesFiltered.length) {
+        const stylesFilterArr = stylesFiltered.map(
+          (s) => `tattooStyles:${s.title}`,
+        );
+        facets.push(`${stylesFilterArr.join(" || ")}`);
+      }
     }
     if (type === "tattoos") {
       const stylesFiltered = persistedStyles.filter((s) => s.selected);
@@ -216,6 +225,8 @@ export default function SearchAll() {
 
       // 3. Studio chips
       count += persistedStudio.filter((s) => s.selected).length;
+      // 4. Style chips (enabled for artists as well)
+      count += persistedStyles.filter((s) => s.selected).length;
     }
 
     // 4. Style chips

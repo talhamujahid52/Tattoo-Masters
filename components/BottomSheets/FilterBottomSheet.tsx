@@ -20,7 +20,9 @@ import {
 } from "@/redux/slices/filterSlices";
 import Text from "../Text";
 import Button from "../Button";
-import { useBottomSheet } from "@gorhom/bottom-sheet";
+import { BottomSheetScrollView, useBottomSheet } from "@gorhom/bottom-sheet";
+import useTattooStyles from "@/hooks/useTattooStyles";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const FilterBottomSheet = ({
   searchActiveFor,
@@ -28,7 +30,10 @@ const FilterBottomSheet = ({
   searchActiveFor: "tattoos" | "artists";
 }) => {
   const dispatch = useDispatch();
-  const stylesEnabled = searchActiveFor === "tattoos"; // styles only apply to tattoos
+  const insets = useSafeAreaInsets();
+  // Enable style filters for both tattoos and artists
+  const stylesEnabled =
+    searchActiveFor === "tattoos" || searchActiveFor === "artists";
 
   const bottomSheet = useBottomSheet();
   /** ──────────────────────────
@@ -42,6 +47,9 @@ const FilterBottomSheet = ({
     styles: persistedStyles,
   } = useSelector(selectFilter);
 
+  // Centralized fetch of style titles
+  const { titles: fetchedStyleTitles } = useTattooStyles();
+
   /** ──────────────────────────
    *  2. Local “draft” state
    *  ────────────────────────── */
@@ -52,6 +60,21 @@ const FilterBottomSheet = ({
   const [ratings, setRatingsLocal] = useState(persistedRatings);
   const [studio, setStudioLocal] = useState(persistedStudio);
   const [tattooStyles, setStylesLocal] = useState(persistedStyles);
+
+  // When fetched titles or persisted selections change, sync local styles list
+  useEffect(() => {
+    if (fetchedStyleTitles.length > 0) {
+      const selectedSet = new Set(
+        (persistedStyles || []).filter((s) => s.selected).map((s) => s.title),
+      );
+      const merged = fetchedStyleTitles.map((title, idx) => ({
+        title,
+        value: idx + 1,
+        selected: selectedSet.has(title),
+      }));
+      setStylesLocal(merged);
+    }
+  }, [fetchedStyleTitles, persistedStyles]);
 
   /** ──────────────────────────
    *  3. Sync local state when sheet is reopened
@@ -169,143 +192,148 @@ const FilterBottomSheet = ({
 
       {/* content */}
       <View style={styles.contentContainer}>
-        {/* radius toggle */}
-        <View style={styles.toggleButtonRow}>
-          <Text size="h4" weight="semibold" color="#A7A7A7">
-            Within your radius
-          </Text>
-          <Switch
-            disabled={stylesEnabled} // block toggling whenever styles are on
-            trackColor={{ false: "#767577", true: "#44e52c" }}
-            thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleRadius}
-            value={radiusEnabled}
-          />
-        </View>
-
-        {/* radius slider */}
-        {radiusEnabled && (
-          <View style={styles.sliderRow}>
-            <Slider
-              style={{
-                width: "80%",
-                height: 40,
-                opacity: !radiusEnabled || stylesEnabled ? 0.5 : 1,
-              }}
-              value={radiusValue}
-              onValueChange={setRadiusValueLocal}
-              minimumValue={0}
-              maximumValue={100}
-              minimumTrackTintColor="#F2D189"
-              maximumTrackTintColor="#FFFFFF26"
-              thumbTintColor="#F2D189"
-              disabled={!radiusEnabled || stylesEnabled}
-            />
-            <Text size="p" weight="normal" color="#A7A7A7">
-              {radiusValue.toFixed()} Km
+        <BottomSheetScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={{ paddingBottom: 72 + insets.bottom }}
+          showsVerticalScrollIndicator={true}
+        >
+          {/* radius toggle */}
+          <View style={styles.toggleButtonRow}>
+            <Text size="h4" weight="semibold" color="#A7A7A7">
+              Within your radius
             </Text>
+            <Switch
+              style={{ width: 75 }}
+              // trackColor={{ false: "#767577", true: "#44e52c" }}
+              // thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
+              // ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleRadius}
+              value={radiusEnabled}
+            />
           </View>
-        )}
 
-        {/* rating */}
-        <Text size="h4" weight="semibold" color="#A7A7A7">
-          Rating
-        </Text>
-        <View style={styles.ratingButtonsRow}>
-          {ratings.map((r) => (
-            <TouchableOpacity
-              key={r.value}
-              disabled={stylesEnabled} // disable when any style is selected
-              onPress={() => selectRating(r.value)}
-              activeOpacity={1}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: r.selected ? "#DAB769" : "#262526",
-                  opacity: stylesEnabled ? 0.5 : 1,
-                },
-              ]}
-            >
-              <Text
-                size="p"
-                weight="normal"
-                color={r.selected ? "#22221F" : "#A7A7A7"}
-              >
-                {r.title}
+          {/* radius slider */}
+          {radiusEnabled && (
+            <View style={styles.sliderRow}>
+              <Slider
+                style={{
+                  width: "80%",
+                  height: 40,
+                }}
+                value={radiusValue}
+                onValueChange={setRadiusValueLocal}
+                minimumValue={0}
+                maximumValue={100}
+                minimumTrackTintColor="#F2D189"
+                maximumTrackTintColor="#FFFFFF26"
+                thumbTintColor="#F2D189"
+                disabled={!radiusEnabled}
+              />
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {radiusValue.toFixed()} Km
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+          )}
 
-        {/* studio */}
-        <View style={styles.studioRow}>
+          {/* rating */}
           <Text size="h4" weight="semibold" color="#A7A7A7">
-            Studio
+            Rating
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {studio.map((s) => (
+            {ratings.map((r) => (
               <TouchableOpacity
-                key={s.value}
-                disabled={stylesEnabled}
-                onPress={() => toggleStudio(s.value)}
+                key={r.value}
+                onPress={() => selectRating(r.value)}
                 activeOpacity={1}
                 style={[
                   styles.chip,
                   {
-                    backgroundColor: s.selected ? "#DAB769" : "#262526",
-                    opacity: stylesEnabled ? 0.5 : 1,
+                    backgroundColor: r.selected ? "#DAB769" : "#262526",
                   },
                 ]}
               >
                 <Text
                   size="p"
                   weight="normal"
-                  color={s.selected ? "#22221F" : "#A7A7A7"}
+                  color={r.selected ? "#22221F" : "#A7A7A7"}
                 >
-                  {s.title}
+                  {r.title}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
-        </View>
 
-        {/* styles */}
-        <View style={styles.tattooStylesRow}>
-          <Text size="h4" weight="semibold" color="#A7A7A7">
-            Styles
-          </Text>
-          <View style={styles.ratingButtonsRow}>
-            {tattooStyles.map((s) => (
-              <TouchableOpacity
-                key={s.value}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: s.selected ? "#DAB769" : "#262526",
-                    // if the group is disabled, fade it out:
-                    opacity: stylesEnabled ? 1 : 0.5,
-                  },
-                ]}
-                // block presses when disabled
-                disabled={!stylesEnabled}
-                onPress={() => toggleStyle(s.value)}
-                activeOpacity={1}
-              >
-                <Text
-                  size="p"
-                  weight="normal"
-                  color={s.selected ? "#22221F" : "#A7A7A7"}
+          {/* studio */}
+          <View style={styles.studioRow}>
+            <Text size="h4" weight="semibold" color="#A7A7A7">
+              Studio
+            </Text>
+            <View style={styles.ratingButtonsRow}>
+              {studio.map((s) => (
+                <TouchableOpacity
+                  key={s.value}
+                  onPress={() => toggleStudio(s.value)}
+                  activeOpacity={1}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: s.selected ? "#DAB769" : "#262526",
+                    },
+                  ]}
                 >
-                  {s.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    size="p"
+                    weight="normal"
+                    color={s.selected ? "#22221F" : "#A7A7A7"}
+                  >
+                    {s.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* apply */}
-        <View style={{ marginVertical: 32 }}>
+          {/* styles */}
+          <View style={styles.tattooStylesRow}>
+            <Text size="h4" weight="semibold" color="#A7A7A7">
+              Styles
+            </Text>
+            <View style={styles.ratingButtonsRow}>
+              {tattooStyles.map((s) => (
+                <TouchableOpacity
+                  key={s.value}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: s.selected ? "#DAB769" : "#262526",
+                    },
+                  ]}
+                  // block presses when disabled
+                  disabled={!stylesEnabled}
+                  onPress={() => toggleStyle(s.value)}
+                  activeOpacity={1}
+                >
+                  <Text
+                    size="p"
+                    weight="normal"
+                    color={s.selected ? "#22221F" : "#A7A7A7"}
+                  >
+                    {s.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </BottomSheetScrollView>
+
+        {/* dark backdrop under the footer to hide content */}
+        <View
+          pointerEvents="none"
+          style={[styles.footerBackdrop, { height: 72 + insets.bottom }]}
+        />
+
+        {/* sticky apply */}
+        <View style={[styles.footerPinned, { bottom: 16 + insets.bottom }]}>
           <Button title="Apply" onPress={handleApply} />
         </View>
       </View>
@@ -319,7 +347,7 @@ export default FilterBottomSheet;
  *  Styles unchanged except tiny helper
  *  ────────────────────────── */
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#080808" },
+  container: { backgroundColor: "#080808", flex: 1 },
   titleRow: {
     height: 46,
     flexDirection: "row",
@@ -329,18 +357,20 @@ const styles = StyleSheet.create({
     borderBottomColor: "#FFFFFF26",
     paddingHorizontal: 16,
   },
-  contentContainer: { paddingHorizontal: 16 },
+  contentContainer: { paddingHorizontal: 16, position: "relative", flex: 1 },
+  scrollArea: { flex: 1 },
   toggleButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 24,
+    marginBottom: 20,
   },
   sliderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 32,
+    marginBottom: 16,
   },
   ratingButtonsRow: {
     marginTop: 16,
@@ -354,5 +384,23 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     borderBottomWidth: 1,
     borderBottomColor: "#FFFFFF26",
+  },
+  footerPinned: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 16,
+    zIndex: 10,
+    backgroundColor: "#080808",
+    paddingTop: 8,
+    elevation: 6,
+  },
+  footerBackdrop: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#080808",
+    zIndex: 5,
   },
 });

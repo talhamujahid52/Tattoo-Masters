@@ -5,7 +5,7 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import { ScrollView, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 
 // Custom hook to manage the BottomSheet visibility and content
 const useBottomSheet = () => {
@@ -25,7 +25,7 @@ const useBottomSheet = () => {
         hide();
       }
     },
-    [hide]
+    [hide],
   );
 
   const renderBackdrop = useCallback(
@@ -38,7 +38,7 @@ const useBottomSheet = () => {
         pressBehavior="close"
       />
     ),
-    []
+    [],
   );
 
   const renderHandle = useCallback(
@@ -49,7 +49,7 @@ const useBottomSheet = () => {
         </View>
       </View>
     ),
-    []
+    [],
   );
 
   const BottomSheet = useCallback(
@@ -57,18 +57,21 @@ const useBottomSheet = () => {
       <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
+        snapPoints={["60%"]}
+        enableDynamicSizing={false}
+        enableOverDrag={false}
         backdropComponent={renderBackdrop}
         onDismiss={hide}
         onChange={handleSheetChanges}
         handleComponent={renderHandle}
         backgroundStyle={styles.sheetBackground}
       >
-        <BottomSheetView style={{ backgroundColor: "#080808" }}>
-          <ScrollView>{InsideComponent}</ScrollView>
+        <BottomSheetView style={{ backgroundColor: "#080808", flex: 1 }}>
+          {InsideComponent}
         </BottomSheetView>
       </BottomSheetModal>
     ),
-    [hide, handleSheetChanges, renderBackdrop]
+    [hide, handleSheetChanges, renderBackdrop],
   );
 
   return { BottomSheet, show, hide };

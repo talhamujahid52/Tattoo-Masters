@@ -12,7 +12,7 @@ const HomeLayout = () => {
   const navigation = useNavigation();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user
+    (state: any) => state?.user?.user,
   );
   const { BottomSheet, show, hide } = useBottomSheet();
   return (
@@ -48,6 +48,12 @@ const HomeLayout = () => {
             ),
             headerRight: () => (
               <TouchableOpacity
+                style={{
+                  // padding: 10,
+                  left: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
                 onPress={() => {
                   loggedInUser
@@ -58,7 +64,12 @@ const HomeLayout = () => {
                 <Image
                   source={require("../../../../assets/images/menu.png")}
                   resizeMode="cover"
-                  style={{ height: 13, width: 19 }}
+                  style={{
+                    alignSelf: "center",
+
+                    height: 13,
+                    width: 19,
+                  }}
                 />
               </TouchableOpacity>
             ),
