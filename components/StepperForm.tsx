@@ -39,6 +39,12 @@ const StepperForm: React.FC = () => {
 
   const stepLabels = ["Profile", "Tattoo portfolio", "Preview"];
 
+  // Helper function to validate URL format
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url.trim() === "") return true; // Allow empty URLs
+    return url.startsWith("http://") || url.startsWith("https://");
+  };
+
   const handleNext = () => {
     // Validation: Step 1 requires profile picture selected
     if (step === 1) {
@@ -50,7 +56,7 @@ const StepperForm: React.FC = () => {
       if (!hasProfilePicture) {
         Alert.alert(
           "Profile picture required",
-          "Please add a profile picture to continue.",
+          "Please add a profile picture to continue."
         );
         return;
       }
@@ -59,7 +65,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.name || formData.name.trim().length === 0) {
         Alert.alert(
           "Full Name required",
-          "Please enter your full name to continue.",
+          "Please enter your full name to continue."
         );
         return;
       }
@@ -68,7 +74,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.studio) {
         Alert.alert(
           "Studio Type required",
-          "Please select your work type (Studio, Freelancer, or Home Artist) to continue.",
+          "Please select your work type (Studio, Freelancer, or Home Artist) to continue."
         );
         return;
       }
@@ -80,7 +86,7 @@ const StepperForm: React.FC = () => {
       ) {
         Alert.alert(
           "Studio Name required",
-          "Please enter your studio name to continue.",
+          "Please enter your studio name to continue."
         );
         return;
       }
@@ -89,7 +95,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.address || formData.address.trim().length === 0) {
         Alert.alert(
           "Address required",
-          "Please enter your address to continue.",
+          "Please enter your address to continue."
         );
         return;
       }
@@ -98,7 +104,7 @@ const StepperForm: React.FC = () => {
       if (!formData?.tattooStyles || formData.tattooStyles.length === 0) {
         Alert.alert(
           "Tattoo Style required",
-          "Please select at least one tattoo style to continue.",
+          "Please select at least one tattoo style to continue."
         );
         return;
       }
@@ -107,7 +113,34 @@ const StepperForm: React.FC = () => {
       if (!formData?.aboutYou || formData.aboutYou.trim().length === 0) {
         Alert.alert(
           "About You required",
-          "Please provide an introduction about yourself to continue.",
+          "Please provide an introduction about yourself to continue."
+        );
+        return;
+      }
+      // Social Media URL Validation
+      if (formData?.facebookProfile && !isValidUrl(formData.facebookProfile)) {
+        Alert.alert(
+          "Invalid Facebook URL",
+          "Facebook profile URL must start with http:// or https://"
+        );
+        return;
+      }
+
+      if (
+        formData?.instagramProfile &&
+        !isValidUrl(formData.instagramProfile)
+      ) {
+        Alert.alert(
+          "Invalid Instagram URL",
+          "Instagram profile URL must start with http:// or https://"
+        );
+        return;
+      }
+
+      if (formData?.twitterProfile && !isValidUrl(formData.twitterProfile)) {
+        Alert.alert(
+          "Invalid Twitter URL",
+          "Twitter profile URL must start with http:// or https://"
         );
         return;
       }
@@ -194,50 +227,40 @@ const StepperForm: React.FC = () => {
     for (let i = 1; i <= totalSteps; i++) {
       indicators.push(
         <View key={i} style={styles.stepContainer}>
-          <View
-            style={[
-              styles.stepIndicator,
-              i === step && styles.activeStep,
-              i < step && styles.doneStep,
-            ]}
-          >
-            {i < step && (
-              <Image
-                style={{ height: 6, width: 8 }}
-                source={require("../assets/images/black-tick.png")}
-              />
-            )}
+          <View style={styles.stepWithLabel}>
+            <View
+              style={[
+                styles.stepIndicator,
+                i === step && styles.activeStep,
+                i < step && styles.doneStep,
+              ]}
+            >
+              {i < step && (
+                <Image
+                  style={{ height: 6, width: 8 }}
+                  source={require("../assets/images/black-tick.png")}
+                />
+              )}
+            </View>
+            <Text
+              size="medium"
+              weight="normal"
+              color={i === step ? "#FFFFFF" : "#A7A7A7"}
+              style={styles.stepLabel}
+            >
+              {stepLabels[i - 1]}
+            </Text>
           </View>
-          {i < totalSteps && (
-            <View style={[styles.line, { width: width / 5 }]} />
-          )}
-        </View>,
+          {i < totalSteps && <View style={[styles.line, { width: 60 }]} />}
+        </View>
       );
     }
     return <View style={styles.indicatorContainer}>{indicators}</View>;
   };
 
-  const renderStepLabel = () => (
-    <View style={styles.labelContainer}>
-      {stepLabels.map((label, index) => (
-        <Text
-          key={index}
-          size="medium"
-          weight="normal"
-          color={index + 1 === step ? "#FFFFFF" : "#A7A7A7"}
-        >
-          {label}
-        </Text>
-      ))}
-    </View>
-  );
-
   return (
     <View style={styles.container}>
-      <View style={{ paddingVertical: 24 }}>
-        {renderStepIndicator()}
-        {renderStepLabel()}
-      </View>
+      <View style={{ paddingVertical: 24 }}>{renderStepIndicator()}</View>
 
       <View style={styles.contentContainer}>
         {step === 1 && <Step1 />}
@@ -296,14 +319,11 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    alignItems: "flex-start",
   },
-  labelContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  stepWithLabel: {
     alignItems: "center",
-    width: "100%",
-    paddingHorizontal: 30,
+    paddingHorizontal: 12,
   },
   stepIndicator: {
     width: 20,
@@ -322,12 +342,15 @@ const styles = StyleSheet.create({
   doneStep: {
     backgroundColor: "#DAB769",
   },
+  stepLabel: {
+    marginTop: 4,
+    textAlign: "center",
+  },
   line: {
     height: 3,
     borderRadius: 5,
     backgroundColor: "#FFFFFF26",
-    marginHorizontal: 25,
-    marginVertical: 10,
+    marginTop: 10, // Aligns with the center of the round indicator (20px height / 2)
   },
   contentContainer: {
     flex: 1,

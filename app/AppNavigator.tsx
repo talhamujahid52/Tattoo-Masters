@@ -478,7 +478,7 @@ const AppNavigator = () => {
             name="artist/MyProfile"
             options={{
               headerShown: true,
-              headerTitle: "My Profile",
+              headerTitle: "My profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,

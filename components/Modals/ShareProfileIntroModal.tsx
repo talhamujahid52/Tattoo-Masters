@@ -112,7 +112,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
         size="p"
         weight="normal"
         color="#A7A7A7"
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16, textAlign: "center" }}
       >
         Great! Now you can share your new profile on social media and have your
         old clients, friends and followers find you here as well.

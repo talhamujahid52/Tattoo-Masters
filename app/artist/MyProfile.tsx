@@ -22,6 +22,7 @@ import { UserFirestore } from "@/types/user";
 import useTypesense from "@/hooks/useTypesense";
 import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 import NoReviewsOnMyProfile from "@/components/NoReviewsOnMyProfile";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface StyleItem {
   title: string;
@@ -254,10 +255,7 @@ const MyProfile = () => {
           )}
         </View>
         <View style={styles.artistFavoriteRow}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/favorite-white.png")}
-          />
+          <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
 
           {loggedInUser?.followersCount ? (
             <Text size="p" weight="normal" color="#FBF6FA">
