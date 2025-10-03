@@ -246,13 +246,13 @@ const IndividualChat: React.FC = () => {
       let currentChatID = chatID;
       if (!currentChatID) {
         try {
-          const normalizedUser = {
-            uid: loggedInUser?.uid,
-            name:
-              loggedInUserFirestore?.name || loggedInUser?.displayName || "",
-            profilePicture: loggedInUser?.photoURL || "",
-          };
-          const newChat = await createChat(selectedArtist, normalizedUser);
+          // const normalizedUser = {
+          //   uid: loggedInUser?.uid,
+          //   name:
+          //     loggedInUserFirestore?.name || loggedInUser?.displayName || "",
+          //   profilePicture: loggedInUser?.photoURL || "",
+          // };
+          const newChat = await createChat(selectedArtist, loggedInUser);
           currentChatID = newChat.id;
           setChatID(currentChatID);
         } catch (error) {

@@ -13,60 +13,41 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
   const [otherUserDetails, setOtherUserDetails] = useState<any>();
-  const otherFromParticipants = participants?.find(
-    (item: any) => item !== loggedInUser?.uid
+  const otherUserId = participants?.find(
+    (userId: string) => userId !== loggedInUser?.uid
   );
-  const otherFromEmbedded = Object.keys(chat || {}).find((k) => {
-    if (
-      [
-        "participants",
-        "createdAt",
-        "lastMessage",
-        "lastMessageTime",
-        "id",
-      ].includes(k)
-    )
-      return false;
-    if (k === loggedInUser?.uid) return false;
-    const v: any = (chat as any)[k];
-    return v && typeof v === "object" && ("name" in v || "profilePicture" in v);
-  });
-  const otherUser = otherFromParticipants || otherFromEmbedded;
+  const embeddedUserData = otherUserId ? chat?.[otherUserId] : undefined;
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserFromFirebase = async () => {
+      if (!otherUserId) return;
+
       try {
-        const userDocRef = firestore().collection("Users").doc(otherUser);
-        const userDoc = await userDocRef.get();
+        const userDoc = await firestore()
+          .collection("Users")
+          .doc(otherUserId)
+          .get();
 
         if (userDoc.exists) {
           const userData = userDoc.data();
           setOtherUserDetails(userData);
-          // Do whatever you need with userData
-          // console.log("Fetched user data:", userData);
         } else {
-          console.warn("User not found with ID:", otherUser);
+          setOtherUserDetails(embeddedUserData || null);
         }
       } catch (error) {
-        console.error("Error fetching user:", error);
+        console.error("Error fetching user from Firebase:", error);
+        setOtherUserDetails(embeddedUserData || null);
       }
     };
 
-    if (otherUser && !chatOtherProfile) {
-      fetchUser();
-    }
-  }, [otherUser, chatOtherProfile]);
+    fetchUserFromFirebase();
+  }, [otherUserId]);
 
-  // Prefer data embedded on chat doc (set at chat creation) to avoid mismatch
-  const chatOtherProfile = otherUser ? chat?.[otherUser] : undefined;
-  const otherUserName = chatOtherProfile?.name || otherUserDetails?.name;
-  const otherUserId = otherUserDetails?.uid || otherUser;
-
+  const otherUserName = otherUserDetails?.name || "";
   const otherUserProfilePicture =
-    chatOtherProfile?.profilePicture ||
-    (otherUserDetails?.profilePictureSmall
-      ? otherUserDetails?.profilePictureSmall
-      : otherUserDetails?.profilePicture);
+    otherUserDetails?.profilePictureSmall ||
+    otherUserDetails?.profilePicture ||
+    null;
 
   const lastMessage = chat?.lastMessage;
   const lastMessageTime = chat?.lastMessageTime;
@@ -106,10 +87,10 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           pathname: "/artist/IndividualChat",
           params: {
             existingChatId: chat?.id,
-            otherUserName: otherUserName,
-            otherUserId: otherUserId,
-            otherUserProfilePicture: otherUserProfilePicture,
-            otherUser,
+            otherUserName,
+            otherUserId,
+            otherUserProfilePicture,
+            otherUser: otherUserId,
           },
         });
       }}
