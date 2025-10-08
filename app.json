@@ -22,7 +22,8 @@
         "aps-environment": "production",
         "NSLocationWhenInUseUsageDescription": "This app requires access to your location when open.",
         "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images.",
-        "NSUserTrackingUsageDescription": "This identifier will be used to send push notifications."
+        "NSUserTrackingUsageDescription": "This identifier will be used to send push notifications.",
+        "UIDesignRequiresCompatibility": true
       }
     },
     "android": {
