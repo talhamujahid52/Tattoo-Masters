@@ -48,7 +48,7 @@ import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
-import useBottomSheet from "@/hooks/useBottomSheet";
+import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import { SearchType, addSearch } from "@/redux/slices/recentSearchesSlice";
 import ImageGallery from "@/components/ImageGallery";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
@@ -97,7 +97,7 @@ export default function SearchAll() {
   const adjustedWidth = width - 42;
 
   const [loading, setLoading] = useState(false);
-  const { BottomSheet, show, hide } = useBottomSheet();
+  const { BottomSheet, show, hide } = useFilterBottomSheet();
 
   const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
     () => searchTypeInitial || null,

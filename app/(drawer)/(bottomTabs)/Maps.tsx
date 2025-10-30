@@ -18,6 +18,7 @@ import {
   GooglePlacesAutocomplete,
 } from "react-native-google-places-autocomplete";
 import useBottomSheet from "@/hooks/useBottomSheet";
+import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ArtistProfileBottomSheet from "@/components/BottomSheets/ArtistProfileBottomSheet";
 
@@ -42,7 +43,7 @@ import useTypesense from "@/hooks/useTypesense";
 import { useFocusEffect } from "@react-navigation/native";
 
 const FullScreenMapWithSearch: React.FC = () => {
-  const { BottomSheet, show, hide } = useBottomSheet();
+  const { BottomSheet, show, hide } = useFilterBottomSheet();
   const {
     BottomSheet: MapProfileBottomSheet,
     show: showMapProfileBottomSheet,
