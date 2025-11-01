@@ -40,11 +40,18 @@ export interface UserFirestore {
   facebookProfile: string;
   instagramProfile: string;
   twitterProfile: string;
+  notificationPreferences?: NotificationPreferences;
 }
 
 export interface LocationData {
   latitude: number;
   longitude: number;
+}
+
+export interface NotificationPreferences {
+  messages?: boolean;
+  favorites?: boolean;
+  likes?: boolean;
 }
 
 export interface TattooStyle {

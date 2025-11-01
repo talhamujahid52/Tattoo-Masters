@@ -5,6 +5,7 @@ import {
   // Dimensions,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
@@ -31,6 +32,18 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import firestore from "@react-native-firebase/firestore";
 import storage from "@react-native-firebase/storage";
+
+type TattooDetailContent = {
+  id: string;
+  caption: string;
+  photoUrlVeryHigh?: string;
+  photoUrlHigh?: string;
+  styles: string[];
+  stylesJson: string;
+  userId?: string;
+  deleteUrls: Record<string, string>;
+  deleteUrlsJson: string;
+};
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 5;
@@ -75,31 +88,84 @@ const TattooDetail: React.FC = () => {
     [scale]
   );
   const insets = useSafeAreaInsets();
-  const {
-    photoUrlVeryHigh,
-    // photoUrlHigh,
-    id,
-    caption,
-    stylesJson,
-    userId,
-    // timestamp,
-    deleteUrlsJson,
-  } = useLocalSearchParams<any>();
+  const params = useLocalSearchParams<Record<string, string | string[]>>();
 
-  const deleteUrls = React.useMemo(() => {
-    try {
-      return deleteUrlsJson ? JSON.parse(deleteUrlsJson) : {};
-    } catch (e) {
-      return {};
+  const toSingle = (value: string | string[] | undefined): string | undefined => {
+    if (Array.isArray(value)) return value[0];
+    return value;
+  };
+
+  const idFromParams = toSingle(params.id) ?? "";
+  const captionFromParams = toSingle(params.caption) ?? "";
+  const photoUrlVeryHighFromParams = toSingle(params.photoUrlVeryHigh);
+  const photoUrlHighFromParams = toSingle(params.photoUrlHigh);
+  const userIdFromParams = toSingle(params.userId);
+  const stylesJsonParam = toSingle(params.stylesJson);
+  const deleteUrlsJsonParam = toSingle(params.deleteUrlsJson);
+
+  const initialStyles = React.useMemo(() => {
+    if (stylesJsonParam) {
+      try {
+        const parsed = JSON.parse(stylesJsonParam);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => String(item));
+        }
+      } catch (error) {
+        // ignore parse errors and fall back to empty array
+      }
     }
-  }, [deleteUrlsJson]);
-  const existingStylesJson = React.useMemo(() => {
-    try {
-      return stylesJson ? String(stylesJson) : "[]";
-    } catch (e) {
-      return "[]";
+    return [] as string[];
+  }, [stylesJsonParam]);
+
+  const initialDeleteUrls = React.useMemo(() => {
+    if (deleteUrlsJsonParam) {
+      try {
+        const parsed = JSON.parse(deleteUrlsJsonParam);
+        if (parsed && typeof parsed === "object") {
+          return parsed as Record<string, string>;
+        }
+      } catch (error) {
+        // ignore parse errors and fall back to empty object
+      }
     }
-  }, [stylesJson]);
+    return {} as Record<string, string>;
+  }, [deleteUrlsJsonParam]);
+
+  const initialDetail = React.useMemo<TattooDetailContent>(() => ({
+    id: idFromParams,
+    caption: captionFromParams,
+    photoUrlVeryHigh: photoUrlVeryHighFromParams,
+    photoUrlHigh: photoUrlHighFromParams,
+    userId: userIdFromParams,
+    styles: initialStyles,
+    stylesJson: stylesJsonParam ?? JSON.stringify(initialStyles),
+    deleteUrls: initialDeleteUrls,
+    deleteUrlsJson: deleteUrlsJsonParam ?? JSON.stringify(initialDeleteUrls),
+  }), [
+    idFromParams,
+    captionFromParams,
+    photoUrlVeryHighFromParams,
+    photoUrlHighFromParams,
+    userIdFromParams,
+    initialStyles,
+    stylesJsonParam,
+    initialDeleteUrls,
+    deleteUrlsJsonParam,
+  ]);
+
+  const [fetchedDetail, setFetchedDetail] = useState<TattooDetailContent | null>(
+    null,
+  );
+  const [isFetchingDetail, setIsFetchingDetail] = useState(false);
+
+  const detail = fetchedDetail ?? initialDetail;
+  const id = detail.id;
+  const caption = detail.caption;
+  const deleteUrls = detail.deleteUrls ?? {};
+  const deleteUrlsJson = detail.deleteUrlsJson ?? "{}";
+  const existingStylesJson = detail.stylesJson ?? "[]";
+  const userId = detail.userId;
+  const photoUrlVeryHigh = detail.photoUrlVeryHigh || detail.photoUrlHigh;
 
   // const { width, height } = Dimensions.get("window");
 
@@ -118,6 +184,57 @@ const TattooDetail: React.FC = () => {
     show: showLoggingInBottomSheet,
     hide: hideLoggingInBottomSheet,
   } = useBottomSheet();
+
+  useEffect(() => {
+    if (!initialDetail.id) return;
+    if (initialDetail.photoUrlVeryHigh) return;
+    if (fetchedDetail) return;
+
+    let cancelled = false;
+
+    const loadDetail = async () => {
+      setIsFetchingDetail(true);
+      try {
+        const snap = await firestore()
+          .collection("publications")
+          .doc(initialDetail.id)
+          .get();
+        if (!snap.exists || cancelled) return;
+        const data = snap.data() as any;
+        const styles = Array.isArray(data?.styles)
+          ? data.styles.map((item: any) => String(item))
+          : [];
+        const downloadUrls = data?.downloadUrls || {};
+        const deleteUrlsResult =
+          data?.deleteUrls && typeof data.deleteUrls === "object"
+            ? (data.deleteUrls as Record<string, string>)
+            : {};
+        setFetchedDetail({
+          id: snap.id,
+          caption: data?.caption || "",
+          photoUrlVeryHigh: downloadUrls?.veryHigh,
+          photoUrlHigh: downloadUrls?.high,
+          userId: data?.userId,
+          styles,
+          stylesJson: JSON.stringify(styles),
+          deleteUrls: deleteUrlsResult,
+          deleteUrlsJson: JSON.stringify(deleteUrlsResult),
+        });
+      } catch (error) {
+        console.error("Failed to load tattoo details", error);
+      } finally {
+        if (!cancelled) {
+          setIsFetchingDetail(false);
+        }
+      }
+    };
+
+    loadDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialDetail, fetchedDetail]);
 
   // Use the Typesense hook to fetch the user details from the "Users" collection.
   const { getDocument } = useTypesense();
@@ -164,7 +281,7 @@ const TattooDetail: React.FC = () => {
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
-            isOwner={currentUserId && userId && currentUserId === userId}
+            isOwner={Boolean(currentUserId && userId && currentUserId === userId)}
             onEditTattoo={() => {
               router.push({
                 pathname: "/artist/UploadTattoo",
@@ -173,7 +290,9 @@ const TattooDetail: React.FC = () => {
                   docId: id,
                   existingCaption: caption,
                   existingStylesJson: existingStylesJson,
-                  existingImageUrl: encodeURIComponent(photoUrlVeryHigh),
+                  existingImageUrl: photoUrlVeryHigh
+                    ? encodeURIComponent(photoUrlVeryHigh)
+                    : undefined,
                   existingDeleteUrlsJson: deleteUrlsJson,
                 },
               });
@@ -254,15 +373,34 @@ const TattooDetail: React.FC = () => {
           maxScale={MAX_SCALE}
           style={animatedStyle}
         >
-          <ExpoImage
-            style={{
-              height: "100%",
-              bottom: insets.bottom,
-              width: "100%",
-            }}
-            contentFit="contain"
-            source={{ uri: photoUrlVeryHigh }}
-          />
+          {photoUrlVeryHigh ? (
+            <ExpoImage
+              style={{
+                height: "100%",
+                bottom: insets.bottom,
+                width: "100%",
+              }}
+              contentFit="contain"
+              source={{ uri: photoUrlVeryHigh }}
+            />
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#000",
+              }}
+            >
+              {isFetchingDetail ? (
+                <ActivityIndicator size="large" color="#fff" />
+              ) : (
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  Image unavailable
+                </Text>
+              )}
+            </View>
+          )}
         </Zoomable>
       </View>
       <LinearGradient
@@ -288,9 +426,10 @@ const TattooDetail: React.FC = () => {
         >
           <TouchableOpacity
             onPress={() => {
+              if (!userDetails?.uid) return;
               router.push({
                 pathname: "/artist/ArtistProfile",
-                params: { artistId: userDetails?.uid },
+                params: { artistId: userDetails.uid },
               });
             }}
             style={{ flexDirection: "row", alignItems: "center" }}

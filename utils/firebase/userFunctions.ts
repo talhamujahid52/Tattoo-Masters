@@ -2,7 +2,12 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { uploadFileToFirebase } from "./fileFunctions";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { UserFirestore, UserProfileFormData } from "@/types/user";
+import {
+  NotificationPreferences,
+  UserFirestore,
+  UserProfileFormData,
+} from "@/types/user";
+import { sendUserNotification } from "@/utils/notifications";
 
 /**
  * Adds a new user to Firebase Firestore.
@@ -191,6 +196,17 @@ export const signInWithGoogle = async () => {
   }
 };
 
+type PublicationData = {
+  userId?: string;
+};
+
+type LikeTransactionResult = {
+  likeAdded: boolean;
+  ownerId?: string;
+  ownerPreferences?: NotificationPreferences;
+  likerName: string;
+};
+
 export const toggleLikePublication = async (
   publicationId: string,
   userId: string,
@@ -201,32 +217,88 @@ export const toggleLikePublication = async (
   const userRef = firestore().collection("Users").doc(userId);
 
   try {
-    await firestore().runTransaction(async (transaction) => {
-      // Get the user document to check likedItems
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists) {
-        throw new Error("User does not exist");
-      }
-      const userData = userDoc.data() || {};
-      const likedItems: string[] = userData.likedItems || [];
+    const result = await firestore().runTransaction<LikeTransactionResult>(
+      async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        if (!userDoc.exists) {
+          throw new Error("User does not exist");
+        }
+        const userData = (userDoc.data() || {}) as UserFirestore & {
+          likedItems?: string[];
+        };
 
-      // Determine if the publication is already liked
-      const alreadyLiked = likedItems.includes(publicationId);
-      const incrementValue = alreadyLiked ? -1 : 1;
+        const publicationDoc = await transaction.get(publicationRef);
+        if (!publicationDoc.exists) {
+          throw new Error("Publication does not exist");
+        }
+        const publicationData = (publicationDoc.data() ||
+          {}) as PublicationData;
+        const ownerId = publicationData.userId;
 
-      // Update publication: increment or decrement likes
-      transaction.update(publicationRef, {
-        likes: firestore.FieldValue.increment(incrementValue),
-      });
+        const likedItems: string[] = userData.likedItems || [];
+        const alreadyLiked = likedItems.includes(publicationId);
+        const incrementValue = alreadyLiked ? -1 : 1;
 
-      // Update user: remove or add publicationId to likedItems array
-      transaction.update(userRef, {
-        likedItems: alreadyLiked
-          ? firestore.FieldValue.arrayRemove(publicationId)
-          : firestore.FieldValue.arrayUnion(publicationId),
-      });
-    });
+        transaction.update(publicationRef, {
+          likes: firestore.FieldValue.increment(incrementValue),
+        });
+
+        transaction.update(userRef, {
+          likedItems: alreadyLiked
+            ? firestore.FieldValue.arrayRemove(publicationId)
+            : firestore.FieldValue.arrayUnion(publicationId),
+        });
+
+        let ownerPreferences: NotificationPreferences | undefined;
+        if (ownerId) {
+          const ownerDoc = await transaction.get(
+            firestore().collection("Users").doc(ownerId),
+          );
+          if (ownerDoc.exists) {
+            const ownerData = ownerDoc.data() as UserFirestore;
+            ownerPreferences = ownerData.notificationPreferences;
+          }
+        }
+
+        const likerNameFromName = userData?.name ? userData.name.trim() : "";
+        const likerNameFromFullName = userData?.fullName
+          ? userData.fullName.trim()
+          : "";
+
+        const likerName =
+          likerNameFromName || likerNameFromFullName || "Someone";
+
+        return {
+          likeAdded: !alreadyLiked,
+          ownerId,
+          ownerPreferences,
+          likerName,
+        };
+      },
+    );
+
     console.log("Publication like toggled successfully.");
+
+    if (
+      result?.likeAdded &&
+      result.ownerId &&
+      result.ownerId !== userId &&
+      (result.ownerPreferences?.likes ?? true)
+    ) {
+      try {
+        const likerName = result.likerName || "Someone";
+        const message = `${likerName} has liked your photo.`;
+        const url = `/artist/TattooDetail?id=${encodeURIComponent(publicationId)}`;
+        await sendUserNotification(result.ownerId, message, message, {
+          type: "tattooLike",
+          publicationId,
+          url,
+        });
+        console.log("sent like notification");
+      } catch (notifyError) {
+        console.log("Failed to send like notification", notifyError);
+      }
+    }
   } catch (error) {
     console.error("Error toggling publication like:", error);
   }

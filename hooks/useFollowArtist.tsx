@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import { UserFirestore } from "@/types/user";
+import { sendUserNotification } from "@/utils/notifications";
 
 const useFollowArtist = () => {
   const dispatch = useDispatch();
@@ -53,7 +54,31 @@ const useFollowArtist = () => {
         })
       );
 
-      return !isFollowing;
+      const becameFollower = !isFollowing;
+
+      if (
+        becameFollower &&
+        artistId !== userFirestore.uid &&
+        (artistData?.notificationPreferences?.favorites ?? true)
+      ) {
+        try {
+          const followerName =
+            userData?.name?.trim() ||
+            userData?.fullName?.trim() ||
+            userFirestore?.name?.trim() ||
+            "Someone";
+
+          const message = `${followerName} added you to favorites.`;
+          await sendUserNotification(artistId, message, message, {
+            type: "favorite",
+            followerId: userFirestore.uid,
+          });
+        } catch (notifyError) {
+          console.log("Failed to send favorites notification", notifyError);
+        }
+      }
+
+      return becameFollower;
     } catch (error) {
       console.error("Error toggling follow:", error);
       throw error;
