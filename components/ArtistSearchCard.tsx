@@ -3,6 +3,7 @@ import Text from "./Text";
 import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { useRouter } from "expo-router";
+import { useSelector } from "react-redux";
 
 interface ArtistSearchCardProps {
   // isActive: boolean;
@@ -11,14 +12,22 @@ interface ArtistSearchCardProps {
 
 const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
   const router = useRouter();
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
 
   return (
     <TouchableOpacity
       onPress={() => {
-        router.push({
-          pathname: "/artist/ArtistProfile",
-          params: { artistId: artist.id },
-        });
+        if (artist?.data?.uid === loggedInUser?.uid) {
+          router.push({
+            pathname: "/artist/MyProfile",
+            params: { artistId: artist.id },
+          });
+        } else {
+          router.push({
+            pathname: "/artist/ArtistProfile",
+            params: { artistId: artist.id },
+          });
+        }
       }}
       style={styles.card}
     >

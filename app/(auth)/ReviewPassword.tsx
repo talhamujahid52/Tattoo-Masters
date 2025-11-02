@@ -80,7 +80,7 @@ const ReviewPassword = () => {
         source={require("../../assets/images/lock_person-2.png")}
       />
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Choose new review Password
+        Choose new review password
       </Text>
       <Text size="p" weight="normal" color="#A7A7A7" style={styles.description}>
         Please enter a new review password.
@@ -106,7 +106,7 @@ const ReviewPassword = () => {
         />
         <Input
           inputMode="password"
-          placeholder="Confirm review Password"
+          placeholder="Confirm review password"
           value={confirmNewReviewPassword}
           onChangeText={setConfirmNewReviewPassword}
         />

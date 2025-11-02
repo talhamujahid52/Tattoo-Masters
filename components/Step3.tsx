@@ -212,7 +212,7 @@ const step3: React.FC = () => {
         <ReviewOnProfileBlur></ReviewOnProfileBlur>
         <View style={{ marginVertical: 24 }}>
           <Text size="profileName" weight="semibold" color="#FBF6FA">
-            Location
+            Address
           </Text>
           <Text
             size="medium"

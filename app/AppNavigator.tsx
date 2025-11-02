@@ -35,7 +35,10 @@ const AppNavigator = () => {
     },
     onRespond: (response) => {
       // Navigation is handled centrally in useNotificationObserver
-      console.log("User tapped notification", response?.notification?.request?.identifier);
+      console.log(
+        "User tapped notification",
+        response?.notification?.request?.identifier
+      );
     },
     showForegroundAlert: false, // We'll manage foreground presentation conditionally below
   });
@@ -45,7 +48,9 @@ const AppNavigator = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const handledRef = { current: new Set<string>() } as { current: Set<string> };
+    const handledRef = { current: new Set<string>() } as {
+      current: Set<string>;
+    };
     const navigateFromData = (data: any) => {
       if (!data) return;
       const incomingChatId = String(data.chatId || "");
@@ -97,24 +102,30 @@ const AppNavigator = () => {
     };
 
     // Background tap
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const id = response?.notification?.request?.identifier as string | undefined;
-      if (id && handledRef.current.has(id)) return;
-      if (id) handledRef.current.add(id);
-      navigateFromData(response?.notification?.request?.content?.data);
-    });
-
-    // Background tap via Firebase Messaging
-    const unsubMsgOpen = messaging().onNotificationOpenedApp((remoteMessage) => {
-      try {
-        const id = (remoteMessage as any)?.messageId as string | undefined;
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const id = response?.notification?.request?.identifier as
+          | string
+          | undefined;
         if (id && handledRef.current.has(id)) return;
         if (id) handledRef.current.add(id);
-        const raw = remoteMessage?.data || {};
-        const data = (raw as any)?.data ? (raw as any).data : raw;
-        navigateFromData(data);
-      } catch {}
-    });
+        navigateFromData(response?.notification?.request?.content?.data);
+      }
+    );
+
+    // Background tap via Firebase Messaging
+    const unsubMsgOpen = messaging().onNotificationOpenedApp(
+      (remoteMessage) => {
+        try {
+          const id = (remoteMessage as any)?.messageId as string | undefined;
+          if (id && handledRef.current.has(id)) return;
+          if (id) handledRef.current.add(id);
+          const raw = remoteMessage?.data || {};
+          const data = (raw as any)?.data ? (raw as any).data : raw;
+          navigateFromData(data);
+        } catch {}
+      }
+    );
 
     return () => {
       sub.remove();
@@ -129,7 +140,11 @@ const AppNavigator = () => {
         const data: any = remoteMessage?.data || {};
         const incomingChatId = data.chatId;
         const currentChatId = getCurrentChatId();
-        if (incomingChatId && currentChatId && incomingChatId === currentChatId) {
+        if (
+          incomingChatId &&
+          currentChatId &&
+          incomingChatId === currentChatId
+        ) {
           // Suppress foreground notification for the active chat
           return;
         }
@@ -357,7 +372,7 @@ const AppNavigator = () => {
             name="(auth)/ChangePassword"
             options={{
               headerShown: true,
-              headerTitle: "Reset password",
+              headerTitle: "Change password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -370,6 +385,18 @@ const AppNavigator = () => {
             options={{
               headerShown: true,
               headerTitle: "Add tattoo",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="(auth)/ForgotPassword"
+            options={{
+              headerShown: true,
+              headerTitle: "Forgot password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
               headerBackTitleVisible: false,
@@ -631,6 +658,7 @@ const AppNavigator = () => {
               headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
+              gestureEnabled: false,
             }}
           />
           <Stack.Screen
@@ -642,6 +670,7 @@ const AppNavigator = () => {
               headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
+              gestureEnabled: false,
             }}
           />
           <Stack.Screen

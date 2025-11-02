@@ -60,6 +60,7 @@ const ArtistProfile = () => {
   const { artistId } = useLocalSearchParams<any>();
   const artist = useGetArtist(artistId);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAllStyles, setShowAllStyles] = useState(false);
   const content = artist?.data?.aboutYou;
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -453,7 +454,7 @@ const ArtistProfile = () => {
         <View style={styles.artistFavoriteRow}>
           <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
           <Text size="p" weight="normal" color="#FBF6FA">
-            {artist?.data?.followersCount || "Not favourited yet"}
+            {artist?.data?.followersCount || "0"}
           </Text>
         </View>
         <View style={styles.tattooStylesRow}>
@@ -461,21 +462,58 @@ const ArtistProfile = () => {
             style={styles.icon}
             source={require("../../assets/images/draw.png")}
           />
-          {artist?.data?.tattooStyles?.map((item: any, idx: number) => (
-            <View
-              key={idx}
-              style={{
-                backgroundColor: "#262526",
-                paddingHorizontal: 5,
-                paddingVertical: 2,
-                borderRadius: 6,
-              }}
-            >
-              <Text size="p" weight="normal" color="#D7D7C9">
-                {item}
-              </Text>
-            </View>
-          ))}
+
+          {/* ✅ Tattoo Styles with See More / See Less logic */}
+          {artist?.data?.tattooStyles && (
+            <>
+              {(showAllStyles
+                ? artist?.data?.tattooStyles
+                : artist?.data?.tattooStyles.slice(0, 6)
+              ).map((item: any, idx: number) => (
+                <View
+                  key={idx}
+                  style={{
+                    backgroundColor: "#262526",
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Text size="p" weight="normal" color="#D7D7C9">
+                    {item}
+                  </Text>
+                </View>
+              ))}
+
+              {artist?.data?.tattooStyles?.length > 6 && (
+                <TouchableOpacity
+                  onPress={() => setShowAllStyles((prev) => !prev)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text size="p" weight="normal" color="#FBF6FA">
+                    {showAllStyles ? "See less" : "See more"}
+                  </Text>
+                  <View style={{ width: 20, height: 20, marginLeft: 4 }}>
+                    <Image
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        transform: [
+                          { rotate: showAllStyles ? "180deg" : "0deg" },
+                        ],
+                      }}
+                      source={require("../../assets/images/arrow_down.png")}
+                    />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
         <Pressable onPress={handleToggle}>
           <Text size="p" weight="normal" color="#A7A7A7">
@@ -533,7 +571,7 @@ const ArtistProfile = () => {
             color="white"
             style={{ marginBottom: 10 }}
           >
-            Location
+            Address
           </Text>
           <View
             style={{

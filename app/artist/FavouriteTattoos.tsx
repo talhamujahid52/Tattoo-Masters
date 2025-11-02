@@ -39,16 +39,16 @@ const FavouriteTattoos = () => {
       ) : (
         <View style={styles.emptyContainer}>
           <Text size="h4" weight="medium" color="#A7A7A7">
-            You have no favorite tattoos here
+            You have no liked tattoos yet
           </Text>
-          <Text
+          {/* <Text
             size="p"
             weight="normal"
             color="#A7A7A7"
             style={styles.emptyText}
           >
             Your favorited tattoos will appear here
-          </Text>
+          </Text> */}
         </View>
       )}
     </View>

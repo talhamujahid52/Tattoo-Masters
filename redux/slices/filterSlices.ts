@@ -47,16 +47,16 @@ const initialState: FilterState = {
   permissionDenied: false,
   radiusValue: 50,
   ratings: [
-    { title: "1 star", value: 1, selected: true },
-    { title: "2 stars", value: 2, selected: false },
-    { title: "3 stars", value: 3, selected: false },
-    { title: "4 stars", value: 4, selected: false },
     { title: "5 stars", value: 5, selected: false },
+    { title: "4 stars", value: 4, selected: false },
+    { title: "3 stars", value: 3, selected: false },
+    { title: "2 stars", value: 2, selected: false },
+    { title: "1 star", value: 1, selected: false },
   ],
   studio: [
     { title: "Studio", value: 1, selected: false, name: "studio" },
     { title: "Freelancer", value: 2, selected: false, name: "freelancer" },
-    { title: "Home Artist", value: 3, selected: false, name: "homeArtist" },
+    { title: "Home artist", value: 3, selected: false, name: "homeArtist" },
   ],
   styles: [
     { title: "Tribal", value: 1, selected: false },

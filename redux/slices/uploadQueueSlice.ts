@@ -13,7 +13,8 @@ export interface UploadItem {
     | "review"
     | "feedback"
     | "profile"
-    | "publication_edit";
+    | "publication_edit"
+    | "chatImage";
   status: "pending" | "uploading" | "completed" | "failed";
   progress: number;
   error?: string;
@@ -35,6 +36,8 @@ export interface UploadItem {
     };
   };
   // For edits of existing publications
+  chatId?: string;
+  messageId?: string;
   docId?: string;
   oldDeleteUrls?: {
     small?: string;

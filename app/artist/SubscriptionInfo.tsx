@@ -85,7 +85,7 @@ const SubscriptionInfo = () => {
           color="#FBF6FA"
           style={{ marginBottom: 4 }}
         >
-          $19
+          $5.99
         </Text>
         <Text
           size="p"
@@ -131,7 +131,7 @@ const SubscriptionInfo = () => {
         </View>
 
         <Button
-          title="Start 1 year Trial"
+          title="Start 1 year free trial"
           onPress={() => {
             router.replace({
               pathname: "/artist/ShareProfile",

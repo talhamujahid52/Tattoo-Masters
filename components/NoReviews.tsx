@@ -46,7 +46,7 @@ const NoReviews: React.FC<NoReviewsProps> = ({
       </View>
 
       <Text size="p" weight="normal" color="#A7A7A7">
-        The tattoo artist has no reviews yet.
+        This tattoo artist has no reviews yet
       </Text>
     </View>
   );

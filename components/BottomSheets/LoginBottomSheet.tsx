@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   Description: {
     textAlign: "center",
-    marginHorizontal: 50,
+    // marginHorizontal: 50,
   },
   usersImage: {
     height: 48,

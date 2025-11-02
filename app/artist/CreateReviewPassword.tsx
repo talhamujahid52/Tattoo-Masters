@@ -249,6 +249,7 @@ const CreateReviewPassword = () => {
           title="Create account"
           onPress={() => {
             handleCreateAccount();
+            // router.push("/artist/SubscriptionInfo");
           }}
         />
         <Pressable

@@ -85,7 +85,9 @@ const Login = () => {
 
         console.log("User signed in!");
       } else {
-        alert("Please verify your email before logging in.");
+        alert(
+          "Please verify your email by clicking the link we sent to your provided email address to continue."
+        );
         console.log("Email is not verified.");
         await auth().signOut(); // Optionally sign out the user
       }
@@ -97,7 +99,7 @@ const Login = () => {
         alert("Incorrect password!");
         console.log("Incorrect password!");
       } else if (error.code === "auth/invalid-credential") {
-        alert("The supplied auth credential is malformed or Expired.");
+        alert("Incorrect email or password. Please try again.");
         console.log(error);
       } else {
         alert(error.message);
@@ -323,7 +325,7 @@ const Login = () => {
       <View style={styles.ForgotPasswordContainer}>
         <TouchableOpacity
           onPress={() => {
-            router.push("/(auth)/ChangePassword");
+            router.push("/(auth)/ForgotPassword");
           }}
         >
           <Text size="medium" weight="semibold" color="#FBF6FA">

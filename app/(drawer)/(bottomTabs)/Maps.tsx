@@ -433,7 +433,7 @@ const FullScreenMapWithSearch: React.FC = () => {
         provider={PROVIDER_GOOGLE}
         style={[styles.map, !mapReady && { opacity: 0.01 }]}
         customMapStyle={googleDarkModeStyle}
-        initialRegion={region}
+        // initialRegion={region}
         mapType={mapTypeState}
         showsMyLocationButton
         showsUserLocation
