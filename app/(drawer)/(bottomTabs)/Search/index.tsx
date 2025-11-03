@@ -144,7 +144,7 @@ const Search: React.FC = () => {
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               inputMode="text"
-              placeholder="Search for artists and studios"
+              placeholder="Search for tattoos, artists and studios"
               leftIcon="search"
               rightIcon={searchText ? "cancel" : undefined}
               rightIconOnPress={() => setSearchText("")}

@@ -8,6 +8,7 @@ import {
   Platform,
   Linking,
   Alert,
+  useWindowDimensions
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -26,14 +27,19 @@ import uuid from "react-native-uuid";
 import firestore from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setCurrentChatId } from "@/utils/NavState";
+import { launchImageLibrary, launchCamera } from "react-native-image-picker";
+import useBackgroundUpload from "@/hooks/useBackgroundUpload";
+import { getFileName } from "@/utils/helperFunctions";
 
 const IndividualChat: React.FC = () => {
+  const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatID, setChatID] = useState<any>();
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
+  const [isSelectingImage, setIsSelectingImage] = useState(false);
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore,
@@ -45,6 +51,7 @@ const IndividualChat: React.FC = () => {
     addMessageToChat,
     listenToMessages,
   } = useChats(loggedInUser.uid);
+  const { queueUpload } = useBackgroundUpload();
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
   const [localTime, setLocalTime] = useState<String>();
@@ -241,6 +248,113 @@ const IndividualChat: React.FC = () => {
     }
   };
 
+  // Handle image selection and upload in background
+  const pickImage = useCallback(async () => {
+    Alert.alert(
+      "Select Image",
+      "Choose an option",
+      [
+        {
+          text: "Camera",
+          onPress: async () => {
+            const result = await launchCamera({
+              mediaType: "photo",
+              quality: 0.8,
+              saveToPhotos: true,
+            });
+
+            if (result.assets && result.assets[0].uri) {
+              await sendImageMessage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: "Gallery",
+          onPress: async () => {
+            const result = await launchImageLibrary({
+              mediaType: "photo",
+              quality: 0.8,
+              selectionLimit: 1,
+            });
+
+            if (result.assets && result.assets[0].uri) {
+              await sendImageMessage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  }, [chatID]);
+
+  const sendImageMessage = useCallback(
+    async (imageUri: string) => {
+      try {
+        if (!imageUri) {
+          throw new Error("No image selected");
+        }
+
+        setIsSelectingImage(true);
+
+        // Ensure chat exists
+        let currentChatID = chatID;
+        if (!currentChatID) {
+          const newChat = await createChat(selectedArtist, loggedInUser);
+          currentChatID = newChat.id;
+          setChatID(currentChatID);
+        }
+
+        // Create message with local image URI
+        const messageId = uuid.v4() as string;
+        const newMessage: IMessage = {
+          _id: messageId,
+          text: "",
+          createdAt: new Date(),
+          user: {
+            _id: loggedInUser.uid,
+            name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
+          },
+          image: imageUri, // Local URI initially
+          pending: true,
+        };
+
+        // Add message to chat immediately with local URI
+        await addMessageToChat([newMessage], currentChatID);
+
+        // Queue the image for background upload
+        const uploadSuccess = await queueUpload({
+          uri: imageUri,
+          userId: loggedInUser.uid,
+          type: "chatImage",
+          chatId: currentChatID,
+          messageId: messageId,
+          name: getFileName(imageUri),
+        });
+
+        // if (!uploadSuccess) {
+        //   Alert.alert(
+        //     "Upload Error",
+        //     "Failed to queue image for upload. The file may no longer exist."
+        //   );
+        //   return;
+        // }
+
+        // The background upload will handle updating the message with the final URL
+        // through your existing upload completion logic
+      } catch (error) {
+        console.error("Error sending image:", error);
+        Alert.alert("Error", "Failed to send image");
+      } finally {
+        setIsSelectingImage(false);
+      }
+    },
+    [chatID, loggedInUser, loggedInUserFirestore, selectedArtist, queueUpload]
+  );
+
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
       let currentChatID = chatID;
@@ -352,14 +466,52 @@ const IndividualChat: React.FC = () => {
     return (
       <View
         style={{
-          backgroundColor: "#303030",
-          borderRadius: isMultiline ? 20 : 100,
           flexDirection: "row",
           alignItems: "flex-end",
-          height,
           marginHorizontal: 8,
         }}
       >
+        {/* + (Add Image) Button - separate from input box */}
+        <TouchableOpacity
+          onPress={pickImage}
+          disabled={isSelectingImage}
+          style={{
+            width: 44,
+            height: 44,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 6,
+          }}
+        >
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "#3A3A3A",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              style={{ height: 20, width: 20, tintColor: "#C1C1C1" }}
+              source={require("../../assets/images/addimagetochat.png")}
+            />
+          </View>
+        </TouchableOpacity>
+  
+        {/* Grey chat input container with text + send icon */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#303030",
+            borderRadius: isMultiline ? 20 : 100,
+            flexDirection: "row",
+            alignItems: "flex-end",
+            height,
+          }}
+        >
+          {/* Text Input */}
         <View style={{ flex: 1, justifyContent: "center" }}>
           <Composer
             {...props}
@@ -400,10 +552,11 @@ const IndividualChat: React.FC = () => {
             />
           </View>
         </Send>
+        </View>
       </View>
     );
   };
-  const phoneNumber = "1234567890";
+  const phoneNumber = otherUserDetails?.phoneNumber ? otherUserDetails?.phoneNumber : "";
 
   const openDialer = () => {
     const url = `tel:${phoneNumber}`;
@@ -557,6 +710,15 @@ const IndividualChat: React.FC = () => {
         renderAvatar={null}
         alwaysShowSend={true}
         inverted={true}
+        lightboxProps={{
+          activeProps: {
+            style: {
+              flex: 1,
+              resizeMode: 'contain',
+              width
+            },
+          },
+        }}
       />
     </SafeAreaView>
   );

@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   registerArtistContainer: {
-    marginTop: "20%",
+    // marginTop: "20%",
   },
   registerArtist: {
     height: "100%",

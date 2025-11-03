@@ -452,7 +452,7 @@ const Step1: React.FC = () => {
           <TextInput
             selectionColor="#A29F93"
             placeholderTextColor="#A29F93"
-            placeholder="My Intro"
+            placeholder="Tell something about yourself"
             multiline
             value={formData.aboutYou}
             style={styles.textArea}
@@ -500,7 +500,7 @@ const Step1: React.FC = () => {
             />
             <Input
               inputMode="text"
-              placeholder="Twitter profile"
+              placeholder="X profile"
               value={formData.twitterProfile}
               onChangeText={(text) =>
                 setFormData((prev) => ({ ...prev, twitterProfile: text }))

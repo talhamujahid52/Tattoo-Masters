@@ -21,7 +21,8 @@ interface UseBackgroundUploadReturn {
       | "review"
       | "feedback"
       | "profile"
-      | "publication_edit";
+      | "publication_edit"
+      | "chatImage"; // Added chatImage type
     caption?: string;
     styles?: string[];
     name?: string;
@@ -33,6 +34,9 @@ interface UseBackgroundUploadReturn {
       high?: string;
       veryHigh?: string;
     };
+    // For chat images
+    chatId?: string;
+    messageId?: string;
   }) => Promise<boolean>;
 
   // Queue state
@@ -71,6 +75,8 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
     name,
     docId,
     oldDeleteUrls,
+    chatId,
+    messageId,
   }: {
     uri: string;
     userId: string;
@@ -79,7 +85,8 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
       | "review"
       | "feedback"
       | "profile"
-      | "publication_edit";
+      | "publication_edit"
+      | "chatImage";
     caption?: string;
     styles?: string[];
     name?: string;
@@ -90,6 +97,8 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
       high?: string;
       veryHigh?: string;
     };
+    chatId?: string;
+    messageId?: string;
   }) => {
     const fileName = name || getFileName(uri);
 
@@ -114,6 +123,8 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
           type,
           docId,
           oldDeleteUrls,
+          chatId,
+          messageId,
         })
       );
 

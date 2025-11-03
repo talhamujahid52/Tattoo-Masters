@@ -2,16 +2,18 @@ import React, { useContext, useMemo } from "react";
 import { View, StyleSheet, Image, TouchableOpacity, Share } from "react-native";
 import Text from "../Text";
 import Button from "../Button";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { FormContext } from "@/context/FormContext";
 import { useSelector } from "react-redux";
 import { UserFirestore } from "@/types/user";
+import { DrawerActions } from "@react-navigation/native";
 
 type Props = {
   onClose?: () => void;
 };
 
 const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
+  const navigation = useNavigation();
   const { formData, setFormData } = useContext(FormContext)!;
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUserFirestore: UserFirestore = useSelector(
@@ -118,9 +120,11 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          router.push({
-            pathname: "/(bottomTabs)/Home",
-          });
+          router.dismissAll();
+          navigation.dispatch(DrawerActions.toggleDrawer());
+          // router.push({
+          //   pathname: "/(bottomTabs)/Home",
+          // });
         }}
       >
         <Text size="h4" weight="normal" color="#FBF6FA">

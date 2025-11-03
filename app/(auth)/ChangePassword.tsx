@@ -69,10 +69,10 @@ const ChangePassword = () => {
     <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <Image
         style={styles.image}
-        source={require("../../assets/images/lock.png")}
+        source={require("../../assets/images/filled-lock.png")}
       />
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Reset password
+        Enter your email
       </Text>
       <Text
         size="p"
@@ -80,7 +80,8 @@ const ChangePassword = () => {
         color="#A7A7A7"
         style={styles.description2}
       >
-        A password reset link will be sent to your email address if it exists.
+        Enter the email address associated with your account to receive a link
+        to change your password.
       </Text>
       <View style={styles.passwordFieldsContainer}>
         <Input
@@ -110,8 +111,8 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   image: {
-    height: 35,
-    width: 40,
+    height: 44,
+    width: 44,
     resizeMode: "contain",
   },
   title: {

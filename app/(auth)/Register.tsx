@@ -24,7 +24,8 @@ const Register: React.FC = () => {
   const signInWithGoogle = useSignInWithGoogle();
 
   const formatPhoneNumber = (): string => {
-    return `${countryCode ? `${countryCode}` : ""} ${phone}`.trim();
+    const cleanedNumber = phone.replace(/\s/g, ""); // Remove all spaces from number
+    return `${countryCode ? `${countryCode}` : ""} ${cleanedNumber}`.trim();
   };
 
   const validateEmail = (email: string) => {
@@ -63,6 +64,7 @@ const Register: React.FC = () => {
         uid: user.uid,
         name: fullName,
         email: user.email,
+        phoneNumber: fullPhoneNumber,
         profilePicture: "",
         followedArtists: [],
         likedTattoos: [],

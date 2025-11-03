@@ -44,6 +44,16 @@ const EditProfile = () => {
   useEffect(() => {
     if (loggedInUserFirestore) {
       setFullName(loggedInUserFirestore.name || "");
+
+      const storedPhone = loggedInUserFirestore.phoneNumber || "";
+      if (storedPhone.includes(" ")) {
+        const [code, ...rest] = storedPhone.split(" ");
+        setCountryCode(code);
+        setPhoneNumber(rest.join(" ").trim());
+      } else {
+        setCountryCode("");
+        setPhoneNumber(storedPhone);
+      }
     }
   }, [loggedInUserFirestore]);
 

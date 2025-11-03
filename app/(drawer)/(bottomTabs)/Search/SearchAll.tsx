@@ -369,7 +369,7 @@ export default function SearchAll() {
             leftIcon="search"
             returnKeyType="search"
             style={{ flex: 1, borderWidth: 1, borderColor: "red" }}
-            placeholder="Search for artists and studios"
+            placeholder="Search for tattoos, artists and studios"
             autoFocus
           />
         </View>

@@ -91,9 +91,13 @@ const useChats = (userId: string) => {
               const data = doc.data();
               return {
                 _id: doc.id,
-                text: data.text,
+                text: data.text || "",
                 createdAt: data.createdAt?.toDate?.() ?? new Date(),
                 user: data.user,
+                // Add image support
+                image: data.image || undefined,
+                // Track pending uploads
+                pending: data.pending || false,
               };
             });
 
@@ -138,19 +142,33 @@ const useChats = (userId: string) => {
       try {
         await Promise.all(
           newMessages.map(async (message) => {
-            const docRef = await firestore()
+            const messageData: any = {
+              _id: message._id,
+              text: message.text || "",
+              createdAt: message.createdAt,
+              user: message.user,
+            };
+
+            // If message has an image (local URI), mark as pending
+            if (message.image) {
+              messageData.image = message.image;
+              messageData.pending = true; // Mark as pending upload
+            }
+
+            await firestore()
               .collection("Chats")
               .doc(currentChatID)
               .collection("messages")
-              .add({
-                _id: message._id,
-                text: message.text,
-                createdAt: message.createdAt,
-                user: message.user,
-              });
+              .doc(message._id as string)
+              .set(messageData);
+
+            // Update last message
+            const lastMessageText = message.image 
+              ? "📷 Image" 
+              : message.text || "";
 
             await firestore().collection("Chats").doc(currentChatID).update({
-              lastMessage: message.text,
+              lastMessage: lastMessageText,
               lastMessageTime: message.createdAt,
             });
 
@@ -168,7 +186,10 @@ const useChats = (userId: string) => {
                 const senderProfile = chatData?.[senderId] || {};
                 const senderName =
                   senderProfile?.name || (message.user as any)?.name || "New message";
-                const preview = (message.text || "").toString();
+                const preview = message.image 
+                  ? "📷 Sent an image" 
+                  : (message.text || "").toString();
+                
                 await sendChatNotification(
                   recipientId,
                   senderName,

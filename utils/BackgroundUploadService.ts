@@ -205,6 +205,9 @@ class BackgroundUploadService {
         case "profile":
           await this.uploadProfile(item);
           break;
+        case "chatImage":
+          await this.uploadChatImage(item);
+          break;
         default:
           throw new Error(`Unknown upload type: ${item.type}`);
       }
@@ -229,6 +232,125 @@ class BackgroundUploadService {
       }
       throw error;
     }
+  }
+
+  private async uploadChatImage(item: UploadItem): Promise<void> {
+    if (!item.chatId || !item.messageId) {
+      throw new Error("Missing chatId or messageId for chat image upload");
+    }
+
+    const dateConst = Date.now().toString();
+    const filePath = `chatImages/${item.chatId}${dateConst}/${item.name}`;
+
+    console.log(`Uploading chat image to: ${filePath}`);
+
+    const reference = storage().ref(filePath);
+
+    // Upload with progress tracking
+    const uploadTask = reference.putFile(item.uri, {
+      contentType: "image/jpeg",
+      cacheControl: "public,max-age=31536000",
+    });
+
+    uploadTask.on("state_changed", (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 50; // 50% for upload
+      store.dispatch(
+        updateUploadStatus({
+          id: item.id,
+          status: "uploading",
+          progress: Math.round(progress),
+        }),
+      );
+    });
+
+    await uploadTask;
+
+    // Update progress to 60% after upload
+    store.dispatch(
+      updateUploadStatus({
+        id: item.id,
+        status: "uploading",
+        progress: 60,
+      }),
+    );
+
+    // Generate different resolution image paths
+    // const smallImagePath = filePath.replace(
+    //   item.name,
+    //   resizedName(item.name, "400x400"),
+    // );
+    const mediumImagePath = filePath.replace(
+      item.name,
+      resizedName(item.name, "720x1280"),
+    );
+    // const highImagePath = filePath.replace(
+    //   item.name,
+    //   resizedName(item.name, "1080x1920"),
+    // );
+    // const veryHighImagePath = filePath.replace(
+    //   item.name,
+    //   resizedName(item.name, "1440x2560"),
+    // );
+
+    // Get download URLs for different sizes
+    // const downloadUrlSmall = await keepTrying(smallImagePath);
+    // store.dispatch(
+    //   updateUploadStatus({ id: item.id, status: "uploading", progress: 70 }),
+    // );
+
+    const downloadUrlMedium = await keepTrying(mediumImagePath);
+    store.dispatch(
+      updateUploadStatus({ id: item.id, status: "uploading", progress: 80 }),
+    );
+
+    // const downloadUrlHigh = await keepTrying(highImagePath);
+    // store.dispatch(
+    //   updateUploadStatus({ id: item.id, status: "uploading", progress: 85 }),
+    // );
+
+    // const downloadUrlVeryHigh = await keepTrying(veryHighImagePath);
+    // store.dispatch(
+    //   updateUploadStatus({ id: item.id, status: "uploading", progress: 90 }),
+    // );
+
+    const firebaseImageData = {
+      downloadUrls: {
+        small: "downloadUrlSmall",
+        medium: downloadUrlMedium,
+        high: "downloadUrlHigh",
+        veryHigh: "downloadUrlVeryHigh",
+      },
+      deleteUrls: {
+        small: "smallImagePath",
+        medium: mediumImagePath,
+        high: "highImagePath",
+        veryHigh: "veryHighImagePath",
+      },
+    };
+
+    // Update Firestore message document
+    await firestore()
+      .collection("Chats")
+      .doc(item.chatId)
+      .collection("messages")
+      .doc(item.messageId)
+      .update({
+        image: firebaseImageData.downloadUrls.medium,
+        pending: false,
+      });
+
+    // Update Redux with Firebase data
+    store.dispatch(updateFirebaseData({ id: item.id, firebaseImageData }));
+
+    store.dispatch(
+      updateUploadStatus({
+        id: item.id,
+        status: "completed",
+        progress: 100,
+      }),
+    );
+
+    console.log(`Chat image upload completed: ${item.id}`);
   }
 
   private async uploadPublicationEdit(item: UploadItem): Promise<void> {

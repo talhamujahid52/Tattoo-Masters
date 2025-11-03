@@ -62,7 +62,7 @@ const NoReviewsOnMyProfile: React.FC = () => {
         </View>
 
         <Text size="p" weight="normal" color="#A7A7A7">
-          You have no reviews yet.
+          You have no reviews yet
         </Text>
       </View>
     </>

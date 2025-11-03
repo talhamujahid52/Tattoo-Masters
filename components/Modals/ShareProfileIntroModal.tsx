@@ -126,7 +126,7 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          router.push({
+          router.replace({
             pathname: "/artist/ShareReviewPassword",
           });
         }}
