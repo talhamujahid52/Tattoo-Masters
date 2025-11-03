@@ -7,7 +7,7 @@ import {
   Pressable,
   Linking,
 } from "react-native";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import { router } from "expo-router";
@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 
 import { selectFilter } from "@/redux/slices/filterSlices";
+import useFollowArtist from "@/hooks/useFollowArtist";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type ArtistProfileBottomSheetProps = {
   hideMapProfileBottomSheet: () => void;
@@ -25,6 +27,9 @@ const ArtistProfileBottomSheet = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const insets = useSafeAreaInsets();
   const { currentlyViewingArtist } = useSelector(selectFilter);
+  const userFirestore = useSelector((state: any) => state.user.userFirestore);
+  const { toggleFollow, isFollowing } = useFollowArtist();
+  const [isFollowingLocal, setIsFollowingLocal] = useState(false);
 
   const content = currentlyViewingArtist?.aboutYou
     ? currentlyViewingArtist.aboutYou
@@ -32,6 +37,30 @@ const ArtistProfileBottomSheet = ({
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  useEffect(() => {
+    if (currentlyViewingArtist?.id) {
+      setIsFollowingLocal(isFollowing(currentlyViewingArtist.id));
+    }
+  }, [currentlyViewingArtist?.id, isFollowing]);
+
+  const handleFavoritePress = async () => {
+    if (!currentlyViewingArtist?.id) return;
+    if (!userFirestore) {
+      // No login UI here; do nothing for now
+      return;
+    }
+    const next = !isFollowingLocal;
+    setIsFollowingLocal(next);
+    try {
+      const result = await toggleFollow(currentlyViewingArtist.id);
+      if (typeof result === "boolean" && result !== next) {
+        setIsFollowingLocal(result);
+      }
+    } catch (e) {
+      setIsFollowingLocal((prev) => !prev);
+    }
   };
 
   const profilePicture = useMemo(() => {
@@ -149,11 +178,17 @@ const ArtistProfileBottomSheet = ({
 
       <View style={styles.buttonRow}>
         <IconButton
-          title="Favorite"
-          icon={require("../../assets/images/favorite-black.png")}
+          title={isFollowingLocal ? "Unfavorite" : "Favorite"}
+          icon={
+            <MaterialCommunityIcons
+              name={isFollowingLocal ? "heart" : "heart-outline"}
+              size={20}
+              color="#22221F"
+            />
+          }
           iconStyle={{ height: 20, width: 20, resizeMode: "contain" }}
           variant="Secondary"
-          onPress={() => {}}
+          onPress={handleFavoritePress}
         />
         <IconButton
           title="Message"

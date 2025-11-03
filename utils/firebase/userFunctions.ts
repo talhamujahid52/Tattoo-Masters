@@ -287,9 +287,10 @@ export const toggleLikePublication = async (
     ) {
       try {
         const likerName = result.likerName || "Someone";
-        const message = `${likerName} has liked your photo.`;
+        const title = "Tattoo Masters";
+        const body = `${likerName} liked your photo.`;
         const url = `/artist/TattooDetail?id=${encodeURIComponent(publicationId)}`;
-        await sendUserNotification(result.ownerId, message, message, {
+        await sendUserNotification(result.ownerId, title, body, {
           type: "tattooLike",
           publicationId,
           url,

@@ -240,14 +240,38 @@ const TattooDetail: React.FC = () => {
   const { getDocument } = useTypesense();
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<UserFirestore | undefined>();
-  const isLiked = useIsPublicationLiked(id, currentUserId);
-  const totalLikes = usePublicationLikes(id);
+  const isLikedFromHook = useIsPublicationLiked(id, currentUserId);
+  const totalLikesFromHook = usePublicationLikes(id);
+
+  const [liked, setLiked] = useState<boolean>(false);
+  const [likesCount, setLikesCount] = useState<number>(0);
+
+  useEffect(() => {
+    setLiked(isLikedFromHook);
+  }, [isLikedFromHook]);
+
+  useEffect(() => {
+    setLikesCount(totalLikesFromHook ?? 0);
+  }, [totalLikesFromHook]);
+
   const toggleLikePublicationOnHandle = async () => {
     try {
-      loggedInUser
-        ? (setLoading(true), await toggleLikePublication(id, currentUserId))
-        : showLoggingInBottomSheet();
-    } catch {
+      if (!loggedInUser) {
+        showLoggingInBottomSheet();
+        return;
+      }
+
+      // Optimistic update
+      const nextLiked = !liked;
+      setLiked(nextLiked);
+      setLikesCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
+
+      setLoading(true);
+      await toggleLikePublication(id, currentUserId);
+    } catch (e) {
+      // Revert optimistic update on failure
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => Math.max(0, prev + (liked ? -1 : 1)));
       console.log("failed to like unlike photo");
     } finally {
       setLoading(false);
@@ -465,7 +489,7 @@ const TattooDetail: React.FC = () => {
               hitSlop={{ top: 8, left: 8, right: 4, bottom: 8 }}
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
-              {isLiked ? (
+              {liked ? (
                 <Ionicons name="heart" size={24} color="#fff" />
               ) : (
                 <Ionicons name="heart-outline" size={24} color="#fff" />
@@ -476,7 +500,7 @@ const TattooDetail: React.FC = () => {
                 style={{ minWidth: 10 }}
                 color="#fff"
               >
-                {totalLikes ?? 0}
+                {likesCount ?? 0}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

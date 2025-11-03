@@ -36,6 +36,16 @@ const useFollowArtist = () => {
         ? (artistData.followersCount || 1) - 1
         : (artistData.followersCount || 0) + 1;
 
+      // Optimistic: update Redux immediately so UI reflects instantly
+      const previousUserData = { ...userData };
+      dispatch(
+        setUserFirestoreData({
+          ...userData,
+          followedArtists: updatedFollowedArtists,
+        })
+      );
+
+      // Persist updates in background
       // Update user document
       await userRef.update({
         followedArtists: updatedFollowedArtists,
@@ -45,14 +55,6 @@ const useFollowArtist = () => {
       await artistRef.update({
         followersCount: updatedFollowersCount,
       });
-
-      // Update Redux store
-      dispatch(
-        setUserFirestoreData({
-          ...userData,
-          followedArtists: updatedFollowedArtists,
-        })
-      );
 
       const becameFollower = !isFollowing;
 
@@ -68,8 +70,9 @@ const useFollowArtist = () => {
             userFirestore?.name?.trim() ||
             "Someone";
 
-          const message = `${followerName} added you to favorites.`;
-          await sendUserNotification(artistId, message, message, {
+          const title = "Tattoo Masters";
+          const body = `${followerName} added you to favorites.`;
+          await sendUserNotification(artistId, title, body, {
             type: "favorite",
             followerId: userFirestore.uid,
           });
@@ -81,6 +84,21 @@ const useFollowArtist = () => {
       return becameFollower;
     } catch (error) {
       console.error("Error toggling follow:", error);
+      // Revert optimistic Redux update on failure
+      try {
+        const snapshot = await firestore()
+          .collection("Users")
+          .doc(userFirestore.uid)
+          .get();
+        const latestData = (snapshot.data() || {}) as UserFirestore;
+        dispatch(
+          setUserFirestoreData({
+            ...latestData,
+          })
+        );
+      } catch (_) {
+        // As a fallback, no-op; UI on specific screens may maintain local state
+      }
       throw error;
     }
   };
