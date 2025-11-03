@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { ResponsiveGrid } from "react-native-flexible-grid";
 import { useRouter } from "expo-router";
@@ -69,19 +69,22 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
   }, []);
 
   const isTypesense = images.length > 0;
-  const data = isTypesense
-    ? images.map((item) => ({ ...item, widthRatio: 1, heightRatio: 1 }))
-    : imageUris.map((item) => ({
-        uri: item?.uri,
-        widthRatio: 1,
-        heightRatio: 1,
-      }));
+  const data = useMemo(() => {
+    return isTypesense
+      ? images.map((item) => ({ ...item, widthRatio: 1, heightRatio: 1 }))
+      : imageUris.map((item) => ({
+          uri: item?.uri,
+          widthRatio: 1,
+          heightRatio: 1,
+        }));
+  }, [isTypesense, images, imageUris]);
   const renderItem = isTypesense ? renderTypesenseItem : renderUriItem;
 
   return (
     <View
       style={{
         flex: 1,
+        backgroundColor: "#000",
       }}
     >
       <ResponsiveGrid

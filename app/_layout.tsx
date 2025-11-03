@@ -34,7 +34,7 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <FormProvider>
                 <AppNavigator />
-                <UploadProgressIndicator />
+                {/* <UploadProgressIndicator /> */}
               </FormProvider>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>

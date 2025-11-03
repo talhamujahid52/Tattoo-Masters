@@ -63,7 +63,23 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
   );
 };
 
-export default ArtistSearchCard;
+function areEqual(
+  prev: ArtistSearchCardProps,
+  next: ArtistSearchCardProps
+) {
+  const pa = prev.artist?.data || {};
+  const na = next.artist?.data || {};
+  return (
+    prev.artist?.id === next.artist?.id &&
+    pa.name === na.name &&
+    pa.studio === na.studio &&
+    pa.studioName === na.studioName &&
+    (pa.profilePictureSmall || pa.profilePicture) ===
+      (na.profilePictureSmall || na.profilePicture)
+  );
+}
+
+export default React.memo(ArtistSearchCard, areEqual);
 
 const styles = StyleSheet.create({
   card: {

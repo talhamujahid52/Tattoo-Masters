@@ -15,6 +15,7 @@ import {
   Keyboard,
   Image,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 
 import * as Location from "expo-location";
@@ -98,6 +99,8 @@ export default function SearchAll() {
 
   const [loading, setLoading] = useState(false);
   const { BottomSheet, show, hide } = useFilterBottomSheet();
+  const [isSheetReady, setIsSheetReady] = useState(false);
+  const isTattoos = selectedFilter === "tattoos" || selectedFilter === null;
 
   const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
     () => searchTypeInitial || null,
@@ -239,6 +242,37 @@ export default function SearchAll() {
     persistedStudio,
     selectedFilter,
   ]);
+
+  // Build a stable signature of the current search inputs to avoid redundant re-searches
+  const searchSignature = useMemo(() => {
+    const ratingsSel = persistedRatings
+      .filter((r) => r.selected)
+      .map((r) => r.value)
+      .sort()
+      .join(",");
+    const studioSel = persistedStudio
+      .filter((s) => s.selected)
+      .map((s) => s.name)
+      .sort()
+      .join(",");
+    const stylesSel = persistedStyles
+      .filter((s) => s.selected)
+      .map((s) => s.title)
+      .sort()
+      .join(",");
+    const q = (searchedText || "").trim() === "" ? "*" : (searchedText || "").trim();
+    const radius = persistedRadiusEnabled ? `R${persistedRadiusValue}` : "R0";
+    const type = selectedFilter ?? "tattoos";
+    return [type, q, radius, ratingsSel, studioSel, stylesSel].join("|");
+  }, [
+    selectedFilter,
+    searchedText,
+    persistedRadiusEnabled,
+    persistedRadiusValue,
+    persistedRatings,
+    persistedStudio,
+    persistedStyles,
+  ]);
   // HELPER: perform tattoos search
   const searchTattoos = async (query: string) => {
     dispatch(setTattooLoading(true));
@@ -283,25 +317,17 @@ export default function SearchAll() {
       setSelectedFilter(value);
     }
   };
-  // 2) inside the component body
+  // Only request location if radius filter is enabled
   useEffect(() => {
+    if (!persistedRadiusEnabled) return;
     let cancelled = false;
 
     (async () => {
       try {
-        // Ask for foreground permission
         const { status } = await Location.requestForegroundPermissionsAsync();
-
         if (cancelled) return;
+        if (status !== "granted") return;
 
-        if (status !== "granted") {
-          // dispatch(setPermissionDenied(true));
-          return;
-        }
-
-        // dispatch(setPermissionDenied(false));
-
-        // Get the device’s current position
         const {
           coords: { latitude, longitude },
         } = await Location.getCurrentPositionAsync({
@@ -313,42 +339,44 @@ export default function SearchAll() {
         }
       } catch (err) {
         console.warn("Location error:", err);
-        // if (!cancelled) dispatch(setPermissionDenied(true));
       }
     })();
 
-    // cleanup to avoid state updates if component unmounts mid-request
     return () => {
       cancelled = true;
     };
-  }, [dispatch]);
+  }, [dispatch, persistedRadiusEnabled]);
 
-  // MAIN SEARCH
+  // Defer mounting the bottom sheet to avoid any initial mount flicker
   useEffect(() => {
+    const id = requestAnimationFrame(() => setIsSheetReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  // MAIN SEARCH - run only when signature changes
+  const lastSignatureRef = useRef<string>("");
+  useEffect(() => {
+    if (lastSignatureRef.current === searchSignature) return;
+    lastSignatureRef.current = searchSignature;
     doSearch(searchedText);
-  }, [
-    selectedFilter,
-    searchedText,
-    persistedRadiusEnabled,
-    persistedRadiusValue,
-    persistedRatings,
-    persistedStudio,
-    persistedStyles,
-  ]);
+  }, [searchSignature]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <BottomSheet
-        InsideComponent={
-          <FilterBottomSheet
-            searchActiveFor={
-              !selectedFilter || selectedFilter === "tattoos"
-                ? "tattoos"
-                : "artists"
-            }
-          />
-        }
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      {isSheetReady && (
+        <BottomSheet
+          InsideComponent={
+            <FilterBottomSheet
+              searchActiveFor={
+                !selectedFilter || selectedFilter === "tattoos"
+                  ? "tattoos"
+                  : "artists"
+              }
+            />
+          }
+        />
+      )}
       <View style={styles.inputHeader}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -370,7 +398,6 @@ export default function SearchAll() {
             returnKeyType="search"
             style={{ flex: 1, borderWidth: 1, borderColor: "red" }}
             placeholder="Search for tattoos, artists and studios"
-            autoFocus
           />
         </View>
         <TouchableOpacity onPress={show} style={styles.filterButton}>
@@ -441,18 +468,19 @@ export default function SearchAll() {
                 : `${resultsArtists?.length} result${resultsArtists?.length !== 1 ? "s" : ""} for "${searchedText}"`)}
           </Text>
         )}
-        {loading ? (
-          <View style={[StyleSheet.absoluteFill, { top: "45%" }]}>
+        {loading && (isTattoos ? !resultsTattooss?.length : !resultsArtists?.length) ? (
+          <View style={[StyleSheet.absoluteFill, { top: "45%", backgroundColor: "#000" }]}>
             <ActivityIndicator size={"large"} />
           </View>
         ) : (
           <>
-            {selectedFilter === "tattoos" || selectedFilter === null ? (
+            {isTattoos ? (
               <ImageGallery images={resultsTattooss} />
             ) : (
               <KeyboardAwareFlatList
                 data={resultsArtists}
                 numColumns={3}
+                style={{ backgroundColor: "#000" }}
                 keyExtractor={(item: any) => item.id}
                 renderItem={({ item, index }) => (
                   <View
@@ -467,6 +495,9 @@ export default function SearchAll() {
                 )}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
+                removeClippedSubviews
+                windowSize={7}
+                initialNumToRender={15}
               />
             )}
           </>
@@ -486,6 +517,7 @@ const styles = StyleSheet.create({
     paddingBottom: 11,
     borderBottomWidth: 0.33,
     borderColor: "#FFFFFF56",
+    backgroundColor: "#000",
   },
 
   filterIcon: {
@@ -509,6 +541,11 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
   },
-  searchView: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
+  searchView: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    backgroundColor: "#000",
+  },
   heading: { marginBottom: 16 },
 });
