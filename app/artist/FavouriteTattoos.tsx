@@ -28,7 +28,7 @@ const FavouriteTattoos = () => {
           {totalLiked ?? 0} liked tattoo{totalLiked !== 1 && "s"}
         </Text>
       </View>
-      {likedPublicationsData?.likedPublications.length > 1 ? (
+      {likedPublicationsData?.likedPublications.length > 0 ? (
         <ImageGallery
           images={
             likedPublicationsData.likedPublications.map((item) => ({

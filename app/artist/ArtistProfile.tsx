@@ -621,7 +621,16 @@ const ArtistProfile = () => {
           </View>
         </View>
         <Pressable
-          onPress={openLocationInGoogleMaps}
+          // onPress={openLocationInGoogleMaps}
+          onPress={() => {
+            // console.log("Artist Location: ", artist?.data?.location);
+            router.push({
+              pathname: "/artist/MapDetails",
+              params: {
+                location: JSON.stringify(artist?.data?.location),
+              },
+            });
+          }}
           style={{
             height: 130,
             borderRadius: 20,

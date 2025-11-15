@@ -22,11 +22,13 @@ interface bottomSheetProps {
 const ShareReviewPasswordBottomSheet = ({
   hideShareReviewPasswordBottomSheet,
 }: bottomSheetProps) => {
-  const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const loggedInUserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
   const router = useRouter();
 
   const handleCopyToClipboard = () => {
-    Clipboard.setString(loggedInUser?.reviewPassword);
+    Clipboard.setString(loggedInUserFirestore?.reviewPassword);
     if (Platform.OS === "android") {
       ToastAndroid.show("Password copied to clipboard!", ToastAndroid.SHORT);
     } else {
@@ -37,7 +39,7 @@ const ShareReviewPasswordBottomSheet = ({
   const onShare = async () => {
     try {
       const result = await Share.share({
-        message: loggedInUser?.reviewPassword,
+        message: loggedInUserFirestore?.reviewPassword,
       });
 
       if (result.action === Share.sharedAction) {
@@ -95,7 +97,7 @@ const ShareReviewPasswordBottomSheet = ({
           Password
         </Text>
         <Input
-          value={loggedInUser?.reviewPassword}
+          value={loggedInUserFirestore?.reviewPassword}
           inputMode="text"
           placeholder="Review Password"
           rightIcon={"content-copy"}

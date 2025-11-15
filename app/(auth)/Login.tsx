@@ -48,11 +48,12 @@ const Login = () => {
 
   const handleEmailChange = (input: string) => {
     setEmail(input);
-    if (!validateEmail(input)) {
-      setEmailError("Can't verify email to login.");
-    } else {
-      setEmailError("");
-    }
+    setEmailError("");
+    // if (!validateEmail(input)) {
+    //   setEmailError("Can't verify email to login.");
+    // } else {
+    //   setEmailError("");
+    // }
   };
 
   const handleLoginClick = async () => {
@@ -60,7 +61,12 @@ const Login = () => {
       alert("Both email and password are required.");
       return;
     }
-    if (emailError) return; // Prevent login if there's an email error
+
+    if (!validateEmail(email)) {
+      setEmailError("Enter a Valid Email Address");
+      return;
+    }
+    // if (emailError) return; // Prevent login if there's an email error
 
     try {
       const userCredential = await signInWithEmailAndPassword(email, password); // Use user input for login

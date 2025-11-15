@@ -219,6 +219,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     lineHeight: 33.41,
     color: "#FBF6FA",
+    marginTop:14
   },
   Row: {
     paddingTop: 8,

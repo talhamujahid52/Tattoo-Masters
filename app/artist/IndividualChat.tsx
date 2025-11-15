@@ -250,45 +250,15 @@ const IndividualChat: React.FC = () => {
 
   // Handle image selection and upload in background
   const pickImage = useCallback(async () => {
-    Alert.alert(
-      "Select Image",
-      "Choose an option",
-      [
-        {
-          text: "Camera",
-          onPress: async () => {
-            const result = await launchCamera({
-              mediaType: "photo",
-              quality: 0.8,
-              saveToPhotos: true,
-            });
+    const result = await launchImageLibrary({
+      mediaType: "photo",
+      quality: 0.8,
+      selectionLimit: 1,
+    });
 
-            if (result.assets && result.assets[0].uri) {
-              await sendImageMessage(result.assets[0].uri);
-            }
-          },
-        },
-        {
-          text: "Gallery",
-          onPress: async () => {
-            const result = await launchImageLibrary({
-              mediaType: "photo",
-              quality: 0.8,
-              selectionLimit: 1,
-            });
-
-            if (result.assets && result.assets[0].uri) {
-              await sendImageMessage(result.assets[0].uri);
-            }
-          },
-        },
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-      ],
-      { cancelable: true }
-    );
+    if (result.assets && result.assets[0].uri) {
+      await sendImageMessage(result.assets[0].uri);
+    }
   }, [chatID]);
 
   const sendImageMessage = useCallback(
@@ -710,6 +680,7 @@ const IndividualChat: React.FC = () => {
         renderAvatar={null}
         alwaysShowSend={true}
         inverted={true}
+        bottomOffset={-33}
         lightboxProps={{
           activeProps: {
             style: {

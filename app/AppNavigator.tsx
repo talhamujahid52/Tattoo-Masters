@@ -637,6 +637,18 @@ const AppNavigator = () => {
               headerTintColor: "#fff",
             }}
           />
+          <Stack.Screen
+            name="artist/MapDetails"
+            options={{
+              headerShown: true,
+              headerTitle: "Location",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
           {/* <Stack.Screen */}
           {/*   name="artist/SearchArtistProfiles" */}
           {/*   options={{ */}
