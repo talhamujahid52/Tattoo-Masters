@@ -63,7 +63,7 @@ const Login = () => {
     }
 
     if (!validateEmail(email)) {
-      setEmailError("Enter a Valid Email Address");
+      setEmailError("Enter a valid email address");
       return;
     }
     // if (emailError) return; // Prevent login if there's an email error
