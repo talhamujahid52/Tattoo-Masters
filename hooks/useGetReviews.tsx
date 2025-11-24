@@ -54,7 +54,9 @@ const useGetReviews = (artistId: any) => {
         const reviewsWithUserData = reviewsData.map((review: any) => ({
           ...review,
           userName: usersData[review.user]?.name,
-          userProfilePicture: usersData[review.user]?.profilePicture,
+          userProfilePicture: usersData[review.user]?.profilePictureSmall
+            ? usersData[review.user]?.profilePictureSmall
+            : usersData[review.user]?.profilePicture,
         }));
 
         setReviews(reviewsWithUserData);

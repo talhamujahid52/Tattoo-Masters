@@ -7,6 +7,7 @@ import {
   FlatList,
   Pressable,
   Linking,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -24,9 +25,11 @@ import useTypesense from "@/hooks/useTypesense";
 import NoReviews from "@/components/NoReviews";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import useFollowArtist from "@/hooks/useFollowArtist";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import ProfilePicturePreview from "@/components/ProfilePicturePreview";
+import { updateSingleArtist } from "@/redux/slices/artistSlice";
 
 interface StyleItem {
   title: string;
@@ -65,6 +68,9 @@ const ArtistProfile = () => {
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
   };
+  const [refreshing, setRefreshing] = useState(false);
+  const artistsTs = useTypesense();
+  const dispatch = useDispatch();
 
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
   const { toggleFollow, isFollowing } = useFollowArtist();
@@ -288,11 +294,13 @@ const ArtistProfile = () => {
     try {
       const newFollowState = await toggleFollow(artistId);
       // Ensure UI reflects actual resulting state if backend differs
-      if (typeof newFollowState === 'boolean') {
+      if (typeof newFollowState === "boolean") {
         setIsFollowingArtist(newFollowState);
         // Reconcile count if needed
         if (newFollowState !== nextFollowing) {
-          setFollowersCount((prev) => Math.max(0, prev + (newFollowState ? 1 : -1)));
+          setFollowersCount((prev) =>
+            Math.max(0, prev + (newFollowState ? 1 : -1))
+          );
         }
       }
     } catch (error) {
@@ -369,11 +377,45 @@ const ArtistProfile = () => {
       console.error("Failed to open URL:", error);
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const hits = await artistsTs.search({
+        collection: "Users",
+        query: "*",
+        queryBy: "name",
+        filterBy: `isArtist:=true && id:=${artistId}`,
+      });
+
+      const refreshedArtist = hits[0]?.document;
+
+      if (refreshedArtist) {
+        dispatch(
+          updateSingleArtist({
+            id: artistId,
+            data: refreshedArtist,
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to refresh artist:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
       style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#fff"
+          colors={["#fff"]}
+        />
+      }
     >
       <View style={{ paddingHorizontal: 16 }}>
         {/* BottomSheets */}
@@ -405,7 +447,11 @@ const ArtistProfile = () => {
 
         <View style={styles.userProfileRow}>
           <View style={styles.pictureAndName}>
-            <Image style={styles.profilePicture} source={profilePicture} />
+            {/* <Image style={styles.profilePicture} source={profilePicture} /> */}
+            <ProfilePicturePreview
+              imageSource={profilePicture}
+              imageStyle={styles.profilePicture}
+            />
             <View
               style={{
                 display: "flex",
@@ -540,7 +586,7 @@ const ArtistProfile = () => {
           <Text size="p" weight="normal" color="#A7A7A7">
             {isExpanded || content?.length <= 120
               ? content
-              : `${content?.slice(0, 100)}...`}
+              : `${content?.slice(0, 160)}...`}
           </Text>
         </Pressable>
 

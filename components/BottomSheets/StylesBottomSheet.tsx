@@ -61,7 +61,7 @@ const StylesBottomSheet: React.FC<StylesBottomSheetProps> = ({
         <Input
           value={searchQuery}
           inputMode="text"
-          placeholder="Search Style"
+          placeholder="Search style"
           leftIcon="search"
           onChangeText={setSearchQuery}
           rightIcon={searchQuery ? "cancel" : undefined}

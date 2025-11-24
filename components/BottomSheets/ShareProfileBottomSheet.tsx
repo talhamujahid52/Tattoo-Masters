@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import Button from "../Button";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
+import dynamicLinks from "@react-native-firebase/dynamic-links";
 
 interface bottomSheetProps {
   hide: () => void;
@@ -22,23 +23,38 @@ const ShareProfileBottomSheet = ({ hide, myId }: bottomSheetProps) => {
   const router = useRouter();
   const shareArtistProfile = async (myId: any) => {
     try {
-      // This will use your "myapp" scheme
-      const baseUrl = Linking.createURL("artist/ArtistProfile");
-      const url = `${baseUrl}?artistId=${myId}`;
-      console.log("Generated URL:", url); // Important for testing!
+      // // This will use your "myapp" scheme
+      // const baseUrl = Linking.createURL("artist/ArtistProfile");
+      // const url = `${baseUrl}?artistId=${myId}`;
+      // console.log("Generated URL:", url); // Important for testing!
 
-      const canOpen = await Linking.canOpenURL(url);
-      console.log("Can open URL:", canOpen);
+      // const canOpen = await Linking.canOpenURL(url);
+      // console.log("Can open URL:", canOpen);
 
-      // if (canOpen) {
-      //   await Linking.openURL(url);
-      //   console.log("✅ URL opened successfully!");
-      // } else {
-      //   // Alert.alert('Error', 'Cannot open this URL');
-      // }
+      // // if (canOpen) {
+      // //   await Linking.openURL(url);
+      // //   console.log("✅ URL opened successfully!");
+      // // } else {
+      // //   // Alert.alert('Error', 'Cannot open this URL');
+      // // }
+
+      const fullLink = `https://tattoomasters.com/artist?artistId=${myId}`;
+      const shortLink = await dynamicLinks().buildShortLink({
+        link: fullLink,
+        domainUriPrefix: "https://tattoomasters.page.link",
+        android: {
+          packageName: "com.ddjn.tattoomasters",
+        },
+        ios: {
+          bundleId: "com.ddjn.tattoomasters",
+        },
+      });
+
       await Share.share({
-        message: `Check out this artist profile: ${url}`,
-        url: url,
+        message:
+          `Hey there! Check out my profile on the new Tattoo Masters app.\n\n` +
+          `${shortLink}\n\n` +
+          `It’s an all new app for all tattoo artists and tattoo enthusiasts.`,
       });
     } catch (error) {
       console.error("Error sharing:", error);

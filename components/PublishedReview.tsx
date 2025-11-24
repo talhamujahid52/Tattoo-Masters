@@ -6,6 +6,7 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import LoginBottomSheet from "./BottomSheets/LoginBottomSheet";
 import { useSelector } from "react-redux";
+import ProfilePicturePreview from "./ProfilePicturePreview";
 
 interface Review {
   artistId: string;
@@ -141,7 +142,7 @@ const PublishedReview = ({ review }: { review: Review }) => {
               overflow: "hidden",
             }}
           >
-            <Image
+            {/* <Image
               style={{
                 height: "100%",
                 width: "100%",
@@ -152,6 +153,19 @@ const PublishedReview = ({ review }: { review: Review }) => {
                   ? { uri: review.imageUrl }
                   : require("../assets/images/Artist.png")
               }
+            /> */}
+            <ProfilePicturePreview
+              imageSource={
+                review.imageUrl
+                  ? { uri: review.imageUrl }
+                  : require("../assets/images/Artist.png")
+              }
+              imageStyle={{
+                height: "100%",
+                width: "100%",
+                resizeMode: "cover",
+              }}
+              isSquare={true}
             />
           </View>
         </View>

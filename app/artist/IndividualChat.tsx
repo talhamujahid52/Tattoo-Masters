@@ -426,6 +426,7 @@ const IndividualChat: React.FC = () => {
             </Text>
           ) : null;
         }}
+        renderTicks={()=> null}
       />
     );
   };

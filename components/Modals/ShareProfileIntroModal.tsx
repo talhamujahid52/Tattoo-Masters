@@ -35,7 +35,10 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
       });
 
       await Share.share({
-        message: `Check out this artist profile:\n${shortLink}`,
+        message:
+          `Hey there! Check out my profile on the new Tattoo Masters app.\n\n` +
+          `${shortLink}\n\n` +
+          `It’s an all new app for all tattoo artists and tattoo enthusiasts.`,
       });
     } catch (error) {
       console.error("Error sharing dynamic link:", error);

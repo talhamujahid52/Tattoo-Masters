@@ -80,7 +80,7 @@ const ReviewsAndRatingSummary: React.FC<ReviewsAndRatingSummaryProps> = ({
       {/* Left side - Rating bars */}
       <View style={styles.barsContainer}>
         <Text color="#FFF" style={styles.sectionTitle}>
-          Overall Rating
+          Overall rating
         </Text>
         <View style={styles.barsWrapper}>
           {[5, 4, 3, 2, 1].map((star: number) => {

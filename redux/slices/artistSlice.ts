@@ -25,6 +25,18 @@ const artistSlice = createSlice({
         }
       });
     },
+
+    updateSingleArtist: (state, action: PayloadAction<{ id: string; data: any }>) => {
+      const { id, data } = action.payload;
+      const index = state.allArtists.findIndex((a) => a.id === id);
+    
+      if (index !== -1) {
+        state.allArtists[index] = { id, data }; // replace existing entry
+      } else {
+        state.allArtists.push({ id, data }); // add if missing
+      }
+    },
+
     resetAllArtists: (state) => {
       state.allArtists = [];
     },
@@ -33,6 +45,7 @@ const artistSlice = createSlice({
     updateSearchResults: (state, action: PayloadAction<any[]>) => {
       state.searchResults = action.payload;
     },
+
     resetSearchResults: (state) => {
       state.searchResults = [];
     },
@@ -41,6 +54,7 @@ const artistSlice = createSlice({
 
 export const {
   updateAllArtists,
+  updateSingleArtist,
   resetAllArtists,
   updateSearchResults, // ← new
   resetSearchResults, // ← new

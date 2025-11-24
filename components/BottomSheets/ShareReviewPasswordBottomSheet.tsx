@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import Input from "../Input";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { useSelector } from "react-redux";
+import dynamicLinks from "@react-native-firebase/dynamic-links";
 
 interface bottomSheetProps {
   hideShareReviewPasswordBottomSheet: () => void;
@@ -38,8 +39,24 @@ const ShareReviewPasswordBottomSheet = ({
 
   const onShare = async () => {
     try {
+      const fullLink = `https://tattoomasters.com/artist?artistId=${loggedInUserFirestore?.uid}`;
+      const shortLink = await dynamicLinks().buildShortLink({
+        link: fullLink,
+        domainUriPrefix: "https://tattoomasters.page.link",
+        android: {
+          packageName: "com.ddjn.tattoomasters",
+        },
+        ios: {
+          bundleId: "com.ddjn.tattoomasters",
+        },
+      });
+
       const result = await Share.share({
-        message: loggedInUserFirestore?.reviewPassword,
+        message:
+          `Hey! Here’s my review password for the new Tattoo Masters app.\n\n` +
+          `Password: ${loggedInUserFirestore?.reviewPassword}\n\n` +
+          `${shortLink}\n\n` +
+          `I would appreciate a great review to help me grow my profile.`,
       });
 
       if (result.action === Share.sharedAction) {

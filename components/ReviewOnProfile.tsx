@@ -166,9 +166,9 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             <Image
               style={styles.profilePicture}
               source={
-                reviewerDetails?.profilePicture
-                  ? { uri: reviewerDetails?.profilePicture }
-                  : require("../assets/images/Artist.png")
+                reviewerDetails?.profilePictureSmall
+                  ? { uri: reviewerDetails?.profilePictureSmall }
+                  : { uri: reviewerDetails?.profilePicture }
               }
             />
             <View>
@@ -214,7 +214,8 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
               style={styles.bottomRow}
             >
               <Text size="h4" weight="normal" color="#FBF6FA">
-                View all {totalReviews > 1 ? totalReviews : ""} reviews
+                View all{totalReviews > 1 ? " " + totalReviews + " " : " "}
+                reviews
               </Text>
               <Image
                 style={styles.icon}

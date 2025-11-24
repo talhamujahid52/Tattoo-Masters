@@ -23,6 +23,7 @@ import useTypesense from "@/hooks/useTypesense";
 import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 import NoReviewsOnMyProfile from "@/components/NoReviewsOnMyProfile";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 
 interface StyleItem {
   title: string;
@@ -45,6 +46,7 @@ const MyProfile = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
+  const [showAllUserStyles, setShowAllUserStyles] = useState(false);
 
   const content =
     loggedInUser?.aboutYou ||
@@ -184,13 +186,21 @@ const MyProfile = () => {
       <View style={{ paddingHorizontal: 16 }}>
         <View style={styles.userProfileRow}>
           <View style={styles.pictureAndName}>
-            <Image
+            {/* <Image
               style={styles.profilePicture}
               source={{
                 uri:
                   loggedInUser?.profilePictureSmall ??
                   loggedInUser?.profilePicture,
               }}
+            /> */}
+            <ProfilePicturePreview
+              imageSource={{
+                uri:
+                  loggedInUser?.profilePictureSmall ??
+                  loggedInUser?.profilePicture,
+              }}
+              imageStyle={styles.profilePicture}
             />
             <View>
               <Text size="h3" weight="semibold" color="white">
@@ -277,23 +287,56 @@ const MyProfile = () => {
             style={styles.icon}
             source={require("../../assets/images/draw.png")}
           />
-          {loggedInUser?.tattooStyles?.map((item: any, idx: any) => {
-            return (
-              <View
-                key={idx}
-                style={{
-                  backgroundColor: "#262526",
-                  paddingHorizontal: 5,
-                  paddingVertical: 2,
-                  borderRadius: 6,
-                }}
-              >
-                <Text size="p" weight="normal" color="#D7D7C9">
-                  {item}
-                </Text>
-              </View>
-            );
-          })}
+          {loggedInUser?.tattooStyles && (
+            <>
+              {(showAllUserStyles
+                ? loggedInUser?.tattooStyles
+                : loggedInUser?.tattooStyles.slice(0, 6)
+              ).map((item: any, idx: number) => (
+                <View
+                  key={idx}
+                  style={{
+                    backgroundColor: "#262526",
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Text size="p" weight="normal" color="#D7D7C9">
+                    {item}
+                  </Text>
+                </View>
+              ))}
+
+              {loggedInUser?.tattooStyles?.length > 6 && (
+                <TouchableOpacity
+                  onPress={() => setShowAllUserStyles((prev) => !prev)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text size="p" weight="normal" color="#FBF6FA">
+                    {showAllUserStyles ? "See less" : "See more"}
+                  </Text>
+                  <View style={{ width: 20, height: 20, marginLeft: 4 }}>
+                    <Image
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        transform: [
+                          { rotate: showAllUserStyles ? "180deg" : "0deg" },
+                        ],
+                      }}
+                      source={require("../../assets/images/arrow_down.png")}
+                    />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
         {/* <Text size="p" weight="normal" color="#A7A7A7">
         {loggedInUser?.aboutYou ?? ""}
@@ -302,7 +345,7 @@ const MyProfile = () => {
           <Text size="p" weight="normal" color="#A7A7A7">
             {isExpanded || content?.length <= 120
               ? content
-              : `${content?.slice(0, 100)}...`}
+              : `${content?.slice(0, 160)}...`}
           </Text>
         </Pressable>
         <View style={styles.buttonRow}>
