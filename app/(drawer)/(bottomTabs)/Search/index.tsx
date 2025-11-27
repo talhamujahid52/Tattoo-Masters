@@ -48,7 +48,7 @@ const Search: React.FC = () => {
       const docs = hits.map((h: any) => h.document);
       dispatch(resetAllArtists());
       dispatch(
-        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data })))
+        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
       );
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -88,7 +88,7 @@ const Search: React.FC = () => {
   }, [isFocused, fadeAnim]);
 
   const recentSearches = useSelector(
-    (state: any) => state.recentSearches.items
+    (state: any) => state.recentSearches.items,
   );
 
   const onRecentPress = (term: { type: string; text: string }) => {
@@ -100,7 +100,6 @@ const Search: React.FC = () => {
 
     dispatch(addSearch({ text: term.text, type: term.type }));
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
@@ -218,6 +217,7 @@ const Search: React.FC = () => {
               Artists near you
             </Text>
             <KeyboardAwareFlatList
+              style={{ backgroundColor: "#000" }}
               data={artists}
               renderItem={({ item, index }) => (
                 <View
@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
   },
   searchView: {
     flex: 1,
+    backgroundColor: "#000",
     paddingHorizontal: 16,
     zIndex: 0,
   },

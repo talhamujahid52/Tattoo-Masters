@@ -259,7 +259,8 @@ export default function SearchAll() {
       .map((s) => s.title)
       .sort()
       .join(",");
-    const q = (searchedText || "").trim() === "" ? "*" : (searchedText || "").trim();
+    const q =
+      (searchedText || "").trim() === "" ? "*" : (searchedText || "").trim();
     const radius = persistedRadiusEnabled ? `R${persistedRadiusValue}` : "R0";
     const type = selectedFilter ?? "tattoos";
     return [type, q, radius, ratingsSel, studioSel, stylesSel].join("|");
@@ -359,7 +360,6 @@ export default function SearchAll() {
     lastSignatureRef.current = searchSignature;
     doSearch(searchedText);
   }, [searchSignature]);
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -468,7 +468,12 @@ export default function SearchAll() {
           </Text>
         )}
         {loading ? (
-          <View style={[StyleSheet.absoluteFill, { top: "45%" }]}>
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { top: "45%", backgroundColor: "#000" },
+            ]}
+          >
             <ActivityIndicator size={"large"} />
           </View>
         ) : (
@@ -544,6 +549,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+    backgroundColor: "#000",
   },
   heading: { marginBottom: 16 },
 });
