@@ -4,7 +4,7 @@
     "slug": "Tattoo-Masters",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon-new.png",
     "scheme": "myapp",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -23,7 +23,8 @@
         "NSLocationWhenInUseUsageDescription": "This app requires access to your location when open.",
         "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images.",
         "NSUserTrackingUsageDescription": "This identifier will be used to send push notifications.",
-        "UIDesignRequiresCompatibility": true
+        "UIDesignRequiresCompatibility": true,
+        "LSApplicationQueriesSchemes": ["tel"]
       }
     },
     "android": {
@@ -99,3 +100,4 @@
     }
   }
 }
+
