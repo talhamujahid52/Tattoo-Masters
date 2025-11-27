@@ -100,11 +100,10 @@ export default function SearchAll() {
   const [loading, setLoading] = useState(false);
   const { BottomSheet, show, hide } = useFilterBottomSheet();
   const [isSheetReady, setIsSheetReady] = useState(false);
-  const isTattoos = selectedFilter === "tattoos" || selectedFilter === null;
-
   const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
     () => searchTypeInitial || null,
   );
+  const isTattoos = selectedFilter === "tattoos" || selectedFilter === null;
   // HELPER: build filterBy string for Typesense
   const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
     const facets: string[] = [];
@@ -468,8 +467,8 @@ export default function SearchAll() {
                 : `${resultsArtists?.length} result${resultsArtists?.length !== 1 ? "s" : ""} for "${searchedText}"`)}
           </Text>
         )}
-        {loading && (isTattoos ? !resultsTattooss?.length : !resultsArtists?.length) ? (
-          <View style={[StyleSheet.absoluteFill, { top: "45%", backgroundColor: "#000" }]}>
+        {loading ? (
+          <View style={[StyleSheet.absoluteFill, { top: "45%" }]}>
             <ActivityIndicator size={"large"} />
           </View>
         ) : (
@@ -545,7 +544,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
-    backgroundColor: "#000",
   },
   heading: { marginBottom: 16 },
 });
