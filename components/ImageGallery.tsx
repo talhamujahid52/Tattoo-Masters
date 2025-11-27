@@ -43,6 +43,7 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
           }}
         >
           <ExpoImage
+            transition={400}
             source={{ uri: item?.document?.downloadUrls?.small }}
             key={item?.document?.downloadUrls?.small}
             cachePolicy={"disk"}

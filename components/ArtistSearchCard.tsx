@@ -42,6 +42,7 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
               }
             : require("../assets/images/Artist.png")
         }
+        transition={400}
         style={styles.imageStyle}
         contentFit="cover"
         cachePolicy={"disk"}
@@ -56,17 +57,14 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
         {artist?.data?.studio === "studio"
           ? artist?.data?.studioName
           : artist?.data?.studio === "freelancer"
-          ? "Freelancer"
-          : "Home artist"}
+            ? "Freelancer"
+            : "Home artist"}
       </Text>
     </TouchableOpacity>
   );
 };
 
-function areEqual(
-  prev: ArtistSearchCardProps,
-  next: ArtistSearchCardProps
-) {
+function areEqual(prev: ArtistSearchCardProps, next: ArtistSearchCardProps) {
   const pa = prev.artist?.data || {};
   const na = next.artist?.data || {};
   return (
@@ -79,7 +77,7 @@ function areEqual(
   );
 }
 
-export default React.memo(ArtistSearchCard, areEqual);
+export default ArtistSearchCard;
 
 const styles = StyleSheet.create({
   card: {

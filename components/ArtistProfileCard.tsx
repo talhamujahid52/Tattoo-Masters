@@ -38,17 +38,13 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
       <ExpoImage
         key={artist.data?.profilePicture}
         cachePolicy={"disk"}
-        source={
-          profilePicture
-            ? { uri: profilePicture }
-            : require("../assets/images/Artist.png")
-        }
+        transition={400}
+        source={{ uri: profilePicture }}
         contentFit="cover"
         style={{
           width: 131,
           height: 170,
           borderRadius: 12,
-          backgroundColor: "#202020",
         }}
       />
       <Text
@@ -91,7 +87,7 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
   );
 };
 
-export default ArtistProfileCard;
+export default React.memo(ArtistProfileCard);
 
 const styles = StyleSheet.create({
   RatingAndLocation: {
