@@ -38,7 +38,6 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
       <ExpoImage
         key={artist.data?.profilePicture}
         cachePolicy={"disk"}
-        transition={400}
         source={{ uri: profilePicture }}
         contentFit="cover"
         style={{

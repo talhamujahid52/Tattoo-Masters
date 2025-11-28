@@ -5,6 +5,7 @@ import React, {
   useRef,
   useLayoutEffect,
   useMemo,
+  useCallback,
 } from "react";
 import {
   SafeAreaView,
@@ -353,6 +354,21 @@ export default function SearchAll() {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  const renderArtistItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => (
+      <View
+        style={{
+          width: adjustedWidth / 3,
+          marginRight: index % 3 === 0 ? 5 : 0,
+          marginLeft: index % 3 === 2 ? 5 : 0,
+        }}
+      >
+        <ArtistSearchCard artist={item} />
+      </View>
+    ),
+    [adjustedWidth],
+  );
+
   // MAIN SEARCH - run only when signature changes
   const lastSignatureRef = useRef<string>("");
   useEffect(() => {
@@ -486,17 +502,7 @@ export default function SearchAll() {
                 numColumns={3}
                 style={{ backgroundColor: "#000" }}
                 keyExtractor={(item: any) => item.id}
-                renderItem={({ item, index }) => (
-                  <View
-                    style={{
-                      width: adjustedWidth / 3,
-                      marginRight: index % 3 === 0 ? 5 : 0,
-                      marginLeft: index % 3 === 2 ? 5 : 0,
-                    }}
-                  >
-                    <ArtistSearchCard artist={item} />
-                  </View>
-                )}
+                renderItem={renderArtistItem}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
                 removeClippedSubviews

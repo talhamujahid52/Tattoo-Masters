@@ -14,6 +14,7 @@ import { LogBox, View } from "react-native";
 import Text from "@/components/Text";
 import { Try } from "expo-router/build/views/Try";
 import UploadProgressIndicator from "@/components/UploadProgressIndicator";
+import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 // import { useRouter } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
@@ -21,6 +22,7 @@ LogBox.ignoreLogs([
   "Please use `getApp()` instead",
   "React Native Firebase: The method .* is deprecated",
 ]);
+LogBox.ignoreAllLogs(true);
 
 export default function RootLayout() {
   // const router = useRouter();
@@ -30,14 +32,18 @@ export default function RootLayout() {
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <StatusBar style="light" />
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000" }}>
-            <BottomSheetModalProvider>
-              <FormProvider>
-                <AppNavigator />
-                {/* <UploadProgressIndicator /> */}
-              </FormProvider>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
+          <ThemeProvider value={DarkTheme}>
+            <GestureHandlerRootView
+              style={{ flex: 1, backgroundColor: "#000" }}
+            >
+              <BottomSheetModalProvider>
+                <FormProvider>
+                  <AppNavigator />
+                  {/* <UploadProgressIndicator /> */}
+                </FormProvider>
+              </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+          </ThemeProvider>
         </PersistGate>
       </Provider>
     </>

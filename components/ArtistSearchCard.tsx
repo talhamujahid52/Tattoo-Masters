@@ -32,24 +32,29 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
       style={styles.card}
     >
       <ExpoImage
-        // source={require("../assets/images/Artist.png")}
+        key={artist?.data?.profilePicture}
         source={
           artist?.data?.profilePicture || artist?.data?.profilePictureSmall
             ? {
-                uri:
-                  artist?.data?.profilePictureSmall ??
-                  artist?.data?.profilePicture,
-              }
+              uri:
+                artist?.data?.profilePictureSmall ??
+                artist?.data?.profilePicture,
+            }
             : require("../assets/images/Artist.png")
         }
-        transition={400}
         style={styles.imageStyle}
         contentFit="cover"
         cachePolicy={"disk"}
       />
       <View style={styles.RatingAndLocation}>
         {/* {isActive && <View style={styles.greenOnlineDot} />} */}
-        <Text size="p" weight="semibold" color="#FFFFFF">
+        <Text
+          size="p"
+          weight="semibold"
+          color="#FFFFFF"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {artist?.data?.name ?? ""}
         </Text>
       </View>
@@ -63,19 +68,6 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
     </TouchableOpacity>
   );
 };
-
-function areEqual(prev: ArtistSearchCardProps, next: ArtistSearchCardProps) {
-  const pa = prev.artist?.data || {};
-  const na = next.artist?.data || {};
-  return (
-    prev.artist?.id === next.artist?.id &&
-    pa.name === na.name &&
-    pa.studio === na.studio &&
-    pa.studioName === na.studioName &&
-    (pa.profilePictureSmall || pa.profilePicture) ===
-      (na.profilePictureSmall || na.profilePicture)
-  );
-}
 
 export default ArtistSearchCard;
 

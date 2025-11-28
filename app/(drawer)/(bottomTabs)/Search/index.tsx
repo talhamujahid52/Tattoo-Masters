@@ -98,8 +98,23 @@ const Search: React.FC = () => {
       params: { query: term.text, type: term.type },
     });
 
-    dispatch(addSearch({ text: term.text, type: term.type }));
+    dispatch(addSearch({ text: term.text, type: term.type as any }));
   };
+  const renderArtistItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => (
+      <View
+        style={{
+          width: adjustedWidth / 3,
+          marginRight: index % 3 === 0 ? 5 : 0,
+          marginLeft: index % 3 === 2 ? 5 : 0,
+        }}
+      >
+        <ArtistSearchCard artist={item} />
+      </View>
+    ),
+    [adjustedWidth],
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
@@ -219,17 +234,7 @@ const Search: React.FC = () => {
             <KeyboardAwareFlatList
               style={{ backgroundColor: "#000" }}
               data={artists}
-              renderItem={({ item, index }) => (
-                <View
-                  style={{
-                    width: adjustedWidth / 3,
-                    marginRight: index % 3 === 0 ? 5 : 0,
-                    marginLeft: index % 3 === 2 ? 5 : 0,
-                  }}
-                >
-                  <ArtistSearchCard artist={item} />
-                </View>
-              )}
+              renderItem={renderArtistItem}
               keyExtractor={(item: any) => item.id}
               numColumns={3}
               showsHorizontalScrollIndicator={false}

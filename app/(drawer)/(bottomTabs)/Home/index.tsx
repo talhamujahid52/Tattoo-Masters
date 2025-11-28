@@ -7,6 +7,9 @@ import {
   RefreshControl,
   Image,
   Pressable,
+  ActivityIndicator,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -36,6 +39,7 @@ const Home = () => {
   const [lastCompletedCount, setLastCompletedCount] = useState(0);
   const artistsTs = useTypesense();
   const publicationsTs = useTypesense();
+  const [page, setPage] = useState(1);
   const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
   const artists = useSelector((state: any) => state.artist.allArtists);
@@ -95,8 +99,23 @@ const Home = () => {
 
   // Initial publications search on mount
   useEffect(() => {
-    publicationsTs.search({ collection: "publications" });
+    publicationsTs.search({
+      collection: "publications",
+      page: 1,
+      per_page: 21,
+    });
   }, [publicationsTs.search]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    publicationsTs.search({
+      collection: "publications",
+      page: nextPage,
+      per_page: 21,
+      append: true,
+    });
+  };
 
   // Fetch artists on mount or when typesense dependency changes
   useEffect(() => {
@@ -112,7 +131,6 @@ const Home = () => {
       const incomingSenderId = String(data?.senderId || "");
       const url = typeof data?.url === "string" ? data.url : "";
       const currentChatId = getCurrentChatId();
-
       if (url) {
         router.push(url);
         return;
@@ -141,7 +159,7 @@ const Home = () => {
           navigateFromData(data);
           return;
         }
-      } catch {}
+      } catch { }
 
       try {
         // Fallback to Expo last response
@@ -152,7 +170,7 @@ const Home = () => {
           const data = raw?.data ? raw.data : raw;
           navigateFromData(data);
         }
-      } catch {}
+      } catch { }
     })();
   }, []);
 
@@ -160,14 +178,37 @@ const Home = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchUsers();
-    publicationsTs.search({ collection: "publications" });
+    setPage(1);
+    publicationsTs.search({
+      collection: "publications",
+      page: 1,
+      per_page: 21,
+    });
     setRefreshing(false);
+  };
+
+  const isCloseToBottom = ({
+    layoutMeasurement,
+    contentOffset,
+    contentSize,
+  }: NativeScrollEvent) => {
+    const paddingToBottom = 20;
+    return (
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom
+    );
   };
 
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: 30 }}
       style={styles.container}
+      onScroll={({ nativeEvent }) => {
+        if (isCloseToBottom(nativeEvent) && !publicationsTs.loading) {
+          handleLoadMore();
+        }
+      }}
+      scrollEventThrottle={400}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -282,6 +323,7 @@ const Home = () => {
         Find your inspiration
       </Text>
       <ImageGallery images={publicationsTs.results} />
+
     </ScrollView>
   );
 };

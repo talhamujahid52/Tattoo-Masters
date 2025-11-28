@@ -426,7 +426,7 @@ const IndividualChat: React.FC = () => {
             </Text>
           ) : null;
         }}
-        renderTicks={()=> null}
+        renderTicks={() => null}
       />
     );
   };
@@ -470,7 +470,7 @@ const IndividualChat: React.FC = () => {
             />
           </View>
         </TouchableOpacity>
-  
+
         {/* Grey chat input container with text + send icon */}
         <View
           style={{
@@ -483,46 +483,46 @@ const IndividualChat: React.FC = () => {
           }}
         >
           {/* Text Input */}
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Composer
-            {...props}
-            placeholder="Send message"
-            placeholderTextColor="#C1C1C1"
-            textInputStyle={{
-              color: "white",
-              fontSize: 16,
-              backgroundColor: "transparent",
-              paddingLeft: 8,
-            }}
-            multiline
-            scrollEnabled={composerHeight >= 100}
-            textInputProps={{
-              selectionColor: "white",
-              showsVerticalScrollIndicator: false,
-            }}
-            onInputSizeChanged={(e) => {
-              setComposerHeight(e.height);
-            }}
-          />
-        </View>
-
-        <Send
-          {...props}
-          containerStyle={{
-            width: 44,
-            height: 44,
-            alignItems: "center",
-            justifyContent: "center",
-            alignSelf: isMultiline ? "flex-end" : "center",
-          }}
-        >
-          <View style={{ width: 32, height: 32 }}>
-            <Image
-              style={{ height: "100%", width: "100%" }}
-              source={require("../../assets/images/sendMessage.png")}
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <Composer
+              {...props}
+              placeholder="Send message"
+              placeholderTextColor="#C1C1C1"
+              textInputStyle={{
+                color: "white",
+                fontSize: 16,
+                backgroundColor: "transparent",
+                paddingLeft: 8,
+              }}
+              multiline
+              scrollEnabled={composerHeight >= 100}
+              textInputProps={{
+                selectionColor: "white",
+                showsVerticalScrollIndicator: false,
+              }}
+              onInputSizeChanged={(e) => {
+                setComposerHeight(e.height);
+              }}
             />
           </View>
-        </Send>
+
+          <Send
+            {...props}
+            containerStyle={{
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+              alignSelf: isMultiline ? "flex-end" : "center",
+            }}
+          >
+            <View style={{ width: 32, height: 32 }}>
+              <Image
+                style={{ height: "100%", width: "100%" }}
+                source={require("../../assets/images/sendMessage.png")}
+              />
+            </View>
+          </Send>
         </View>
       </View>
     );
@@ -530,6 +530,13 @@ const IndividualChat: React.FC = () => {
   const phoneNumber = otherUserDetails?.phoneNumber ? otherUserDetails?.phoneNumber : "";
 
   const openDialer = () => {
+    if (!phoneNumber) {
+      Alert.alert(
+        "No Phone Number",
+        "This user has not provided a phone number."
+      );
+      return;
+    }
     const url = `tel:${phoneNumber}`;
     Linking.canOpenURL(url)
       .then((supported) => {
@@ -572,12 +579,10 @@ const IndividualChat: React.FC = () => {
     if (diffInSeconds < 3600)
       return `${Math.floor(diffInSeconds / 60)} min ago`;
     if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)} hour${
-        Math.floor(diffInSeconds / 3600) === 1 ? "" : "s"
+      return `${Math.floor(diffInSeconds / 3600)} hour${Math.floor(diffInSeconds / 3600) === 1 ? "" : "s"
+        } ago`;
+    return `${Math.floor(diffInSeconds / 86400)} day${Math.floor(diffInSeconds / 86400) === 1 ? "" : "s"
       } ago`;
-    return `${Math.floor(diffInSeconds / 86400)} day${
-      Math.floor(diffInSeconds / 86400) === 1 ? "" : "s"
-    } ago`;
   };
 
   return (
@@ -588,7 +593,7 @@ const IndividualChat: React.FC = () => {
           onPress={() => {
             router.back();
           }}
-          // style={{ height: 15, width: 16 }}
+        // style={{ height: 15, width: 16 }}
         >
           {Platform.OS === "android" && (
             <Image

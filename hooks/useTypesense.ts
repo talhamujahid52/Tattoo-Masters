@@ -49,6 +49,9 @@ interface SearchParams {
    * Optional filter_by parameter (e.g. "isArtist:=true")
    */
   filterBy?: string;
+  page?: number;
+  per_page?: number;
+  append?: boolean;
 }
 
 interface GetDocumentParams {
@@ -84,6 +87,9 @@ const useTypesense = () => {
       query,
       queryBy,
       filterBy,
+      page,
+      per_page,
+      append = false,
     }: SearchParams): Promise<TypesenseResult<any>[]> => {
       setLoading(true);
       try {
@@ -95,9 +101,15 @@ const useTypesense = () => {
             query_by: queryBy ?? "caption,styles",
             filter_by: filterBy, // pass the filterBy parameter here
             limit: 100, // Adjust limit as needed
+            page: page ?? 1,
+            per_page: per_page ?? 10,
           });
         const hits = response.hits as TypesenseResult<any>[];
-        setResults(hits);
+        if (append) {
+          setResults((prev) => [...prev, ...hits]);
+        } else {
+          setResults(hits);
+        }
         setError(null);
         return hits;
       } catch (err: any) {
