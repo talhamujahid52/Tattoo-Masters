@@ -686,7 +686,7 @@ const IndividualChat: React.FC = () => {
         renderAvatar={null}
         alwaysShowSend={true}
         inverted={true}
-        bottomOffset={-33}
+        bottomOffset={-25}
         lightboxProps={{
           activeProps: {
             style: {

@@ -74,7 +74,7 @@ const DeleteAccount = () => {
         Sad to see you go.
       </Text>
       <Text size="p" weight="normal" color="#A7A7A7" style={styles.description}>
-        Please enter your password to delete account.
+        Please enter your password to delete your account.
       </Text>
       <Text size="p" weight="normal" color="#A7A7A7">
         We prefer you wouldn’t.
@@ -82,13 +82,13 @@ const DeleteAccount = () => {
       <View style={styles.passwordFieldsContainer}>
         <Input
           inputMode="password"
-          placeholder="Enter Password"
+          placeholder="Enter password"
           value={password}
           onChangeText={setPassword}
         />
         <Input
           inputMode="password"
-          placeholder="Confirm Password"
+          placeholder="Confirm password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />

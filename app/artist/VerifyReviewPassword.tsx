@@ -38,7 +38,7 @@ const VerifyReviewPassword = () => {
         />
       </View>
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Enter Password to review {artist?.data?.name}
+        Enter password to review {artist?.data?.name}
       </Text>
       <Text
         size="p"

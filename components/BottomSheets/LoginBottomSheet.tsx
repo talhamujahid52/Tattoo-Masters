@@ -44,7 +44,7 @@ const LoginBottomSheet = ({ hideLoginBottomSheet }: LoginBottomSheetProps) => {
       </Text>
       <Image
         style={styles.usersImage}
-        source={require("../../assets/images/users.png")}
+        source={require("../../assets/images/Avatars.png")}
       />
       <Text
         size="medium"
