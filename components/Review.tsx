@@ -26,9 +26,9 @@ const Review: React.FC<Review> = ({
           <Image
             style={styles.profilePicture}
             source={
-              loggedInUser?.profilePicture
-                ? { uri: loggedInUser?.profilePicture }
-                : require("../assets/images/Artist.png")
+              loggedInUser?.profilePictureSmall
+                ? { uri: loggedInUser?.profilePictureSmall }
+                : { uri: loggedInUser?.profilePicture }
             }
           />
           <View

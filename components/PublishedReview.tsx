@@ -21,6 +21,7 @@ interface Review {
   userName: string;
   userProfilePicture: string;
   imageUrl: string;
+  largeImageUrl: string;
 }
 
 const options = [
@@ -166,6 +167,7 @@ const PublishedReview = ({ review }: { review: Review }) => {
                 resizeMode: "cover",
               }}
               isSquare={true}
+              highResolutionImage={review?.largeImageUrl}
             />
           </View>
         </View>

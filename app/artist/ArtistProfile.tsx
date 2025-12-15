@@ -451,6 +451,7 @@ const ArtistProfile = () => {
             <ProfilePicturePreview
               imageSource={profilePicture}
               imageStyle={styles.profilePicture}
+              highResolutionImage={artist?.data?.profilePictureVeryHigh} 
             />
             <View
               style={{

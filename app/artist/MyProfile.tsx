@@ -7,6 +7,7 @@ import {
   FlatList,
   Pressable,
   Linking,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import Text from "@/components/Text";
@@ -24,6 +25,8 @@ import ReviewOnProfileBlur from "@/components/ReviewOnProfileBlur";
 import NoReviewsOnMyProfile from "@/components/NoReviewsOnMyProfile";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+import { setUserFirestoreData } from "@/redux/slices/userSlice";
 
 interface StyleItem {
   title: string;
@@ -43,6 +46,8 @@ const MyProfile = () => {
   // console.log("My Profile : ", loggedInUser);
   // console.log("LoggedIn User Id: ", loggedInUser?.uid);
 
+  const dispatch = useDispatch();
+  const [refreshing, setRefreshing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
@@ -102,20 +107,21 @@ const MyProfile = () => {
 
   const publicationsTs = useTypesense();
 
-  useEffect(() => {
-    const fetchPublications = async () => {
-      try {
-        const response = await publicationsTs.search({
-          collection: "publications",
-          query: myId,
-          queryBy: "userId",
-        });
-        setSearchResults(response || []);
-      } catch (error) {
-        console.error("Error fetching publications:", error);
-      }
-    };
+  const fetchPublications = async () => {
+    try {
+      const response = await publicationsTs.search({
+        collection: "publications",
+        query: myId,
+        queryBy: "userId",
+      });
+      setSearchResults(response || []);
+    } catch (error) {
+      console.error("Error fetching publications:", error);
+    }
+  };
 
+  useEffect(() => {
+    if (!myId) return;
     fetchPublications();
   }, [myId]);
 
@@ -178,8 +184,37 @@ const MyProfile = () => {
     }
   };
 
+  const onRefresh = async () => {
+    if (!myId) return;
+
+    try {
+      setRefreshing(true);
+
+      await Promise.all([
+        fetchPublications(),
+        getUpdatedUser(myId).then((updatedUser) => {
+          dispatch(setUserFirestoreData(updatedUser));
+        }),
+      ]);
+    } catch (error) {
+      console.error("Failed to refresh profile:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#fff"
+          colors={["#fff"]}
+        />
+      }
+    >
       <BottomSheet
         InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />}
       />
@@ -201,6 +236,7 @@ const MyProfile = () => {
                   loggedInUser?.profilePicture,
               }}
               imageStyle={styles.profilePicture}
+              highResolutionImage={loggedInUser?.profilePictureVeryHigh}
             />
             <View>
               <Text size="h3" weight="semibold" color="white">
