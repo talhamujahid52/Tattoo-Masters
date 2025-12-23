@@ -24,7 +24,9 @@
         "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images.",
         "NSUserTrackingUsageDescription": "This identifier will be used to send push notifications.",
         "UIDesignRequiresCompatibility": true,
-        "LSApplicationQueriesSchemes": ["tel"]
+        "LSApplicationQueriesSchemes": [
+          "tel"
+        ]
       }
     },
     "android": {
@@ -34,7 +36,10 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.ddjn.tattoomasters",
-      "permissions": ["ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "androidStatusBar": {
       "backgroundColor": "#000000",
@@ -86,6 +91,10 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34
           }
         }
       ]
@@ -100,4 +109,3 @@
     }
   }
 }
-
