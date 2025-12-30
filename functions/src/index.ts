@@ -121,3 +121,6 @@ export const sendPushNotification = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+export * from "./cleanupUserData";
+export * from "./deleteUserAccount";
