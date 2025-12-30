@@ -323,7 +323,7 @@ const SearchLocation: React.FC = () => {
           }}
         >
           <Text size="h4" weight="semibold" color="#fff">
-            Confirm Location
+            Confirm location
           </Text>
         </TouchableOpacity>
       </View>

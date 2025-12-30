@@ -19,12 +19,14 @@ interface ProfilePicturePreviewProps {
   imageSource: any;
   imageStyle?: StyleProp<ImageStyle>;
   isSquare?: boolean;
+  highResolutionImage?: any;
 }
 
 const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
   imageSource,
   imageStyle,
   isSquare,
+  highResolutionImage,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -75,7 +77,11 @@ const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
                   height: isSquare ? width * 0.95 : width * 0.85,
                   borderRadius: isSquare ? 0 : (width * 0.85) / 2,
                 }}
-                source={imageSource}
+                source={
+                  highResolutionImage
+                    ? { uri: highResolutionImage }
+                    : imageSource
+                }
                 resizeMode="cover"
               />
             </Pressable>

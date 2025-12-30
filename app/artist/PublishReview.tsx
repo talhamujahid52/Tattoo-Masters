@@ -56,6 +56,7 @@ const PublishReview = () => {
         rating,
         user: currentUserId,
         imageUrl: imageURLs.downloadUrlSmall,
+        largeImageUrl: imageURLs.downloadUrlLarge,
       });
 
       const userRef = firestore()
