@@ -496,7 +496,7 @@ const EditProfile = () => {
           <TextInput
             selectionColor="#A29F93"
             placeholderTextColor="#A29F93"
-            placeholder="My Intro"
+            placeholder="Enter Text"
             multiline
             value={formData.aboutYou}
             style={styles.textArea}
@@ -544,7 +544,7 @@ const EditProfile = () => {
             />
             <Input
               inputMode="text"
-              placeholder="Twitter profile"
+              placeholder="X profile"
               value={formData.twitterProfile}
               onChangeText={(text) =>
                 setFormData((prev) => ({ ...prev, twitterProfile: text }))

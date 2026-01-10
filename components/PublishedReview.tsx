@@ -73,7 +73,7 @@ const PublishedReview = ({ review }: { review: Review }) => {
               source={
                 review?.userProfilePicture
                   ? { uri: review?.userProfilePicture }
-                  : require("../assets/images/Artist.png")
+                  : require("../assets/images/placeholder.png")
               }
             />
             <View
@@ -84,7 +84,7 @@ const PublishedReview = ({ review }: { review: Review }) => {
               }}
             >
               <Text size="p" weight="normal" color="#FFF">
-                {review?.userName ? review?.userName : "Martin Luis"}
+                {review?.userName ? review?.userName : "Deleted account"}
               </Text>
               <Text size="medium" weight="normal" color="#A7A7A7">
                 {timeAgo} {/* Display the calculated time ago */}

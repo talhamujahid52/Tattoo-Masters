@@ -8,12 +8,14 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { useDispatch } from "react-redux";
 import { resetUser } from "@/redux/slices/userSlice";
 import { clearSearches } from "@/redux/slices/recentSearchesSlice";
+import { useRouter } from "expo-router";
 
 const DeleteAccount = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const providerId = auth().currentUser?.providerData;
   console.log("Provider: ", providerId);
@@ -47,7 +49,16 @@ const DeleteAccount = () => {
 
       Alert.alert(
         "Account Deleted",
-        "Your account has been permanently deleted."
+        "Your account has been permanently deleted.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace("/(bottomTabs)/Home");
+            },
+          },
+        ],
+        { cancelable: false }
       );
     } catch (error) {
       console.error("Account deletion failed:", error);

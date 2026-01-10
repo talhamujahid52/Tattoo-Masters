@@ -32,7 +32,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           const userData = userDoc.data();
           setOtherUserDetails(userData);
         } else {
-          setOtherUserDetails(embeddedUserData || null);
+          setOtherUserDetails(null);
         }
       } catch (error) {
         console.error("Error fetching user from Firebase:", error);
@@ -43,7 +43,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     fetchUserFromFirebase();
   }, [otherUserId]);
 
-  const otherUserName = otherUserDetails?.name || "";
+  const otherUserName = otherUserDetails?.name || "Deleted account";
   const otherUserProfilePicture =
     otherUserDetails?.profilePictureSmall ||
     otherUserDetails?.profilePicture ||

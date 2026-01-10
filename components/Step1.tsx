@@ -41,8 +41,8 @@ const Step1: React.FC = () => {
   ];
 
   const defaultLocation = {
-    latitude: 33.664286,
-    longitude: 73.004291,
+    latitude: 0,
+    longitude: 0,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   };

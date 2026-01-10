@@ -168,12 +168,16 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
               source={
                 reviewerDetails?.profilePictureSmall
                   ? { uri: reviewerDetails?.profilePictureSmall }
-                  : { uri: reviewerDetails?.profilePicture }
+                  : reviewerDetails?.profilePicture
+                  ? { uri: reviewerDetails?.profilePicture }
+                  : require("../assets/images/placeholder.png")
               }
             />
             <View>
               <Text size="p" weight="normal" color="#FFF">
-                {reviewerDetails?.name ? reviewerDetails?.name : "Martin Luis"}
+                {reviewerDetails?.name
+                  ? reviewerDetails?.name
+                  : "Deleted account"}
               </Text>
               <Text size="medium" weight="normal" color="#A7A7A7">
                 {latestReview?.date ? timeAgo(latestReview.date) : "Just now"}{" "}

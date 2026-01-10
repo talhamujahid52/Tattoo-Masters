@@ -139,8 +139,8 @@ const StepperForm: React.FC = () => {
 
       if (formData?.twitterProfile && !isValidUrl(formData.twitterProfile)) {
         Alert.alert(
-          "Invalid Twitter URL",
-          "Twitter profile URL must start with http:// or https://"
+          "Invalid X URL",
+          "X profile URL must start with http:// or https://"
         );
         return;
       }
