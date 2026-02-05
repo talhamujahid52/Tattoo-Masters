@@ -3,17 +3,12 @@ import {
   TouchableOpacity,
   View,
   FlatList,
-  ScrollView,
-  RefreshControl,
   Image,
   Pressable,
-  ActivityIndicator,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
@@ -107,6 +102,7 @@ const Home = () => {
   }, [publicationsTs.search]);
 
   const handleLoadMore = () => {
+    if (publicationsTs.loading) return;
     const nextPage = page + 1;
     setPage(nextPage);
     publicationsTs.search({
@@ -159,7 +155,7 @@ const Home = () => {
           navigateFromData(data);
           return;
         }
-      } catch { }
+      } catch {}
 
       try {
         // Fallback to Expo last response
@@ -170,7 +166,7 @@ const Home = () => {
           const data = raw?.data ? raw.data : raw;
           navigateFromData(data);
         }
-      } catch { }
+      } catch {}
     })();
   }, []);
 
@@ -187,37 +183,9 @@ const Home = () => {
     setRefreshing(false);
   };
 
-  const isCloseToBottom = ({
-    layoutMeasurement,
-    contentOffset,
-    contentSize,
-  }: NativeScrollEvent) => {
-    const paddingToBottom = 20;
-    return (
-      layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - paddingToBottom
-    );
-  };
-
-  return (
-    <ScrollView
-      contentContainerStyle={{ paddingBottom: 30 }}
-      style={styles.container}
-      onScroll={({ nativeEvent }) => {
-        if (isCloseToBottom(nativeEvent) && !publicationsTs.loading) {
-          handleLoadMore();
-        }
-      }}
-      scrollEventThrottle={400}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#fff"
-          colors={["#fff"]}
-        />
-      }
-    >
+  // Header component for the ImageGallery
+  const ListHeader = (
+    <View style={styles.headerContainer}>
       <View style={{ position: "relative", paddingHorizontal: 16 }}>
         <Input
           value={searchText}
@@ -276,12 +244,12 @@ const Home = () => {
                   width: 170,
                   height: 170,
                   borderRadius: 16,
-                  overflow: "hidden", // Ensure content like rounded corners are respected
+                  overflow: "hidden",
                   position: "relative",
                 }}
               >
                 <Image
-                  source={require("../../../../assets/images/searchMoreArtists.png")}
+                  source={require("../../../assets/images/searchMoreArtists.png")}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -295,7 +263,6 @@ const Home = () => {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    // justifyContent: "center",
                     paddingHorizontal: 16,
                   }}
                 >
@@ -322,9 +289,19 @@ const Home = () => {
       >
         Find your inspiration
       </Text>
-      <ImageGallery images={publicationsTs.results} />
+    </View>
+  );
 
-    </ScrollView>
+  return (
+    <View style={styles.container}>
+      <ImageGallery
+        images={publicationsTs.results}
+        onEndReached={handleLoadMore}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        ListHeaderComponent={ListHeader}
+      />
+    </View>
   );
 };
 
@@ -332,9 +309,12 @@ export default Home;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: "#000",
-    // paddingHorizontal: 16,
     paddingTop: 15,
+  },
+  headerContainer: {
+    backgroundColor: "#000",
   },
   flatlistHeadingContainer: {
     flexDirection: "row",

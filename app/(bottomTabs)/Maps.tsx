@@ -384,7 +384,7 @@ const FullScreenMapWithSearch: React.FC = () => {
                 }}
               >
                 <Image
-                  source={require("../../../assets/images/search.png")}
+                  source={require("../../assets/images/search.png")}
                   style={{ width: 24, height: 24, tintColor: "#fff" }}
                   resizeMode="contain"
                 />
@@ -421,7 +421,7 @@ const FullScreenMapWithSearch: React.FC = () => {
             </Text>
           )}
           <Image
-            source={require("../../../assets/images/filter.png")}
+            source={require("../../assets/images/filter.png")}
             resizeMode="contain"
             style={styles.filterIcon}
           />
@@ -472,7 +472,7 @@ const FullScreenMapWithSearch: React.FC = () => {
                   source={{
                     uri: profilePic
                       ? profilePic
-                      : require("../../../assets/images/placeholder.png"),
+                      : require("../../assets/images/placeholder.png"),
                   }}
                   style={{
                     width: 48,

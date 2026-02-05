@@ -417,7 +417,7 @@ export default function SearchAll() {
         </View>
         <TouchableOpacity onPress={show} style={styles.filterButton}>
           <Image
-            source={require("../../../../assets/images/filter.png")}
+            source={require("../../../assets/images/filter.png")}
             resizeMode="contain"
             style={styles.filterIcon}
           />

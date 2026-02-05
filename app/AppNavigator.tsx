@@ -263,6 +263,8 @@ const AppNavigator = () => {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: "#000" },
+            headerBackTitleVisible: false,
+            headerBackButtonDisplayMode: "minimal",
           }}
         >
           <Stack.Screen options={{ animation: "fade" }} name="(auth)/Welcome" />
@@ -500,7 +502,15 @@ const AppNavigator = () => {
               headerTintColor: "#fff",
             }}
           />
-          <Stack.Screen name="(drawer)" />
+          <Stack.Screen name="(bottomTabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="Menu"
+            options={{
+              headerShown: false,
+              animation: "slide_from_right",
+              gestureDirection: "horizontal",
+            }}
+          />
           <Stack.Screen
             name="artist/MyProfile"
             options={{

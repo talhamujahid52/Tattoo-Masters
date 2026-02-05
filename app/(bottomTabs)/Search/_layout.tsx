@@ -7,14 +7,13 @@ const SearchLayout = () => {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: "#000" },
+        headerBackButtonDisplayMode: "minimal",
       }}
     >
       <Stack.Screen
         name="index"
         options={{
           headerShown: false,
-          // gestureEnabled: true,
-          // headerTitle: "Add location",
           headerTitleStyle: { color: "#fff" },
           headerStyle: { backgroundColor: "#000" },
           headerBackTitleVisible: false,
@@ -26,8 +25,6 @@ const SearchLayout = () => {
         name="SearchAll"
         options={{
           headerShown: false,
-          // gestureEnabled: true,
-          // headerTitle: "Add location",
           headerTitleStyle: { color: "#fff" },
           headerStyle: { backgroundColor: "#000" },
           headerBackTitleVisible: false,

@@ -1,67 +1,73 @@
-import { StyleSheet, View, Image, StatusBar } from "react-native";
-import Text from "@/components/Text";
-import React, { useCallback, useEffect, useState } from "react";
-import { Tabs, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import CustomBottomSheet from "@/components/CustomBottomSheet";
+import { Image, StatusBar, Pressable } from "react-native";
+import React from "react";
+import { Tabs } from "expo-router";
+import useBottomSheet from "@/hooks/useBottomSheet";
+import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 const BottomTabsLayout = () => {
-  const unreadMessages = 17;
-  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
-  // const router = useRouter();
-  const handlePresentModalPress = useCallback(() => {
-    setBottomSheetVisible(true);
-  }, []);
+  const { BottomSheet, show, hide } = useBottomSheet();
+  const insets = useSafeAreaInsets();
+  const loggedInUser: FirebaseAuthTypes.User = useSelector(
+    (state: any) => state?.user?.user
+  );
 
-  const handleDismiss = useCallback(() => {
-    setBottomSheetVisible(false);
-  }, []);
-  // const userId = useSelector((state: RootState) => state.user.user?.uid);
-
-  // useEffect(() => {
-  //   console.log("user", userId);
-  //   if (!userId) {
-  //     router.replace("/(auth)/Welcome");
-  //   }
-  // }, [userId]);
+  const handleTabPress = (tab: string, defaultHandler?: () => void) => {
+    if (!loggedInUser) {
+      show();
+    } else if (defaultHandler) {
+      defaultHandler();
+    }
+  };
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <BottomSheet
+        InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
+      />
       <Tabs
         screenOptions={{
           sceneContainerStyle: { backgroundColor: "#000" },
           tabBarStyle: {
             backgroundColor: "#000000",
-            borderColor: "#FFFFFF26",
-            height: 90,
+            borderTopColor: "#313232",
+            borderTopWidth: 0.33,
+            height: 54 + insets.bottom,
           },
         }}
       >
         <Tabs.Screen
           name="Home"
           options={{
+            headerShown: false,
             title: "",
-
             tabBarIcon: ({ focused }) =>
               focused ? (
-                <Ionicons name="home-sharp" size={24} color="#fff" />
+                <Image
+                  source={require("../../assets/images/home-filled.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ) : (
-                <Ionicons name="home-outline" size={24} color="#838383" />
+                <Image
+                  source={require("../../assets/images/home.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ),
             headerStyle: {
               backgroundColor: "#000",
+              shadowOpacity: 0,
             },
-            headerLeft: () => (
-              <Image
-                source={require("../../assets/images/tattoo masters.png")}
-                resizeMode="cover"
-                style={{ height: 27, width: 180 }}
-              />
-            ),
-            headerRight: () => <Ionicons name="menu" size={25} color="#fff" />,
+            headerLeftContainerStyle: {
+              paddingLeft: 16,
+            },
+            headerRightContainerStyle: {
+              paddingRight: 16,
+            },
           }}
         />
         <Tabs.Screen
@@ -70,9 +76,17 @@ const BottomTabsLayout = () => {
             title: "",
             tabBarIcon: ({ focused }) =>
               focused ? (
-                <Ionicons name="search-sharp" size={24} color="#fff" />
+                <Image
+                  source={require("../../assets/images/search-filled.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ) : (
-                <Ionicons name="search-outline" size={24} color="#838383" />
+                <Image
+                  source={require("../../assets/images/search.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ),
             headerStyle: {
               backgroundColor: "#000",
@@ -87,22 +101,44 @@ const BottomTabsLayout = () => {
             title: "",
             tabBarIcon: ({ focused }) =>
               focused ? (
-                <Ionicons name="map-sharp" size={24} color="#fff" />
+                <Image
+                  source={require("../../assets/images/map-filled.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ) : (
-                <Ionicons name="map-outline" size={24} color="#838383" />
+                <Image
+                  source={require("../../assets/images/map.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
               ),
+            headerShown: false,
           }}
         />
         <Tabs.Screen
           name="Likes"
           options={{
             title: "",
-            tabBarIcon: ({ focused }) => (
-              <Ionicons
-                onPress={handlePresentModalPress}
-                name={focused ? "heart-sharp" : "heart-outline"}
-                size={24}
-                color={focused ? "#fff" : "#838383"}
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <Image
+                  source={require("../../assets/images/favorite-filled.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
+              ) : (
+                <Image
+                  source={require("../../assets/images/favorite-outline.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
+              ),
+            headerShown: false,
+            tabBarButton: (props) => (
+              <Pressable
+                {...props}
+                onPress={() => handleTabPress("Likes", props.onPress as () => void)}
               />
             ),
           }}
@@ -111,57 +147,32 @@ const BottomTabsLayout = () => {
           name="Chat"
           options={{
             title: "",
-            tabBarIcon: ({ focused }) => (
-              <View style={styles.iconContainer}>
-                <Ionicons
-                  name={focused ? "chatbubble-sharp" : "chatbubble-outline"}
-                  size={24}
-                  color={focused ? "#fff" : "#838383"}
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <Image
+                  source={require("../../assets/images/comment-filled.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
                 />
-                {unreadMessages > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{unreadMessages}</Text>
-                  </View>
-                )}
-              </View>
+              ) : (
+                <Image
+                  source={require("../../assets/images/comment.png")}
+                  resizeMode="contain"
+                  style={{ height: 28, width: 28 }}
+                />
+              ),
+            headerShown: false,
+            tabBarButton: (props) => (
+              <Pressable
+                {...props}
+                onPress={() => handleTabPress("Chat", props.onPress as () => void)}
+              />
             ),
           }}
         />
       </Tabs>
-      <CustomBottomSheet
-        isVisible={isBottomSheetVisible}
-        onDismiss={handleDismiss}
-      />
     </>
   );
 };
 
 export default BottomTabsLayout;
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    position: "relative",
-    alignItems: "center",
-  },
-  badge: {
-    position: "absolute",
-    right: -2,
-    top: -4,
-    backgroundColor: "red",
-    borderRadius: 10,
-    height: 17,
-    width: 17,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    color: "white",
-    fontSize: 10,
-  },
-  contentContainer: {
-    flex: 1,
-    alignItems: "center",
-  },
-});

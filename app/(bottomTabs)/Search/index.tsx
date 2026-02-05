@@ -59,15 +59,6 @@ const Search: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     const timeout = setTimeout(() => {
-  //       searchInputRef.current?.focus();
-  //     }, 300);
-
-  //     return () => clearTimeout(timeout);
-  //   }, [])
-  // );
 
   // overlay fade (if you re-enable it)
   useEffect(() => {
@@ -137,7 +128,7 @@ const Search: React.FC = () => {
             {Platform.OS === "ios" && (
               <Image
                 style={{ width: 24, height: 24, resizeMode: "contain" }}
-                source={require("../../../../assets/images/iosBackIcon.png")}
+                source={require("../../../assets/images/iosBackIcon.png")}
               />
             )}
           </TouchableOpacity>
@@ -207,7 +198,7 @@ const Search: React.FC = () => {
                       resizeMode: "contain",
                       marginRight: 10,
                     }}
-                    source={require("../../../../assets/images/historyIcon.png")}
+                    source={require("../../../assets/images/historyIcon.png")}
                   />
                   <Text style={{ color: "#fff" }} size="p">
                     {item.text}

@@ -1,9 +1,21 @@
-import React, { useCallback, useMemo } from "react";
-import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
-import { ResponsiveGrid } from "react-native-flexible-grid";
+import React, { useCallback } from "react";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+  RefreshControl,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
 import { TypesenseResult, Publication } from "@/hooks/useTypesense";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const NUM_COLUMNS = 3;
+const ITEM_MARGIN = 2;
+const ITEM_SIZE = (SCREEN_WIDTH - ITEM_MARGIN * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
 
 interface Props {
   images?: TypesenseResult<Publication>[];
@@ -13,22 +25,36 @@ interface Props {
     caption: string;
     styles: string[];
   }[];
+  onEndReached?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  ListHeaderComponent?: React.ReactElement | null;
+  contentContainerStyle?: object;
 }
 
-const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
+const ImageGallery = ({
+  images = [],
+  imageUris = [],
+  onEndReached,
+  onRefresh,
+  refreshing = false,
+  ListHeaderComponent,
+  contentContainerStyle,
+}: Props) => {
   const router = useRouter();
+
   const renderTypesenseItem = useCallback(
-    ({ item }: { item: TypesenseResult<any> }) => {
+    ({ item }: { item: TypesenseResult<Publication> }) => {
       const doc = item.document;
       return (
         <TouchableOpacity
-          style={styles.boxContainer}
+          style={styles.itemContainer}
           onPress={() => {
             router.push({
               pathname: "/artist/TattooDetail",
               params: {
                 photoUrlVeryHigh: encodeURIComponent(
-                  doc?.downloadUrls?.veryHigh,
+                  doc?.downloadUrls?.veryHigh
                 ),
                 photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
                 id: doc.id,
@@ -43,85 +69,85 @@ const ImageGallery = ({ images = [], imageUris = [] }: Props) => {
           }}
         >
           <ExpoImage
-            // transition={400}
-            source={{ uri: item?.document?.downloadUrls?.small }}
-            key={item?.document?.downloadUrls?.small}
-            cachePolicy={"disk"}
-            style={styles.box}
+            source={{ uri: doc?.downloadUrls?.small }}
+            cachePolicy="disk"
+            style={styles.image}
             contentFit="cover"
           />
         </TouchableOpacity>
       );
     },
-    [],
+    [router]
   );
 
-  const renderUriItem = useCallback(({ item }: { item: { uri: string } }) => {
-    return (
-      <View style={styles.boxContainer}>
-        <Image
-          source={{ uri: item.uri }}
-          key={item?.uri}
-          style={styles.box}
-          resizeMode="cover"
-        />
-      </View>
-    );
-  }, []);
+  const renderUriItem = useCallback(
+    ({ item }: { item: { uri: string } }) => {
+      return (
+        <View style={styles.itemContainer}>
+          <Image
+            source={{ uri: item.uri }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
+      );
+    },
+    []
+  );
 
   const isTypesense = images.length > 0;
-  const data = useMemo(() => {
-    return isTypesense
-      ? images.map((item) => ({ ...item, widthRatio: 1, heightRatio: 1 }))
-      : imageUris.map((item) => ({
-          uri: item?.uri,
-          widthRatio: 1,
-          heightRatio: 1,
-        }));
-  }, [isTypesense, images, imageUris]);
+  const data = isTypesense ? images : imageUris;
   const renderItem = isTypesense ? renderTypesenseItem : renderUriItem;
+  const keyExtractor = isTypesense
+    ? (item: TypesenseResult<Publication>) => item.document?.id || String(Math.random())
+    : (item: { uri: string }, index: number) => item.uri || String(index);
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "#000",
-      }}
-    >
-      <ResponsiveGrid
-        maxItemsPerColumn={3}
-        data={data}
-        renderItem={renderItem}
-        showScrollIndicator={false}
-      />
-    </View>
+    <FlatList
+      data={data}
+      renderItem={renderItem as any}
+      keyExtractor={keyExtractor as any}
+      numColumns={NUM_COLUMNS}
+      style={styles.container}
+      contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+      showsVerticalScrollIndicator={false}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
+      ListHeaderComponent={ListHeaderComponent}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#fff"
+            colors={["#fff"]}
+          />
+        ) : undefined
+      }
+    />
   );
 };
 
 export default ImageGallery;
 
 const styles = StyleSheet.create({
-  boxContainer: {
+  container: {
     flex: 1,
-    margin: 2,
+    backgroundColor: "#000",
+  },
+  contentContainer: {
+    paddingBottom: 30,
+  },
+  itemContainer: {
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
+    margin: ITEM_MARGIN,
     borderRadius: 4,
     overflow: "hidden",
-  },
-  image: {
-    width: 100,
-    height: 100,
-  },
-  box: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#202020",
   },
-  text: {
-    color: "white",
-    fontSize: 10,
-    position: "absolute",
-    bottom: 10,
+  image: {
+    width: "100%",
+    height: "100%",
   },
 });

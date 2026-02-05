@@ -1,26 +1,31 @@
 import React from "react";
-import { Stack, useNavigation } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Image } from "react-native";
 import { TouchableOpacity } from "react-native";
-import { DrawerActions } from "@react-navigation/native";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSelector } from "react-redux";
 
 const HomeLayout = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
-    (state: any) => state?.user?.user,
+    (state: any) => state?.user?.user
   );
   const { BottomSheet, show, hide } = useBottomSheet();
+
   return (
     <>
       <BottomSheet
         InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
       />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: "#000" } }}>
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: "#000" },
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      >
         <Stack.Screen
           name="index"
           options={{
@@ -37,7 +42,7 @@ const HomeLayout = () => {
             },
             headerLeft: () => (
               <Image
-                source={require("../../../../assets/images/tattoo masters.png")}
+                source={require("../../../assets/images/tattoo masters.png")}
                 resizeMode="cover"
                 style={{
                   height: 27,
@@ -49,24 +54,20 @@ const HomeLayout = () => {
             headerRight: () => (
               <TouchableOpacity
                 style={{
-                  // padding: 10,
                   left: 8,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
                 hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
                 onPress={() => {
-                  loggedInUser
-                    ? navigation.dispatch(DrawerActions.toggleDrawer())
-                    : show();
+                  loggedInUser ? router.push("/Menu") : show();
                 }}
               >
                 <Image
-                  source={require("../../../../assets/images/menu.png")}
+                  source={require("../../../assets/images/menu.png")}
                   resizeMode="cover"
                   style={{
                     alignSelf: "center",
-
                     height: 13,
                     width: 19,
                   }}
