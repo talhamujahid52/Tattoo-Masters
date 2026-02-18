@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["UR4D67257L.com.ddjn.tattoomasters"],
+        "components": [
+          { "/": "/artist/*" },
+          { "/": "/tattoo/*" }
+        ]
+      }
+    ]
+  }
+}

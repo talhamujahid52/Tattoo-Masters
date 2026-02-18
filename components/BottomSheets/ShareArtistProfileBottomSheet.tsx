@@ -11,8 +11,6 @@ import {
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import * as Linking from "expo-linking";
-import dynamicLinks from "@react-native-firebase/dynamic-links";
 
 interface bottomSheetProps {
   showLoginBottomSheet: () => void;
@@ -33,27 +31,11 @@ const ShareArtistProfileBottomSheet = ({
 
   const shareArtistProfile = async (artistId: string) => {
     try {
-      const fullLink = `https://tattoomasters.com/artist?artistId=${artistId}`;
+      const link = `https://tattoomasters.app/artist/${artistId}`;
 
-      const shortLink = await dynamicLinks().buildShortLink({
-        link: fullLink,
-        domainUriPrefix: "https://tattoomasters.page.link",
-        android: {
-          packageName: "com.ddjn.tattoomasters",
-        },
-        ios: {
-          bundleId: "com.ddjn.tattoomasters",
-        },
-      });
-
-      await Share.share({
-        message:
-          `Check out this tattoo artist on the new Tattoo Masters app.\n\n` +
-          `${shortLink}\n\n` +
-          `It’s an all new app for all tattoo artists and tattoo enthusiasts.`,
-      });
+      await Share.share({ message: link });
     } catch (error) {
-      console.error("Error sharing dynamic link:", error);
+      console.error("Error sharing:", error);
     }
   };
 

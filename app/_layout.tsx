@@ -18,6 +18,13 @@ import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 // import { useRouter } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
+
+// Ensures Home is always at the bottom of the stack when opening via deep link,
+// so the back button navigates to Home instead of exiting the app.
+export const unstable_settings = {
+  initialRouteName: "(bottomTabs)",
+};
+
 LogBox.ignoreLogs([
   "Please use `getApp()` instead",
   "React Native Firebase: The method .* is deprecated",

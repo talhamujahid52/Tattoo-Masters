@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ddjn.tattoomasters",
+      "sha256_cert_fingerprints": [
+        "C4:8E:18:19:BB:A0:6C:CE:B5:0B:5E:4A:9A:65:75:69:0F:26:86:51:58:EA:29:EF:34:78:84:65:4A:47:C6:E6"
+      ]
+    }
+  }
+]

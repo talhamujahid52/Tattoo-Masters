@@ -30,6 +30,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { updateSingleArtist } from "@/redux/slices/artistSlice";
+import firestore from "@react-native-firebase/firestore";
 
 interface StyleItem {
   title: string;
@@ -61,7 +62,27 @@ const ArtistProfile = () => {
   } = useBottomSheet();
 
   const { artistId } = useLocalSearchParams<any>();
-  const artist = useGetArtist(artistId);
+  const reduxArtist = useGetArtist(artistId);
+  const [firestoreArtist, setFirestoreArtist] = useState<any>(null);
+  const artist = reduxArtist ?? firestoreArtist;
+
+  useEffect(() => {
+    if (reduxArtist || !artistId) return;
+    let cancelled = false;
+    firestore()
+      .collection("Users")
+      .doc(artistId)
+      .get()
+      .then((snap) => {
+        if (cancelled || !snap.exists) return;
+        setFirestoreArtist({ id: snap.id, data: snap.data() });
+      })
+      .catch((err) => console.error("Firestore artist fallback error:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [artistId, reduxArtist]);
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const content = artist?.data?.aboutYou;

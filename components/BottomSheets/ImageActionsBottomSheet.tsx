@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Image, Share } from "react-native";
 import Text from "../Text";
 import React from "react";
 import { router, useRouter } from "expo-router";
@@ -13,6 +13,7 @@ interface bottomSheetProps {
   isOwner?: boolean;
   onEditTattoo?: () => void;
   onDeleteTattoo?: () => void;
+  publicationId?: string;
 }
 
 const ImageActionsBottomSheet = ({
@@ -22,11 +23,23 @@ const ImageActionsBottomSheet = ({
   isOwner = false,
   onEditTattoo,
   onDeleteTattoo,
+  publicationId,
 }: bottomSheetProps) => {
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
   );
   const currentUserId = loggedInUser?.uid;
+
+  const shareTattoo = async () => {
+    if (!publicationId) return;
+    try {
+      const link = `https://tattoomasters.app/tattoo/${publicationId}`;
+      await Share.share({ message: link });
+    } catch (error) {
+      console.error("Error sharing tattoo:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {isOwner ? (
@@ -59,6 +72,21 @@ const ImageActionsBottomSheet = ({
             />
             <Text size="p" weight="normal" color="#FBF6FA">
               Delete tattoo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              hideImageActionsSheet();
+              shareTattoo();
+            }}
+            style={styles.drawerItem}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/share.png")}
+            />
+            <Text size="p" weight="normal" color="#FBF6FA">
+              Share tattoo
             </Text>
           </TouchableOpacity>
         </>
@@ -94,6 +122,21 @@ const ImageActionsBottomSheet = ({
             />
             <Text size="h4" weight="normal" color="#FBF6FA">
               Feedback
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              hideImageActionsSheet();
+              shareTattoo();
+            }}
+            style={styles.drawerItem}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/share.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Share tattoo
             </Text>
           </TouchableOpacity>
         </>

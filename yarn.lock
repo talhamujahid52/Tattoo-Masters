@@ -2030,11 +2030,6 @@
   dependencies:
     plist "^3.1.0"
 
-"@react-native-firebase/dynamic-links@^21.14.0":
-  version "21.14.0"
-  resolved "https://registry.yarnpkg.com/@react-native-firebase/dynamic-links/-/dynamic-links-21.14.0.tgz#991141efebf9eb033feef01763db5bc421811a96"
-  integrity sha512-6NWcHQjri6kXPxX8Q/hS3BErRNbxyUsTkeoUyasuiZBcHIxfP6IS0I9CPxANpxOwrmUWb1p6oO/J/Lcbm0Rxsw==
-
 "@react-native-firebase/firestore@^21.14.0":
   version "21.14.0"
   resolved "https://registry.yarnpkg.com/@react-native-firebase/firestore/-/firestore-21.14.0.tgz#76a946a35cb7856e838ce34e99d4372de2343671"

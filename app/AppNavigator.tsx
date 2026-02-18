@@ -17,7 +17,6 @@ import {
   useNotificationListeners,
 } from "@/hooks/useNotification";
 
-import dynamicLinks from "@react-native-firebase/dynamic-links";
 import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import { getCurrentChatId } from "@/utils/NavState";
 
@@ -168,27 +167,10 @@ const AppNavigator = () => {
     if (initializing) setInitializing(false);
   }
 
-  useEffect(() => {
-    const handleDynamicLink = (link: any) => {
-      console.log("URL: ", link);
-      if (link?.url) {
-        const url = new URL(link.url);
-        const artistId = url.searchParams.get("artistId");
-
-        console.log("Artist Id: ", artistId);
-
-        if (artistId) {
-          router.push(`/artist/ArtistProfile?artistId=${artistId}`);
-        }
-      }
-    };
-
-    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
-
-    dynamicLinks().getInitialLink().then(handleDynamicLink);
-
-    return () => unsubscribe();
-  }, []);
+  // Deep links (universal links + custom scheme) are handled entirely by
+  // Expo Router's file-based routing via catch-all route files:
+  //   app/artist/[artistId].tsx  →  re-exports ArtistProfile
+  // No manual link handling needed.
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
@@ -536,6 +518,18 @@ const AppNavigator = () => {
             }}
           />
           <Stack.Screen
+            name="artist/[artistId]"
+            options={{
+              headerShown: true,
+              headerTitle: "Artist",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
             name="artist/CreateReviewPassword"
             options={{
               headerShown: true,
@@ -598,6 +592,18 @@ const AppNavigator = () => {
           />
           <Stack.Screen
             name="artist/TattooDetail"
+            options={{
+              headerShown: true,
+              headerTitle: "Portfolio",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="tattoo/[id]"
             options={{
               headerShown: true,
               headerTitle: "Portfolio",

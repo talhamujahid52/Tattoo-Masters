@@ -306,6 +306,7 @@ const TattooDetail: React.FC = () => {
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
             isOwner={Boolean(currentUserId && userId && currentUserId === userId)}
+            publicationId={id}
             onEditTattoo={() => {
               router.push({
                 pathname: "/artist/UploadTattoo",

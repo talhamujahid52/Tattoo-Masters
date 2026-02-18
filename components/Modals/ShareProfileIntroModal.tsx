@@ -4,7 +4,6 @@ import Text from "../Text";
 import Button from "../Button";
 import { router } from "expo-router";
 import { FormContext } from "@/context/FormContext";
-import dynamicLinks from "@react-native-firebase/dynamic-links";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
 type Props = {
@@ -21,27 +20,11 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
   const myProfileId = loggedInUserFirestore?.uid;
   const shareProfile = async () => {
     try {
-      const fullLink = `https://tattoomasters.com/artist?artistId=${myProfileId}`;
+      const link = `https://tattoomasters.app/artist/${myProfileId}`;
 
-      const shortLink = await dynamicLinks().buildShortLink({
-        link: fullLink,
-        domainUriPrefix: "https://tattoomasters.page.link",
-        android: {
-          packageName: "com.ddjn.tattoomasters",
-        },
-        ios: {
-          bundleId: "com.ddjn.tattoomasters",
-        },
-      });
-
-      await Share.share({
-        message:
-          `Hey there! Check out my profile on the new Tattoo Masters app.\n\n` +
-          `${shortLink}\n\n` +
-          `It’s an all new app for all tattoo artists and tattoo enthusiasts.`,
-      });
+      await Share.share({ message: link });
     } catch (error) {
-      console.error("Error sharing dynamic link:", error);
+      console.error("Error sharing:", error);
     }
   };
 
