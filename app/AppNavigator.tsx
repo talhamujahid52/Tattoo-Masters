@@ -7,6 +7,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import messaging from "@react-native-firebase/messaging";
 import { SplashScreen, Stack, useRouter, usePathname } from "expo-router";
+import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, Image } from "react-native";
@@ -24,6 +25,7 @@ const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
   const skipInitialHomeRef = React.useRef(false);
   const [initializing, setInitializing] = useState(true);
+  const [initialUrlChecked, setInitialUrlChecked] = useState(false);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
 
   useNotification(userId); // Handles token, saving, etc.
@@ -172,6 +174,21 @@ const AppNavigator = () => {
   //   app/artist/[artistId].tsx  →  re-exports ArtistProfile
   // No manual link handling needed.
 
+  // On cold start via a deep link, tell the redirect logic to stand down
+  // so Expo Router can resolve the URL to the correct route.
+  useEffect(() => {
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          skipInitialHomeRef.current = true;
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setInitialUrlChecked(true);
+      });
+  }, []);
+
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
@@ -209,7 +226,7 @@ const AppNavigator = () => {
 
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   useEffect(() => {
-    if (initializing) {
+    if (initializing || !initialUrlChecked) {
       return;
     }
     if (
@@ -232,7 +249,7 @@ const AppNavigator = () => {
     if (isFacebookUser) {
       router.back();
     }
-  }, [userId, initializing]);
+  }, [userId, initializing, initialUrlChecked]);
 
   if (initializing) {
     return null;
