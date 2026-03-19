@@ -18,6 +18,9 @@ const Review: React.FC<Review> = ({
   isShownOnProfile = false,
 }) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
 
   return (
     <View style={styles.container}>
@@ -26,9 +29,16 @@ const Review: React.FC<Review> = ({
           <Image
             style={styles.profilePicture}
             source={
-              loggedInUser?.profilePictureSmall
-                ? { uri: loggedInUser?.profilePictureSmall }
-                : { uri: loggedInUser?.profilePicture }
+              loggedInUserFirestore?.profilePictureSmall ||
+              loggedInUserFirestore?.profilePicture ||
+              loggedInUser?.photoURL
+                ? {
+                    uri:
+                      loggedInUserFirestore?.profilePictureSmall ??
+                      loggedInUserFirestore?.profilePicture ??
+                      loggedInUser?.photoURL,
+                  }
+                : require("../assets/images/placeholder.png")
             }
           />
           <View
@@ -39,7 +49,7 @@ const Review: React.FC<Review> = ({
             }}
           >
             <Text size="p" weight="normal" color="#FFF">
-              {loggedInUser?.name ? loggedInUser?.name : "Martin Luis"}
+              {loggedInUserFirestore?.name ? loggedInUserFirestore?.name : ""}
             </Text>
             <Text size="medium" weight="normal" color="#A7A7A7">
               1 min
@@ -51,7 +61,7 @@ const Review: React.FC<Review> = ({
               source={require("../assets/images/star.png")}
             />
             <Text size="p" weight="normal" color="#FBF6FA">
-              {rating ? rating : "4.5"}
+              {rating ? rating : ""}
             </Text>
           </View>
         </View>

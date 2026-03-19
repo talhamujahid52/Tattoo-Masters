@@ -36,23 +36,25 @@ const ShareReviewPasswordBottomSheet = ({
     }
   };
 
+  const myProfileId = loggedInUserFirestore?.uid;
   const onShare = async () => {
     try {
-      const link = `https://tattoomasters.app/artist/${loggedInUserFirestore?.uid}`;
+      const link = `https://tattoomasters.app/artist/${myProfileId}`;
+      const message = `Hey! Here's my review password for the new Tattoo Masters app.\nPassword: ${loggedInUserFirestore?.reviewPassword}\n${link}\nI would appreciate a great review to help me grow my profile.`;
 
-      const result = await Share.share({ message: link });
+      const result = await Share.share({ message });
 
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
-          console.log("Avtivity Type : ", result.activityType);
+          console.log("Activity Type:", result.activityType);
         } else {
-          console.log("Shared : ");
+          console.log("Shared successfully.");
         }
       } else if (result.action === Share.dismissedAction) {
-        console.log("Share Sheet Dismissed : ");
+        console.log("Share Sheet dismissed.");
       }
     } catch (error) {
-      console.log("Error opening Share Sheet : ", error);
+      console.log("Error opening Share Sheet:", error);
     }
   };
 

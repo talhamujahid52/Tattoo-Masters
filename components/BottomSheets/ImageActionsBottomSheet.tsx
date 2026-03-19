@@ -34,7 +34,9 @@ const ImageActionsBottomSheet = ({
     if (!publicationId) return;
     try {
       const link = `https://tattoomasters.app/tattoo/${publicationId}`;
-      await Share.share({ message: link });
+      const message = `Check out this cool tattoo on the new Tattoo Masters app.\n${link}\nIt's an all new app for all tattoo artists and tattoo enthusiasts.`;
+
+      await Share.share({ message });
     } catch (error) {
       console.error("Error sharing tattoo:", error);
     }

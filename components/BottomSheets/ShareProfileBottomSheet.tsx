@@ -22,8 +22,9 @@ const ShareProfileBottomSheet = ({ hide, myId }: bottomSheetProps) => {
   const shareArtistProfile = async (myId: any) => {
     try {
       const link = `https://tattoomasters.app/artist/${myId}`;
+      const message = `Hey there! Check out my profile on the new Tattoo Masters app.\n${link}\nIt's an all new app for all tattoo artists and tattoo enthusiasts.`;
 
-      await Share.share({ message: link });
+      await Share.share({ message });
     } catch (error) {
       console.error("Error sharing:", error);
     }

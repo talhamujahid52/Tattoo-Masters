@@ -21,8 +21,9 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
   const shareProfile = async () => {
     try {
       const link = `https://tattoomasters.app/artist/${myProfileId}`;
+      const message = `Hey there! Check out my profile on the new Tattoo Masters app.\n${link}\nIt's an all new app for all tattoo artists and tattoo enthusiasts.`;
 
-      await Share.share({ message: link });
+      await Share.share({ message });
     } catch (error) {
       console.error("Error sharing:", error);
     }

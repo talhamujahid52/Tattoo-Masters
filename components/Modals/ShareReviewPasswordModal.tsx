@@ -19,11 +19,13 @@ const ShareReviewPasswordModal: React.FC<Props> = ({ onClose }) => {
   const loggedInUserFirestore: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore
   );
+  const myProfileId = loggedInUserFirestore?.uid;
   const onShare = async () => {
     try {
-      const result = await Share.share({
-        message: `Here's my review password: ${formData?.reviewPassword}`,
-      });
+      const link = `https://tattoomasters.app/artist/${myProfileId}`;
+      const message = `Hey! Here's my review password for the new Tattoo Masters app.\nPassword: ${formData?.reviewPassword}\n${link}\nI would appreciate a great review to help me grow my profile.`;
+
+      const result = await Share.share({ message });
 
       if (result.action === Share.sharedAction) {
         if (result.activityType) {

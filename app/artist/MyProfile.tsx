@@ -204,226 +204,203 @@ const MyProfile = () => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#fff"
-          colors={["#fff"]}
-        />
-      }
-    >
+    <>
       <BottomSheet
         InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />}
       />
-      <View style={{ paddingHorizontal: 16 }}>
-        <View style={styles.userProfileRow}>
-          <View style={styles.pictureAndName}>
-            {/* <Image
-              style={styles.profilePicture}
-              source={{
-                uri:
-                  loggedInUser?.profilePictureSmall ??
-                  loggedInUser?.profilePicture,
-              }}
-            /> */}
-            <ProfilePicturePreview
-              imageSource={{
-                uri:
-                  loggedInUser?.profilePictureSmall ??
-                  loggedInUser?.profilePicture,
-              }}
-              imageStyle={styles.profilePicture}
-              highResolutionImage={loggedInUser?.profilePictureVeryHigh}
-            />
-            <View>
-              <Text size="h3" weight="semibold" color="white">
-                {loggedInUser?.name ?? ""}
-              </Text>
-              <Text size="p" weight="normal" color="#A7A7A7">
-                {loggedInUser?.studio === "studio"
-                  ? loggedInUser?.studioName
-                  : loggedInUser?.studio === "freelancer"
-                  ? "Freelancer"
-                  : "Home artist"}
-              </Text>
-              <Text size="p" weight="normal" color="#A7A7A7">
-                {loggedInUser?.city ?? ""}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              show();
-            }}
-            style={styles.moreIconContainer}
-          >
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/more_vert.png")}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.userSocialsRow}>
-          {loggedInUser?.facebookProfile && (
-            <TouchableOpacity
-              onPress={() => {
-                handleOpenLink(loggedInUser.facebookProfile);
-              }}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/facebook_2.png")}
-              />
-            </TouchableOpacity>
-          )}
-          {loggedInUser?.instagramProfile && (
-            <TouchableOpacity
-              onPress={() => handleOpenLink(loggedInUser.instagramProfile)}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/instagram.png")}
-              />
-            </TouchableOpacity>
-          )}
-          {loggedInUser?.twitterProfile && (
-            <TouchableOpacity
-              onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/twitter.png")}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-        <View style={styles.artistFavoriteRow}>
-          <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
-
-          {loggedInUser?.followersCount ? (
-            <Text size="p" weight="normal" color="#FBF6FA">
-              {loggedInUser?.followersCount}
-            </Text>
-          ) : (
-            <View
-              style={{
-                height: 11,
-                width: 31,
-                borderRadius: 6,
-                backgroundColor: "#2D2D2D",
-              }}
-            ></View>
-          )}
-        </View>
-        <View style={styles.tattooStylesRow}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/draw.png")}
-          />
-          {loggedInUser?.tattooStyles && (
-            <>
-              {(showAllUserStyles
-                ? loggedInUser?.tattooStyles
-                : loggedInUser?.tattooStyles.slice(0, 6)
-              ).map((item: any, idx: number) => (
-                <View
-                  key={idx}
-                  style={{
-                    backgroundColor: "#262526",
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
-                    borderRadius: 6,
+      <ImageGallery
+        images={filteredResults}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        ListHeaderComponent={
+          <View style={{ paddingHorizontal: 16 }}>
+            <View style={styles.userProfileRow}>
+              <View style={styles.pictureAndName}>
+                <ProfilePicturePreview
+                  imageSource={{
+                    uri:
+                      loggedInUser?.profilePictureSmall ??
+                      loggedInUser?.profilePicture,
                   }}
-                >
-                  <Text size="p" weight="normal" color="#D7D7C9">
-                    {item}
+                  imageStyle={styles.profilePicture}
+                  highResolutionImage={loggedInUser?.profilePictureVeryHigh}
+                />
+                <View>
+                  <Text size="h3" weight="semibold" color="white">
+                    {loggedInUser?.name ?? ""}
+                  </Text>
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    {loggedInUser?.studio === "studio"
+                      ? loggedInUser?.studioName
+                      : loggedInUser?.studio === "freelancer"
+                      ? "Freelancer"
+                      : "Home artist"}
+                  </Text>
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    {loggedInUser?.city ?? ""}
                   </Text>
                 </View>
-              ))}
+              </View>
+              <TouchableOpacity onPress={show} style={styles.moreIconContainer}>
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/more_vert.png")}
+                />
+              </TouchableOpacity>
+            </View>
 
-              {loggedInUser?.tattooStyles?.length > 6 && (
+            <View style={styles.userSocialsRow}>
+              {loggedInUser?.facebookProfile && (
                 <TouchableOpacity
-                  onPress={() => setShowAllUserStyles((prev) => !prev)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
-                  }}
+                  onPress={() => handleOpenLink(loggedInUser.facebookProfile)}
                 >
-                  <Text size="p" weight="normal" color="#FBF6FA">
-                    {showAllUserStyles ? "See less" : "See more"}
-                  </Text>
-                  <View style={{ width: 20, height: 20, marginLeft: 4 }}>
-                    <Image
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        transform: [
-                          { rotate: showAllUserStyles ? "180deg" : "0deg" },
-                        ],
-                      }}
-                      source={require("../../assets/images/arrow_down.png")}
-                    />
-                  </View>
+                  <Image
+                    style={styles.icon}
+                    source={require("../../assets/images/facebook_2.png")}
+                  />
                 </TouchableOpacity>
               )}
-            </>
-          )}
-        </View>
-        {/* <Text size="p" weight="normal" color="#A7A7A7">
-        {loggedInUser?.aboutYou ?? ""}
-      </Text> */}
-        <Pressable onPress={handleToggle}>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            {isExpanded || content?.length <= 120
-              ? content
-              : `${content?.slice(0, 160)}...`}
-          </Text>
-        </Pressable>
-        <View style={styles.buttonRow}>
-          <IconButton
-            title="Edit profile"
-            icon={require("../../assets/images/edit.png")}
-            variant="Primary"
-            onPress={() => {
-              router.push({
-                pathname: "/artist/EditProfile",
-              });
-            }}
-          />
-          <IconButton
-            title="Add tattoo"
-            icon={require("../../assets/images/add_photo_alternate-2.png")}
-            variant="Primary"
-            onPress={() => {
-              router.push("/artist/AddTattoo");
-            }}
-          />
-        </View>
-        {loggedInUser?.latestReview ? (
-          <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
-        ) : (
-          <NoReviewsOnMyProfile />
-        )}
-        <View style={styles.stylesFilterRow}>
-          <FlatList
-            data={styleFilters}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.title}
-            horizontal={true}
-            contentContainerStyle={{ gap: 10 }}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-      </View>
-      <View style={{ paddingBottom: 60 }}>
-        <ImageGallery images={filteredResults}></ImageGallery>
-      </View>
-    </ScrollView>
+              {loggedInUser?.instagramProfile && (
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(loggedInUser.instagramProfile)}
+                >
+                  <Image
+                    style={styles.icon}
+                    source={require("../../assets/images/instagram.png")}
+                  />
+                </TouchableOpacity>
+              )}
+              {loggedInUser?.twitterProfile && (
+                <TouchableOpacity
+                  onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
+                >
+                  <Image
+                    style={styles.icon}
+                    source={require("../../assets/images/twitter.png")}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.artistFavoriteRow}>
+              <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
+              {loggedInUser?.followersCount ? (
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {loggedInUser?.followersCount}
+                </Text>
+              ) : (
+                <View
+                  style={{
+                    height: 11,
+                    width: 31,
+                    borderRadius: 6,
+                    backgroundColor: "#2D2D2D",
+                  }}
+                />
+              )}
+            </View>
+
+            <View style={styles.tattooStylesRow}>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/draw.png")}
+              />
+              {loggedInUser?.tattooStyles && (
+                <>
+                  {(showAllUserStyles
+                    ? loggedInUser?.tattooStyles
+                    : loggedInUser?.tattooStyles.slice(0, 6)
+                  ).map((item: any, idx: number) => (
+                    <View
+                      key={idx}
+                      style={{
+                        backgroundColor: "#262526",
+                        paddingHorizontal: 5,
+                        paddingVertical: 2,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text size="p" weight="normal" color="#D7D7C9">
+                        {item}
+                      </Text>
+                    </View>
+                  ))}
+                  {loggedInUser?.tattooStyles?.length > 6 && (
+                    <TouchableOpacity
+                      onPress={() => setShowAllUserStyles((prev) => !prev)}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 5,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text size="p" weight="normal" color="#FBF6FA">
+                        {showAllUserStyles ? "See less" : "See more"}
+                      </Text>
+                      <View style={{ width: 20, height: 20, marginLeft: 4 }}>
+                        <Image
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            transform: [
+                              { rotate: showAllUserStyles ? "180deg" : "0deg" },
+                            ],
+                          }}
+                          source={require("../../assets/images/arrow_down.png")}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
+
+            <Pressable onPress={handleToggle}>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {isExpanded || content?.length <= 120
+                  ? content
+                  : `${content?.slice(0, 160)}...`}
+              </Text>
+            </Pressable>
+
+            <View style={styles.buttonRow}>
+              <IconButton
+                title="Edit profile"
+                icon={require("../../assets/images/edit.png")}
+                variant="Primary"
+                onPress={() => router.push({ pathname: "/artist/EditProfile" })}
+              />
+              <IconButton
+                title="Add tattoo"
+                icon={require("../../assets/images/add_photo_alternate-2.png")}
+                variant="Primary"
+                onPress={() => router.push("/artist/AddTattoo")}
+              />
+            </View>
+
+            {loggedInUser?.latestReview ? (
+              <ReviewOnProfile ArtistId={myId} isMyProfile={true} />
+            ) : (
+              <NoReviewsOnMyProfile />
+            )}
+
+            {/* ✅ Horizontal FlatList is now inside a vertical FlatList's header — no conflict */}
+            <View style={styles.stylesFilterRow}>
+              <FlatList
+                data={styleFilters}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.title}
+                horizontal={true}
+                contentContainerStyle={{ gap: 10 }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </View>
+          </View>
+        }
+      />
+    </>
   );
 };
 

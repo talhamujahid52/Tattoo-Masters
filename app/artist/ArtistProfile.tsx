@@ -472,7 +472,7 @@ const ArtistProfile = () => {
             <ProfilePicturePreview
               imageSource={profilePicture}
               imageStyle={styles.profilePicture}
-              highResolutionImage={artist?.data?.profilePictureVeryHigh} 
+              highResolutionImage={artist?.data?.profilePictureVeryHigh}
             />
             <View
               style={{
@@ -710,6 +710,9 @@ const ArtistProfile = () => {
             provider={PROVIDER_GOOGLE}
             customMapStyle={googleDarkModeStyle}
             scrollEnabled={false}
+            rotateEnabled={false}
+            pitchEnabled={false}
+            pointerEvents="none"
             style={styles.map}
             mapType="standard"
             region={region}
