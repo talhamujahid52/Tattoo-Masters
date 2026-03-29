@@ -257,6 +257,7 @@ const Step1: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <TattooStylesSheet
+        snapPoints={["90%"]}
         InsideComponent={
           <StylesBottomSheet
             tattooStyles={tattooStyles}

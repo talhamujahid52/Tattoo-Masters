@@ -136,6 +136,7 @@ const AddReview = () => {
       contentContainerStyle={styles.scrollViewContent}
     >
       <TattooStylesSheet
+        snapPoints={["90%"]}
         InsideComponent={
           <StylesBottomSheet
             tattooStyles={tattooStyles}

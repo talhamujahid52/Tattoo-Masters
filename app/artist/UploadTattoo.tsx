@@ -29,8 +29,15 @@ const UploadTattoo = () => {
   const [loading, setLoading] = useState(false);
   const [selectedStyles, setSelectedStyles] = useState<number[]>([]);
   const router = useRouter();
-  const { index, mode, docId, existingCaption, existingStylesJson, existingImageUrl, existingDeleteUrlsJson } =
-    useLocalSearchParams<any>();
+  const {
+    index,
+    mode,
+    docId,
+    existingCaption,
+    existingStylesJson,
+    existingImageUrl,
+    existingDeleteUrlsJson,
+  } = useLocalSearchParams<any>();
   const insets = useSafeAreaInsets();
   const { setFormData } = useContext(FormContext)!;
   const loggedInUser = useSelector((state: any) => state?.user?.user);
@@ -79,7 +86,8 @@ const UploadTattoo = () => {
         const selectedStyleTitles = selectedTattooStyles
           .filter((style) => style.selected)
           .map((style) => style.title);
-        const isRemote = typeof attachment === "string" && attachment.startsWith("http");
+        const isRemote =
+          typeof attachment === "string" && attachment.startsWith("http");
 
         if (!isRemote && attachment) {
           // Queue background edit upload and navigate home
@@ -104,16 +112,13 @@ const UploadTattoo = () => {
           router.replace("/(bottomTabs)/Home");
         } else {
           // Only metadata updated
-          await firestore()
-            .collection("publications")
-            .doc(String(docId))
-            .set(
-              {
-                caption,
-                styles: selectedStyleTitles,
-              },
-              { merge: true },
-            );
+          await firestore().collection("publications").doc(String(docId)).set(
+            {
+              caption,
+              styles: selectedStyleTitles,
+            },
+            { merge: true }
+          );
           router.replace("/(bottomTabs)/Home");
         }
       } catch (error) {
@@ -175,13 +180,17 @@ const UploadTattoo = () => {
           // If in edit mode, pre-select based on existingStylesJson
           if (mode === "edit" && existingStylesJson) {
             try {
-              const existingStyles: string[] = JSON.parse(String(existingStylesJson));
+              const existingStyles: string[] = JSON.parse(
+                String(existingStylesJson)
+              );
               const preselected = formattedStyles.map((s: any) => ({
                 ...s,
                 selected: existingStyles.includes(s.title),
               }));
               setTattooStyles(preselected);
-              setSelectedTattooStyles(preselected.filter((i: any) => i.selected));
+              setSelectedTattooStyles(
+                preselected.filter((i: any) => i.selected)
+              );
             } catch {
               setTattooStyles(formattedStyles);
             }
@@ -230,6 +239,7 @@ const UploadTattoo = () => {
       contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
     >
       <TattooStylesSheet
+        snapPoints={["90%"]}
         InsideComponent={
           <StylesBottomSheet
             tattooStyles={tattooStyles}
@@ -337,7 +347,9 @@ const UploadTattoo = () => {
         <Button
           loading={loading}
           disabled={mode === "edit" ? false : !attachment}
-          variant={mode === "edit" ? "primary" : attachment ? "primary" : "secondary"}
+          variant={
+            mode === "edit" ? "primary" : attachment ? "primary" : "secondary"
+          }
           onPress={publishTattoo}
           title={mode === "edit" ? "Save" : "Publish"}
         />

@@ -53,10 +53,18 @@ const useBottomSheet = () => {
   );
 
   const BottomSheet = useCallback(
-    ({ InsideComponent }: { InsideComponent: React.ReactNode }) => (
+    ({
+      InsideComponent,
+      snapPoints, // default
+    }: {
+      InsideComponent: React.ReactNode;
+      snapPoints?: string[];
+    }) => (
       <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
+        snapPoints={snapPoints}
+        enableDynamicSizing={!snapPoints}
         backdropComponent={renderBackdrop}
         onDismiss={hide}
         onChange={handleSheetChanges}

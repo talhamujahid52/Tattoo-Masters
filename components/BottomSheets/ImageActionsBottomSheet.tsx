@@ -49,6 +49,21 @@ const ImageActionsBottomSheet = ({
           <TouchableOpacity
             onPress={() => {
               hideImageActionsSheet();
+              shareTattoo();
+            }}
+            style={styles.drawerItem}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/share.png")}
+            />
+            <Text size="p" weight="normal" color="#FBF6FA">
+              Share tattoo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              hideImageActionsSheet();
               onEditTattoo && onEditTattoo();
             }}
             style={styles.drawerItem}
@@ -74,21 +89,6 @@ const ImageActionsBottomSheet = ({
             />
             <Text size="p" weight="normal" color="#FBF6FA">
               Delete tattoo
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              hideImageActionsSheet();
-              shareTattoo();
-            }}
-            style={styles.drawerItem}
-          >
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/share.png")}
-            />
-            <Text size="p" weight="normal" color="#FBF6FA">
-              Share tattoo
             </Text>
           </TouchableOpacity>
         </>

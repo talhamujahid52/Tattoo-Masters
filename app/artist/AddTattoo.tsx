@@ -142,6 +142,7 @@ const AddTattoo = () => {
       contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
     >
       <TattooStylesSheet
+        snapPoints={["90%"]}
         InsideComponent={
           <StylesBottomSheet
             tattooStyles={tattooStyles}

@@ -303,6 +303,7 @@ const EditProfile = () => {
   return (
     <ScrollView style={styles.container}>
       <TattooStylesSheet
+        snapPoints={["90%"]}
         InsideComponent={
           <StylesBottomSheet
             tattooStyles={tattooStyles}

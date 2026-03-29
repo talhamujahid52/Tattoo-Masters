@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   scrollView: {
-    height: 300,
+    // maxHeight: 300,
     marginBottom: 16,
   },
   stylesGrid: {

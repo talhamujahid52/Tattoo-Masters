@@ -1,6 +1,12 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Pressable,
+} from "react-native";
+import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   GooglePlaceData,
   GooglePlaceDetail,
@@ -12,11 +18,13 @@ import Button from "@/components/Button";
 import { FormContext } from "../../context/FormContext";
 import Text from "@/components/Text";
 import * as Location from "expo-location";
+import { useSelector } from "react-redux";
 
 const SearchLocation: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
+  const artists = useSelector((s: any) => s.artist.allArtists);
 
   const [region, setRegion] = useState<Region>({
     latitude: formData.location?.latitude || 0,
@@ -26,7 +34,31 @@ const SearchLocation: React.FC = () => {
   });
 
   const [address, setAddress] = useState<string>(formData.address || "");
+  // const zoomIn = () => {
+  //   mapRef.current?.animateToRegion({
+  //     ...region,
+  //     latitudeDelta: region.latitudeDelta / 2,
+  //     longitudeDelta: region.longitudeDelta / 2,
+  //   });
+  //   setRegion((prev) => ({
+  //     ...prev,
+  //     latitudeDelta: prev.latitudeDelta / 2,
+  //     longitudeDelta: prev.longitudeDelta / 2,
+  //   }));
+  // };
 
+  // const zoomOut = () => {
+  //   mapRef.current?.animateToRegion({
+  //     ...region,
+  //     latitudeDelta: region.latitudeDelta * 1.5,
+  //     longitudeDelta: region.longitudeDelta * 1.5,
+  //   });
+  //   setRegion((prev) => ({
+  //     ...prev,
+  //     latitudeDelta: prev.latitudeDelta * 1.5,
+  //     longitudeDelta: prev.longitudeDelta * 1.5,
+  //   }));
+  // };
   useEffect(() => {
     const getCurrentLocation = async () => {
       try {
@@ -296,8 +328,52 @@ const SearchLocation: React.FC = () => {
         onRegionChangeComplete={handleRegionChangeComplete}
         mapType="standard"
         zoomEnabled
-      />
+      >
+        {artists.map((artist: any, index: number) => {
+          const location = artist?.data?.location;
+          const profilePic =
+            artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
 
+          if (!location[0] || !location[1]) return null;
+
+          return (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: location[0],
+                longitude: location[1],
+              }}
+              title={artist?.data?.name || "Artist"}
+            >
+              <Pressable style={{ alignItems: "center" }}>
+                <Image
+                  source={{
+                    uri: profilePic
+                      ? profilePic
+                      : require("../../assets/images/placeholder.png"),
+                  }}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 40,
+                    borderWidth: 1,
+                    borderColor: "#fff",
+                    backgroundColor: "#202020",
+                  }}
+                />
+              </Pressable>
+            </Marker>
+          );
+        })}
+      </MapView>
+      {/* <View style={styles.zoomControls}>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
+          <Text style={styles.zoomText}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
+          <Text style={styles.zoomText}>−</Text>
+        </TouchableOpacity>
+      </View> */}
       <View style={styles.markerFixed}>
         <MaterialIcons
           name={"location-pin"}
@@ -332,6 +408,27 @@ const SearchLocation: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  zoomControls: {
+    position: "absolute",
+    right: 18,
+    bottom: 80,
+    flexDirection: "column",
+    gap: 10,
+  },
+  zoomButton: {
+    backgroundColor: "#242424",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
+  },
+  zoomText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+  },
   container: {
     flex: 1,
     justifyContent: "flex-start",
