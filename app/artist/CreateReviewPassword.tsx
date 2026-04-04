@@ -163,69 +163,70 @@ const CreateReviewPassword = () => {
 
   return (
     <KeyboardAwareScrollView contentContainerStyle={styles.container}>
-      <View
-        style={{
-          width: 115,
-          height: 109,
-          justifyContent: "center",
-          alignItems: "center",
-          position: "relative",
-        }}
-      >
-        <Image
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
           style={{
-            height: 115,
-            width: 109,
-            resizeMode: "contain",
+            width: 115,
+            height: 109,
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
           }}
-          source={require("../../assets/images/reviewPasswordImage.png")}
-        />
-        <Image
-          style={[
-            styles.headerImage,
-            {
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: [{ translateX: -34 }, { translateY: -34 }],
-            },
-          ]}
-          source={profileImage}
-        />
-      </View>
+        >
+          <Image
+            style={{
+              height: 115,
+              width: 109,
+              resizeMode: "contain",
+            }}
+            source={require("../../assets/images/reviewPasswordImage.png")}
+          />
+          <Image
+            style={[
+              styles.headerImage,
+              {
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: [{ translateX: -34 }, { translateY: -34 }],
+              },
+            ]}
+            source={profileImage}
+          />
+        </View>
 
-      <Text
-        weight="medium"
-        size="profileName"
-        color="#FBF6FA"
-        style={{ marginVertical: 16 }}
-      >
-        Last step
-      </Text>
-      <Text color="#A7A7A7" style={styles.descriptionText}>
-        In order to get reviewed on Tattoo Masters{"\n"} your clients must enter
-        a review password.
-      </Text>
-      <Text color="#A7A7A7" style={styles.descriptionText}>
-        Come up with a creative password{"\n"}which you can share with them!
-      </Text>
+        <Text
+          weight="medium"
+          size="profileName"
+          color="#FBF6FA"
+          style={{ marginVertical: 16 }}
+        >
+          Last step
+        </Text>
+        <Text color="#A7A7A7" style={styles.descriptionText}>
+          In order to get reviewed on Tattoo Masters{"\n"} your clients must
+          enter a review password.
+        </Text>
+        <Text color="#A7A7A7" style={styles.descriptionText}>
+          Come up with a creative password{"\n"}which you can share with them!
+        </Text>
 
-      <View style={styles.infoBox}>
-        <Image
-          source={require("../../assets/images/error-2.png")}
-          style={styles.warningIcon}
-          resizeMode="contain"
-        />
-        <View>
-          <Text size="medium" color="#A7A7A7">
-            This password will be used by your customers.
-          </Text>
-          <Text size="medium" color="#A7A7A7">
-            Please do not use any personal password{"\n"}for this purpose.
-          </Text>
+        <View style={styles.infoBox}>
+          <Image
+            source={require("../../assets/images/error-2.png")}
+            style={styles.warningIcon}
+            resizeMode="contain"
+          />
+          <View>
+            <Text size="medium" color="#A7A7A7">
+              This password will be used by your customers.
+            </Text>
+            <Text size="medium" color="#A7A7A7">
+              Please do not use any personal password{"\n"}for this purpose.
+            </Text>
+          </View>
         </View>
       </View>
-
       <View style={styles.inputSection}>
         {error !== "" && (
           <Text color="red" style={styles.errorText}>
@@ -306,8 +307,8 @@ const styles = StyleSheet.create({
   inputSection: {
     width: "100%",
     rowGap: 10,
-    marginTop: "auto",
-    marginBottom: 40,
+    // marginTop: "auto",
+    // marginBottom: 40,
   },
   errorText: {
     textAlign: "center",

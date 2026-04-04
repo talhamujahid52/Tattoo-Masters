@@ -343,7 +343,7 @@ const SearchLocation: React.FC = () => {
                 latitude: location[0],
                 longitude: location[1],
               }}
-              title={artist?.data?.name || "Artist"}
+              // title={artist?.data?.name || "Artist"}
             >
               <Pressable style={{ alignItems: "center" }}>
                 <Image

@@ -453,7 +453,7 @@ const Step1: React.FC = () => {
           <TextInput
             selectionColor="#A29F93"
             placeholderTextColor="#A29F93"
-            placeholder="Tell something about yourself"
+            placeholder="Enter text"
             multiline
             value={formData.aboutYou}
             style={styles.textArea}

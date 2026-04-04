@@ -461,7 +461,7 @@ const FullScreenMapWithSearch: React.FC = () => {
                 latitude: location[0],
                 longitude: location[1],
               }}
-              title={artist?.data?.name || "Artist"}
+              // title={artist?.data?.name || "Artist"}
               onPress={() => {
                 dispatch(setCurrentlyViewingArtist(artist?.data));
                 showMapProfileBottomSheet();
