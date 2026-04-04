@@ -96,6 +96,21 @@ const ImageActionsBottomSheet = ({
         <>
           <TouchableOpacity
             onPress={() => {
+              hideImageActionsSheet();
+              shareTattoo();
+            }}
+            style={styles.drawerItem}
+          >
+            <Image
+              style={styles.icon}
+              source={require("../../assets/images/share.png")}
+            />
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Share tattoo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
               loggedInUser
                 ? (hideImageActionsSheet(), showReportSheet())
                 : (hideImageActionsSheet(), showLoggingInBottomSheet());
@@ -124,21 +139,6 @@ const ImageActionsBottomSheet = ({
             />
             <Text size="h4" weight="normal" color="#FBF6FA">
               Feedback
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              hideImageActionsSheet();
-              shareTattoo();
-            }}
-            style={styles.drawerItem}
-          >
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/share.png")}
-            />
-            <Text size="h4" weight="normal" color="#FBF6FA">
-              Share tattoo
             </Text>
           </TouchableOpacity>
         </>
