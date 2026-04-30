@@ -401,6 +401,9 @@ const EditProfile = () => {
               customMapStyle={googleDarkModeStyle}
               mapType="standard"
               region={region}
+              rotateEnabled={false}
+              pitchEnabled={false}
+              pointerEvents="none"
             />
           </TouchableOpacity>
         )}
@@ -497,7 +500,7 @@ const EditProfile = () => {
           <TextInput
             selectionColor="#A29F93"
             placeholderTextColor="#A29F93"
-            placeholder="Enter Text"
+            placeholder="Enter text"
             multiline
             value={formData.aboutYou}
             style={styles.textArea}

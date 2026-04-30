@@ -64,7 +64,7 @@ export const useSignInWithGoogle = () => {
       console.log("User signed in and data saved to Firestore!");
       //   return userData;
     } catch (error) {
-      alert(error);
+      // alert(error);
       console.log("Google Sign-In error:", error);
     }
   };

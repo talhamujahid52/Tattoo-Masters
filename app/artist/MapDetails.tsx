@@ -1,11 +1,20 @@
 import React, { useRef, useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import Text from "@/components/Text";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
+import { useSelector } from "react-redux";
 
 const MapDetails = () => {
   const mapRef = useRef<MapView>(null);
+  const artists = useSelector((s: any) => s.artist.allArtists);
 
   const { location } = useLocalSearchParams();
   const parsedLocation = JSON.parse(location); // [lat, lng]
@@ -16,6 +25,32 @@ const MapDetails = () => {
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   });
+
+  // const zoomIn = () => {
+  //   mapRef.current?.animateToRegion({
+  //     ...region,
+  //     latitudeDelta: region.latitudeDelta / 2,
+  //     longitudeDelta: region.longitudeDelta / 2,
+  //   });
+  //   setRegion((prev) => ({
+  //     ...prev,
+  //     latitudeDelta: prev.latitudeDelta / 2,
+  //     longitudeDelta: prev.longitudeDelta / 2,
+  //   }));
+  // };
+
+  // const zoomOut = () => {
+  //   mapRef.current?.animateToRegion({
+  //     ...region,
+  //     latitudeDelta: region.latitudeDelta * 1.5,
+  //     longitudeDelta: region.longitudeDelta * 1.5,
+  //   });
+  //   setRegion((prev) => ({
+  //     ...prev,
+  //     latitudeDelta: prev.latitudeDelta * 1.5,
+  //     longitudeDelta: prev.longitudeDelta * 1.5,
+  //   }));
+  // };
 
   useEffect(() => {
     if (parsedLocation) {
@@ -97,15 +132,58 @@ const MapDetails = () => {
         initialRegion={region}
         onRegionChangeComplete={() => {}} // prevent location from changing
       >
-        <Marker
+        {/* <Marker
           coordinate={{
             latitude: region.latitude,
             longitude: region.longitude,
           }}
         >
           <MaterialIcons name="location-pin" size={42} color="red" />
-        </Marker>
+        </Marker> */}
+        {artists.map((artist: any, index: number) => {
+          const location = artist?.data?.location;
+          const profilePic =
+            artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
+
+          if (!location[0] || !location[1]) return null;
+
+          return (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: location[0],
+                longitude: location[1],
+              }}
+            >
+              <Pressable style={{ alignItems: "center" }}>
+                <Image
+                  source={{
+                    uri: profilePic
+                      ? profilePic
+                      : require("../../assets/images/placeholder.png"),
+                  }}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 40,
+                    borderWidth: 1,
+                    borderColor: "#fff",
+                    backgroundColor: "#202020",
+                  }}
+                />
+              </Pressable>
+            </Marker>
+          );
+        })}
       </MapView>
+      {/* <View style={styles.zoomControls}>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
+          <Text style={styles.zoomText}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
+          <Text style={styles.zoomText}>−</Text>
+        </TouchableOpacity>
+      </View> */}
     </View>
   );
 };
@@ -119,4 +197,25 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
+  // zoomControls: {
+  //   position: "absolute",
+  //   right: 18,
+  //   bottom: 80,
+  //   flexDirection: "column",
+  //   gap: 10,
+  // },
+  // zoomButton: {
+  //   backgroundColor: "#242424",
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 20,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  //   elevation: 4,
+  // },
+  // zoomText: {
+  //   color: "#fff",
+  //   fontSize: 22,
+  //   fontWeight: "bold",
+  // },
 });
