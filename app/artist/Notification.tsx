@@ -68,10 +68,10 @@ const Notification = () => {
     } catch (error) {
       console.error("Failed to update notification preferences", error);
       setPreferences(prev);
-      Alert.alert(
-        "Update failed",
-        "Unable to save notification preferences. Please try again.",
-      );
+      // Alert.alert(
+      //   "Update failed",
+      //   "Unable to save notification preferences. Please try again.",
+      // );
     } finally {
       setIsSaving(false);
     }

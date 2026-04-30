@@ -105,7 +105,7 @@ const PublishReview = () => {
           });
         }
       }
-      Alert.alert("Success", "Your review has been published successfully!", [
+      Alert.alert("Review Published", "Your review has been published successfully.", [
         {
           text: "OK",
           onPress: () => {
@@ -121,7 +121,7 @@ const PublishReview = () => {
     } catch (err) {
       console.error("Error publishing review:", err);
       Alert.alert(
-        "Error",
+        "Unsuccessful",
         err instanceof Error && err.message === "Failed to upload image"
           ? "We couldn't upload your tattoo image. Please try again."
           : "There was a problem publishing your review. Please try again.",

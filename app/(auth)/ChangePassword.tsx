@@ -21,7 +21,7 @@ const ChangePassword = () => {
 
   const handlePasswordReset = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email address");
+      Alert.alert("Action Required", "Please enter your email address.");
       return;
     }
 
@@ -30,10 +30,7 @@ const ChangePassword = () => {
       isLoggedIn &&
       email.toLowerCase() !== loggedInUserEmail?.toLowerCase()
     ) {
-      Alert.alert(
-        "Error",
-        "Entered email does not match the logged-in user's email."
-      );
+      Alert.alert("Unsuccessful", "Entered email does not match.");
       return;
     }
 
@@ -42,8 +39,8 @@ const ChangePassword = () => {
     try {
       await auth().sendPasswordResetEmail(email);
       Alert.alert(
-        "Success",
-        "A password reset link has been sent to your email address.",
+        "Reset Link Sent",
+        "A password reset link has been sent to your email.",
         [
           {
             text: "OK",
@@ -55,9 +52,9 @@ const ChangePassword = () => {
       );
     } catch (error: any) {
       if (error.code === "auth/user-not-found") {
-        Alert.alert("Error", "No user found with that email address.");
+        Alert.alert("Unsuccessful", "Email address not found.");
       } else {
-        Alert.alert("Error", error.message);
+        Alert.alert("Unsuccessful", error.message);
       }
     } finally {
       setLoading(false);

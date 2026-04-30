@@ -21,13 +21,13 @@ const DeleteAccount = () => {
   console.log("Provider: ", providerId);
   const handleDelete = async () => {
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      Alert.alert("Unsuccessful", "Passwords do not match.");
       return;
     }
 
     const user = auth().currentUser;
     if (!user?.email) {
-      Alert.alert("Error", "No user is currently signed in.");
+      Alert.alert("Unsuccessful", "No user is currently signed in.");
       return;
     }
 
@@ -63,9 +63,9 @@ const DeleteAccount = () => {
     } catch (error) {
       console.error("Account deletion failed:", error);
       if (error.code === "auth/wrong-password") {
-        Alert.alert("Error", "Incorrect password.");
+        Alert.alert("Unsuccessful", "Incorrect password.");
       } else {
-        Alert.alert("Error", "Something went wrong. Please try again.");
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);

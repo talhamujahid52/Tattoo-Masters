@@ -104,7 +104,7 @@ const FilterBottomSheet = ({
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
-          "Location permissions are disabled. Please enable them in the Settings app.",
+          "Location permissions are disabled. Please enable location permissions in your phone settings.",
           [
             { text: "Cancel", style: "cancel" },
             { text: "Open Settings", onPress: () => Linking.openSettings() },

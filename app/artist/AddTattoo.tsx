@@ -86,15 +86,15 @@ const AddTattoo = () => {
 
       if (!uploadSuccess) {
         Alert.alert(
-          "Upload Error",
-          "Failed to queue image for upload. The file may no longer exist."
+          "Unsuccessful",
+          "Something went wrong. Please try again."
         );
         return;
       }
 
       router.back();
     } catch (error) {
-      Alert.alert("Error adding tattoo", error as string);
+      Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

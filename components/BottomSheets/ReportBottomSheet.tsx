@@ -51,7 +51,7 @@ const ReportBottomSheet = ({
         createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
-      Alert.alert("Success", "Your Request has been submitted successfully.", [
+      Alert.alert("Report Submitted", "Your report has been submitted successfully.", [
         {
           text: "OK",
           onPress: () => {
@@ -60,7 +60,7 @@ const ReportBottomSheet = ({
         },
       ]);
     } catch (error) {
-      Alert.alert("Failure", "An error occurs while submitting request.", [
+      Alert.alert("Unsuccessful", "There was a problem submitting your report. Please try again.", [
         {
           text: "OK",
           onPress: () => {

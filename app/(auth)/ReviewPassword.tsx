@@ -28,20 +28,20 @@ const ReviewPassword = () => {
 
     // Check if passwords are not empty and meet the length requirement
     if (!newReviewPassword || !confirmNewReviewPassword) {
-      Alert.alert("Error", "Password cannot be empty.");
+      Alert.alert("Action Required", "Please enter a review password.");
       setIsLoading(false);
       return;
     }
 
     if (newReviewPassword !== confirmNewReviewPassword) {
       // Alert the user if passwords don't match
-      Alert.alert("Error", "Passwords do not match.");
+      Alert.alert("Unsuccessful", "Passwords do not match.");
       setIsLoading(false);
       return;
     }
 
     if (newReviewPassword.length < 8 || confirmNewReviewPassword.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters long.");
+      Alert.alert("Action Required", "Password must be at least 8 characters long.");
       setIsLoading(false);
       return;
     }
@@ -50,7 +50,7 @@ const ReviewPassword = () => {
       const currentUserId = firebase?.auth()?.currentUser?.uid; // Or get user ID from your app's state
 
       if (!currentUserId) {
-        Alert.alert("Error", "User not authenticated.");
+        Alert.alert("Unsuccessful", "User not authenticated.");
         setIsLoading(false);
         return;
       }
@@ -59,7 +59,7 @@ const ReviewPassword = () => {
         reviewPassword: newReviewPassword,
       });
 
-      Alert.alert("Success", "Review password has been successfully updated.", [
+      Alert.alert("Review Password Updated", "Your review password has been updated successfully.", [
         {
           text: "OK",
           onPress: () => router.back(), // Navigate back when OK is clicked
@@ -68,7 +68,7 @@ const ReviewPassword = () => {
       setIsLoading(false);
     } catch (error) {
       console.error("Error updating review password:", error);
-      Alert.alert("Error", "Failed to update the review password.");
+      Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       setIsLoading(false);
     }
   };

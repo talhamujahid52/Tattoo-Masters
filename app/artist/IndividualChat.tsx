@@ -317,7 +317,7 @@ const IndividualChat: React.FC = () => {
         // through your existing upload completion logic
       } catch (error) {
         console.error("Error sending image:", error);
-        Alert.alert("Error", "Failed to send image");
+        Alert.alert("Unsuccessful", "Failed to send image.");
       } finally {
         setIsSelectingImage(false);
       }
@@ -532,7 +532,7 @@ const IndividualChat: React.FC = () => {
   const openDialer = () => {
     if (!phoneNumber) {
       Alert.alert(
-        "No Phone Number",
+        "Missing Phone Number",
         "This user has not provided a phone number."
       );
       return;
@@ -543,12 +543,12 @@ const IndividualChat: React.FC = () => {
         if (supported) {
           Linking.openURL(url);
         } else {
-          Alert.alert("Error", "Unable to open dialer");
+          Alert.alert("Unsuccessful", "Unable to open dialer.");
         }
       })
       .catch((err) => {
         console.error("An error occurred", err);
-        Alert.alert("Error", "Something went wrong");
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       });
   };
 

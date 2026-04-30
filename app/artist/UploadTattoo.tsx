@@ -122,7 +122,7 @@ const UploadTattoo = () => {
           router.replace("/(bottomTabs)/Home");
         }
       } catch (error) {
-        Alert.alert("Error", "Failed to update tattoo.");
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -156,7 +156,7 @@ const UploadTattoo = () => {
 
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to save tattoo image.");
+      Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

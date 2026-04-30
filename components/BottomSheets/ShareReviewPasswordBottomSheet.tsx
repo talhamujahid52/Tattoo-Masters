@@ -32,7 +32,7 @@ const ShareReviewPasswordBottomSheet = ({
     if (Platform.OS === "android") {
       ToastAndroid.show("Password copied to clipboard!", ToastAndroid.SHORT);
     } else {
-      Alert.alert("Copied", "Password copied to clipboard.");
+      Alert.alert("Password Copied", "Password copied to clipboard.");
     }
   };
 

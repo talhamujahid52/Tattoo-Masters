@@ -355,8 +355,8 @@ const TattooDetail: React.FC = () => {
                         router.back();
                       } catch (e) {
                         Alert.alert(
-                          "Delete Failed",
-                          "We couldn't delete this tattoo. Please try again.",
+                          "Unsuccessful",
+                          "Something went wrong. Please try again.",
                         );
                       } finally {
                         setLoading(false);

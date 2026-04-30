@@ -55,8 +55,8 @@ const StepperForm: React.FC = () => {
         !!loggedInUser?.photoURL;
       if (!hasProfilePicture) {
         Alert.alert(
-          "Profile picture required",
-          "Please add a profile picture to continue."
+          "Profile Picture Required",
+          "Please add profile picture to continue."
         );
         return;
       }
@@ -64,8 +64,8 @@ const StepperForm: React.FC = () => {
       // Full Name Validation
       if (!formData?.name || formData.name.trim().length === 0) {
         Alert.alert(
-          "Full Name required",
-          "Please enter your full name to continue."
+          "Name Required",
+          "Please enter your name to continue."
         );
         return;
       }
@@ -73,8 +73,8 @@ const StepperForm: React.FC = () => {
       // Studio Type Validation (Must select one)
       if (!formData?.studio) {
         Alert.alert(
-          "Studio Type required",
-          "Please select your work type (Studio, Freelancer, or Home Artist) to continue."
+          "Studio Type Required",
+          "Please select studio type to continue."
         );
         return;
       }
@@ -85,8 +85,8 @@ const StepperForm: React.FC = () => {
         (!formData?.studioName || formData.studioName.trim().length === 0)
       ) {
         Alert.alert(
-          "Studio Name required",
-          "Please enter your studio name to continue."
+          "Studio Name Required",
+          "Please enter studio name to continue."
         );
         return;
       }
@@ -94,8 +94,8 @@ const StepperForm: React.FC = () => {
       // Address Validation
       if (!formData?.address || formData.address.trim().length === 0) {
         Alert.alert(
-          "Address required",
-          "Please enter your address to continue."
+          "Address Required",
+          "Please enter address to continue."
         );
         return;
       }
@@ -103,7 +103,7 @@ const StepperForm: React.FC = () => {
       // Tattoo Styles Validation (At least one style selected)
       if (!formData?.tattooStyles || formData.tattooStyles.length === 0) {
         Alert.alert(
-          "Tattoo Style required",
+          "Tattoo Styles Required",
           "Please select at least one tattoo style to continue."
         );
         return;
@@ -112,8 +112,8 @@ const StepperForm: React.FC = () => {
       // About You Validation
       if (!formData?.aboutYou || formData.aboutYou.trim().length === 0) {
         Alert.alert(
-          "About You required",
-          "Please provide an introduction about yourself to continue."
+          "About You Required",
+          "Please provide an introduction to continue."
         );
         return;
       }
@@ -150,7 +150,7 @@ const StepperForm: React.FC = () => {
       const firstFour = formData?.images?.slice(0, 4) || [];
       const allFourPresent = firstFour.every((img) => img && !!img.uri);
       if (!allFourPresent) {
-        Alert.alert("Add 4 tattoos", "Please upload 4 tattoos to continue.");
+        Alert.alert("Add Tattoos", "Please upload at least 4 tattoos to continue.");
         return;
       }
     }

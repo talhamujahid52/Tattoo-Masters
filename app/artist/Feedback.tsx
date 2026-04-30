@@ -59,10 +59,10 @@ const Feedback = () => {
         });
 
         if (!imageQueuedSuccessfully) {
-          Alert.alert(
-            "Image Upload Warning",
-            "Your feedback will be submitted, but the image could not be queued for upload. The image file may no longer exist."
-          );
+          // Alert.alert(
+          //   "Image Upload Warning",
+          //   "Your feedback will be submitted, but the image could not be queued for upload. The image file may no longer exist."
+          // );
         }
       }
 
@@ -88,7 +88,7 @@ const Feedback = () => {
     } catch (err) {
       console.error("Error submitting feedback:", err);
       Alert.alert(
-        "Error",
+        "Unsuccessful",
         "There was a problem submitting your feedback. Please try again.",
         [{ text: "OK" }]
       );
