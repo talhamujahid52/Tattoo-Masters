@@ -214,7 +214,7 @@ const MyProfile = () => {
         refreshing={refreshing}
         contentContainerStyle={{ paddingBottom: 60 }}
         ListHeaderComponent={
-          <View style={{ paddingHorizontal: 16 }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
             <View style={styles.userProfileRow}>
               <View style={styles.pictureAndName}>
                 <ProfilePicturePreview

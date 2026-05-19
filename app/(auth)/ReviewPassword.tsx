@@ -12,6 +12,7 @@ import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { firebase } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const ReviewPassword = () => {
   const [newReviewPassword, setNewReviewPassword] = useState("");
@@ -74,7 +75,7 @@ const ReviewPassword = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <Image
         style={styles.image}
         source={require("../../assets/images/lock_person-2.png")}
@@ -117,7 +118,7 @@ const ReviewPassword = () => {
         onPress={handleConfirm}
         disabled={isLoading}
       ></Button>
-    </View>
+    </KeyboardAwareScrollView>
   );
 };
 

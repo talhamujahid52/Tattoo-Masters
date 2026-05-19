@@ -26,6 +26,7 @@ import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
 import StylesBottomSheet from "../../components/BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 type TattooStyle = {
   title: string;
@@ -301,7 +302,7 @@ const EditProfile = () => {
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <TattooStylesSheet
         snapPoints={["90%"]}
         InsideComponent={
@@ -572,7 +573,7 @@ const EditProfile = () => {
           <Button loading={loading} title="Save" onPress={updateProfile} />
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -580,7 +581,7 @@ export default EditProfile;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     backgroundColor: "#000",
     padding: 16,
     borderTopWidth: 0.33,

@@ -248,7 +248,7 @@ const Login = () => {
       console.log("🎉 Facebook login flow complete!");
     } catch (error) {
       console.error("❌ Facebook login error:", error);
-      alert(error?.message || error);
+      // alert(error?.message || error);
     }
   };
 
