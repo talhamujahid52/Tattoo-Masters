@@ -6,9 +6,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  ActionSheetIOS,
   Linking,
   Alert,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -28,11 +29,25 @@ import firestore from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setCurrentChatId } from "@/utils/NavState";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
+import type { Asset, ImagePickerResponse } from "react-native-image-picker";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { getFileName } from "@/utils/helperFunctions";
 
+const IMAGE_PICKER_OPTIONS = {
+  mediaType: "photo",
+  quality: 0.8,
+  assetRepresentationMode: "compatible",
+} as const;
+
+const getImageFileName = (asset: Asset) => {
+  const fallbackName = `chat-image-${Date.now()}.jpg`;
+  if (asset.fileName) return asset.fileName;
+  if (asset.uri) return getFileName(asset.uri) || fallbackName;
+  return fallbackName;
+};
+
 const IndividualChat: React.FC = () => {
-  const { width } = useWindowDimensions()
+  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
@@ -198,8 +213,14 @@ const IndividualChat: React.FC = () => {
         typeof loc === "object" &&
         ("latitude" in loc || "lat" in loc || "_latitude" in loc)
       ) {
-        lat = Number((loc as any).latitude ?? (loc as any).lat ?? (loc as any)._latitude);
-        lng = Number((loc as any).longitude ?? (loc as any).lng ?? (loc as any)._longitude);
+        lat = Number(
+          (loc as any).latitude ?? (loc as any).lat ?? (loc as any)._latitude,
+        );
+        lng = Number(
+          (loc as any).longitude ??
+            (loc as any).lng ??
+            (loc as any)._longitude,
+        );
       }
 
       // Validate coordinates
@@ -248,21 +269,8 @@ const IndividualChat: React.FC = () => {
     }
   };
 
-  // Handle image selection and upload in background
-  const pickImage = useCallback(async () => {
-    const result = await launchImageLibrary({
-      mediaType: "photo",
-      quality: 0.8,
-      selectionLimit: 1,
-    });
-
-    if (result.assets && result.assets[0].uri) {
-      await sendImageMessage(result.assets[0].uri);
-    }
-  }, [chatID]);
-
   const sendImageMessage = useCallback(
-    async (imageUri: string) => {
+    async (imageUri: string, fileName?: string) => {
       try {
         if (!imageUri) {
           throw new Error("No image selected");
@@ -302,7 +310,8 @@ const IndividualChat: React.FC = () => {
           type: "chatImage",
           chatId: currentChatID,
           messageId: messageId,
-          name: getFileName(imageUri),
+          name:
+            fileName || getFileName(imageUri) || `chat-image-${Date.now()}.jpg`,
         });
 
         // if (!uploadSuccess) {
@@ -324,6 +333,91 @@ const IndividualChat: React.FC = () => {
     },
     [chatID, loggedInUser, loggedInUserFirestore, selectedArtist, queueUpload]
   );
+
+  const handleImagePickerResponse = useCallback(
+    async (result: ImagePickerResponse) => {
+      if (result.didCancel) return;
+
+      if (result.errorCode) {
+        const message =
+          result.errorCode === "camera_unavailable"
+            ? "Camera is not available on this device."
+            : result.errorCode === "permission"
+              ? "Camera or photo access is required to attach an image."
+              : result.errorMessage || "Failed to attach image.";
+
+        Alert.alert("Unsuccessful", message);
+        return;
+      }
+
+      const asset = result.assets?.[0];
+      if (!asset?.uri) {
+        Alert.alert("Unsuccessful", "No image was selected.");
+        return;
+      }
+
+      await sendImageMessage(asset.uri, getImageFileName(asset));
+    },
+    [sendImageMessage]
+  );
+
+  const takePhoto = useCallback(async () => {
+    try {
+      const result = await launchCamera({
+        ...IMAGE_PICKER_OPTIONS,
+        cameraType: "back",
+        saveToPhotos: false,
+      });
+
+      await handleImagePickerResponse(result);
+    } catch (error) {
+      console.error("Error opening camera:", error);
+      Alert.alert("Unsuccessful", "Failed to open camera.");
+    }
+  }, [handleImagePickerResponse]);
+
+  const chooseFromGallery = useCallback(async () => {
+    try {
+      const result = await launchImageLibrary({
+        ...IMAGE_PICKER_OPTIONS,
+        selectionLimit: 1,
+      });
+
+      await handleImagePickerResponse(result);
+    } catch (error) {
+      console.error("Error opening photo library:", error);
+      Alert.alert("Unsuccessful", "Failed to open photo library.");
+    }
+  }, [handleImagePickerResponse]);
+
+  const openImageSourcePicker = useCallback(() => {
+    if (isSelectingImage) return;
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: "Attach image",
+          options: ["Take Photo", "Choose from Library", "Cancel"],
+          cancelButtonIndex: 2,
+          userInterfaceStyle: "dark",
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            takePhoto();
+          } else if (buttonIndex === 1) {
+            chooseFromGallery();
+          }
+        }
+      );
+      return;
+    }
+
+    Alert.alert("Attach image", undefined, [
+      { text: "Take Photo", onPress: takePhoto },
+      { text: "Choose from Library", onPress: chooseFromGallery },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }, [chooseFromGallery, isSelectingImage, takePhoto]);
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
@@ -444,7 +538,7 @@ const IndividualChat: React.FC = () => {
       >
         {/* + (Add Image) Button - separate from input box */}
         <TouchableOpacity
-          onPress={pickImage}
+          onPress={openImageSourcePicker}
           disabled={isSelectingImage}
           style={{
             width: 44,

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
 import Text from "./Text";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
-import useGetArtist from "@/hooks/useGetArtist";
 import firestore from "@react-native-firebase/firestore";
 interface ChatListCellProps {
   chat: any;
@@ -12,13 +11,22 @@ interface ChatListCellProps {
 const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
-  const [otherUserDetails, setOtherUserDetails] = useState<any>();
   const otherUserId = participants?.find(
     (userId: string) => userId !== loggedInUser?.uid
   );
-  const embeddedUserData = otherUserId ? chat?.[otherUserId] : undefined;
+  const embeddedUserData = useMemo(
+    () => (otherUserId ? chat?.[otherUserId] : undefined),
+    [chat, otherUserId]
+  );
+  const [otherUserDetails, setOtherUserDetails] = useState<any>(
+    embeddedUserData || null
+  );
 
   useEffect(() => {
+    let isActive = true;
+
+    setOtherUserDetails(embeddedUserData || null);
+
     const fetchUserFromFirebase = async () => {
       if (!otherUserId) return;
 
@@ -30,23 +38,30 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
 
         if (userDoc.exists) {
           const userData = userDoc.data();
-          setOtherUserDetails(userData);
+          if (isActive) setOtherUserDetails(userData);
         } else {
-          setOtherUserDetails(null);
+          if (isActive) setOtherUserDetails(null);
         }
       } catch (error) {
         console.error("Error fetching user from Firebase:", error);
-        setOtherUserDetails(embeddedUserData || null);
+        if (isActive) setOtherUserDetails(embeddedUserData || null);
       }
     };
 
     fetchUserFromFirebase();
-  }, [otherUserId]);
 
-  const otherUserName = otherUserDetails?.name || "Deleted account";
+    return () => {
+      isActive = false;
+    };
+  }, [embeddedUserData, otherUserId]);
+
+  const otherUserName =
+    otherUserDetails?.name || embeddedUserData?.name || "Deleted account";
   const otherUserProfilePicture =
     otherUserDetails?.profilePictureSmall ||
     otherUserDetails?.profilePicture ||
+    embeddedUserData?.profilePictureSmall ||
+    embeddedUserData?.profilePicture ||
     null;
 
   const lastMessage = chat?.lastMessage;

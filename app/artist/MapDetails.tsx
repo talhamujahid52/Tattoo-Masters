@@ -1,30 +1,40 @@
 import React, { useRef, useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  Pressable,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import Text from "@/components/Text";
-import { MaterialIcons } from "@expo/vector-icons";
+import { View, StyleSheet, Pressable, Image } from "react-native";
+import MapView, {
+  Camera,
+  Marker,
+  PROVIDER_GOOGLE,
+} from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { useSelector } from "react-redux";
+
+const SELECTED_LOCATION_ZOOM_DELTA = 0.003;
+const SELECTED_LOCATION_CAMERA_ZOOM = 16.5;
 
 const MapDetails = () => {
   const mapRef = useRef<MapView>(null);
   const artists = useSelector((s: any) => s.artist.allArtists);
 
   const { location } = useLocalSearchParams();
-  const parsedLocation = JSON.parse(location); // [lat, lng]
+  const locationParam = Array.isArray(location) ? location[0] : location;
+  const parsedLocation = JSON.parse(locationParam ?? "[0,0]"); // [lat, lng]
 
   const [region, setRegion] = useState({
     latitude: parsedLocation[0],
     longitude: parsedLocation[1],
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
+    latitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
+    longitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
   });
+
+  const selectedLocationCamera: Camera = {
+    center: {
+      latitude: parsedLocation[0],
+      longitude: parsedLocation[1],
+    },
+    heading: 0,
+    pitch: 0,
+    zoom: SELECTED_LOCATION_CAMERA_ZOOM,
+  };
 
   // const zoomIn = () => {
   //   mapRef.current?.animateToRegion({
@@ -57,12 +67,12 @@ const MapDetails = () => {
       const newRegion = {
         latitude: parsedLocation[0],
         longitude: parsedLocation[1],
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
+        latitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
+        longitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
       };
 
       setRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 800);
+      mapRef.current?.animateCamera(selectedLocationCamera, { duration: 800 });
     }
   }, []);
 
@@ -130,6 +140,12 @@ const MapDetails = () => {
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         initialRegion={region}
+        initialCamera={selectedLocationCamera}
+        onMapReady={() => {
+          mapRef.current?.animateCamera(selectedLocationCamera, {
+            duration: 300,
+          });
+        }}
         onRegionChangeComplete={() => {}} // prevent location from changing
       >
         {/* <Marker
