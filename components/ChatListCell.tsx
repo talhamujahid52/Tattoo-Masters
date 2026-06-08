@@ -21,11 +21,13 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   const [otherUserDetails, setOtherUserDetails] = useState<any>(
     embeddedUserData || null
   );
+  const [hasCheckedUser, setHasCheckedUser] = useState(!otherUserId);
 
   useEffect(() => {
     let isActive = true;
 
     setOtherUserDetails(embeddedUserData || null);
+    setHasCheckedUser(!otherUserId);
 
     const fetchUserFromFirebase = async () => {
       if (!otherUserId) return;
@@ -38,13 +40,22 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
 
         if (userDoc.exists) {
           const userData = userDoc.data();
-          if (isActive) setOtherUserDetails(userData);
+          if (isActive) {
+            setOtherUserDetails(userData);
+            setHasCheckedUser(true);
+          }
         } else {
-          if (isActive) setOtherUserDetails(null);
+          if (isActive) {
+            setOtherUserDetails(null);
+            setHasCheckedUser(true);
+          }
         }
       } catch (error) {
         console.error("Error fetching user from Firebase:", error);
-        if (isActive) setOtherUserDetails(embeddedUserData || null);
+        if (isActive) {
+          setOtherUserDetails(embeddedUserData || null);
+          setHasCheckedUser(true);
+        }
       }
     };
 
@@ -56,7 +67,9 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   }, [embeddedUserData, otherUserId]);
 
   const otherUserName =
-    otherUserDetails?.name || embeddedUserData?.name || "Deleted account";
+    otherUserDetails?.name ||
+    embeddedUserData?.name ||
+    (hasCheckedUser ? "Deleted account" : "");
   const otherUserProfilePicture =
     otherUserDetails?.profilePictureSmall ||
     otherUserDetails?.profilePicture ||
