@@ -8,7 +8,10 @@ import { router } from "expo-router";
 import { FormContext } from "../../context/FormContext";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { useSelector, useDispatch } from "react-redux";
-import { updateUserProfile } from "@/utils/firebase/userFunctions";
+import {
+  updateUserProfile,
+  assignOriginalArtistNumber,
+} from "@/utils/firebase/userFunctions";
 import { UserProfileFormData } from "@/types/user";
 import { UserFirestore } from "@/types/user";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
@@ -116,10 +119,15 @@ const CreateReviewPassword = () => {
         }
       }
 
+      const originalArtistNumber = await assignOriginalArtistNumber(
+        currentUserId
+      );
+
       await updateUserProfile(currentUserId, {
         ...updatedFormData,
-        isArtist: true, //make the user an artist
+        isArtist: true,
         artistRegistrationDate: new Date().toISOString(),
+        ...(originalArtistNumber !== null && { originalArtistNumber }),
       } as UserProfileFormData);
 
       // update the user profile picture as well if it has been changed
@@ -142,7 +150,16 @@ const CreateReviewPassword = () => {
       const updatedUser = await getUpdatedUser(currentUserId);
       dispatch(setUserFirestoreData(updatedUser));
       console.log("profile updated successfully");
-      router.push("/artist/SubscriptionInfo");
+      if (originalArtistNumber) {
+        router.push({
+          pathname: "/artist/OriginalArtistInfoScreen",
+          params: {
+            originalArtistNumber: originalArtistNumber,
+          },
+        });
+      } else {
+        router.push("/artist/SubscriptionInfo");
+      }
     } catch (error) {
       console.log("error", error);
     } finally {

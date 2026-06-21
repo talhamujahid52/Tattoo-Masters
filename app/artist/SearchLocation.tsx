@@ -19,6 +19,7 @@ import { FormContext } from "../../context/FormContext";
 import Text from "@/components/Text";
 import * as Location from "expo-location";
 import { useSelector } from "react-redux";
+import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
 
 const SearchLocation: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
@@ -263,7 +264,7 @@ const SearchLocation: React.FC = () => {
           fetchDetails
           onPress={handleLocationSelect}
           query={{
-            key: "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k",
+            key: GOOGLE_MAPS_API_KEY,
             language: "en",
           }}
           styles={{

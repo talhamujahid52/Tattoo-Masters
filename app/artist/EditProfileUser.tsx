@@ -52,7 +52,7 @@ const EditProfile = () => {
         setPhoneNumber(rest.join(" ").trim());
       } else {
         setCountryCode("");
-        setPhoneNumber(storedPhone);
+        setPhoneNumber("");
       }
     }
   }, [loggedInUserFirestore]);

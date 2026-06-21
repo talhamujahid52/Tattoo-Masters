@@ -90,7 +90,9 @@ const TattooDetail: React.FC = () => {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<Record<string, string | string[]>>();
 
-  const toSingle = (value: string | string[] | undefined): string | undefined => {
+  const toSingle = (
+    value: string | string[] | undefined
+  ): string | undefined => {
     if (Array.isArray(value)) return value[0];
     return value;
   };
@@ -131,31 +133,33 @@ const TattooDetail: React.FC = () => {
     return {} as Record<string, string>;
   }, [deleteUrlsJsonParam]);
 
-  const initialDetail = React.useMemo<TattooDetailContent>(() => ({
-    id: idFromParams,
-    caption: captionFromParams,
-    photoUrlVeryHigh: photoUrlVeryHighFromParams,
-    photoUrlHigh: photoUrlHighFromParams,
-    userId: userIdFromParams,
-    styles: initialStyles,
-    stylesJson: stylesJsonParam ?? JSON.stringify(initialStyles),
-    deleteUrls: initialDeleteUrls,
-    deleteUrlsJson: deleteUrlsJsonParam ?? JSON.stringify(initialDeleteUrls),
-  }), [
-    idFromParams,
-    captionFromParams,
-    photoUrlVeryHighFromParams,
-    photoUrlHighFromParams,
-    userIdFromParams,
-    initialStyles,
-    stylesJsonParam,
-    initialDeleteUrls,
-    deleteUrlsJsonParam,
-  ]);
-
-  const [fetchedDetail, setFetchedDetail] = useState<TattooDetailContent | null>(
-    null,
+  const initialDetail = React.useMemo<TattooDetailContent>(
+    () => ({
+      id: idFromParams,
+      caption: captionFromParams,
+      photoUrlVeryHigh: photoUrlVeryHighFromParams,
+      photoUrlHigh: photoUrlHighFromParams,
+      userId: userIdFromParams,
+      styles: initialStyles,
+      stylesJson: stylesJsonParam ?? JSON.stringify(initialStyles),
+      deleteUrls: initialDeleteUrls,
+      deleteUrlsJson: deleteUrlsJsonParam ?? JSON.stringify(initialDeleteUrls),
+    }),
+    [
+      idFromParams,
+      captionFromParams,
+      photoUrlVeryHighFromParams,
+      photoUrlHighFromParams,
+      userIdFromParams,
+      initialStyles,
+      stylesJsonParam,
+      initialDeleteUrls,
+      deleteUrlsJsonParam,
+    ]
   );
+
+  const [fetchedDetail, setFetchedDetail] =
+    useState<TattooDetailContent | null>(null);
   const [isFetchingDetail, setIsFetchingDetail] = useState(false);
 
   const detail = fetchedDetail ?? initialDetail;
@@ -305,7 +309,9 @@ const TattooDetail: React.FC = () => {
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
-            isOwner={Boolean(currentUserId && userId && currentUserId === userId)}
+            isOwner={Boolean(
+              currentUserId && userId && currentUserId === userId
+            )}
             publicationId={id}
             onEditTattoo={() => {
               router.push({
@@ -348,22 +354,25 @@ const TattooDetail: React.FC = () => {
                             } catch (e) {
                               // ignore errors for missing files
                             }
-                          }),
+                          })
                         );
                         // Delete the Firestore document
-                        await firestore().collection("publications").doc(String(id)).delete();
+                        await firestore()
+                          .collection("publications")
+                          .doc(String(id))
+                          .delete();
                         router.back();
                       } catch (e) {
                         Alert.alert(
                           "Unsuccessful",
-                          "Something went wrong. Please try again.",
+                          "Something went wrong. Please try again."
                         );
                       } finally {
                         setLoading(false);
                       }
                     },
                   },
-                ],
+                ]
               );
             }}
           />
@@ -479,9 +488,21 @@ const TattooDetail: React.FC = () => {
             />
 
             <View />
-            <Text size="p" weight="semibold" color="#FFF">
+            <Text
+              size="p"
+              weight="semibold"
+              color="#FFF"
+              style={{ marginRight: 8 }}
+            >
               {userDetails?.name}
             </Text>
+            <Image
+              style={{
+                width: 20,
+                height: 20,
+              }}
+              source={require("../../assets/images/originalArtist.png")}
+            />
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity

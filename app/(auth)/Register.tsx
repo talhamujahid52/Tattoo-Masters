@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  Alert,
+  Platform,
+} from "react-native";
 import Input from "@/components/Input";
 import PhoneInput from "@/components/PhoneCustomInput";
 import Button from "@/components/Button";
@@ -12,6 +19,15 @@ import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import auth from "@react-native-firebase/auth";
+import { sha256 } from "react-native-sha256";
+import {
+  LoginManager,
+  AccessToken,
+  AuthenticationToken,
+} from "react-native-fbsdk-next";
+import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
+import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -22,6 +38,7 @@ const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
   const signInWithGoogle = useSignInWithGoogle();
+  const dispatch = useDispatch();
 
   const formatPhoneNumber = (): string => {
     const cleanedNumber = phone.replace(/\s/g, ""); // Remove all spaces from number
@@ -45,11 +62,11 @@ const Register: React.FC = () => {
     console.log("Confirm Password:", confirmPassword);
 
     if (!validateEmail(email)) {
-      alert("Please enter a valid email address.");
+      Alert.alert("Action Required", "Please enter a valid email address.");
       return;
     }
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      Alert.alert("Unsuccessful", "Passwords do not match.");
       return;
     }
 
@@ -76,11 +93,149 @@ const Register: React.FC = () => {
       await auth().signOut();
       router.replace({ pathname: "/(auth)/EmailVerification" });
     } catch (error: any) {
+      console.log("error: ", error);
       if (error && error.code && error.message) {
-        alert(error.message);
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       }
+    }
+  };
+
+  const onFacebookButtonPress = async () => {
+    try {
+      console.log("🔵 Starting Facebook login");
+
+      let facebookCredential;
+      let androidAccessToken = null; // Store for reuse
+
+      if (Platform.OS === "ios") {
+        // iOS implementation with Limited Login
+        const generateNonce = () => {
+          return (
+            Math.random().toString(36).substring(2) + Date.now().toString(36)
+          );
+        };
+
+        const nonce = generateNonce();
+        const nonceSha256 = await sha256(nonce);
+
+        const result = await LoginManager.logInWithPermissions(
+          ["public_profile", "email"],
+          "limited",
+          nonceSha256
+        );
+
+        if (result.isCancelled) {
+          throw new Error("User cancelled the login process");
+        }
+
+        const data = await AuthenticationToken.getAuthenticationTokenIOS();
+        if (!data) {
+          throw new Error(
+            "Something went wrong obtaining authentication token"
+          );
+        }
+
+        facebookCredential = auth.FacebookAuthProvider.credential(
+          data.authenticationToken,
+          nonce
+        );
+      } else {
+        // Android implementation with Classic Login
+        const result = await LoginManager.logInWithPermissions([
+          "public_profile",
+          "email",
+        ]);
+
+        if (result.isCancelled) {
+          throw new Error("User cancelled the login process");
+        }
+
+        const data = await AccessToken.getCurrentAccessToken();
+        if (!data) {
+          throw new Error("Something went wrong obtaining access token");
+        }
+
+        androidAccessToken = data.accessToken; // Store for reuse
+        facebookCredential = auth.FacebookAuthProvider.credential(
+          data.accessToken
+        );
+      }
+
+      console.log("🔵 Signing in to Firebase...");
+      const userCredential = await auth().signInWithCredential(
+        facebookCredential
+      );
+      const user = userCredential.user;
+      console.log("✅ Firebase sign-in complete. User:", user);
+
+      // Check if user exists in Firestore
+      const userDocRef = firestore().collection("Users").doc(user.uid);
+      const userDoc = await userDocRef.get();
+
+      if (!userDoc.exists) {
+        console.log("👤 New user. Creating user document...");
+
+        let userData = {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          profilePicture: user.photoURL,
+          followedArtists: [],
+          likedTattoos: [],
+          isArtist: false,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+        };
+
+        // For Android, fetch additional info from Graph API if needed
+        if (Platform.OS === "android") {
+          const getFacebookUserInfo = async (accessToken) => {
+            try {
+              const response = await fetch(
+                `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
+              );
+              const userInfo = await response.json();
+              console.log("📘 Facebook userInfo:", userInfo);
+              return {
+                email: userInfo.email || null,
+                profilePicture: userInfo.picture?.data?.url || null,
+              };
+            } catch (error) {
+              console.log("❌ Error fetching Facebook user info:", error);
+              return { email: null, profilePicture: null };
+            }
+          };
+
+          // Reuse the access token from Android flow
+          const data = await AccessToken.getCurrentAccessToken();
+          const facebookUserInfo = await getFacebookUserInfo(data?.accessToken);
+
+          userData = {
+            ...userData,
+            email: facebookUserInfo.email || user.email,
+            profilePicture: facebookUserInfo.profilePicture || user.photoURL,
+          };
+        }
+
+        await userDocRef.set(userData);
+        dispatch(setUserFirestoreData(userData));
+        console.log("✅ New user added to Firestore");
+      } else {
+        console.log("👤 Existing user found in Firestore");
+        dispatch(setUser(userDoc.data()));
+      }
+
+      const fcmToken = await getFcmToken();
+      if (fcmToken) {
+        await saveFcmTokenToFirestore(user.uid, fcmToken);
+        console.log("📲 FCM token saved to Firestore");
+      }
+
+      console.log("🎉 Facebook login flow complete!");
+    } catch (error) {
+      console.error("❌ Facebook login error:", error);
+      // alert(error?.message || error);
     }
   };
 
@@ -159,10 +314,8 @@ const Register: React.FC = () => {
           <ThirdPartyLoginButton
             title="Facebook"
             icon={require("../../assets/images/facebook.png")}
-            onPress={() => {
-              alert(
-                "Login with Facebook is currently unavailable. We're working on it and it will be available soon!"
-              );
+            onPress={async () => {
+              await onFacebookButtonPress();
             }}
           />
         </View>
@@ -219,7 +372,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     lineHeight: 33.41,
     color: "#FBF6FA",
-    marginTop:14
+    marginTop: 14,
   },
   Row: {
     paddingTop: 8,

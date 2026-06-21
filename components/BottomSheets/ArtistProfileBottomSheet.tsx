@@ -129,7 +129,33 @@ const ArtistProfileBottomSheet = ({
           />
         </TouchableOpacity> */}
       </View>
-
+      {currentlyViewingArtist?.originalArtistNumber && (
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            columnGap: 8,
+          }}
+        >
+          <Image
+            style={{
+              height: 24,
+              width: 24,
+              resizeMode: "contain",
+            }}
+            source={require("../../assets/images/originalArtist.png")}
+          />
+          <Text size="p" weight="normal" color="#DAB769">
+            Original artist{" "}
+            {String(currentlyViewingArtist?.originalArtistNumber).padStart(
+              3,
+              "0"
+            )}
+            /250
+          </Text>
+        </View>
+      )}
       <View style={styles.userSocialsRow}>
         {currentlyViewingArtist?.facebookProfile && (
           <TouchableOpacity
@@ -217,6 +243,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#080808",
     padding: 16,
+    rowGap: 16,
   },
   userProfileRow: {
     flexDirection: "row",
@@ -248,14 +275,14 @@ const styles = StyleSheet.create({
   userSocialsRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    // paddingVertical: 16,
     gap: 16,
   },
   buttonRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 16,
+    // marginTop: 16,
     marginBottom: 24,
   },
 });

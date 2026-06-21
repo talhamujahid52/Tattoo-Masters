@@ -31,21 +31,45 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
       }}
       style={styles.card}
     >
-      <ExpoImage
-        key={artist?.data?.profilePicture}
-        source={
-          artist?.data?.profilePicture || artist?.data?.profilePictureSmall
-            ? {
-              uri:
-                artist?.data?.profilePictureSmall ??
-                artist?.data?.profilePicture,
-            }
-            : require("../assets/images/Artist.png")
-        }
-        style={styles.imageStyle}
-        contentFit="cover"
-        cachePolicy={"disk"}
-      />
+      <View style={{ height: 148, position: "relative" }}>
+        <ExpoImage
+          key={artist?.data?.profilePicture}
+          source={
+            artist?.data?.profilePicture || artist?.data?.profilePictureSmall
+              ? {
+                  uri:
+                    artist?.data?.profilePictureSmall ??
+                    artist?.data?.profilePicture,
+                }
+              : require("../assets/images/Artist.png")
+          }
+          style={styles.imageStyle}
+          contentFit="cover"
+          cachePolicy={"disk"}
+        />
+        {artist?.data?.originalArtistNumber && (
+          <View style={styles.BottomLeftOverlay}>
+            <ExpoImage
+              cachePolicy={"disk"}
+              source={require("../assets/images/originalArtist.png")}
+              contentFit="cover"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+              }}
+            />
+            <Text
+              size="small"
+              weight="normal"
+              color="#FBF6FA"
+              numberOfLines={1}
+            >
+              Original artist
+            </Text>
+          </View>
+        )}
+      </View>
       <View style={styles.RatingAndLocation}>
         {/* {isActive && <View style={styles.greenOnlineDot} />} */}
         <Text
@@ -62,8 +86,8 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
         {artist?.data?.studio === "studio"
           ? artist?.data?.studioName
           : artist?.data?.studio === "freelancer"
-            ? "Freelancer"
-            : "Home artist"}
+          ? "Freelancer"
+          : "Home artist"}
       </Text>
     </TouchableOpacity>
   );
@@ -93,5 +117,21 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+  },
+  BottomLeftOverlay: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    borderRadius: 6,
+    borderColor: "#00000029",
+    borderWidth: 1,
+    width: 105,
+    height: 26,
+    backgroundColor: "#000000C2",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    columnGap: 4,
   },
 });

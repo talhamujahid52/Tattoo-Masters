@@ -32,6 +32,7 @@ import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import type { Asset, ImagePickerResponse } from "react-native-image-picker";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { getFileName } from "@/utils/helperFunctions";
+import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
 
 const IMAGE_PICKER_OPTIONS = {
   mediaType: "photo",
@@ -65,7 +66,7 @@ const IndividualChat: React.FC = () => {
     createChat,
     addMessageToChat,
     listenToMessages,
-  } = useChats(loggedInUser.uid);
+  } = useChats(loggedInUser?.uid);
   const { queueUpload } = useBackgroundUpload();
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
@@ -198,8 +199,6 @@ const IndividualChat: React.FC = () => {
     };
   }, []);
 
-  const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
-
   const getLocalTimeFromCoordinates = async (loc: any) => {
     try {
       let lat: number | undefined;
@@ -240,7 +239,7 @@ const IndividualChat: React.FC = () => {
       }
 
       const timestamp = Math.floor(Date.now() / 1000);
-      const url = `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${timestamp}&key=${GOOGLE_API_KEY}`;
+      const url = `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${timestamp}&key=${GOOGLE_MAPS_API_KEY}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -293,7 +292,7 @@ const IndividualChat: React.FC = () => {
           text: "",
           createdAt: new Date(),
           user: {
-            _id: loggedInUser.uid,
+            _id: loggedInUser?.uid,
             name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
           },
           image: imageUri, // Local URI initially
@@ -306,7 +305,7 @@ const IndividualChat: React.FC = () => {
         // Queue the image for background upload
         const uploadSuccess = await queueUpload({
           uri: imageUri,
-          userId: loggedInUser.uid,
+          userId: loggedInUser?.uid,
           type: "chatImage",
           chatId: currentChatID,
           messageId: messageId,
@@ -771,7 +770,7 @@ const IndividualChat: React.FC = () => {
         messages={messages}
         onSend={(newMessages) => onSend(newMessages)}
         user={{
-          _id: loggedInUser.uid,
+          _id: loggedInUser?.uid,
           name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
         }}
         renderBubble={renderBubble}

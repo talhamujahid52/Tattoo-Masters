@@ -48,28 +48,48 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
       return null;
     }
   };
-  const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
+  // const GOOGLE_API_KEY = "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k";
 
   // Step 2: Get country from lat/lng
-  const getCountryFromCoordinates = async ([lat, lng]: [number, number]) => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}`;
-      const response = await fetch(url);
-      const data = await response.json();
+  // const getCountryFromCoordinates = async ([lat, lng]: [number, number]) => {
+  //   try {
+  //     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
+  //     const response = await fetch(url);
+  //     const data = await response.json();
 
-      if (data.status === "OK") {
-        const countryComponent = data.results[0].address_components.find(
-          (component) => component.types.includes("country")
-        );
-        console.log(
-          "countryComponent?.short_name ",
-          countryComponent?.short_name
-        );
-        return countryComponent?.short_name || null; // e.g., "US"
-      } else {
-        console.error("Geocoding API error:", data.status);
-        return null;
+  //     if (data.status === "OK") {
+  //       const countryComponent = data.results[0].address_components.find(
+  //         (component) => component.types.includes("country")
+  //       );
+  //       console.log(
+  //         "countryComponent?.short_name ",
+  //         countryComponent?.short_name
+  //       );
+  //       return countryComponent?.short_name || null; // e.g., "US"
+  //     } else {
+  //       console.error("Geocoding API error:", data);
+  //       return null;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching country from coordinates:", error);
+  //     return null;
+  //   }
+  // };
+
+  const getCountryFromCoordinates = async ([latitude, longitude]: [
+    number,
+    number
+  ]) => {
+    try {
+      const result = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      console.log("Result is  : ", result);
+      if (result.length > 0) {
+        return result[0].isoCountryCode; // e.g. "US"
       }
+      return null;
     } catch (error) {
       console.error("Error fetching country from coordinates:", error);
       return null;
@@ -108,11 +128,32 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
             onChange(number, code);
           }
         } else {
-          // Fallback if improperly formatted
-          setInputValue(storedPhoneNumber);
+          // // Fallback if improperly formatted
+          // setInputValue(storedPhoneNumber);
 
-          // Notify parent component
-          onChange(storedPhoneNumber, "");
+          // // Notify parent component
+          // onChange(storedPhoneNumber, "");
+          const coords = await getCurrentCoordinates();
+          console.log("coords: ", coords);
+          if (!coords) {
+            setIsInitialized(true);
+            return;
+          }
+
+          const countryCode = await getCountryFromCoordinates(coords);
+          if (!countryCode) {
+            setIsInitialized(true);
+            return;
+          }
+
+          const matchedCountry = countries.find(
+            (country) => country.cca2 === countryCode.toUpperCase()
+          );
+
+          if (matchedCountry) {
+            setSelectedCountry(matchedCountry);
+            onChange(inputValue, matchedCountry.callingCode);
+          }
         }
       } else {
         // If no logged in user data, select country from API

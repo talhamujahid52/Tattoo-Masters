@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  Alert,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Input from "@/components/Input";
@@ -23,6 +24,10 @@ import { useDispatch } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
 import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
+import { resetUser } from "@/redux/slices/userSlice";
+import { clearSearches } from "@/redux/slices/recentSearchesSlice";
+import { clearFcmTokenOnLogout } from "@/hooks/useNotification";
+
 GoogleSignin.configure({
   webClientId:
     "828691216515-im3vbghoggs7g5oplhog6vkepnfg64pb.apps.googleusercontent.com",
@@ -58,7 +63,10 @@ const Login = () => {
 
   const handleLoginClick = async () => {
     if (!email || !password) {
-      alert("Both email and password are required.");
+      Alert.alert(
+        "Action Required",
+        "Please enter your email address and password to continue."
+      );
       return;
     }
 
@@ -91,24 +99,41 @@ const Login = () => {
 
         console.log("User signed in!");
       } else {
-        alert(
-          "Please verify your email by clicking the link we sent to your provided email address to continue."
+        Alert.alert(
+          "Action Required",
+          "Please verify your email address by clicking the link in the email you received."
         );
         console.log("Email is not verified.");
+        try {
+          const uid = auth().currentUser?.uid;
+          if (uid) {
+            await clearFcmTokenOnLogout(uid);
+          }
+        } catch (e) {
+          // continue regardless
+        }
         await auth().signOut(); // Optionally sign out the user
+        dispatch(resetUser());
+        dispatch(clearSearches());
       }
     } catch (error: any) {
       if (error.code === "auth/user-not-found") {
-        alert("No user found with this email!");
-        console.log("No user found with this email!");
+        Alert.alert(
+          "Unsuccessful",
+          "No user found with provided email address."
+        );
+        console.log("No user found with provided email address.");
       } else if (error.code === "auth/wrong-password") {
-        alert("Incorrect password!");
-        console.log("Incorrect password!");
+        Alert.alert("Unsuccessful", "Incorrect password.");
+        console.log("Incorrect password.");
       } else if (error.code === "auth/invalid-credential") {
-        alert("Incorrect email or password. Please try again.");
+        Alert.alert(
+          "Unsuccessful",
+          "Incorrect email address or password. Please try again."
+        );
         console.log(error);
       } else {
-        alert(error.message);
+        Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
         console.log(error);
       }
     }
@@ -222,7 +247,7 @@ const Login = () => {
 
           // Reuse the access token from Android flow
           const data = await AccessToken.getCurrentAccessToken();
-          const facebookUserInfo = await getFacebookUserInfo(data.accessToken);
+          const facebookUserInfo = await getFacebookUserInfo(data?.accessToken);
 
           userData = {
             ...userData,

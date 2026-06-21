@@ -64,6 +64,43 @@ export const updateUserProfile = async (
     throw error;
   }
 };
+
+export const assignOriginalArtistNumber = async (
+  userId: string,
+): Promise<number | null> => {
+  const configRef = firestore()
+    .collection("Configurations")
+    .doc("OriginalArtists");
+  const userRef = firestore().collection("Users").doc(userId);
+
+  return firestore().runTransaction(async (transaction) => {
+    const configSnap = await transaction.get(configRef);
+
+    if (!configSnap.exists) {
+      throw new Error("OriginalArtists configuration document not found");
+    }
+
+    const { currentCount, maxCount } = configSnap.data() as {
+      currentCount: number;
+      maxCount: number;
+    };
+
+    if (currentCount >= maxCount) {
+      return null; // slots full, no number assigned
+    }
+
+    const newNumber = currentCount + 1;
+
+    transaction.update(configRef, { currentCount: newNumber });
+    transaction.set(
+      userRef,
+      { originalArtistNumber: newNumber },
+      { merge: true },
+    );
+
+    return newNumber;
+  });
+};
 /**
  * Fetches the updated user document from Firestore using the provided user ID.
  *

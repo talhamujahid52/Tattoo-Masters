@@ -35,17 +35,43 @@ const ArtistProfileCard: React.FC<ArtistProfileCardProps> = ({ artist }) => {
         height: 215,
       }}
     >
-      <ExpoImage
-        key={artist.data?.profilePicture}
-        cachePolicy={"disk"}
-        source={{ uri: profilePicture }}
-        contentFit="cover"
-        style={{
-          width: 131,
-          height: 170,
-          borderRadius: 12,
-        }}
-      />
+      <View style={{ width: 131, height: 170, position: "relative" }}>
+        <ExpoImage
+          key={artist.data?.profilePicture}
+          cachePolicy={"disk"}
+          source={{ uri: profilePicture }}
+          // source="https://picsum.photos/seed/696/3000/2000"
+          contentFit="cover"
+          style={{
+            width: 131,
+            height: 170,
+            borderRadius: 12,
+          }}
+        />
+        {artist?.data?.originalArtistNumber && (
+          <View style={styles.BottomLeftOverlay}>
+            <ExpoImage
+              cachePolicy={"disk"}
+              source={require("../assets/images/originalArtist.png")}
+              contentFit="cover"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+              }}
+            />
+            <Text
+              size="small"
+              weight="normal"
+              color="#FBF6FA"
+              numberOfLines={1}
+            >
+              Original artist
+            </Text>
+          </View>
+        )}
+      </View>
+
       <Text
         size="large"
         weight="medium"
@@ -109,5 +135,21 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     lineHeight: 16.71,
     color: "#FFFFFF",
+  },
+  BottomLeftOverlay: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    borderRadius: 6,
+    borderColor: "#00000029",
+    borderWidth: 1,
+    width: 105,
+    height: 26,
+    backgroundColor: "#000000C2",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    columnGap: 4,
   },
 });

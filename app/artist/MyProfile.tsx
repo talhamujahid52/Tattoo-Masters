@@ -27,6 +27,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
+import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
 
 interface StyleItem {
   title: string;
@@ -37,6 +38,11 @@ interface StyleItem {
 const MyProfile = () => {
   const router = useRouter();
   const { BottomSheet, show, hide } = useBottomSheet();
+  const {
+    BottomSheet: OriginalArtistBottomSheet,
+    show: showOriginalArtistBottomSheet,
+    hide: hideOriginalArtistBottomSheet,
+  } = useBottomSheet();
   const loggedInUser: UserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore
   );
@@ -208,13 +214,15 @@ const MyProfile = () => {
       <BottomSheet
         InsideComponent={<ShareProfileBottomSheet hide={hide} myId={myId} />}
       />
+      <OriginalArtistBottomSheet InsideComponent={<OriginalArtistNote />} />
+
       <ImageGallery
         images={filteredResults}
         onRefresh={onRefresh}
         refreshing={refreshing}
         contentContainerStyle={{ paddingBottom: 60 }}
         ListHeaderComponent={
-          <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, rowGap: 16 }}>
             <View style={styles.userProfileRow}>
               <View style={styles.pictureAndName}>
                 <ProfilePicturePreview
@@ -249,39 +257,70 @@ const MyProfile = () => {
                 />
               </TouchableOpacity>
             </View>
+            {loggedInUser?.originalArtistNumber && (
+              <TouchableOpacity
+                onPress={showOriginalArtistBottomSheet}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  columnGap: 8,
+                }}
+              >
+                <Image
+                  style={{
+                    height: 24,
+                    width: 24,
+                    resizeMode: "contain",
+                  }}
+                  source={require("../../assets/images/originalArtist.png")}
+                />
+                <Text size="p" weight="normal" color="#DAB769">
+                  Original artist{" "}
+                  {String(loggedInUser?.originalArtistNumber).padStart(3, "0")}
+                  /250
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <View style={styles.userSocialsRow}>
-              {loggedInUser?.facebookProfile && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(loggedInUser.facebookProfile)}
-                >
-                  <Image
-                    style={styles.icon}
-                    source={require("../../assets/images/facebook_2.png")}
-                  />
-                </TouchableOpacity>
-              )}
-              {loggedInUser?.instagramProfile && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(loggedInUser.instagramProfile)}
-                >
-                  <Image
-                    style={styles.icon}
-                    source={require("../../assets/images/instagram.png")}
-                  />
-                </TouchableOpacity>
-              )}
-              {loggedInUser?.twitterProfile && (
-                <TouchableOpacity
-                  onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
-                >
-                  <Image
-                    style={styles.icon}
-                    source={require("../../assets/images/twitter.png")}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
+            {(loggedInUser?.facebookProfile ||
+              loggedInUser?.instagramProfile ||
+              loggedInUser?.twitterProfile) && (
+              <View style={styles.userSocialsRow}>
+                {loggedInUser?.facebookProfile && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(loggedInUser.facebookProfile)}
+                  >
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/facebook_2.png")}
+                    />
+                  </TouchableOpacity>
+                )}
+                {loggedInUser?.instagramProfile && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleOpenLink(loggedInUser.instagramProfile)
+                    }
+                  >
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/instagram.png")}
+                    />
+                  </TouchableOpacity>
+                )}
+                {loggedInUser?.twitterProfile && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(loggedInUser.twitterProfile)}
+                  >
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/twitter.png")}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             <View style={styles.artistFavoriteRow}>
               <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
@@ -450,7 +489,6 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
     gap: 16,
   },
   artistFavoriteRow: {
@@ -465,18 +503,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 16,
   },
   buttonRow: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 16,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   stylesFilterRow: {
-    marginTop: 24,
+    marginTop: 8,
     marginBottom: 16,
   },
 });

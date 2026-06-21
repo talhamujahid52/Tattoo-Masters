@@ -31,6 +31,7 @@ import * as Location from "expo-location";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { updateSingleArtist } from "@/redux/slices/artistSlice";
 import firestore from "@react-native-firebase/firestore";
+import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
 
 interface StyleItem {
   title: string;
@@ -59,6 +60,12 @@ const ArtistProfile = () => {
     BottomSheet: LoggingInBottomSheet,
     show: showLoggingInBottomSheet,
     hide: hideLoggingInBottomSheet,
+  } = useBottomSheet();
+
+  const {
+    BottomSheet: OriginalArtistBottomSheet,
+    show: showOriginalArtistBottomSheet,
+    hide: hideOriginalArtistBottomSheet,
   } = useBottomSheet();
 
   const { artistId } = useLocalSearchParams<any>();
@@ -438,7 +445,7 @@ const ArtistProfile = () => {
         />
       }
     >
-      <View style={{ paddingHorizontal: 16 }}>
+      <View style={{ paddingHorizontal: 16, gap: 16 }}>
         {/* BottomSheets */}
         <LoggingInBottomSheet
           InsideComponent={
@@ -466,6 +473,7 @@ const ArtistProfile = () => {
           }
         />
 
+        <OriginalArtistBottomSheet InsideComponent={<OriginalArtistNote />} />
         <View style={styles.userProfileRow}>
           <View style={styles.pictureAndName}>
             {/* <Image style={styles.profilePicture} source={profilePicture} /> */}
@@ -508,38 +516,66 @@ const ArtistProfile = () => {
             />
           </TouchableOpacity>
         </View>
-        <View style={styles.userSocialsRow}>
-          {artist?.data?.facebookProfile && (
-            <TouchableOpacity
-              onPress={() => handleOpenLink(artist?.data?.facebookProfile)}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/facebook_2.png")}
-              />
-            </TouchableOpacity>
-          )}
-          {artist?.data?.instagramProfile && (
-            <TouchableOpacity
-              onPress={() => handleOpenLink(artist?.data?.instagramProfile)}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/instagram.png")}
-              />
-            </TouchableOpacity>
-          )}
-          {artist?.data?.twitterProfile && (
-            <TouchableOpacity
-              onPress={() => handleOpenLink(artist?.data?.twitterProfile)}
-            >
-              <Image
-                style={styles.icon}
-                source={require("../../assets/images/twitter.png")}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        {artist?.data?.originalArtistNumber && (
+          <TouchableOpacity
+            onPress={showOriginalArtistBottomSheet}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              columnGap: 8,
+            }}
+          >
+            <Image
+              style={{
+                height: 24,
+                width: 24,
+                resizeMode: "contain",
+              }}
+              source={require("../../assets/images/originalArtist.png")}
+            />
+            <Text size="p" weight="normal" color="#DAB769">
+              Original artist{" "}
+              {String(artist?.data?.originalArtistNumber).padStart(3, "0")}/250
+            </Text>
+          </TouchableOpacity>
+        )}
+        {(artist?.data?.facebookProfile ||
+          artist?.data?.instagramProfile ||
+          artist?.data?.twitterProfile) && (
+          <View style={styles.userSocialsRow}>
+            {artist?.data?.facebookProfile && (
+              <TouchableOpacity
+                onPress={() => handleOpenLink(artist?.data?.facebookProfile)}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/facebook_2.png")}
+                />
+              </TouchableOpacity>
+            )}
+            {artist?.data?.instagramProfile && (
+              <TouchableOpacity
+                onPress={() => handleOpenLink(artist?.data?.instagramProfile)}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/instagram.png")}
+                />
+              </TouchableOpacity>
+            )}
+            {artist?.data?.twitterProfile && (
+              <TouchableOpacity
+                onPress={() => handleOpenLink(artist?.data?.twitterProfile)}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/twitter.png")}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
         <View style={styles.artistFavoriteRow}>
           <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
           <Text size="p" weight="normal" color="#FBF6FA">
@@ -653,7 +689,7 @@ const ArtistProfile = () => {
           />
         )}
 
-        <View style={{ marginTop: 24 }}>
+        <View style={{ marginTop: 8 }}>
           <Text
             size="h4"
             weight="semibold"
@@ -667,7 +703,7 @@ const ArtistProfile = () => {
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-between",
-              marginBottom: 8,
+              marginBottom: -8,
             }}
           >
             <Text size="large" weight="normal" color="#A7A7A7">
@@ -703,7 +739,6 @@ const ArtistProfile = () => {
             height: 130,
             borderRadius: 20,
             overflow: "hidden",
-            marginTop: 8,
           }}
         >
           <MapView
@@ -723,7 +758,7 @@ const ArtistProfile = () => {
           size="h4"
           weight="semibold"
           color="white"
-          style={{ marginTop: 24 }}
+          style={{ marginTop: 8 }}
         >
           Portfolio
         </Text>
@@ -791,7 +826,6 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
     gap: 16,
   },
   artistFavoriteRow: {
@@ -806,18 +840,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 16,
   },
   buttonRow: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 16,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   stylesFilterRow: {
-    marginTop: 16,
     marginBottom: 16,
   },
   map: {

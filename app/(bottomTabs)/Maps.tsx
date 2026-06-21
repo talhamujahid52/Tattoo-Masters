@@ -21,6 +21,7 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ArtistProfileBottomSheet from "@/components/BottomSheets/ArtistProfileBottomSheet";
+import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
 
 import {
   selectFilter,
@@ -200,7 +201,7 @@ const FullScreenMapWithSearch: React.FC = () => {
       return () => {
         cancelled = true;
       };
-    }, [dispatch]),
+    }, [dispatch])
   );
   const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
     const facets: string[] = [];
@@ -214,7 +215,7 @@ const FullScreenMapWithSearch: React.FC = () => {
           facets.push(
             `rating:>=${selectedRatings[0] - 0.1} && rating:<=${
               selectedRatings[0] + 0.1
-            }`,
+            }`
           );
         }
       }
@@ -257,8 +258,8 @@ const FullScreenMapWithSearch: React.FC = () => {
     });
     dispatch(
       updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
-      ),
+        hits.map((h: any) => ({ id: h.document.id, data: h.document }))
+      )
     );
     dispatch(addSearch({ text: query, type: "artists" }));
   };
@@ -308,7 +309,7 @@ const FullScreenMapWithSearch: React.FC = () => {
             fetchDetails
             onPress={(
               data: GooglePlaceData,
-              details: GooglePlaceDetail | null,
+              details: GooglePlaceDetail | null
             ) => {
               if (details && details.geometry) {
                 const { lat, lng } = details.geometry.location;
@@ -328,7 +329,7 @@ const FullScreenMapWithSearch: React.FC = () => {
               }
             }}
             query={{
-              key: "AIzaSyCYsCsuGy8EFd8S8SG4xyU4oPi-0P_yu9k",
+              key: GOOGLE_MAPS_API_KEY,
               language: "en",
             }}
             styles={{

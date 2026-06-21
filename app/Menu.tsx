@@ -147,6 +147,26 @@ const Menu = () => {
                 <Text size="p" weight="normal" color="#A7A7A7">
                   {loggedInUserFirestore?.followersCount || 0}
                 </Text>
+                {loggedInUserFirestore?.originalArtistNumber && (
+                  <>
+                    <Image
+                      style={{
+                        height: 20,
+                        width: 20,
+                        resizeMode: "contain",
+                        marginLeft: 8,
+                      }}
+                      source={require("../assets/images/originalArtist.png")}
+                    />
+                    <Text size="p" weight="normal" color="#DAB769">
+                      Original artist{" "}
+                      {String(
+                        loggedInUserFirestore?.originalArtistNumber
+                      ).padStart(3, "0")}
+                      /250
+                    </Text>
+                  </>
+                )}
               </View>
             </View>
             <Text
@@ -292,9 +312,7 @@ const Menu = () => {
 
           <View style={styles.separator} />
 
-          <TouchableOpacity
-            onPress={() => navigateTo("/(auth)/DeleteAccount")}
-          >
+          <TouchableOpacity onPress={() => navigateTo("/(auth)/DeleteAccount")}>
             <Text
               size="medium"
               weight="semibold"

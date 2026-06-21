@@ -21,6 +21,7 @@ export interface UserFirestore {
   id: string;
   images: string[];
   isArtist: boolean;
+  originalArtistNumber: number;
   likedTattoos: any[];
   location: LocationData;
   name: string;
@@ -77,4 +78,5 @@ export interface UserProfileFormData {
   studioName: string;
   tattooStyles: string[];
   isArtist: boolean;
+  originalArtistNumber: number;
 }

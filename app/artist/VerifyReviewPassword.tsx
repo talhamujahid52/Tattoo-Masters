@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Image, Alert } from "react-native";
 import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -23,7 +23,7 @@ const VerifyReviewPassword = () => {
           params: { artistId: artistId },
         });
       } else {
-        alert("Wrong Password");
+        Alert.alert("Unsuccessful", "Incorrect password.");
       }
     }
   };
