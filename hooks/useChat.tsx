@@ -163,8 +163,8 @@ const useChats = (userId: string) => {
               .set(messageData);
 
             // Update last message
-            const lastMessageText = message.image 
-              ? "📷 Image" 
+            const lastMessageText = message.image
+              ? "Image"
               : message.text || "";
 
             await firestore().collection("Chats").doc(currentChatID).update({
@@ -186,8 +186,8 @@ const useChats = (userId: string) => {
                 const senderProfile = chatData?.[senderId] || {};
                 const senderName =
                   senderProfile?.name || (message.user as any)?.name || "New message";
-                const preview = message.image 
-                  ? "📷 Sent an image" 
+                const preview = message.image
+                  ? "Sent an image"
                   : (message.text || "").toString();
                 
                 await sendChatNotification(

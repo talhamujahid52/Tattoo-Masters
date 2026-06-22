@@ -8,6 +8,12 @@ interface ChatListCellProps {
   chat: any;
 }
 
+const getLastMessagePreview = (message: unknown) => {
+  if (typeof message !== "string") return "";
+
+  return /^[^a-zA-Z]*image$/i.test(message.trim()) ? "Image" : message;
+};
+
 const ChatListCell = ({ chat }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
@@ -78,6 +84,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     null;
 
   const lastMessage = chat?.lastMessage;
+  const lastMessagePreview = getLastMessagePreview(lastMessage);
   const lastMessageTime = chat?.lastMessageTime;
   const date = new Date(
     lastMessageTime?.seconds * 1000 + lastMessageTime?.nanoseconds / 1000000
@@ -152,7 +159,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
           </Text>
         </View>
         <Text size="p" weight="normal" color="#B2B2B2">
-          {lastMessage ? lastMessage : ""}
+          {lastMessagePreview}
         </Text>
       </View>
     </TouchableOpacity>
