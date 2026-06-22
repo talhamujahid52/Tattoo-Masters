@@ -496,13 +496,15 @@ const TattooDetail: React.FC = () => {
             >
               {userDetails?.name}
             </Text>
-            <Image
-              style={{
-                width: 20,
-                height: 20,
-              }}
-              source={require("../../assets/images/originalArtist.png")}
-            />
+            {userDetails?.originalArtistNumber && (
+              <Image
+                style={{
+                  width: 20,
+                  height: 20,
+                }}
+                source={require("../../assets/images/originalArtist.png")}
+              />
+            )}
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity
