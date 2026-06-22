@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  ActionSheetIOS,
   Linking,
   Alert,
   useWindowDimensions,
@@ -33,6 +32,8 @@ import type { Asset, ImagePickerResponse } from "react-native-image-picker";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { getFileName } from "@/utils/helperFunctions";
 import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
+import useBottomSheet from "@/hooks/useBottomSheet";
+import ChatImagePickerBottomSheet from "@/components/BottomSheets/ChatImagePickerBottomSheet";
 
 const IMAGE_PICKER_OPTIONS = {
   mediaType: "photo",
@@ -56,6 +57,11 @@ const IndividualChat: React.FC = () => {
   const [messageRecieverName, setMessageRecieverName] = useState("");
   const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
   const [isSelectingImage, setIsSelectingImage] = useState(false);
+  const {
+    BottomSheet: ImagePickerSheet,
+    show: showImagePickerSheet,
+    hide: hideImagePickerSheet,
+  } = useBottomSheet();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUserFirestore = useSelector(
     (state: any) => state?.user?.userFirestore,
@@ -391,32 +397,8 @@ const IndividualChat: React.FC = () => {
 
   const openImageSourcePicker = useCallback(() => {
     if (isSelectingImage) return;
-
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: "Attach image",
-          options: ["Take Photo", "Choose from Library", "Cancel"],
-          cancelButtonIndex: 2,
-          userInterfaceStyle: "dark",
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) {
-            takePhoto();
-          } else if (buttonIndex === 1) {
-            chooseFromGallery();
-          }
-        }
-      );
-      return;
-    }
-
-    Alert.alert("Attach image", undefined, [
-      { text: "Take Photo", onPress: takePhoto },
-      { text: "Choose from Library", onPress: chooseFromGallery },
-      { text: "Cancel", style: "cancel" },
-    ]);
-  }, [chooseFromGallery, isSelectingImage, takePhoto]);
+    showImagePickerSheet();
+  }, [isSelectingImage, showImagePickerSheet]);
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
@@ -680,6 +662,15 @@ const IndividualChat: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <ImagePickerSheet
+        InsideComponent={
+          <ChatImagePickerBottomSheet
+            hideImagePickerSheet={hideImagePickerSheet}
+            onTakePhoto={takePhoto}
+            onChooseFromLibrary={chooseFromGallery}
+          />
+        }
+      />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
