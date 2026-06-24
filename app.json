@@ -91,7 +91,13 @@
       [
         "react-native-maps-expo-plugin",
         {
-          "googleMapsApiKey": "AIzaSyBxyFQXLAeIq5dCFY3w1q28Zcrf3D9Y8lc"
+          "googleMapsApiKey": "AIzaSyDsBQLKDuWUVnjHyTQKG1nZI6d0NiSqg-c"
+        }
+      ],
+      [
+        "./plugin/with-google-maps-android.js",
+        {
+          "googleMapsApiKey": "AIzaSyDsBQLKDuWUVnjHyTQKG1nZI6d0NiSqg-c"
         }
       ],
       [
