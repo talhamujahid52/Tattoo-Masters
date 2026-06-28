@@ -1,13 +1,33 @@
-import React from "react";
+import React, { useContext, useMemo } from "react";
 import { StyleSheet, View, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image as ExpoImage } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import Text from "../../components/Text";
 import Button from "@/components/Button";
+import { FormContext } from "@/context/FormContext";
+import { UserFirestore } from "@/types/user";
+import { useSelector } from "react-redux";
+
 const OriginalArtistInfoScreen = () => {
   const insets = useSafeAreaInsets();
   const { originalArtistNumber } = useLocalSearchParams();
+  const { formData, setFormData } = useContext(FormContext)!;
+  const loggedInUserFirestore: UserFirestore = useSelector(
+    (state: any) => state?.user?.userFirestore
+  );
+  const loggedInUser = useSelector((state: any) => state?.user?.user);
+
+  const profileImage = useMemo(() => {
+    return {
+      uri:
+        formData?.profilePicture ??
+        loggedInUserFirestore?.profilePictureSmall ??
+        loggedInUserFirestore?.profilePicture ??
+        loggedInUser?.photoURL ??
+        undefined,
+    };
+  }, [loggedInUser, loggedInUserFirestore, formData]);
 
   const getOrdinal = (num: any) => {
     const j = num % 10;
@@ -29,7 +49,7 @@ const OriginalArtistInfoScreen = () => {
       <View style={styles.content}>
         <View style={styles.artistContainer}>
           <ExpoImage
-            source={require("../../assets/images/Artist.png")}
+            source={profileImage}
             contentFit="cover"
             style={styles.artistImage}
           />
