@@ -1,6 +1,7 @@
 import React from "react";
 import {
   GestureResponderEvent,
+  ImageSourcePropType,
   StyleSheet,
   TouchableOpacity,
   Image,
@@ -9,14 +10,20 @@ import Text from "./Text";
 
 interface ButtonProps {
   title: string;
-  icon?: any;
+  icon?: ImageSourcePropType;
+  iconElement?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
 }
 
-const ThirdPartyLoginButton = ({ title = "Google", icon, onPress }: ButtonProps) => {
+const ThirdPartyLoginButton = ({
+  title = "Google",
+  icon,
+  iconElement,
+  onPress,
+}: ButtonProps) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.button}>
-      <Image style={styles.Image} source={icon} />
+      {iconElement || (icon && <Image style={styles.Image} source={icon} />)}
       <Text size="p" weight="normal" color="#FBF6FA">
         {title}
       </Text>

@@ -6,15 +6,15 @@ import auth from "@react-native-firebase/auth";
 import Button from "@/components/Button";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useDispatch } from "react-redux";
-import { resetUser } from "@/redux/slices/userSlice";
-import { clearSearches } from "@/redux/slices/recentSearchesSlice";
 import { useRouter } from "expo-router";
+import { clearLocalSession } from "@/utils/authSession";
+import { AppDispatch } from "@/redux/store";
 
 const DeleteAccount = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
   const providerId = auth().currentUser?.providerData;
@@ -43,9 +43,7 @@ const DeleteAccount = () => {
       // Delete user
       await user.delete();
 
-      // Clear user data and searches
-      dispatch(resetUser());
-      dispatch(clearSearches());
+      await clearLocalSession(dispatch);
 
       Alert.alert(
         "Account Deleted",

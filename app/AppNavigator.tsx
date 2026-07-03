@@ -3,6 +3,7 @@ import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
 import { resetUploadingStates } from "@/redux/slices/uploadQueueSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
+import { clearLocalSession } from "@/utils/authSession";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import messaging from "@react-native-firebase/messaging";
@@ -165,7 +166,11 @@ const AppNavigator = () => {
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     // console.log("App Navigator : ", user);
-    dispatch(setUser(user));
+    if (user) {
+      dispatch(setUser(user));
+    } else {
+      void clearLocalSession(dispatch);
+    }
     if (initializing) setInitializing(false);
   }
 

@@ -14,13 +14,13 @@ import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector, useDispatch } from "react-redux";
 import { UserFirestore } from "@/types/user";
-import { resetUser } from "@/redux/slices/userSlice";
-import { clearSearches } from "@/redux/slices/recentSearchesSlice";
+import { clearLocalSession } from "@/utils/authSession";
+import { AppDispatch } from "@/redux/store";
 
 const Menu = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -65,8 +65,7 @@ const Menu = () => {
       // continue regardless
     }
     await auth().signOut();
-    dispatch(resetUser());
-    dispatch(clearSearches());
+    await clearLocalSession(dispatch);
     router.back();
   };
 

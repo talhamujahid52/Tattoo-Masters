@@ -1,4 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import type { AnyAction } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import userSlice from "./slices/userSlice"; // Import your slice
@@ -16,7 +17,7 @@ const persistConfig = {
   blacklist: ["uploadQueue"], // Don't persist upload queue - should reset on app restart
 };
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   user: userSlice,
   artist: artistSlice,
   chats: chatSlice,
@@ -25,6 +26,21 @@ const rootReducer = combineReducers({
   filter: filterSlices,
   uploadQueue: uploadQueueSlice,
 });
+
+const RESET_REDUX_STATE = "session/resetReduxState";
+
+const rootReducer = (
+  state: ReturnType<typeof appReducer> | undefined,
+  action: AnyAction
+) => {
+  if (action.type === RESET_REDUX_STATE) {
+    return appReducer(undefined, action);
+  }
+
+  return appReducer(state, action);
+};
+
+export const resetReduxState = () => ({ type: RESET_REDUX_STATE });
 
 // Create persisted reducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -42,5 +58,5 @@ const store = configureStore({
 const persistor = persistStore(store);
 export { store, persistor };
 
-export type RootState = ReturnType<typeof rootReducer>; // Infers the shape of the Redux state
+export type RootState = ReturnType<typeof appReducer>; // Infers the shape of the Redux state
 export type AppDispatch = typeof store.dispatch;

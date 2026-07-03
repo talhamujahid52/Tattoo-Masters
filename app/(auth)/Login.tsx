@@ -24,9 +24,11 @@ import { useDispatch } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
 import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
-import { resetUser } from "@/redux/slices/userSlice";
-import { clearSearches } from "@/redux/slices/recentSearchesSlice";
 import { clearFcmTokenOnLogout } from "@/hooks/useNotification";
+import { useSignInWithApple } from "@/hooks/useSignInWithApple";
+import { Ionicons } from "@expo/vector-icons";
+import { clearLocalSession } from "@/utils/authSession";
+import { AppDispatch } from "@/redux/store";
 
 GoogleSignin.configure({
   webClientId:
@@ -44,7 +46,8 @@ const Login = () => {
   const insets = useSafeAreaInsets();
   const [password, setPassword] = useState<string>(""); // State for password input
   const [emailError, setEmailError] = useState<string>(""); // State for email error
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const signInWithApple = useSignInWithApple();
   const validateEmail = (input: string): boolean => {
     // Basic email validation regex
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -113,8 +116,7 @@ const Login = () => {
           // continue regardless
         }
         await auth().signOut(); // Optionally sign out the user
-        dispatch(resetUser());
-        dispatch(clearSearches());
+        await clearLocalSession(dispatch);
       }
     } catch (error: any) {
       if (error.code === "auth/user-not-found") {
@@ -383,6 +385,15 @@ const Login = () => {
           icon={require("../../assets/images/Google.png")}
           onPress={signInWithGoogle}
         />
+        {Platform.OS === "ios" && (
+          <ThirdPartyLoginButton
+            title="Apple"
+            iconElement={
+              <Ionicons name="logo-apple" size={20} color="#FBF6FA" />
+            }
+            onPress={signInWithApple}
+          />
+        )}
         <ThirdPartyLoginButton
           title="Facebook"
           icon={require("../../assets/images/facebook.png")}

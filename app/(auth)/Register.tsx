@@ -28,6 +28,10 @@ import {
 import { setUser, setUserFirestoreData } from "@/redux/slices/userSlice";
 import { useDispatch } from "react-redux";
 import { getFcmToken, saveFcmTokenToFirestore } from "@/hooks/useNotification";
+import { useSignInWithApple } from "@/hooks/useSignInWithApple";
+import { Ionicons } from "@expo/vector-icons";
+import { clearLocalSession } from "@/utils/authSession";
+import { AppDispatch } from "@/redux/store";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -38,7 +42,8 @@ const Register: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
   const signInWithGoogle = useSignInWithGoogle();
-  const dispatch = useDispatch();
+  const signInWithApple = useSignInWithApple();
+  const dispatch = useDispatch<AppDispatch>();
 
   const formatPhoneNumber = (): string => {
     const cleanedNumber = phone.replace(/\s/g, ""); // Remove all spaces from number
@@ -91,6 +96,7 @@ const Register: React.FC = () => {
 
       await user.sendEmailVerification();
       await auth().signOut();
+      await clearLocalSession(dispatch);
       router.replace({ pathname: "/(auth)/EmailVerification" });
     } catch (error: any) {
       console.log("error: ", error);
@@ -311,6 +317,15 @@ const Register: React.FC = () => {
             icon={require("../../assets/images/Google.png")}
             onPress={signInWithGoogle}
           />
+          {Platform.OS === "ios" && (
+            <ThirdPartyLoginButton
+              title="Apple"
+              iconElement={
+                <Ionicons name="logo-apple" size={20} color="#FBF6FA" />
+              }
+              onPress={signInWithApple}
+            />
+          )}
           <ThirdPartyLoginButton
             title="Facebook"
             icon={require("../../assets/images/facebook.png")}
