@@ -112,8 +112,8 @@ package-lock.json
 /**/.ruby-version
 vendor/
 
-/ios/
-/android/
+/ios
+/android
 # iOS / CocoaPods
 /packages/helloworld/ios/build/
 /packages/helloworld/ios/Pods/
