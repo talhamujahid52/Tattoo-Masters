@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tattoo Masters",
     "slug": "Tattoo-Masters",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon-new.png",
     "scheme": "myapp",
@@ -22,9 +22,8 @@
         "LSMinimumSystemVersion": "12.0.0",
         "ITSAppUsesNonExemptEncryption": false,
         "aps-environment": "production",
-        "NSLocationWhenInUseUsageDescription": "This app requires access to your location when open.",
-        "NSCameraUsageDescription": "We need access to your camera to take photos for chat attachments.",
-        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select images.",
+        "NSCameraUsageDescription": "Tattoo Masters uses your camera so you can take and send photos in chats.",
+        "NSPhotoLibraryUsageDescription": "Tattoo Masters uses your photo library so you can choose images for profiles, tattoo posts, reviews, and chats.",
         "UIDesignRequiresCompatibility": true,
         "LSApplicationQueriesSchemes": ["tel"]
       },
@@ -119,7 +118,10 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Tattoo Masters to use your location to determine nearby tattoo artists and studios."
+          "locationWhenInUsePermission": "Tattoo Masters uses your location to find nearby artists and studios—for example, within your selected search radius.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "isIosBackgroundLocationEnabled": false
         }
       ],
       [
@@ -133,7 +135,8 @@
             "targetSdkVersion": 35
           }
         }
-      ]
+      ],
+      "./plugin/without-ios-user-tracking.js"
     ],
     "experiments": {
       "typedRoutes": true

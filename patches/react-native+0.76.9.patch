@@ -1,0 +1,18 @@
+diff --git a/node_modules/react-native/third-party-podspecs/fmt.podspec b/node_modules/react-native/third-party-podspecs/fmt.podspec
+index 1c15add..48a551c 100644
+--- a/node_modules/react-native/third-party-podspecs/fmt.podspec
++++ b/node_modules/react-native/third-party-podspecs/fmt.podspec
+@@ -17,9 +17,12 @@ Pod::Spec.new do |spec|
+   spec.source = {
+     :git => fmt_git_url,
+     :tag => "11.0.2"
+   }
++  spec.prepare_command = <<-CMD
++ruby -i -pe 'gsub(/#elif defined\\(__apple_build_version__\\) && __apple_build_version__ < 14000029L/, "#elif defined(__apple_build_version__)")' include/fmt/base.h
++  CMD
+   spec.pod_target_xcconfig = {
+-    "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
++    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+   }
+   spec.platforms = min_supported_versions
+   spec.libraries = "c++"
