@@ -9,11 +9,18 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
+    "test:firestore-rules": "firebase emulators:exec --only firestore \"node --test --test-concurrency=1 tests/firestore.rules.test.js\"",
     "lint": "expo lint",
     "postinstall": "patch-package"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^immer$": "<rootDir>/node_modules/immer/dist/cjs/index.js"
+    },
+    "testPathIgnorePatterns": [
+      "/tests/firestore\\.rules\\.test\\.js$"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "~14.0.4",
@@ -88,12 +95,16 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@firebase/auth-types": "^0.12.3",
+    "@firebase/rules-unit-testing": "^4.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "~18.3.12",
     "@types/react-redux": "^7.1.34",
     "@types/react-test-renderer": "^18.0.7",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "~8.0.1",
     "jest": "^29.2.1",
     "jest-expo": "~52.0.3",
+    "firebase": "^11.3.1",
     "patch-package": "^8.0.0",
     "react-native-svg-transformer": "^1.5.0",
     "react-test-renderer": "18.3.1",

@@ -1,4 +1,10 @@
-import React, { useState, useRef, useContext, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   View,
   StyleSheet,
@@ -20,12 +26,30 @@ import Text from "@/components/Text";
 import * as Location from "expo-location";
 import { useSelector } from "react-redux";
 import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const SearchLocation: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext)!;
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
-  const artists = useSelector((s: any) => s.artist.allArtists);
+  const artists: any[] = useSelector((s: any) => s.artist.allArtists);
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleArtists = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds),
+    [artists, blockedUserIds, currentUserId, safetyHydrated],
+  );
 
   const [region, setRegion] = useState<Region>({
     latitude: formData.location?.latitude || 0,
@@ -100,7 +124,7 @@ const SearchLocation: React.FC = () => {
 
   const handleLocationSelect = (
     data: GooglePlaceData,
-    details: GooglePlaceDetail
+    details: GooglePlaceDetail | null
   ) => {
     if (details && details.geometry) {
       const { lat, lng } = details.geometry.location;
@@ -112,7 +136,9 @@ const SearchLocation: React.FC = () => {
       };
 
       // Helper to extract component by type
-      const getComponent = (type: string) =>
+      const getComponent = (
+        type: GooglePlaceDetail["address_components"][number]["types"][number],
+      ) =>
         details.address_components.find((c) => c.types.includes(type))
           ?.long_name || null;
 
@@ -330,16 +356,16 @@ const SearchLocation: React.FC = () => {
         mapType="standard"
         zoomEnabled
       >
-        {artists.map((artist: any, index: number) => {
+        {visibleArtists.map((artist: any, index: number) => {
           const location = artist?.data?.location;
           const profilePic =
             artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
 
-          if (!location[0] || !location[1]) return null;
+          if (!location?.[0] || !location?.[1]) return null;
 
           return (
             <Marker
-              key={index}
+              key={artist?.id ?? index}
               coordinate={{
                 latitude: location[0],
                 longitude: location[1],
@@ -394,7 +420,6 @@ const SearchLocation: React.FC = () => {
                 longitude: region.longitude,
               },
               city: address,
-              locationT: [region.latitude, region.longitude],
             });
             router.back();
           }}

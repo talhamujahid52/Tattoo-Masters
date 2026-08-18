@@ -1,11 +1,17 @@
 import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Text from "@/components/Text";
 import ImageGallery from "@/components/ImageGallery";
-import React from "react";
+import React, { useMemo } from "react";
 import { useRealtimeUserLikedPublications } from "@/hooks/useRealtimeLikedPublications";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSelector } from "react-redux";
 import { Publication, TypesenseResult } from "@/hooks/useTypesense";
+import {
+  selectBlockedUserIds,
+  selectReportedPublicationIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterHiddenPublications } from "@/utils/safetyFilters";
 
 const FavouriteTattoos = () => {
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
@@ -13,7 +19,25 @@ const FavouriteTattoos = () => {
   );
   const currentUserId = loggedInUser?.uid;
   const likedPublicationsData = useRealtimeUserLikedPublications(currentUserId);
-  const totalLiked = likedPublicationsData?.likedPublications?.length ?? 0;
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const reportedPublicationIds = useSelector(selectReportedPublicationIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleLikedPublications = useMemo(() => {
+    if (currentUserId && !safetyHydrated) return [];
+
+    return filterHiddenPublications(
+      likedPublicationsData?.likedPublications ?? [],
+      blockedUserIds,
+      reportedPublicationIds,
+    );
+  }, [
+    blockedUserIds,
+    currentUserId,
+    likedPublicationsData?.likedPublications,
+    reportedPublicationIds,
+    safetyHydrated,
+  ]);
+  const totalLiked = visibleLikedPublications.length;
 
   return (
     <View style={{ flex: 1, paddingVertical: 16 }}>
@@ -28,10 +52,10 @@ const FavouriteTattoos = () => {
           {totalLiked ?? 0} liked tattoo{totalLiked !== 1 && "s"}
         </Text>
       </View>
-      {likedPublicationsData?.likedPublications.length > 0 ? (
+      {visibleLikedPublications.length > 0 ? (
         <ImageGallery
           images={
-            likedPublicationsData.likedPublications.map((item) => ({
+            visibleLikedPublications.map((item) => ({
               document: item,
             })) as TypesenseResult<Publication>[]
           }

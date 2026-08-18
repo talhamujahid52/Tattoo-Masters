@@ -39,16 +39,19 @@ export const useSignInWithGoogle = () => {
       let userData;
       if (!userDoc.exists) {
         // User does not exist in Firestore, create a new user document
-        await userDocRef.set({
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          profilePicture: user.photoURL,
-          followedArtists: [],
-          likedTattoos: [],
-          isArtist: false,
-          createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
-        });
+        await userDocRef.set(
+          {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            profilePicture: user.photoURL,
+            followedArtists: [],
+            likedTattoos: [],
+            isArtist: false,
+            createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
+          },
+          { merge: true },
+        );
         console.log("User added to Firestore!");
       } else {
         console.log("User already exists in Firestore");

@@ -32,6 +32,7 @@ import { useSignInWithApple } from "@/hooks/useSignInWithApple";
 import { Ionicons } from "@expo/vector-icons";
 import { clearLocalSession } from "@/utils/authSession";
 import { AppDispatch } from "@/redux/store";
+import LegalConsentNotice from "@/components/LegalConsentNotice";
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -40,10 +41,17 @@ const Register: React.FC = () => {
   const [countryCode, setCountryCode] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-
   const signInWithGoogle = useSignInWithGoogle();
   const signInWithApple = useSignInWithApple();
   const dispatch = useDispatch<AppDispatch>();
+
+  const handleGoogleSignIn = async () => {
+    await signInWithGoogle();
+  };
+
+  const handleAppleSignIn = async () => {
+    await signInWithApple();
+  };
 
   const formatPhoneNumber = (): string => {
     const cleanedNumber = phone.replace(/\s/g, ""); // Remove all spaces from number
@@ -82,17 +90,23 @@ const Register: React.FC = () => {
       );
 
       const user = userCredential.user;
-      await firestore().collection("Users").doc(user.uid).set({
-        uid: user.uid,
-        name: fullName,
-        email: user.email,
-        phoneNumber: fullPhoneNumber,
-        profilePicture: "",
-        followedArtists: [],
-        likedTattoos: [],
-        isArtist: false,
-        createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
-      });
+      await firestore()
+        .collection("Users")
+        .doc(user.uid)
+        .set(
+          {
+            uid: user.uid,
+            name: fullName,
+            email: user.email,
+            phoneNumber: fullPhoneNumber,
+            profilePicture: "",
+            followedArtists: [],
+            likedTattoos: [],
+            isArtist: false,
+            createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
+          },
+          { merge: true },
+        );
 
       await user.sendEmailVerification();
       await auth().signOut();
@@ -196,7 +210,9 @@ const Register: React.FC = () => {
 
         // For Android, fetch additional info from Graph API if needed
         if (Platform.OS === "android") {
-          const getFacebookUserInfo = async (accessToken) => {
+          const getFacebookUserInfo = async (
+            accessToken?: string | null
+          ) => {
             try {
               const response = await fetch(
                 `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
@@ -224,7 +240,7 @@ const Register: React.FC = () => {
           };
         }
 
-        await userDocRef.set(userData);
+        await userDocRef.set(userData, { merge: true });
         dispatch(setUserFirestoreData(userData));
         console.log("✅ New user added to Firestore");
       } else {
@@ -248,7 +264,11 @@ const Register: React.FC = () => {
   return (
     <SafeAreaView style={styles.Container}>
       <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1, flex: 1, alignItems: "center" }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: "center",
+          paddingBottom: 24,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <Image
@@ -315,7 +335,7 @@ const Register: React.FC = () => {
           <ThirdPartyLoginButton
             title="Google"
             icon={require("../../assets/images/Google.png")}
-            onPress={signInWithGoogle}
+            onPress={handleGoogleSignIn}
           />
           {Platform.OS === "ios" && (
             <ThirdPartyLoginButton
@@ -323,7 +343,7 @@ const Register: React.FC = () => {
               iconElement={
                 <Ionicons name="logo-apple" size={20} color="#FBF6FA" />
               }
-              onPress={signInWithApple}
+              onPress={handleAppleSignIn}
             />
           )}
           <ThirdPartyLoginButton
@@ -334,35 +354,10 @@ const Register: React.FC = () => {
             }}
           />
         </View>
-        <View style={styles.BottomText}>
-          <Text size="small" weight="normal" color="#828282">
-            By clicking continue, you agree to our
-          </Text>
-          <View style={styles.TermsOfServiceContainer}>
-            <TouchableOpacity
-              onPress={() => {
-                router.push("/(auth)/TermsOfService");
-              }}
-            >
-              <Text size="small" weight="normal" color="#FBF6FA">
-                Terms of Service
-              </Text>
-            </TouchableOpacity>
-            <Text size="small" weight="normal" color="#828282">
-              {" "}
-              and{" "}
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                router.push("/(auth)/PrivacyPolicy");
-              }}
-            >
-              <Text size="small" weight="normal" color="#FBF6FA">
-                Privacy Policy.
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <LegalConsentNotice
+          onOpenTerms={() => router.push("/(auth)/TermsOfService")}
+          onOpenPrivacyPolicy={() => router.push("/(auth)/PrivacyPolicy")}
+        />
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
@@ -421,13 +416,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 8,
-  },
-  BottomText: {
-    marginTop: 24,
-  },
-  TermsOfServiceContainer: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
   },
 });

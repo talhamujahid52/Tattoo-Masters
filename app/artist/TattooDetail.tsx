@@ -18,6 +18,7 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
+import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publication,
 // import { doc } from "@react-native-firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,6 +33,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import firestore from "@react-native-firebase/firestore";
 import storage from "@react-native-firebase/storage";
+import useSafety from "@/hooks/useSafety";
 
 type TattooDetailContent = {
   id: string;
@@ -170,6 +172,17 @@ const TattooDetail: React.FC = () => {
   const existingStylesJson = detail.stylesJson ?? "[]";
   const userId = detail.userId;
   const photoUrlVeryHigh = detail.photoUrlVeryHigh || detail.photoUrlHigh;
+  const {
+    hydrated: safetyHydrated,
+    isUserBlocked,
+    reportedPublicationIds,
+  } = useSafety();
+  const isBlockedOwner = Boolean(
+    userId && userId !== currentUserId && isUserBlocked(userId),
+  );
+  const isReportedPublication = Boolean(
+    id && reportedPublicationIds.includes(id),
+  );
 
   // const { width, height } = Dimensions.get("window");
 
@@ -182,6 +195,11 @@ const TattooDetail: React.FC = () => {
     BottomSheet: ReportSheet,
     show: showReportSheet,
     hide: hideReportSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: BlockSheet,
+    show: showBlockSheet,
+    hide: hideBlockSheet,
   } = useBottomSheet();
   const {
     BottomSheet: LoggingInBottomSheet,
@@ -295,6 +313,29 @@ const TattooDetail: React.FC = () => {
     }
   }, [userId, getDocument]);
 
+  if (currentUserId && !safetyHydrated) {
+    return (
+      <View style={styles.safetyStateContainer}>
+        <ActivityIndicator color="#DAB769" />
+      </View>
+    );
+  }
+
+  if (isBlockedOwner || isReportedPublication) {
+    return (
+      <View style={styles.safetyStateContainer}>
+        <Text size="h4" weight="semibold" color="#FBF6FA">
+          This tattoo is unavailable
+        </Text>
+        <TouchableOpacity onPress={() => router.replace("/(bottomTabs)/Home")}>
+          <Text size="p" weight="semibold" color="#DAB769">
+            Return to Home
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View
       style={{
@@ -309,6 +350,8 @@ const TattooDetail: React.FC = () => {
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
+            ownerId={userId}
+            showBlockSheet={showBlockSheet}
             isOwner={Boolean(
               currentUserId && userId && currentUserId === userId
             )}
@@ -383,11 +426,31 @@ const TattooDetail: React.FC = () => {
           <ReportBottomSheet
             hideReportSheet={hideReportSheet}
             title="Image"
+            type="publication"
             options={ReportImageOptions}
             reportItem={id}
+            targetOwnerId={userId}
+            onReported={() => router.back()}
           />
         }
       />
+      {userId && userId !== currentUserId && (
+        <BlockSheet
+          InsideComponent={
+            <BlockUserBottomSheet
+              hideBlockSheet={hideBlockSheet}
+              blockedUserId={userId}
+              blockedUserName={userDetails?.name}
+              blockedUserProfilePicture={
+                userDetails?.profilePictureSmall ?? userDetails?.profilePicture
+              }
+              sourceType="publication"
+              sourceId={id}
+              onBlocked={() => router.back()}
+            />
+          }
+        />
+      )}
       <LoggingInBottomSheet
         InsideComponent={
           <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
@@ -549,4 +612,13 @@ const TattooDetail: React.FC = () => {
 
 export default TattooDetail;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  safetyStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+    padding: 24,
+    backgroundColor: "#000",
+  },
+});

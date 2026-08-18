@@ -15,6 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 
 import { selectFilter } from "@/redux/slices/filterSlices";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
 import useFollowArtist from "@/hooks/useFollowArtist";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -27,12 +31,20 @@ const ArtistProfileBottomSheet = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const insets = useSafeAreaInsets();
   const { currentlyViewingArtist } = useSelector(selectFilter);
+  const currentArtist = currentlyViewingArtist as any;
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
+  const loggedInUserId = useSelector((state: any) => state.user.user?.uid);
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
   const { toggleFollow, isFollowing } = useFollowArtist();
   const [isFollowingLocal, setIsFollowingLocal] = useState(false);
+  const currentArtistId = String(currentArtist?.uid ?? currentArtist?.id ?? "");
+  const isBlocked = Boolean(
+    currentArtistId && blockedUserIds.includes(currentArtistId),
+  );
 
-  const content = currentlyViewingArtist?.aboutYou
-    ? currentlyViewingArtist.aboutYou
+  const content = currentArtist?.aboutYou
+    ? currentArtist.aboutYou
     : "No description available.";
 
   const handleToggle = () => {
@@ -40,13 +52,17 @@ const ArtistProfileBottomSheet = ({
   };
 
   useEffect(() => {
-    if (currentlyViewingArtist?.id) {
-      setIsFollowingLocal(isFollowing(currentlyViewingArtist.id));
+    if (currentArtistId) {
+      setIsFollowingLocal(isFollowing(currentArtistId));
     }
-  }, [currentlyViewingArtist?.id, isFollowing]);
+  }, [currentArtistId, isFollowing]);
+
+  useEffect(() => {
+    if (safetyHydrated && isBlocked) hideMapProfileBottomSheet();
+  }, [hideMapProfileBottomSheet, isBlocked, safetyHydrated]);
 
   const handleFavoritePress = async () => {
-    if (!currentlyViewingArtist?.id) return;
+    if (!currentArtistId || isBlocked) return;
     if (!userFirestore) {
       // No login UI here; do nothing for now
       return;
@@ -54,7 +70,7 @@ const ArtistProfileBottomSheet = ({
     const next = !isFollowingLocal;
     setIsFollowingLocal(next);
     try {
-      const result = await toggleFollow(currentlyViewingArtist.id);
+      const result = await toggleFollow(currentArtistId);
       if (typeof result === "boolean" && result !== next) {
         setIsFollowingLocal(result);
       }
@@ -64,14 +80,14 @@ const ArtistProfileBottomSheet = ({
   };
 
   const profilePicture = useMemo(() => {
-    const profileSmall = currentlyViewingArtist?.profilePictureSmall;
-    const profileDefault = currentlyViewingArtist?.profilePicture;
+    const profileSmall = currentArtist?.profilePictureSmall;
+    const profileDefault = currentArtist?.profilePicture;
     return profileSmall
       ? { uri: profileSmall }
       : profileDefault
       ? { uri: profileDefault }
       : require("../../assets/images/Artist.png");
-  }, [currentlyViewingArtist]);
+  }, [currentArtist]);
 
   const handleOpenLink = async (url: string) => {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -90,6 +106,8 @@ const ArtistProfileBottomSheet = ({
     }
   };
 
+  if (loggedInUserId && (!safetyHydrated || isBlocked)) return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.userProfileRow}>
@@ -99,7 +117,7 @@ const ArtistProfileBottomSheet = ({
               hideMapProfileBottomSheet();
               router.push({
                 pathname: "/artist/ArtistProfile",
-                params: { artistId: currentlyViewingArtist?.id },
+                params: { artistId: currentArtistId },
               });
             }}
           >
@@ -108,17 +126,17 @@ const ArtistProfileBottomSheet = ({
 
           <View>
             <Text size="h3" weight="semibold" color="white">
-              {currentlyViewingArtist?.name ? currentlyViewingArtist.name : ""}
+              {currentArtist?.name ? currentArtist.name : ""}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {currentlyViewingArtist?.studio === "studio"
-                ? currentlyViewingArtist?.studioName
-                : currentlyViewingArtist?.studio === "freelancer"
+              {currentArtist?.studio === "studio"
+                ? currentArtist?.studioName
+                : currentArtist?.studio === "freelancer"
                 ? "Freelancer"
                 : "Home artist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
-              {currentlyViewingArtist?.city ? currentlyViewingArtist.city : ""}
+              {currentArtist?.city ? currentArtist.city : ""}
             </Text>
           </View>
         </View>
@@ -129,7 +147,7 @@ const ArtistProfileBottomSheet = ({
           />
         </TouchableOpacity> */}
       </View>
-      {currentlyViewingArtist?.originalArtistNumber && (
+      {currentArtist?.originalArtistNumber && (
         <View
           style={{
             display: "flex",
@@ -148,7 +166,7 @@ const ArtistProfileBottomSheet = ({
           />
           <Text size="p" weight="normal" color="#DAB769">
             Original artist{" "}
-            {String(currentlyViewingArtist?.originalArtistNumber).padStart(
+            {String(currentArtist?.originalArtistNumber).padStart(
               3,
               "0"
             )}
@@ -157,10 +175,10 @@ const ArtistProfileBottomSheet = ({
         </View>
       )}
       <View style={styles.userSocialsRow}>
-        {currentlyViewingArtist?.facebookProfile && (
+        {currentArtist?.facebookProfile && (
           <TouchableOpacity
             onPress={() =>
-              handleOpenLink(currentlyViewingArtist?.facebookProfile)
+              handleOpenLink(currentArtist?.facebookProfile)
             }
           >
             <Image
@@ -170,10 +188,10 @@ const ArtistProfileBottomSheet = ({
           </TouchableOpacity>
         )}
 
-        {currentlyViewingArtist?.instagramProfile && (
+        {currentArtist?.instagramProfile && (
           <TouchableOpacity
             onPress={() =>
-              handleOpenLink(currentlyViewingArtist?.instagramProfile)
+              handleOpenLink(currentArtist?.instagramProfile)
             }
           >
             <Image
@@ -182,10 +200,10 @@ const ArtistProfileBottomSheet = ({
             />
           </TouchableOpacity>
         )}
-        {currentlyViewingArtist?.twitterProfile && (
+        {currentArtist?.twitterProfile && (
           <TouchableOpacity
             onPress={() =>
-              handleOpenLink(currentlyViewingArtist?.twitterProfile)
+              handleOpenLink(currentArtist?.twitterProfile)
             }
           >
             <Image
@@ -221,12 +239,12 @@ const ArtistProfileBottomSheet = ({
           icon={require("../../assets/images/message.png")}
           variant="Primary"
           onPress={() => {
+            if (!currentArtistId || isBlocked) return;
+            hideMapProfileBottomSheet();
             router.push({
               pathname: "/artist/IndividualChat",
               params: {
-                selectedArtistId: currentlyViewingArtist?.id
-                  ? currentlyViewingArtist.id
-                  : "",
+                selectedArtistId: currentArtistId,
               },
             });
           }}

@@ -95,7 +95,7 @@ export const useSignInWithApple = () => {
           createdAt: firestore.FieldValue.serverTimestamp(),
         };
 
-        await userDocRef.set(userData);
+        await userDocRef.set(userData, { merge: true });
         dispatch(setUserFirestoreData(userData));
       } else {
         dispatch(setUser(userDoc.data()));

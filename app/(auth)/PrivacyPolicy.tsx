@@ -3,6 +3,11 @@ import React, { useState, useEffect } from "react";
 import Text from "@/components/Text";
 import firestore from "@react-native-firebase/firestore";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import {
+  LEGAL_LAST_UPDATED_ISO,
+  LEGAL_LAST_UPDATED_LABEL,
+  LEGAL_PRIVACY_POLICY_VERSION,
+} from "@/utils/legalConsent";
 
 interface Section {
   id: string;
@@ -26,8 +31,10 @@ interface PrivacyData {
 }
 
 const privacyData: PrivacyData = {
-  version: "1.0.0",
-  lastUpdated: firestore.Timestamp.fromDate(new Date()),
+  version: LEGAL_PRIVACY_POLICY_VERSION,
+  lastUpdated: firestore.Timestamp.fromDate(
+    new Date(LEGAL_LAST_UPDATED_ISO)
+  ),
   content: {
     title: "Privacy Policy",
     sections: [
@@ -45,6 +52,7 @@ const privacyData: PrivacyData = {
           "Account Information: Name, email address, profile photo, login credentials",
           "Tattoo Artist Data: Business information, portfolio photos, location",
           "User Content: Messages, reviews, likes, follows, uploaded media",
+          "Safety and Moderation Data: Reports, blocks, selected reasons, and related account or content identifiers",
           "Device Information: IP address, device type, operating system, language, access times",
           "Location Data: With user permission, used to improve local search and discovery",
           "Analytics Data: To understand usage trends and optimize performance",
@@ -59,6 +67,7 @@ const privacyData: PrivacyData = {
           "Recommend artists based on your location and preferences",
           "Facilitate communication and reviews between users and artists",
           "Detect and prevent fraudulent or inappropriate behavior",
+          "Investigate reports, enforce our zero-tolerance safety policy, and administer user blocks",
           "Serve relevant ads and subscription options",
           "Improve platform performance and user experience",
         ],
@@ -72,6 +81,12 @@ const privacyData: PrivacyData = {
           "Legal Authorities: If required by law or to protect rights and safety",
           "Affiliates and Successors: In the event of a business merger or acquisition",
         ],
+      },
+      {
+        id: "safety_controls",
+        title: "Reports, Blocks, and Safety Moderation",
+        content:
+          "Tattoo Masters has zero tolerance for objectionable content and abusive behavior. A tattoo or review report hides that item from your view; an account report submits the account for moderation without automatically blocking it. Blocking hides the account and its content from your view, prevents unwanted contact, creates a moderation record, and alerts our moderation team. Blocking and reporting records may be retained as needed to protect users, investigate issues, and document enforcement decisions.",
       },
       {
         id: "cookies_tracking",
@@ -140,9 +155,52 @@ const privacyData: PrivacyData = {
     "Thank you for using Tattoo Masters. We hope you enjoy the platform and use it in a friendly and respectful manner!",
 };
 
+const isValidPrivacyData = (value: unknown): value is PrivacyData => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<PrivacyData>;
+  if (
+    candidate.isActive !== true ||
+    candidate.version !== LEGAL_PRIVACY_POLICY_VERSION ||
+    !candidate.content ||
+    typeof candidate.content.title !== "string" ||
+    candidate.content.title.trim().length === 0 ||
+    !Array.isArray(candidate.content.sections) ||
+    candidate.content.sections.length === 0
+  ) {
+    return false;
+  }
+
+  const hasValidSections = candidate.content.sections.every(
+    (section) =>
+      !!section &&
+      typeof section.id === "string" &&
+      typeof section.title === "string" &&
+      typeof section.content === "string" &&
+      section.content.trim().length > 0 &&
+      (section.bulletPoints === undefined ||
+        (Array.isArray(section.bulletPoints) &&
+          section.bulletPoints.every(
+            (point) => typeof point === "string" && point.trim().length > 0,
+          ))) &&
+      (section.additionalContent === undefined ||
+        typeof section.additionalContent === "string")
+  );
+
+  return (
+    hasValidSections &&
+    (candidate.thankyouNote === undefined ||
+      typeof candidate.thankyouNote === "string") &&
+    candidate.content.sections.some(
+      (section) => section.id === "safety_controls"
+    )
+  );
+};
+
 const PrivacyPolicy = () => {
-  const [privacy, setPrivacy] = useState<PrivacyData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [privacy, setPrivacy] = useState<PrivacyData>(privacyData);
 
   // const uploadPrivacyToFirebase = async () => {
   //   try {
@@ -164,6 +222,8 @@ const PrivacyPolicy = () => {
   // }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPrivacy = async () => {
       try {
         const doc = await firestore()
@@ -171,39 +231,37 @@ const PrivacyPolicy = () => {
           .doc("privacy_policy")
           .get();
 
-        if (doc.exists) {
-          setPrivacy(doc.data() as PrivacyData);
+        const remotePrivacy = doc.data();
+        if (isMounted && doc.exists && isValidPrivacyData(remotePrivacy)) {
+          setPrivacy(remotePrivacy);
         }
       } catch (error) {
-        console.error("Error fetching privacy policy:", error);
-      } finally {
-        setLoading(false);
+        console.error("Using bundled privacy policy after fetch failed:", error);
       }
     };
 
-    fetchPrivacy();
-  }, []);
+    void fetchPrivacy();
 
-  if (loading) {
-    return (
-      <ScrollView style={styles.container}>
-        <Text size="h1" weight="medium" color="#FBF6FA" style={styles.title}>
-          Privacy Policy
-        </Text>
-        <Text size="p" weight="normal" color="#FBF6FA">
-          Loading...
-        </Text>
-      </ScrollView>
-    );
-  }
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
       <Text size="h1" weight="medium" color="#FBF6FA" style={styles.title}>
-        Privacy Policy
+        {privacy.content.title}
+      </Text>
+      <Text
+        size="small"
+        weight="normal"
+        color="#A7A7A7"
+        style={styles.metadata}
+      >
+        Version {privacy.version} · Last updated {LEGAL_LAST_UPDATED_LABEL}
       </Text>
 
-      {privacy?.content?.sections.map((section) => (
+      {privacy.content.sections.map((section) => (
         <View key={section.id} style={styles.section}>
           <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
             {section.title}
@@ -243,7 +301,7 @@ const PrivacyPolicy = () => {
         </View>
       ))}
 
-      {privacy?.thankyouNote && (
+      {privacy.thankyouNote && (
         <Text
           size="p"
           weight="normal"
@@ -269,6 +327,9 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 10,
+  },
+  metadata: {
+    marginBottom: 24,
   },
   section: {
     marginBottom: 24,

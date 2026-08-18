@@ -1,5 +1,11 @@
 // app/Search.tsx
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   StyleSheet,
@@ -23,6 +29,12 @@ import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { addSearch, clearSearches } from "@/redux/slices/recentSearchesSlice";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
@@ -35,7 +47,21 @@ const Search: React.FC = () => {
   const artistsTs = useTypesense();
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
-  const artists = useSelector((state: any) => state.artist.allArtists);
+  const artists: any[] = useSelector(
+    (state: any) => state.artist.allArtists,
+  );
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleArtists = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds),
+    [artists, blockedUserIds, currentUserId, safetyHydrated],
+  );
 
   const fetchUsers = async () => {
     try {
@@ -224,7 +250,7 @@ const Search: React.FC = () => {
             </Text>
             <KeyboardAwareFlatList
               style={{ backgroundColor: "#000" }}
-              data={artists}
+              data={visibleArtists}
               renderItem={renderArtistItem}
               keyExtractor={(item: any) => item.id}
               numColumns={3}

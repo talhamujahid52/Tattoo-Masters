@@ -90,7 +90,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     lastMessageTime?.seconds * 1000 + lastMessageTime?.nanoseconds / 1000000
   );
 
-  function formatMessageDate(dateString: string): string {
+  function formatMessageDate(dateString: string | Date): string {
     const messageDate = new Date(dateString);
     const today = new Date();
 
@@ -118,10 +118,11 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
   return (
     <TouchableOpacity
       onPress={() => {
+        if (!loggedInUser?.uid || !chat?.id) return;
         router.push({
           pathname: "/artist/IndividualChat",
           params: {
-            existingChatId: chat?.id,
+            existingChatId: chat.id,
             otherUserName,
             otherUserId,
             otherUserProfilePicture,

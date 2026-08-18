@@ -1,0 +1,4 @@
+export const LEGAL_TERMS_VERSION = "1.1.0";
+export const LEGAL_PRIVACY_POLICY_VERSION = "1.1.0";
+export const LEGAL_LAST_UPDATED_LABEL = "August 10, 2026";
+export const LEGAL_LAST_UPDATED_ISO = "2026-08-10T00:00:00.000Z";

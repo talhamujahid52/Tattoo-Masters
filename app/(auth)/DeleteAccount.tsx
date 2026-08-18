@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
-import Button from "@/components/Button";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
@@ -60,7 +59,12 @@ const DeleteAccount = () => {
       );
     } catch (error) {
       console.error("Account deletion failed:", error);
-      if (error.code === "auth/wrong-password") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "auth/wrong-password"
+      ) {
         Alert.alert("Unsuccessful", "Incorrect password.");
       } else {
         Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
@@ -71,7 +75,7 @@ const DeleteAccount = () => {
   };
 
   return (
-    <KeyboardAwareScrollView contentContainerStyle={styles.container} ß>
+    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <Image
         style={styles.image}
         source={require("../../assets/images/sentiment_sad.png")}

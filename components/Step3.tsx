@@ -23,7 +23,7 @@ interface StudioItem {
   title: string;
   selected: boolean;
 }
-const step3: React.FC = () => {
+const Step3: React.FC = () => {
   const { formData } = useContext(FormContext)!;
   const tattooStyles = formData?.tattooStyles;
   const router = useRouter();
@@ -264,7 +264,7 @@ const step3: React.FC = () => {
   );
 };
 
-export default step3;
+export default Step3;
 
 const styles = StyleSheet.create({
   container: {

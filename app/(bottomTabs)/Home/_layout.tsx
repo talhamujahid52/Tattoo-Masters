@@ -32,14 +32,8 @@ const HomeLayout = () => {
             title: "",
             headerStyle: {
               backgroundColor: "#000",
-              shadowOpacity: 0,
             },
-            headerLeftContainerStyle: {
-              paddingLeft: 16,
-            },
-            headerRightContainerStyle: {
-              paddingRight: 16,
-            },
+            headerShadowVisible: false,
             headerLeft: () => (
               <Image
                 source={require("../../../assets/images/tattoo masters.png")}
@@ -82,7 +76,6 @@ const HomeLayout = () => {
             headerShown: false,
             headerTitleStyle: { color: "#fff" },
             headerStyle: { backgroundColor: "#000" },
-            headerBackTitleVisible: false,
             headerBackButtonMenuEnabled: false,
             headerTintColor: "#fff",
           }}

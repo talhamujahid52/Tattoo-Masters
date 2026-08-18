@@ -21,6 +21,9 @@ import {
 
 import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import { getCurrentChatId } from "@/utils/NavState";
+import { getChatAccess, getChatRelationship } from "@/hooks/useChat";
+import { useSafetyHydration } from "@/hooks/useSafety";
+import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
 
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +31,10 @@ const AppNavigator = () => {
   const [initializing, setInitializing] = useState(true);
   const [initialUrlChecked, setInitialUrlChecked] = useState(false);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
+  const safetyHydrated = useSafetyHydration(userId ?? null);
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const pendingNotificationDataRef = React.useRef<any>(null);
+  const handledNotificationIdsRef = React.useRef(new Set<string>());
 
   useNotification(userId); // Handles token, saving, etc.
 
@@ -50,14 +57,46 @@ const AppNavigator = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const handledRef = { current: new Set<string>() } as {
-      current: Set<string>;
-    };
-    const navigateFromData = (data: any) => {
+    const navigateFromData = async (data: any) => {
       if (!data) return;
       const incomingChatId = String(data.chatId || "");
       const incomingSenderId = String(data.senderId || "");
       const currentChatId = getCurrentChatId();
+
+      if (incomingSenderId) {
+        if (!userId || !safetyHydrated) {
+          pendingNotificationDataRef.current = data;
+          return;
+        }
+        if (blockedUserIds.includes(incomingSenderId)) return;
+        try {
+          const relationship = await getChatRelationship(
+            userId,
+            incomingSenderId,
+          );
+          if (!relationship.canSend) return;
+        } catch (error) {
+          console.error("Unable to verify notification sender:", error);
+          return;
+        }
+      }
+
+      if (incomingChatId) {
+        if (!userId) return;
+        try {
+          const access = await getChatAccess(userId, incomingChatId);
+          if (
+            access.hidden ||
+            !access.canSend ||
+            (incomingSenderId && access.otherUserId !== incomingSenderId)
+          ) {
+            return;
+          }
+        } catch (error) {
+          console.error("Unable to verify notification chat access:", error);
+          return;
+        }
+      }
 
       const pushToChat = () => {
         if (typeof data.url === "string" && data.url.length) {
@@ -109,9 +148,9 @@ const AppNavigator = () => {
         const id = response?.notification?.request?.identifier as
           | string
           | undefined;
-        if (id && handledRef.current.has(id)) return;
-        if (id) handledRef.current.add(id);
-        navigateFromData(response?.notification?.request?.content?.data);
+        if (id && handledNotificationIdsRef.current.has(id)) return;
+        if (id) handledNotificationIdsRef.current.add(id);
+        void navigateFromData(response?.notification?.request?.content?.data);
       }
     );
 
@@ -120,28 +159,47 @@ const AppNavigator = () => {
       (remoteMessage) => {
         try {
           const id = (remoteMessage as any)?.messageId as string | undefined;
-          if (id && handledRef.current.has(id)) return;
-          if (id) handledRef.current.add(id);
+          if (id && handledNotificationIdsRef.current.has(id)) return;
+          if (id) handledNotificationIdsRef.current.add(id);
           const raw = remoteMessage?.data || {};
           const data = (raw as any)?.data ? (raw as any).data : raw;
-          navigateFromData(data);
+          void navigateFromData(data);
         } catch {}
       }
     );
+
+    if (safetyHydrated && pendingNotificationDataRef.current) {
+      const pendingData = pendingNotificationDataRef.current;
+      pendingNotificationDataRef.current = null;
+      void navigateFromData(pendingData);
+    }
 
     return () => {
       sub.remove();
       unsubMsgOpen();
     };
-  }, [router]);
+  }, [router, userId, safetyHydrated, blockedUserIds]);
 
   // Foreground: Present banner only if user isn't currently in the same chat
   useEffect(() => {
     const unsub = messaging().onMessage(async (remoteMessage) => {
       try {
         const data: any = remoteMessage?.data || {};
-        const incomingChatId = data.chatId;
+        const incomingChatId = String(data.chatId || "");
+        const incomingSenderId = String(data.senderId || "");
         const currentChatId = getCurrentChatId();
+        if (!safetyHydrated) return;
+        if (incomingSenderId && blockedUserIds.includes(incomingSenderId)) return;
+        if (incomingSenderId) {
+          if (!userId) return;
+          const relationship = await getChatRelationship(userId, incomingSenderId);
+          if (!relationship.canSend) return;
+        }
+        if (incomingChatId) {
+          if (!userId) return;
+          const access = await getChatAccess(userId, incomingChatId);
+          if (!access.canSend || access.hidden) return;
+        }
         if (
           incomingChatId &&
           currentChatId &&
@@ -154,14 +212,13 @@ const AppNavigator = () => {
           title: remoteMessage.notification?.title || "",
           body: remoteMessage.notification?.body || "",
           data,
-          android: { channelId: "default" as any },
         });
       } catch (e) {
         // ignore
       }
     });
     return () => unsub();
-  }, []);
+  }, [userId, safetyHydrated, blockedUserIds]);
 
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
@@ -267,7 +324,6 @@ const AppNavigator = () => {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: "#000" },
-            headerBackTitleVisible: false,
             headerBackButtonDisplayMode: "minimal",
           }}
         >
@@ -283,7 +339,6 @@ const AppNavigator = () => {
               headerTitleStyle: { color: "#fff" },
               headerTitleAlign: "center",
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -296,7 +351,6 @@ const AppNavigator = () => {
               headerTitleStyle: { color: "#fff" },
               headerTitleAlign: "center",
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -309,7 +363,6 @@ const AppNavigator = () => {
               headerTitleStyle: { color: "#fff" },
               headerTitleAlign: "center",
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -321,7 +374,6 @@ const AppNavigator = () => {
               headerTitle: "Set Password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -333,7 +385,6 @@ const AppNavigator = () => {
               headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -345,7 +396,6 @@ const AppNavigator = () => {
               headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -357,7 +407,6 @@ const AppNavigator = () => {
               headerTitle: "Reviews",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -369,7 +418,6 @@ const AppNavigator = () => {
               headerTitle: "Leave a review",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -381,7 +429,6 @@ const AppNavigator = () => {
               headerTitle: "Change password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -393,7 +440,6 @@ const AppNavigator = () => {
               headerTitle: "Add tattoo",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -405,7 +451,6 @@ const AppNavigator = () => {
               headerTitle: "Forgot password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -417,7 +462,6 @@ const AppNavigator = () => {
               headerTitle: "Add tattoo",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -429,7 +473,28 @@ const AppNavigator = () => {
               headerTitle: "Notifications",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/Privacy"
+            options={{
+              headerShown: true,
+              headerTitle: "Privacy",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
+              headerBackButtonMenuEnabled: false,
+              headerTintColor: "#fff",
+            }}
+          />
+          <Stack.Screen
+            name="artist/BlockedUsers"
+            options={{
+              headerShown: true,
+              headerTitle: "Blocked users",
+              headerTitleStyle: { color: "#fff" },
+              headerStyle: { backgroundColor: "#000" },
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -441,7 +506,6 @@ const AppNavigator = () => {
               headerTitle: "Help and support",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -453,7 +517,6 @@ const AppNavigator = () => {
               headerTitle: "Feedback",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -465,7 +528,6 @@ const AppNavigator = () => {
               headerTitle: "",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -477,7 +539,6 @@ const AppNavigator = () => {
               headerTitle: "Change review password",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -489,7 +550,6 @@ const AppNavigator = () => {
               headerTitle: "Terms of service",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -501,7 +561,6 @@ const AppNavigator = () => {
               headerTitle: "Privacy policy",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -522,7 +581,6 @@ const AppNavigator = () => {
               headerTitle: "My profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -534,7 +592,6 @@ const AppNavigator = () => {
               headerTitle: "Artist",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -546,7 +603,6 @@ const AppNavigator = () => {
               headerTitle: "Artist",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -558,7 +614,6 @@ const AppNavigator = () => {
               headerTitle: "Register as artist",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
               headerLeft: () => (
@@ -583,7 +638,6 @@ const AppNavigator = () => {
               headerTitle: "Register as artist",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -595,7 +649,6 @@ const AppNavigator = () => {
               headerTitle: "Edit profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -607,7 +660,6 @@ const AppNavigator = () => {
               headerTitle: "Edit profile",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -619,7 +671,6 @@ const AppNavigator = () => {
               headerTitle: "Portfolio",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -631,7 +682,6 @@ const AppNavigator = () => {
               headerTitle: "Portfolio",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -643,7 +693,6 @@ const AppNavigator = () => {
               headerTitle: "Register as artist",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
               headerTitleAlign: "center",
@@ -670,7 +719,6 @@ const AppNavigator = () => {
               headerTitle: "Add location",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -682,7 +730,6 @@ const AppNavigator = () => {
               headerTitle: "Location",
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}
@@ -705,7 +752,6 @@ const AppNavigator = () => {
               headerShown: false,
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
               gestureEnabled: false,
@@ -717,7 +763,6 @@ const AppNavigator = () => {
               headerShown: false,
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
               gestureEnabled: false,
@@ -729,7 +774,6 @@ const AppNavigator = () => {
               headerShown: false,
               headerTitleStyle: { color: "#fff" },
               headerStyle: { backgroundColor: "#000" },
-              headerBackTitleVisible: false,
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
             }}

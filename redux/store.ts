@@ -9,6 +9,7 @@ import recentSearchesSlice from "./slices/recentSearchesSlice";
 import tattooSlice from "./slices/tattooSlice";
 import filterSlices from "./slices/filterSlices";
 import uploadQueueSlice from "./slices/uploadQueueSlice";
+import safetySlice from "./slices/safetySlice";
 
 // Persist configuration
 const persistConfig = {
@@ -25,6 +26,7 @@ const appReducer = combineReducers({
   tattoos: tattooSlice,
   filter: filterSlices,
   uploadQueue: uploadQueueSlice,
+  safety: safetySlice,
 });
 
 const RESET_REDUX_STATE = "session/resetReduxState";

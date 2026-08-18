@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -12,7 +12,10 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
-import useChats from "@/hooks/useChat";
+import useChats, {
+  CHAT_UNAVAILABLE_MESSAGE,
+  ChatRelationship,
+} from "@/hooks/useChat";
 import {
   GiftedChat,
   IMessage,
@@ -34,6 +37,9 @@ import { getFileName } from "@/utils/helperFunctions";
 import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ChatImagePickerBottomSheet from "@/components/BottomSheets/ChatImagePickerBottomSheet";
+import { backgroundUploadService } from "@/utils/BackgroundUploadService";
+import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
+import ChatActionsBottomSheet from "@/components/BottomSheets/ChatActionsBottomSheet";
 
 const IMAGE_PICKER_OPTIONS = {
   mediaType: "photo",
@@ -51,16 +57,51 @@ const getImageFileName = (asset: Asset) => {
 const IndividualChat: React.FC = () => {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const {
+    selectedArtistId,
+    existingChatId,
+    otherUserName,
+    otherUserId,
+    otherUserProfilePicture,
+  } = useLocalSearchParams<any>();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
-  const [chatID, setChatID] = useState<any>();
-  const [messageRecieverName, setMessageRecieverName] = useState("");
-  const [recieverProfilePicture, setRecieverProfilePicture] = useState("");
+  const [chatID, setChatID] = useState<any>(existingChatId || undefined);
+  const didLeaveForBlockRef = useRef(false);
+  const [messageRecieverName, setMessageRecieverName] = useState(
+    String(otherUserName || ""),
+  );
+  const [recieverProfilePicture, setRecieverProfilePicture] = useState(
+    String(otherUserProfilePicture || ""),
+  );
   const [isSelectingImage, setIsSelectingImage] = useState(false);
+  const [chatRelationship, setChatRelationship] = useState<ChatRelationship>({
+    loading: true,
+    blockedByCurrentUser: false,
+    blockedByOtherUser: false,
+    canSend: false,
+  });
+  const [chatMetadataLoading, setChatMetadataLoading] = useState(
+    Boolean(existingChatId),
+  );
+  const [chatLookupLoading, setChatLookupLoading] = useState(
+    Boolean(selectedArtistId),
+  );
+  const [chatDisabled, setChatDisabled] = useState(false);
   const {
     BottomSheet: ImagePickerSheet,
     show: showImagePickerSheet,
     hide: hideImagePickerSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: ActionsSheet,
+    show: showActionsSheet,
+    hide: hideActionsSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: BlockSheet,
+    show: showBlockSheet,
+    hide: hideBlockSheet,
   } = useBottomSheet();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const loggedInUserFirestore = useSelector(
@@ -72,15 +113,81 @@ const IndividualChat: React.FC = () => {
     createChat,
     addMessageToChat,
     listenToMessages,
+    listenToBlockRelationship,
   } = useChats(loggedInUser?.uid);
   const { queueUpload } = useBackgroundUpload();
   const [isOnline, setIsOnline] = useState(false);
   const [lastSeen, setLastSeen] = useState<Date | null>(null);
   const [localTime, setLocalTime] = useState<String>();
-  const { selectedArtistId, existingChatId, otherUserName, otherUserId } =
-    useLocalSearchParams<any>();
   const selectedArtist = useGetArtist(selectedArtistId);
   const [otherUserDetails, setOtherUserDetails] = useState<any>();
+  const relationshipUserId = String(selectedArtistId || otherUserId || "");
+  const isConversationLoading =
+    chatRelationship.loading || chatMetadataLoading || chatLookupLoading;
+  const isConversationUnavailable =
+    !isConversationLoading && (!chatRelationship.canSend || chatDisabled);
+
+  const leaveBlockedConversation = useCallback(() => {
+    if (didLeaveForBlockRef.current) return;
+    didLeaveForBlockRef.current = true;
+    if (chatID) {
+      backgroundUploadService.cancelChatUploads(String(chatID));
+    }
+    router.back();
+  }, [chatID]);
+
+  useEffect(() => {
+    if (!relationshipUserId) return;
+    setChatRelationship((current) => ({ ...current, loading: true, canSend: false }));
+    return listenToBlockRelationship(relationshipUserId, setChatRelationship);
+  }, [relationshipUserId, listenToBlockRelationship]);
+
+  useEffect(() => {
+    if (!chatID || !loggedInUser?.uid) {
+      setChatMetadataLoading(false);
+      setChatDisabled(false);
+      return;
+    }
+
+    setChatMetadataLoading(true);
+    return firestore()
+      .collection("Chats")
+      .doc(chatID)
+      .onSnapshot(
+        (snapshot) => {
+          const chat = snapshot.data() || {};
+          const hiddenFor: string[] = Array.isArray(chat.hiddenFor)
+            ? chat.hiddenFor
+            : [];
+          const disabledParticipants: string[] = Array.isArray(
+            chat.disabledParticipants,
+          )
+            ? chat.disabledParticipants
+            : [];
+
+          setChatMetadataLoading(false);
+          setChatDisabled(disabledParticipants.includes(loggedInUser.uid));
+          if (hiddenFor.includes(loggedInUser.uid)) {
+            leaveBlockedConversation();
+          }
+        },
+        (error) => {
+          console.error("Error listening to chat availability:", error);
+          setChatMetadataLoading(false);
+          setChatDisabled(true);
+        },
+      );
+  }, [chatID, leaveBlockedConversation, loggedInUser?.uid]);
+
+  useEffect(() => {
+    if (!chatRelationship.blockedByCurrentUser) return;
+    leaveBlockedConversation();
+  }, [chatRelationship.blockedByCurrentUser, leaveBlockedConversation]);
+
+  useEffect(() => {
+    if (!chatID || !isConversationUnavailable) return;
+    backgroundUploadService.cancelChatUploads(String(chatID));
+  }, [chatID, isConversationUnavailable]);
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -133,10 +240,12 @@ const IndividualChat: React.FC = () => {
 
   useEffect(() => {
     if (selectedArtistId) {
+      setChatLookupLoading(true);
       const fetchMessagesIfChatExists = async () => {
         try {
           const artistChat = await checkIfChatExists(selectedArtistId);
           if (artistChat?.exists) {
+            setChatMetadataLoading(true);
             setChatID(artistChat.id);
             setMessageRecieverName(selectedArtist?.data?.name);
             setRecieverProfilePicture(
@@ -166,6 +275,8 @@ const IndividualChat: React.FC = () => {
           }
         } catch (error) {
           console.error("Error checking if chat exists: ", error);
+        } finally {
+          setChatLookupLoading(false);
         }
       };
 
@@ -173,11 +284,14 @@ const IndividualChat: React.FC = () => {
     } else if (existingChatId) {
       const chatExistsAlready = async () => {
         setChatID(existingChatId);
-        setMessageRecieverName(otherUserName);
+        setMessageRecieverName(
+          otherUserDetails?.name || String(otherUserName || ""),
+        );
         setRecieverProfilePicture(
           otherUserDetails?.profilePictureSmall
             ? otherUserDetails?.profilePictureSmall
-            : otherUserDetails?.profilePicture,
+            : otherUserDetails?.profilePicture ||
+                String(otherUserProfilePicture || ""),
         );
         if (otherUserDetails?.location) {
           const localTime = await getLocalTimeFromCoordinates(
@@ -188,7 +302,13 @@ const IndividualChat: React.FC = () => {
       };
       chatExistsAlready();
     }
-  }, [selectedArtistId, existingChatId, otherUserDetails]);
+  }, [
+    selectedArtistId,
+    existingChatId,
+    otherUserDetails,
+    otherUserName,
+    otherUserProfilePicture,
+  ]);
 
   useEffect(() => {
     if (!chatID) return;
@@ -277,6 +397,9 @@ const IndividualChat: React.FC = () => {
   const sendImageMessage = useCallback(
     async (imageUri: string, fileName?: string) => {
       try {
+        if (isConversationLoading || isConversationUnavailable) {
+          throw new Error(CHAT_UNAVAILABLE_MESSAGE);
+        }
         if (!imageUri) {
           throw new Error("No image selected");
         }
@@ -319,6 +442,10 @@ const IndividualChat: React.FC = () => {
             fileName || getFileName(imageUri) || `chat-image-${Date.now()}.jpg`,
         });
 
+        if (!uploadSuccess) {
+          throw new Error("Failed to queue image upload");
+        }
+
         // if (!uploadSuccess) {
         //   Alert.alert(
         //     "Upload Error",
@@ -331,12 +458,27 @@ const IndividualChat: React.FC = () => {
         // through your existing upload completion logic
       } catch (error) {
         console.error("Error sending image:", error);
-        Alert.alert("Unsuccessful", "Failed to send image.");
+        Alert.alert(
+          "Unsuccessful",
+          error instanceof Error && error.message === CHAT_UNAVAILABLE_MESSAGE
+            ? CHAT_UNAVAILABLE_MESSAGE
+            : "Failed to send image.",
+        );
       } finally {
         setIsSelectingImage(false);
       }
     },
-    [chatID, loggedInUser, loggedInUserFirestore, selectedArtist, queueUpload]
+    [
+      chatID,
+      loggedInUser,
+      loggedInUserFirestore,
+      selectedArtist,
+      queueUpload,
+      isConversationLoading,
+      isConversationUnavailable,
+      createChat,
+      addMessageToChat,
+    ]
   );
 
   const handleImagePickerResponse = useCallback(
@@ -396,12 +538,25 @@ const IndividualChat: React.FC = () => {
   }, [handleImagePickerResponse]);
 
   const openImageSourcePicker = useCallback(() => {
-    if (isSelectingImage) return;
+    if (isSelectingImage || isConversationLoading) return;
+    if (isConversationUnavailable) {
+      Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
+      return;
+    }
     showImagePickerSheet();
-  }, [isSelectingImage, showImagePickerSheet]);
+  }, [
+    isSelectingImage,
+    isConversationLoading,
+    isConversationUnavailable,
+    showImagePickerSheet,
+  ]);
 
   const onSend = useCallback(
     async (newMessages: IMessage[]) => {
+      if (isConversationLoading || isConversationUnavailable) {
+        Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
+        return;
+      }
       let currentChatID = chatID;
       if (!currentChatID) {
         try {
@@ -419,9 +574,24 @@ const IndividualChat: React.FC = () => {
           return;
         }
       }
-      await addMessageToChat(newMessages, currentChatID);
+      try {
+        await addMessageToChat(newMessages, currentChatID);
+      } catch (error) {
+        Alert.alert(
+          "Conversation unavailable",
+          error instanceof Error ? error.message : CHAT_UNAVAILABLE_MESSAGE,
+        );
+      }
     },
-    [chatID, loggedInUser, loggedInUserFirestore, selectedArtist],
+    [
+      chatID,
+      loggedInUser,
+      selectedArtist,
+      isConversationLoading,
+      isConversationUnavailable,
+      createChat,
+      addMessageToChat,
+    ],
   );
 
   // Custom rendering functions
@@ -506,6 +676,17 @@ const IndividualChat: React.FC = () => {
     );
   };
   const renderInputToolbar = (props: any) => {
+    if (isConversationLoading) return null;
+    if (isConversationUnavailable) {
+      return (
+        <View style={styles.unavailableContainer}>
+          <Text size="p" weight="normal" color="#A7A7A7">
+            {CHAT_UNAVAILABLE_MESSAGE}
+          </Text>
+        </View>
+      );
+    }
+
     const height = Math.min(Math.max(composerHeight + 8, 44), 100);
     const isMultiline = height >= 52;
 
@@ -605,6 +786,10 @@ const IndividualChat: React.FC = () => {
   const phoneNumber = otherUserDetails?.phoneNumber ? otherUserDetails?.phoneNumber : "";
 
   const openDialer = () => {
+    if (isConversationUnavailable || isConversationLoading) {
+      Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
+      return;
+    }
     if (!phoneNumber) {
       Alert.alert(
         "Missing Phone Number",
@@ -671,6 +856,34 @@ const IndividualChat: React.FC = () => {
           />
         }
       />
+      {relationshipUserId ? (
+        <ActionsSheet
+          InsideComponent={
+            <ChatActionsBottomSheet
+              hideActionsSheet={hideActionsSheet}
+              showBlockSheet={showBlockSheet}
+            />
+          }
+        />
+      ) : null}
+      {relationshipUserId ? (
+        <BlockSheet
+          InsideComponent={
+            <BlockUserBottomSheet
+              hideBlockSheet={hideBlockSheet}
+              blockedUserId={String(relationshipUserId)}
+              sourceType="chat"
+              sourceId={chatID ? String(chatID) : null}
+              blockedUserName={messageRecieverName}
+              blockedUserProfilePicture={recieverProfilePicture}
+              onBlocked={() => {
+                hideBlockSheet();
+                leaveBlockedConversation();
+              }}
+            />
+          }
+        />
+      ) : null}
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -747,18 +960,51 @@ const IndividualChat: React.FC = () => {
         </View>
         <TouchableOpacity
           onPress={openDialer}
-          style={{ height: 24, width: 24 }}
+          disabled={isConversationUnavailable || isConversationLoading}
+          style={{
+            height: 24,
+            width: 24,
+            opacity: isConversationUnavailable || isConversationLoading ? 0.4 : 1,
+          }}
         >
           <Image
             source={require("../../assets/images/call.png")}
             style={{ height: "100%", width: "100%", resizeMode: "contain" }}
           />
         </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Conversation actions"
+          onPress={showActionsSheet}
+          disabled={!relationshipUserId || chatRelationship.blockedByCurrentUser}
+          style={{
+            height: 24,
+            width: 24,
+            opacity:
+              !relationshipUserId || chatRelationship.blockedByCurrentUser
+                ? 0.4
+                : 1,
+          }}
+        >
+          <Image
+            source={require("../../assets/images/more_vert.png")}
+            style={{
+              height: "100%",
+              width: "100%",
+              resizeMode: "contain",
+              tintColor: "#FBF6FA",
+            }}
+          />
+        </TouchableOpacity>
       </View>
 
       <GiftedChat
         messageIdGenerator={() => uuid.v4() as string}
-        messages={messages}
+        messages={
+          chatRelationship.blockedByCurrentUser
+            ? []
+            : messages
+        }
         onSend={(newMessages) => onSend(newMessages)}
         user={{
           _id: loggedInUser?.uid,
@@ -804,6 +1050,16 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     marginRight: 5,
+  },
+  unavailableContainer: {
+    minHeight: 52,
+    marginHorizontal: 8,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    backgroundColor: "#292929",
   },
 });
 

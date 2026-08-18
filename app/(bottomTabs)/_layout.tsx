@@ -30,7 +30,7 @@ const BottomTabsLayout = () => {
       />
       <Tabs
         screenOptions={{
-          sceneContainerStyle: { backgroundColor: "#000" },
+          sceneStyle: { backgroundColor: "#000" },
           tabBarStyle: {
             backgroundColor: "#000000",
             borderTopColor: "#313232",
@@ -137,7 +137,7 @@ const BottomTabsLayout = () => {
             headerShown: false,
             tabBarButton: (props) => (
               <Pressable
-                {...props}
+                {...(props as any)}
                 onPress={() => handleTabPress("Likes", props.onPress as () => void)}
               />
             ),
@@ -164,7 +164,7 @@ const BottomTabsLayout = () => {
             headerShown: false,
             tabBarButton: (props) => (
               <Pressable
-                {...props}
+                {...(props as any)}
                 onPress={() => handleTabPress("Chat", props.onPress as () => void)}
               />
             ),

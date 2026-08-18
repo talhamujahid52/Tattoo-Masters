@@ -6,9 +6,10 @@ import {
   ScrollView,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import Text from "@/components/Text";
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { clearFcmTokenOnLogout } from "@/hooks/useNotification";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -17,6 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { UserFirestore } from "@/types/user";
 import { clearLocalSession } from "@/utils/authSession";
 import { AppDispatch } from "@/redux/store";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -36,6 +38,7 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -104,17 +107,24 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
   };
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
     try {
-      const uid = auth().currentUser?.uid;
-      if (uid) {
-        await clearFcmTokenOnLogout(uid);
+      try {
+        const uid = auth().currentUser?.uid;
+        if (uid) {
+          await clearFcmTokenOnLogout(uid);
+        }
+      } catch (e) {
+        // continue regardless
       }
-    } catch (e) {
-      // continue regardless
+      await auth().signOut();
+      await clearLocalSession(dispatch);
+      handleClose();
+    } finally {
+      setIsLoggingOut(false);
     }
-    await auth().signOut();
-    await clearLocalSession(dispatch);
-    handleClose();
   };
 
   if (!visible && translateX.value === SCREEN_WIDTH) {
@@ -193,10 +203,7 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
                 <TouchableOpacity
                   onPress={() => {
                     handleClose();
-                    router.push({
-                      pathname: "/artist/MyProfile",
-                      params: { loggedInUser: loggedInUser },
-                    });
+                    router.push("/artist/MyProfile");
                   }}
                   style={styles.userProfileRow}
                 >
@@ -400,6 +407,24 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
                 onPress={() => {
                   handleClose();
                   router.push({
+                    pathname: "/artist/Privacy",
+                  });
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="shield-lock-outline"
+                  size={24}
+                  color="#A7A7A7"
+                />
+                <Text size="h4" weight="normal" color="#FBF6FA">
+                  Privacy
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.drawerItem}
+                onPress={() => {
+                  handleClose();
+                  router.push({
                     pathname: "/artist/Feedback",
                   });
                 }}
@@ -513,13 +538,21 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
                 </Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Image
-                style={styles.icon}
-                source={require("../assets/images/logout.png")}
-              />
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={styles.logoutButton}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color="#FBF6FA" />
+              ) : (
+                <Image
+                  style={styles.icon}
+                  source={require("../assets/images/logout.png")}
+                />
+              )}
               <Text size="h4" weight="semibold" color="#FBF6FA">
-                Log out
+                {isLoggingOut ? "Logging out..." : "Log out"}
               </Text>
             </TouchableOpacity>
           </View>

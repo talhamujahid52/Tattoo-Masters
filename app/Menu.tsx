@@ -5,9 +5,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import Text from "@/components/Text";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { clearFcmTokenOnLogout } from "@/hooks/useNotification";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -16,11 +17,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { UserFirestore } from "@/types/user";
 import { clearLocalSession } from "@/utils/authSession";
 import { AppDispatch } from "@/redux/store";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const Menu = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -56,17 +59,24 @@ const Menu = () => {
   }
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
     try {
-      const uid = auth().currentUser?.uid;
-      if (uid) {
-        await clearFcmTokenOnLogout(uid);
+      try {
+        const uid = auth().currentUser?.uid;
+        if (uid) {
+          await clearFcmTokenOnLogout(uid);
+        }
+      } catch (e) {
+        // continue regardless
       }
-    } catch (e) {
-      // continue regardless
+      await auth().signOut();
+      await clearLocalSession(dispatch);
+      router.back();
+    } finally {
+      setIsLoggingOut(false);
     }
-    await auth().signOut();
-    await clearLocalSession(dispatch);
-    router.back();
   };
 
   const navigateTo = (pathname: string, params?: any) => {
@@ -297,6 +307,20 @@ const Menu = () => {
 
             <TouchableOpacity
               style={styles.drawerItem}
+              onPress={() => navigateTo("/artist/Privacy")}
+            >
+              <MaterialCommunityIcons
+                name="shield-lock-outline"
+                size={24}
+                color="#A7A7A7"
+              />
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                Privacy
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.drawerItem}
               onPress={() => navigateTo("/artist/Feedback")}
             >
               <Image
@@ -387,13 +411,21 @@ const Menu = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/logout.png")}
-            />
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutButton}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? (
+              <ActivityIndicator color="#FBF6FA" />
+            ) : (
+              <Image
+                style={styles.icon}
+                source={require("../assets/images/logout.png")}
+              />
+            )}
             <Text size="h4" weight="semibold" color="#FBF6FA">
-              Log out
+              {isLoggingOut ? "Logging out..." : "Log out"}
             </Text>
           </TouchableOpacity>
         </View>

@@ -16,7 +16,6 @@ const SearchLayout = () => {
           headerShown: false,
           headerTitleStyle: { color: "#fff" },
           headerStyle: { backgroundColor: "#000" },
-          headerBackTitleVisible: false,
           headerBackButtonMenuEnabled: false,
           headerTintColor: "#fff",
         }}
@@ -27,7 +26,6 @@ const SearchLayout = () => {
           headerShown: false,
           headerTitleStyle: { color: "#fff" },
           headerStyle: { backgroundColor: "#000" },
-          headerBackTitleVisible: false,
           headerBackButtonMenuEnabled: false,
           headerTintColor: "#fff",
         }}

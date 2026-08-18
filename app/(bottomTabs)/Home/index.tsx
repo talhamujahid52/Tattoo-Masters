@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +25,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { addSearch } from "@/redux/slices/recentSearchesSlice";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
+import { getChatAccess } from "@/hooks/useChat";
 
 const Home = () => {
   const router = useRouter();
@@ -35,9 +42,24 @@ const Home = () => {
   const artistsTs = useTypesense();
   const publicationsTs = useTypesense();
   const [page, setPage] = useState(1);
+  const initialNotificationHandledRef = useRef(false);
   const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
-  const artists = useSelector((state: any) => state.artist.allArtists);
+  const artists: any[] = useSelector(
+    (state: any) => state.artist.allArtists,
+  );
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleArtists: any[] = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds),
+    [artists, blockedUserIds, currentUserId, safetyHydrated],
+  );
 
   // Upload tracking for auto-refresh
   const { queue, completedCount, failedCount, pendingCount, uploadingCount } =
@@ -120,11 +142,36 @@ const Home = () => {
 
   // Cold-start notification handling when arriving to Home
   useEffect(() => {
+    if (
+      initialNotificationHandledRef.current ||
+      (currentUserId && !safetyHydrated)
+    ) {
+      return;
+    }
+    initialNotificationHandledRef.current = true;
+
     let handled = false;
-    const navigateFromData = (data: any) => {
+    const navigateFromData = async (data: any) => {
       if (!data) return;
       const incomingChatId = String(data?.chatId || "");
       const incomingSenderId = String(data?.senderId || "");
+      if (incomingSenderId && blockedUserIds.includes(incomingSenderId)) return;
+      if (incomingChatId) {
+        if (!currentUserId) return;
+        try {
+          const access = await getChatAccess(currentUserId, incomingChatId);
+          if (
+            access.hidden ||
+            !access.canSend ||
+            (incomingSenderId && access.otherUserId !== incomingSenderId)
+          ) {
+            return;
+          }
+        } catch (error) {
+          console.error("Unable to verify notification chat access:", error);
+          return;
+        }
+      }
       const url = typeof data?.url === "string" ? data.url : "";
       const currentChatId = getCurrentChatId();
       if (url) {
@@ -152,7 +199,7 @@ const Home = () => {
           handled = true;
           const raw: any = rm.data || {};
           const data = raw?.data ? raw.data : raw;
-          navigateFromData(data);
+          await navigateFromData(data);
           return;
         }
       } catch {}
@@ -164,11 +211,11 @@ const Home = () => {
           handled = true;
           const raw: any = resp.notification.request.content.data || {};
           const data = raw?.data ? raw.data : raw;
-          navigateFromData(data);
+          await navigateFromData(data);
         }
       } catch {}
     })();
-  }, []);
+  }, [blockedUserIds, currentUserId, router, safetyHydrated]);
 
   // Pull-to-refresh handler
   const onRefresh = async () => {
@@ -229,7 +276,7 @@ const Home = () => {
         </View>
         <View style={{ paddingLeft: 16 }}>
           <FlatList
-            data={artists}
+            data={visibleArtists}
             renderItem={({ item }) => <ArtistProfileCard artist={item} />}
             keyExtractor={(item) => item.id}
             horizontal

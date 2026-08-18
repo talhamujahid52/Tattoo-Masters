@@ -8,6 +8,7 @@ import {
   Pressable,
   Linking,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -16,13 +17,13 @@ import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
 import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtistProfileBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
+import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
-import NoReviews from "@/components/NoReviews";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import useFollowArtist from "@/hooks/useFollowArtist";
 import { useSelector, useDispatch } from "react-redux";
@@ -32,6 +33,7 @@ import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { updateSingleArtist } from "@/redux/slices/artistSlice";
 import firestore from "@react-native-firebase/firestore";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
+import useSafety from "@/hooks/useSafety";
 
 interface StyleItem {
   title: string;
@@ -55,6 +57,11 @@ const ArtistProfile = () => {
     BottomSheet: ReportSheet,
     show: showReportSheet,
     hide: hideReportSheet,
+  } = useBottomSheet();
+  const {
+    BottomSheet: BlockSheet,
+    show: showBlockSheet,
+    hide: hideBlockSheet,
   } = useBottomSheet();
   const {
     BottomSheet: LoggingInBottomSheet,
@@ -101,6 +108,14 @@ const ArtistProfile = () => {
   const dispatch = useDispatch();
 
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
+  const { currentUserId, hydrated: safetyHydrated, isUserBlocked } =
+    useSafety();
+  const targetArtistUserId = String(artist?.data?.uid ?? artistId ?? "");
+  const isBlockedArtist = Boolean(
+    targetArtistUserId &&
+      targetArtistUserId !== currentUserId &&
+      isUserBlocked(targetArtistUserId),
+  );
   const { toggleFollow, isFollowing } = useFollowArtist();
   const [isFollowingArtist, setIsFollowingArtist] = useState(false);
   const [followersCount, setFollowersCount] = useState<number>(0);
@@ -116,8 +131,8 @@ const ArtistProfile = () => {
   console.log("Artist Profile: ", artist);
 
   const region = {
-    latitude: artist?.data?.location[0] || defaultLocation.latitude,
-    longitude: artist?.data?.location[1] || defaultLocation.longitude,
+    latitude: artist?.data?.location?.[0] || defaultLocation.latitude,
+    longitude: artist?.data?.location?.[1] || defaultLocation.longitude,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   };
@@ -164,7 +179,7 @@ const ArtistProfile = () => {
     const styleCountMap: Record<string, number> = {};
     searchResults.forEach((doc) => {
       if (Array.isArray(doc.document.styles)) {
-        doc.document.styles.forEach((style) => {
+        doc.document.styles.forEach((style: string) => {
           styleCountMap[style] = (styleCountMap[style] || 0) + 1;
         });
       }
@@ -357,9 +372,9 @@ const ArtistProfile = () => {
 
   const openInGoogleMaps = async () => {
     const destinationLat =
-      artist?.data?.location[0] || defaultLocation.latitude;
+      artist?.data?.location?.[0] || defaultLocation.latitude;
     const destinationLng =
-      artist?.data?.location[1] || defaultLocation.longitude;
+      artist?.data?.location?.[1] || defaultLocation.longitude;
 
     // console.log("destinationLat ", destinationLat);
     // console.log("destinationLng ", destinationLng);
@@ -380,8 +395,8 @@ const ArtistProfile = () => {
     });
   };
   const openLocationInGoogleMaps = () => {
-    const latitude = artist?.data?.location[0] || defaultLocation.latitude;
-    const longitude = artist?.data?.location[1] || defaultLocation.longitude;
+    const latitude = artist?.data?.location?.[0] || defaultLocation.latitude;
+    const longitude = artist?.data?.location?.[1] || defaultLocation.longitude;
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
 
     Linking.openURL(url).catch((err) => {
@@ -432,6 +447,29 @@ const ArtistProfile = () => {
     }
   };
 
+  if (currentUserId && !safetyHydrated) {
+    return (
+      <View style={styles.safetyStateContainer}>
+        <ActivityIndicator color="#DAB769" />
+      </View>
+    );
+  }
+
+  if (isBlockedArtist) {
+    return (
+      <View style={styles.safetyStateContainer}>
+        <Text size="h4" weight="semibold" color="#FBF6FA">
+          This profile is unavailable
+        </Text>
+        <TouchableOpacity onPress={() => router.replace("/(bottomTabs)/Home")}>
+          <Text size="p" weight="semibold" color="#DAB769">
+            Return to Home
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
@@ -458,7 +496,8 @@ const ArtistProfile = () => {
               showLoginBottomSheet={showLoggingInBottomSheet}
               hideShareSheet={hideShareSheet}
               showReportSheet={showReportSheet}
-              artistId={artistId}
+              showBlockSheet={showBlockSheet}
+              artistId={targetArtistUserId}
             />
           }
         />
@@ -467,8 +506,26 @@ const ArtistProfile = () => {
             <ReportBottomSheet
               hideReportSheet={hideReportSheet}
               title="User"
+              type="user"
               options={options}
-              reportItem={artistId}
+              reportItem={targetArtistUserId}
+              targetOwnerId={targetArtistUserId}
+            />
+          }
+        />
+        <BlockSheet
+          InsideComponent={
+            <BlockUserBottomSheet
+              hideBlockSheet={hideBlockSheet}
+              blockedUserId={targetArtistUserId}
+              blockedUserName={artist?.data?.name}
+              blockedUserProfilePicture={
+                artist?.data?.profilePictureSmall ??
+                artist?.data?.profilePicture
+              }
+              sourceType="profile"
+              sourceId={targetArtistUserId}
+              onBlocked={() => router.back()}
             />
           }
         />
@@ -677,17 +734,10 @@ const ArtistProfile = () => {
             }}
           />
         </View>
-        {artist?.data?.latestReview ? (
-          <ReviewOnProfile
-            ArtistId={artistId}
-            showLoginBottomSheet={showLoggingInBottomSheet}
-          />
-        ) : (
-          <NoReviews
-            ArtistId={artistId}
-            showLoginBottomSheet={showLoggingInBottomSheet}
-          />
-        )}
+        <ReviewOnProfile
+          ArtistId={artistId}
+          showLoginBottomSheet={showLoggingInBottomSheet}
+        />
 
         <View style={{ marginTop: 8 }}>
           <Text
@@ -788,6 +838,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 0.33,
     borderColor: "#282828",
+  },
+  safetyStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+    padding: 24,
+    backgroundColor: "#000",
   },
   userProfileRow: {
     display: "flex",

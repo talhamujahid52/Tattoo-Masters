@@ -3,9 +3,6 @@ import {
   StyleSheet,
   View,
   FlatList,
-  Image,
-  Dimensions,
-  Pressable,
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
@@ -16,16 +13,19 @@ import Text from "@/components/Text";
 import ChatListCell from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
 import useLastSeen from "@/hooks/useLastSeen";
-import { router } from "expo-router";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterHiddenChats } from "@/utils/safetyFilters";
 
 const Chat = () => {
   const insets = useSafeAreaInsets();
-  const { width } = Dimensions.get("window");
-  const adjustedWidth = width - 80;
 
   const loggedInUser = useSelector((state: any) => state?.user?.user); // get Loggedin User
-  const artists = useSelector((state: any) => state?.artist?.allArtists); // get Artists
-  const chats = useSelector((state: any) => state?.chats?.allChats); // get Chats
+  const chats: any[] = useSelector((state: any) => state?.chats?.allChats); // get Chats
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
   useLastSeen();
   const { fetchChats } = useChats(loggedInUser?.uid);
 
@@ -37,16 +37,19 @@ const Chat = () => {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [fetchChats]);
 
   const filteredChats = useMemo(() => {
-    if (!searchText.trim()) {
-      return chats;
-    }
+    if (loggedInUser?.uid && !safetyHydrated) return [];
+    const visibleChats = loggedInUser?.uid
+      ? filterHiddenChats(chats ?? [], loggedInUser.uid, blockedUserIds)
+      : [];
+
+    if (!searchText.trim()) return visibleChats;
 
     const searchLower = searchText.toLowerCase().trim();
 
-    return chats?.filter((chat: any) => {
+    return visibleChats?.filter((chat: any) => {
       const otherUserId = chat?.participants?.find(
         (userId: string) => userId !== loggedInUser?.uid
       );
@@ -57,7 +60,13 @@ const Chat = () => {
         otherUserName.includes(searchLower) || lastMessage.includes(searchLower)
       );
     });
-  }, [chats, searchText, loggedInUser?.uid]);
+  }, [
+    blockedUserIds,
+    chats,
+    loggedInUser?.uid,
+    safetyHydrated,
+    searchText,
+  ]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

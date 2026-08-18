@@ -254,7 +254,7 @@ export const toggleLikePublication = async (
   const userRef = firestore().collection("Users").doc(userId);
 
   try {
-    const result = await firestore().runTransaction<LikeTransactionResult>(
+    const result = (await firestore().runTransaction(
       async (transaction) => {
         const userDoc = await transaction.get(userRef);
         if (!userDoc.exists) {
@@ -312,7 +312,7 @@ export const toggleLikePublication = async (
           likerName,
         };
       },
-    );
+    )) as LikeTransactionResult;
 
     console.log("Publication like toggled successfully.");
 

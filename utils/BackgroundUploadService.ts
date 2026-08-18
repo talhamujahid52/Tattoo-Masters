@@ -16,6 +16,8 @@ class BackgroundUploadService {
   private isRunning = false;
   private processingInterval: NodeJS.Timeout | null = null;
   private appStateSubscription: any = null;
+  private cancelledUploadIds = new Set<string>();
+  private activeChatUploads = new Map<string, any>();
 
   constructor() {
     this.setupAppStateListener();
@@ -77,6 +79,35 @@ class BackgroundUploadService {
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
     }
+  }
+
+  cancelChatUploads(chatId: string) {
+    if (!chatId) return;
+
+    const chatUploads = store
+      .getState()
+      .uploadQueue.queue.filter(
+        (item) =>
+          item.type === "chatImage" &&
+          item.chatId === chatId &&
+          (item.status === "pending" || item.status === "uploading"),
+      );
+
+    chatUploads.forEach((item) => {
+      this.cancelledUploadIds.add(item.id);
+      try {
+        this.activeChatUploads.get(item.id)?.cancel?.();
+      } catch (error) {
+        console.log("Unable to cancel active chat upload:", error);
+      }
+      store.dispatch(
+        updateUploadStatus({
+          id: item.id,
+          status: "failed",
+          error: "Conversation is unavailable",
+        }),
+      );
+    });
   }
 
   private async processQueue() {
@@ -172,6 +203,10 @@ class BackgroundUploadService {
   private async processUploadItem(item: UploadItem): Promise<void> {
     console.log(`Starting upload for ${item.id}...`);
 
+    if (this.cancelledUploadIds.has(item.id)) {
+      throw new Error("Conversation is unavailable");
+    }
+
     // Check if file still exists before attempting upload
     const fileExists = await this.checkFileExists(item.uri);
     if (!fileExists) {
@@ -239,6 +274,8 @@ class BackgroundUploadService {
       throw new Error("Missing chatId or messageId for chat image upload");
     }
 
+    await this.assertChatImageAllowed(item);
+
     const dateConst = Date.now().toString();
     const filePath = `chatImages/${item.chatId}${dateConst}/${item.name}`;
 
@@ -251,6 +288,7 @@ class BackgroundUploadService {
       contentType: "image/jpeg",
       cacheControl: "public,max-age=31536000",
     });
+    this.activeChatUploads.set(item.id, uploadTask);
 
     uploadTask.on("state_changed", (snapshot) => {
       const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 50; // 50% for upload
@@ -263,7 +301,16 @@ class BackgroundUploadService {
       );
     });
 
-    await uploadTask;
+    try {
+      await uploadTask;
+    } finally {
+      this.activeChatUploads.delete(item.id);
+    }
+
+    if (this.cancelledUploadIds.has(item.id)) {
+      throw new Error("Conversation is unavailable");
+    }
+    await this.assertChatImageAllowed(item);
 
     // Update progress to 60% after upload
     store.dispatch(
@@ -328,6 +375,11 @@ class BackgroundUploadService {
       },
     };
 
+    if (this.cancelledUploadIds.has(item.id)) {
+      throw new Error("Conversation is unavailable");
+    }
+    await this.assertChatImageAllowed(item);
+
     // Update Firestore message document
     await firestore()
       .collection("Chats")
@@ -351,6 +403,50 @@ class BackgroundUploadService {
     );
 
     console.log(`Chat image upload completed: ${item.id}`);
+  }
+
+  private async assertChatImageAllowed(item: UploadItem): Promise<void> {
+    if (!item.chatId || !item.userId || this.cancelledUploadIds.has(item.id)) {
+      throw new Error("Conversation is unavailable");
+    }
+
+    const chatSnapshot = await firestore()
+      .collection("Chats")
+      .doc(item.chatId)
+      .get();
+    if (!chatSnapshot.exists) throw new Error("Conversation is unavailable");
+
+    const chat = chatSnapshot.data() || {};
+    const participants: string[] = Array.isArray(chat.participants)
+      ? chat.participants
+      : [];
+    const disabledParticipants: string[] = Array.isArray(chat.disabledParticipants)
+      ? chat.disabledParticipants
+      : [];
+    const otherUserId = participants.find(
+      (participant) => participant !== item.userId,
+    );
+    if (
+      !participants.includes(item.userId) ||
+      !otherUserId ||
+      disabledParticipants.length > 0
+    ) {
+      throw new Error("Conversation is unavailable");
+    }
+
+    const [forwardBlock, reverseBlock] = await Promise.all([
+      firestore()
+        .collection("BlockedUsers")
+        .doc(`${item.userId}__${otherUserId}`)
+        .get(),
+      firestore()
+        .collection("BlockedUsers")
+        .doc(`${otherUserId}__${item.userId}`)
+        .get(),
+    ]);
+    if (forwardBlock.data()?.active === true || reverseBlock.data()?.active === true) {
+      throw new Error("Conversation is unavailable");
+    }
   }
 
   private async uploadPublicationEdit(item: UploadItem): Promise<void> {

@@ -11,7 +11,8 @@ import React, { useMemo, useState, useRef, forwardRef } from "react";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons"; // Example icon library
 import { normalize } from "@/utils/helperFunctions";
 
-interface InputProps extends TextInputProps {
+interface InputProps extends Omit<TextInputProps, "inputMode"> {
+  inputMode?: TextInputProps["inputMode"] | "password";
   placeholder?: string;
   value?: string; // Added value prop
   onChangeText?: (text: string) => void;

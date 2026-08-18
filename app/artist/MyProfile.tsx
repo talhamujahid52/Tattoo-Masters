@@ -140,7 +140,7 @@ const MyProfile = () => {
     const styleCountMap: Record<string, number> = {};
     searchResults.forEach((doc) => {
       if (Array.isArray(doc.document.styles)) {
-        doc.document.styles.forEach((style) => {
+        doc.document.styles.forEach((style: string) => {
           styleCountMap[style] = (styleCountMap[style] || 0) + 1;
         });
       }

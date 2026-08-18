@@ -3,26 +3,27 @@ import {
   View,
   Alert,
   ActivityIndicator,
-  TouchableOpacity,
 } from "react-native";
 import Text from "../Text";
 import React, { useState } from "react";
-import { useRouter } from "expo-router";
 import RadioButton from "@/components/RadioButton";
 import Button from "../Button";
-import firestore from "@react-native-firebase/firestore";
-import { firebase } from "@react-native-firebase/firestore";
+import useSafety, { normalizeReportTargetType } from "@/hooks/useSafety";
+import type { ReportTargetType } from "@/types/safety";
 
 interface Option {
   label: string;
   value: string;
 }
 
-interface bottomSheetProps {
+export interface ReportBottomSheetProps {
   hideReportSheet: () => void;
   title?: string;
   options: Option[];
   reportItem: any;
+  type?: ReportTargetType;
+  targetOwnerId?: string;
+  onReported?: (type: ReportTargetType, targetId: string) => void;
 }
 
 const ReportBottomSheet = ({
@@ -30,47 +31,69 @@ const ReportBottomSheet = ({
   title,
   options,
   reportItem,
-}: bottomSheetProps) => {
+  type,
+  targetOwnerId,
+  onReported,
+}: ReportBottomSheetProps) => {
   const [reasonForReport, setReasonForReport] = useState("");
   const [loading, setLoading] = useState(false);
-  const currentUserId = firebase?.auth()?.currentUser?.uid;
+  const { submitReport } = useSafety();
+
+  const reportType = type ?? normalizeReportTargetType(title);
+  const targetId = String(
+    typeof reportItem === "object"
+      ? (reportItem?.id ?? reportItem?.targetId ?? "")
+      : (reportItem ?? ""),
+  );
+  const resolvedOwnerId =
+    targetOwnerId ??
+    (typeof reportItem === "object"
+      ? (reportItem?.targetOwnerId ??
+        reportItem?.userId ??
+        reportItem?.user ??
+        "")
+      : reportType === "user"
+        ? targetId
+        : "");
 
   const handleReportClick = async () => {
+    if (!reasonForReport) {
+      Alert.alert("Select a reason", "Choose a reason before submitting.");
+      return;
+    }
+
     setLoading(true);
-    console.log("reportedBy:", currentUserId);
-    console.log("type:", title);
-    console.log("targetId:", reportItem);
-    console.log("reason:", reasonForReport);
-    console.log("createdAt:", firestore.FieldValue.serverTimestamp());
     try {
-      await firestore().collection("ReportedItems").add({
-        reportedBy: currentUserId,
-        type: title,
-        targetId: reportItem,
+      await submitReport({
+        type: reportType,
+        targetId,
+        targetOwnerId: resolvedOwnerId,
         reason: reasonForReport,
-        createdAt: firestore.FieldValue.serverTimestamp(),
       });
 
-      Alert.alert("Report Submitted", "Your report has been submitted successfully.", [
-        {
-          text: "OK",
-          onPress: () => {
-            hideReportSheet();
+      onReported?.(reportType, targetId);
+
+      Alert.alert(
+        "Report submitted",
+        reportType === "user"
+          ? "Your report has been submitted successfully."
+          : "Your report has been submitted and this content is now hidden.",
+        [
+          {
+            text: "OK",
+            onPress: hideReportSheet,
           },
-        },
-      ]);
+        ],
+      );
     } catch (error) {
-      Alert.alert("Unsuccessful", "There was a problem submitting your report. Please try again.", [
-        {
-          text: "OK",
-          onPress: () => {
-            hideReportSheet();
-          },
-        },
-      ]);
       console.error("Failed to submit report:", error);
+      Alert.alert(
+        "Unable to submit report",
+        "There was a problem submitting your report. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -114,6 +137,8 @@ const ReportBottomSheet = ({
                 "Report"
               )
             }
+            disabled={!reasonForReport || loading}
+            variant={reasonForReport ? "primary" : "secondary"}
             onPress={handleReportClick}
           ></Button>
         </View>

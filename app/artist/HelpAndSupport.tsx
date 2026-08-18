@@ -13,12 +13,21 @@ import Text from "@/components/Text";
 import { router } from "expo-router";
 import {
   useSafeAreaInsets,
-  SafeAreaView,
 } from "react-native-safe-area-context";
 
+type FAQ = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+type FAQData = {
+  faqs: FAQ[];
+};
+
 const FAQScreen = () => {
-  const [faqData, setFaqData] = useState(null);
-  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [faqData, setFaqData] = useState<FAQData | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
 
@@ -31,7 +40,7 @@ const FAQScreen = () => {
           .get();
 
         if (doc.exists) {
-          setFaqData(doc.data());
+          setFaqData(doc.data() as FAQData);
         }
       } catch (error) {
         console.error("Failed to fetch FAQs:", error);
@@ -42,7 +51,7 @@ const FAQScreen = () => {
     fetchFAQs();
   }, []);
 
-  const toggleFAQ = (index) => {
+  const toggleFAQ = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 

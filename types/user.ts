@@ -42,6 +42,14 @@ export interface UserFirestore {
   instagramProfile: string;
   twitterProfile: string;
   notificationPreferences?: NotificationPreferences;
+  artistRegistrationDate?: string;
+  latestReview?: {
+    feedback: string;
+    rating: string | number;
+    date: unknown;
+    reviewerId: string;
+    imageUrl: string;
+  };
 }
 
 export interface LocationData {

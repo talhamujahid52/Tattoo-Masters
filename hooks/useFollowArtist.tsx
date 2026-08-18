@@ -15,58 +15,56 @@ const useFollowArtist = () => {
       const userRef = firestore().collection("Users").doc(userFirestore.uid);
       const artistRef = firestore().collection("Users").doc(artistId);
 
-      // Get current user data
-      const userDoc = await userRef.get();
-      const userData = userDoc.data() as UserFirestore;
+      const result = await firestore().runTransaction(async (transaction) => {
+        const [userDoc, artistDoc] = await Promise.all([
+          transaction.get(userRef),
+          transaction.get(artistRef),
+        ]);
+        if (!userDoc.exists || !artistDoc.exists) {
+          throw new Error("The selected account is unavailable");
+        }
 
-      // Get current artist data
-      const artistDoc = await artistRef.get();
-      const artistData = artistDoc.data() as UserFirestore;
+        const userData = userDoc.data() as UserFirestore;
+        const artistData = artistDoc.data() as UserFirestore;
+        const isFollowing = userData.followedArtists?.includes(artistId);
+        const updatedFollowedArtists = isFollowing
+          ? userData.followedArtists.filter((id: string) => id !== artistId)
+          : [...(userData.followedArtists || []), artistId];
+        const updatedFollowersCount = isFollowing
+          ? Math.max(0, (artistData.followersCount || 1) - 1)
+          : (artistData.followersCount || 0) + 1;
 
-      // Check if user is already following the artist
-      const isFollowing = userData.followedArtists?.includes(artistId);
+        transaction.update(userRef, {
+          followedArtists: updatedFollowedArtists,
+        });
+        transaction.update(artistRef, {
+          followersCount: updatedFollowersCount,
+        });
 
-      // Update user's followedArtists array
-      const updatedFollowedArtists = isFollowing
-        ? userData.followedArtists.filter((id: string) => id !== artistId)
-        : [...(userData.followedArtists || []), artistId];
+        return {
+          artistData,
+          userData,
+          updatedFollowedArtists,
+          becameFollower: !isFollowing,
+        };
+      });
 
-      // Update artist's followersCount
-      const updatedFollowersCount = isFollowing
-        ? (artistData.followersCount || 1) - 1
-        : (artistData.followersCount || 0) + 1;
-
-      // Optimistic: update Redux immediately so UI reflects instantly
-      const previousUserData = { ...userData };
       dispatch(
         setUserFirestoreData({
-          ...userData,
-          followedArtists: updatedFollowedArtists,
+          ...result.userData,
+          followedArtists: result.updatedFollowedArtists,
         })
       );
 
-      // Persist updates in background
-      // Update user document
-      await userRef.update({
-        followedArtists: updatedFollowedArtists,
-      });
-
-      // Update artist document
-      await artistRef.update({
-        followersCount: updatedFollowersCount,
-      });
-
-      const becameFollower = !isFollowing;
-
       if (
-        becameFollower &&
+        result.becameFollower &&
         artistId !== userFirestore.uid &&
-        (artistData?.notificationPreferences?.favorites ?? true)
+        (result.artistData?.notificationPreferences?.favorites ?? true)
       ) {
         try {
           const followerName =
-            userData?.name?.trim() ||
-            userData?.fullName?.trim() ||
+            result.userData?.name?.trim() ||
+            result.userData?.fullName?.trim() ||
             userFirestore?.name?.trim() ||
             "Someone";
 
@@ -81,7 +79,7 @@ const useFollowArtist = () => {
         }
       }
 
-      return becameFollower;
+      return result.becameFollower;
     } catch (error) {
       console.error("Error toggling follow:", error);
       // Revert optimistic Redux update on failure

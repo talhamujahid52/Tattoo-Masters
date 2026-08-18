@@ -1,5 +1,5 @@
 import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import Text from "./Text";
 import { router } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
@@ -7,19 +7,19 @@ import ShareReviewPasswordBottomSheet from "./BottomSheets/ShareReviewPasswordBo
 import ShareReviewPasswordNote from "./BottomSheets/ShareReviewPasswordNote";
 import useGetArtist from "@/hooks/useGetArtist";
 import { formatDistanceToNow } from "date-fns";
-import firestore from "@react-native-firebase/firestore";
 import { useSelector } from "react-redux";
+import useGetReviews from "@/hooks/useGetReviews";
 
 interface ReviewOnProfileProps {
   ArtistId?: any;
   isMyProfile?: boolean;
-  showLoginBottomSheet: () => void;
+  showLoginBottomSheet?: () => void;
 }
 
 const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   ArtistId,
   isMyProfile = false,
-  showLoginBottomSheet,
+  showLoginBottomSheet = () => undefined,
 }) => {
   const {
     BottomSheet,
@@ -36,55 +36,23 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
   const artist = useGetArtist(ArtistId);
 
   const artistRating = artist?.data?.rating;
-  const totalReviews = artist?.data?.reviewsCount;
-  const latestReview = artist?.data?.latestReview;
   const ratingCategories = artist?.data?.ratingCategories;
-
-  const reviewerId = latestReview?.reviewerId;
-  const [reviewerDetails, setReviewerDetails] = useState<any>({});
-
-  const getUserFromId = async () => {
-    try {
-      if (!reviewerId) {
-        return null;
-      }
-
-      const usersSnapshot = await firestore()
-        .collection("Users")
-        .where("uid", "==", reviewerId)
-        .get();
-
-      if (usersSnapshot.empty) {
-        return null;
-      }
-
-      const userData = usersSnapshot.docs[0].data();
-      return userData;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    // Create an async function inside the useEffect
-    const fetchUserData = async () => {
-      const user = await getUserFromId();
-      if (user) {
-        setReviewerDetails(user);
-        console.log("User data fetched:", user);
-        // Do something with the fetched user data (e.g., set state)
-      } else {
-        console.log("User not found");
-      }
-    };
-
-    fetchUserData(); // Call the async function
-  }, [reviewerId]);
+  const { reviews } = useGetReviews(ArtistId);
+  const latestReview = useMemo(
+    () =>
+      [...reviews].sort((left, right) => {
+        const leftSeconds = Number(left?.date?.seconds ?? left?.date ?? 0);
+        const rightSeconds = Number(right?.date?.seconds ?? right?.date ?? 0);
+        return rightSeconds - leftSeconds;
+      })[0],
+    [reviews],
+  );
+  const totalVisibleReviews = reviews.length;
 
   // Use date-fns to calculate the distance from now
-  const timeAgo = (timestamp: number): string => {
-    const reviewDate = new Date(timestamp * 1000); // Convert seconds to milliseconds
+  const timeAgo = (timestamp: any): string => {
+    const seconds = Number(timestamp?.seconds ?? timestamp ?? 0);
+    const reviewDate = new Date(seconds * 1000);
     return formatDistanceToNow(reviewDate, { addSuffix: true });
   };
   const loggedInUser = useSelector((state: any) => state?.user?.user);
@@ -157,50 +125,53 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
             source={require("../assets/images/star.png")}
           />
           <Text size="p" weight="normal" color="#FBF6FA">
-            {artistRating ? Number(artistRating).toFixed(1) : "4.8"} (
-            {totalReviews ? totalReviews : "129"} reviews)
+            {artistRating ? Number(artistRating).toFixed(1) : "0.0"} (
+            {totalVisibleReviews} review{totalVisibleReviews === 1 ? "" : "s"})
           </Text>
         </View>
-        <View style={styles.userProfileRow}>
-          <View style={styles.pictureAndName}>
-            <Image
-              style={styles.profilePicture}
-              source={
-                reviewerDetails?.profilePictureSmall
-                  ? { uri: reviewerDetails?.profilePictureSmall }
-                  : reviewerDetails?.profilePicture
-                  ? { uri: reviewerDetails?.profilePicture }
-                  : require("../assets/images/placeholder.png")
-              }
-            />
-            <View>
-              <Text size="p" weight="normal" color="#FFF">
-                {reviewerDetails?.name
-                  ? reviewerDetails?.name
-                  : "Deleted account"}
-              </Text>
-              <Text size="medium" weight="normal" color="#A7A7A7">
-                {latestReview?.date ? timeAgo(latestReview.date) : "Just now"}{" "}
-                {/* Display the calculated time ago */}
-              </Text>
+        {latestReview ? (
+          <>
+            <View style={styles.userProfileRow}>
+              <View style={styles.pictureAndName}>
+                <Image
+                  style={styles.profilePicture}
+                  source={
+                    latestReview?.userProfilePicture
+                      ? { uri: latestReview.userProfilePicture }
+                      : require("../assets/images/placeholder.png")
+                  }
+                />
+                <View>
+                  <Text size="p" weight="normal" color="#FFF">
+                    {latestReview?.userName || "Deleted account"}
+                  </Text>
+                  <Text size="medium" weight="normal" color="#A7A7A7">
+                    {latestReview?.date
+                      ? timeAgo(latestReview.date)
+                      : "Just now"}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.midRow, { gap: 4 }]}>
+                <Image
+                  style={styles.icon}
+                  source={require("../assets/images/star.png")}
+                />
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {latestReview?.rating ?? "0"}
+                </Text>
+              </View>
             </View>
-          </View>
-          <View style={[styles.midRow, { gap: 4 }]}>
-            <Image
-              style={styles.icon}
-              source={require("../assets/images/star.png")}
-            />
-            <Text size="p" weight="normal" color="#FBF6FA">
-              {latestReview?.rating ? latestReview?.rating : "4.5"}
+            <Text size="p" weight="normal" color="#A7A7A7">
+              {latestReview.feedback}
             </Text>
-          </View>
-        </View>
-        <Text size="p" weight="normal" color="#A7A7A7">
-          {latestReview?.feedback
-            ? latestReview?.feedback
-            : "Lorem ipsum dolor sit amet contetur itbj jbds adipiscing elit sed do eiusmod tempor incididunt ut labore."}
-        </Text>
-        {totalReviews && (
+          </>
+        ) : (
+          <Text size="p" weight="normal" color="#A7A7A7">
+            No reviews to show.
+          </Text>
+        )}
+        {totalVisibleReviews > 0 && (
           <>
             <View style={styles.seprator}></View>
             <TouchableOpacity
@@ -210,7 +181,7 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
                   params: {
                     artistId: ArtistId,
                     artistRating: artistRating,
-                    totalReviews: totalReviews,
+                    totalReviews: totalVisibleReviews,
                     ratingCategories: JSON.stringify(ratingCategories),
                   },
                 });
@@ -218,7 +189,10 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
               style={styles.bottomRow}
             >
               <Text size="h4" weight="normal" color="#FBF6FA">
-                View all{totalReviews > 1 ? " " + totalReviews + " " : " "}
+                View all
+                {totalVisibleReviews > 1
+                  ? " " + totalVisibleReviews + " "
+                  : " "}
                 reviews
               </Text>
               <Image

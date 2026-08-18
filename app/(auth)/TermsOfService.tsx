@@ -3,6 +3,11 @@ import React, { useState, useEffect } from "react";
 import Text from "@/components/Text";
 import firestore from "@react-native-firebase/firestore";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import {
+  LEGAL_LAST_UPDATED_ISO,
+  LEGAL_LAST_UPDATED_LABEL,
+  LEGAL_TERMS_VERSION,
+} from "@/utils/legalConsent";
 
 interface Section {
   id: string;
@@ -26,8 +31,10 @@ interface TermsData {
 }
 
 const termsData: TermsData = {
-  version: "1.0.0",
-  lastUpdated: firestore.Timestamp.fromDate(new Date()),
+  version: LEGAL_TERMS_VERSION,
+  lastUpdated: firestore.Timestamp.fromDate(
+    new Date(LEGAL_LAST_UPDATED_ISO)
+  ),
   content: {
     title: "Terms of Service",
     sections: [
@@ -47,7 +54,7 @@ const termsData: TermsData = {
         id: "eligibility",
         title: "Eligibility",
         content:
-          "Tattoo Masters is available worldwide and does not impose an age restriction. However, individuals under 13 years of age must use the platform only with parental or guardian supervision, subject to local laws.",
+          "Tattoo Masters is not intended for children under 13, and users under 13 may not create or use an account. You must also meet any higher minimum age or parental-consent requirement that applies where you live.",
       },
       {
         id: "user_accounts",
@@ -75,6 +82,7 @@ const termsData: TermsData = {
         content: "Users agree not to upload, post, or share content that is:",
         bulletPoints: [
           "Illegal, hateful, discriminatory, or violent",
+          "Harassing, bullying, threatening, abusive, or intended to intimidate another person",
           "Pornographic or sexually explicit",
           "Misleading, spammy, or fraudulent",
           "In violation of intellectual property rights",
@@ -87,6 +95,12 @@ const termsData: TermsData = {
         title: "User Reviews and Messaging",
         content:
           "Users may review tattoo artists and upload related photos. Reviews must be based on genuine experiences. Messaging should be respectful and appropriate.",
+      },
+      {
+        id: "user_safety",
+        title: "Zero-Tolerance Policy, Reporting, and Blocking",
+        content:
+          "Tattoo Masters has zero tolerance for objectionable content or abusive behavior. Reporting a tattoo or review immediately hides that item from the reporting user's view. Reporting an account submits it for moderation but does not by itself block or hide the account. Blocking a user immediately hides that account, its content, and the blocker's conversation, prevents new contact, creates a moderation record, and alerts our moderation team. We review reports and blocks and may remove content or suspend or terminate accounts that violate these Terms.",
       },
       {
         id: "content_license",
@@ -141,9 +155,50 @@ const termsData: TermsData = {
   isActive: true,
 };
 
+const isValidTermsData = (value: unknown): value is TermsData => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<TermsData>;
+  if (
+    candidate.isActive !== true ||
+    candidate.version !== LEGAL_TERMS_VERSION ||
+    !candidate.content ||
+    typeof candidate.content.title !== "string" ||
+    candidate.content.title.trim().length === 0 ||
+    !Array.isArray(candidate.content.sections) ||
+    candidate.content.sections.length === 0
+  ) {
+    return false;
+  }
+
+  const hasValidSections = candidate.content.sections.every(
+    (section) =>
+      !!section &&
+      typeof section.id === "string" &&
+      typeof section.title === "string" &&
+      typeof section.content === "string" &&
+      section.content.trim().length > 0 &&
+      (section.bulletPoints === undefined ||
+        (Array.isArray(section.bulletPoints) &&
+          section.bulletPoints.every(
+            (point) => typeof point === "string" && point.trim().length > 0,
+          ))) &&
+      (section.additionalContent === undefined ||
+        typeof section.additionalContent === "string")
+  );
+
+  return (
+    hasValidSections &&
+    (candidate.thankyouNote === undefined ||
+      typeof candidate.thankyouNote === "string") &&
+    candidate.content.sections.some((section) => section.id === "user_safety")
+  );
+};
+
 const TermsOfService = () => {
-  const [terms, setTerms] = useState<TermsData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [terms, setTerms] = useState<TermsData>(termsData);
 
   // const uploadTermsToFirebase = async () => {
   //   try {
@@ -161,6 +216,8 @@ const TermsOfService = () => {
   // };
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTerms = async () => {
       try {
         const doc = await firestore()
@@ -168,39 +225,37 @@ const TermsOfService = () => {
           .doc("terms_of_service")
           .get();
 
-        if (doc.exists) {
-          setTerms(doc.data() as TermsData);
+        const remoteTerms = doc.data();
+        if (isMounted && doc.exists && isValidTermsData(remoteTerms)) {
+          setTerms(remoteTerms);
         }
       } catch (error) {
-        console.error("Error fetching terms:", error);
-      } finally {
-        setLoading(false);
+        console.error("Using bundled terms after fetch failed:", error);
       }
     };
 
-    fetchTerms();
-  }, []);
+    void fetchTerms();
 
-  if (loading) {
-    return (
-      <ScrollView style={styles.container}>
-        <Text size="h1" weight="medium" color="#FBF6FA" style={styles.title}>
-          Terms of service
-        </Text>
-        <Text size="p" weight="normal" color="#FBF6FA">
-          Loading...
-        </Text>
-      </ScrollView>
-    );
-  }
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
       <Text size="h1" weight="medium" color="#FBF6FA" style={styles.title}>
-        Terms of service
+        {terms.content.title}
+      </Text>
+      <Text
+        size="small"
+        weight="normal"
+        color="#A7A7A7"
+        style={styles.metadata}
+      >
+        Version {terms.version} · Last updated {LEGAL_LAST_UPDATED_LABEL}
       </Text>
 
-      {terms?.content?.sections.map((section) => (
+      {terms.content.sections.map((section) => (
         <View key={section.id} style={styles.section}>
           <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
             {section.title}
@@ -240,7 +295,7 @@ const TermsOfService = () => {
         </View>
       ))}
 
-      {terms?.thankyouNote && (
+      {terms.thankyouNote && (
         <Text
           size="p"
           weight="normal"
@@ -266,6 +321,9 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 10,
+  },
+  metadata: {
+    marginBottom: 24,
   },
   section: {
     marginBottom: 24,

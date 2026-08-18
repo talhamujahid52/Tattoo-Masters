@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { View, StyleSheet, Pressable, Image } from "react-native";
 import MapView, {
   Camera,
@@ -7,13 +7,31 @@ import MapView, {
 } from "react-native-maps";
 import { useLocalSearchParams } from "expo-router";
 import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const SELECTED_LOCATION_ZOOM_DELTA = 0.003;
 const SELECTED_LOCATION_CAMERA_ZOOM = 16.5;
 
 const MapDetails = () => {
   const mapRef = useRef<MapView>(null);
-  const artists = useSelector((s: any) => s.artist.allArtists);
+  const artists: any[] = useSelector((s: any) => s.artist.allArtists);
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleArtists = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds),
+    [artists, blockedUserIds, currentUserId, safetyHydrated],
+  );
 
   const { location } = useLocalSearchParams();
   const locationParam = Array.isArray(location) ? location[0] : location;
@@ -156,16 +174,16 @@ const MapDetails = () => {
         >
           <MaterialIcons name="location-pin" size={42} color="red" />
         </Marker> */}
-        {artists.map((artist: any, index: number) => {
+        {visibleArtists.map((artist: any, index: number) => {
           const location = artist?.data?.location;
           const profilePic =
             artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
 
-          if (!location[0] || !location[1]) return null;
+          if (!location?.[0] || !location?.[1]) return null;
 
           return (
             <Marker
-              key={index}
+              key={artist?.id ?? index}
               coordinate={{
                 latitude: location[0],
                 longitude: location[1],

@@ -35,25 +35,138 @@ export const sendPushNotification = functions.https.onRequest((req, res) => {
         return;
       }
       const idToken = authHeader.toString().split(" ")[1];
+      let senderId: string;
       try {
-        await admin.auth().verifyIdToken(idToken);
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        senderId = decodedToken.uid;
       } catch (e) {
         res.status(401).send("Invalid token");
         return;
       }
 
-      const { token, recipientUserId, title, body, data } = req.body || {};
+      const { recipientUserId, title, body, data } = req.body || {};
 
-      if ((!token && !recipientUserId) || !title || !body) {
+      if (
+        typeof recipientUserId !== "string" ||
+        !recipientUserId ||
+        typeof title !== "string" ||
+        !title ||
+        typeof body !== "string" ||
+        !body
+      ) {
         res.status(400).send("Missing required fields");
         return;
       }
 
+      if (recipientUserId === senderId) {
+        res.status(400).send("Sender and recipient must be different users");
+        return;
+      }
+
+      const db = admin.firestore();
+      const [forwardBlock, reverseBlock] = await Promise.all([
+        db.collection("BlockedUsers").doc(`${senderId}__${recipientUserId}`).get(),
+        db.collection("BlockedUsers").doc(`${recipientUserId}__${senderId}`).get(),
+      ]);
+      if (forwardBlock.data()?.active === true || reverseBlock.data()?.active === true) {
+        res.status(200).json({ success: false, sent: 0, failed: 0, suppressed: "blocked" });
+        return;
+      }
+
+      const normalizedData: Record<string, string> = {};
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        Object.entries(data).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          normalizedData[key] = typeof value === "string" ? value : JSON.stringify(value);
+        });
+      }
+      normalizedData.senderId = senderId;
+      const notificationType = normalizedData.type;
+      let notificationTitle = title.slice(0, 200);
+      let notificationBody = body.slice(0, 1000);
+
+      if (notificationType === "chatMessage") {
+        const chatId = normalizedData.chatId;
+        if (!chatId) {
+          res.status(400).send("Missing chatId");
+          return;
+        }
+        const chatSnapshot = await db.collection("Chats").doc(chatId).get();
+        const chatData = chatSnapshot.data() || {};
+        const participants = chatData.participants;
+        if (
+          !chatSnapshot.exists ||
+          !Array.isArray(participants) ||
+          !participants.includes(senderId) ||
+          !participants.includes(recipientUserId)
+        ) {
+          res.status(403).send("Sender and recipient are not chat participants");
+          return;
+        }
+        if (
+          Array.isArray(chatData.disabledParticipants) &&
+          chatData.disabledParticipants.length > 0
+        ) {
+          res.status(200).json({ success: false, sent: 0, failed: 0, suppressed: "disabled_chat" });
+          return;
+        }
+        const senderProfile = chatData[senderId] || {};
+        notificationTitle = String(senderProfile.name || title || "New message")
+          .slice(0, 200);
+        notificationBody = String(chatData.lastMessage || body).slice(0, 1000);
+        normalizedData.chatId = chatId;
+        normalizedData.url =
+          `/artist/IndividualChat?existingChatId=${encodeURIComponent(chatId)}` +
+          `&otherUserId=${encodeURIComponent(senderId)}`;
+      } else if (notificationType === "favorite") {
+        const senderSnapshot = await db.collection("Users").doc(senderId).get();
+        const sender = senderSnapshot.data() || {};
+        const followedArtists = Array.isArray(sender.followedArtists)
+          ? sender.followedArtists
+          : [];
+        if (!followedArtists.includes(recipientUserId)) {
+          res.status(403).send("Favorite relationship was not found");
+          return;
+        }
+        const senderName = String(sender.name || sender.fullName || "Someone");
+        notificationTitle = "Tattoo Masters";
+        notificationBody = `${senderName.slice(0, 160)} added you to favorites.`;
+        normalizedData.followerId = senderId;
+        delete normalizedData.url;
+      } else if (notificationType === "tattooLike") {
+        const publicationId = normalizedData.publicationId;
+        if (!publicationId) {
+          res.status(400).send("Missing publicationId");
+          return;
+        }
+        const [publicationSnapshot, senderSnapshot] = await Promise.all([
+          db.collection("publications").doc(publicationId).get(),
+          db.collection("Users").doc(senderId).get(),
+        ]);
+        const publication = publicationSnapshot.data() || {};
+        const sender = senderSnapshot.data() || {};
+        const likedItems = Array.isArray(sender.likedItems) ? sender.likedItems : [];
+        if (
+          !publicationSnapshot.exists ||
+          publication.userId !== recipientUserId ||
+          !likedItems.includes(publicationId)
+        ) {
+          res.status(403).send("Publication like was not found");
+          return;
+        }
+        const senderName = String(sender.name || sender.fullName || "Someone");
+        notificationTitle = "Tattoo Masters";
+        notificationBody = `${senderName.slice(0, 160)} liked your photo.`;
+        normalizedData.url =
+          `/artist/TattooDetail?id=${encodeURIComponent(publicationId)}`;
+      } else {
+        res.status(400).send("Unsupported notification type");
+        return;
+      }
+
       let tokens: string[] = [];
-      if (token) {
-        tokens = [token];
-      } else if (recipientUserId) {
-        const userSnap = await admin.firestore().collection("Users").doc(recipientUserId).get();
+      if (recipientUserId) {
+        const userSnap = await db.collection("Users").doc(recipientUserId).get();
         if (!userSnap.exists) {
           res.status(404).send("Recipient user not found");
           return;
@@ -69,7 +182,10 @@ export const sendPushNotification = functions.https.onRequest((req, res) => {
       // Build a cross‑platform message
       const multicast: admin.messaging.MulticastMessage = {
         tokens,
-        notification: { title, body },
+        notification: {
+          title: notificationTitle,
+          body: notificationBody,
+        },
         android: {
           priority: "high",
           notification: {
@@ -84,7 +200,7 @@ export const sendPushNotification = functions.https.onRequest((req, res) => {
             },
           },
         },
-        data: data || {},
+        data: normalizedData,
       };
 
       const response = await admin.messaging().sendEachForMulticast(multicast);
@@ -124,3 +240,4 @@ export const sendPushNotification = functions.https.onRequest((req, res) => {
 
 export * from "./cleanupUserData";
 export * from "./deleteUserAccount";
+export * from "./syncBlockedUser";

@@ -1,9 +1,10 @@
 import { StyleSheet, View, TouchableOpacity, Image, Share } from "react-native";
 import Text from "../Text";
 import React from "react";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface bottomSheetProps {
   hideImageActionsSheet: () => void;
@@ -14,6 +15,8 @@ interface bottomSheetProps {
   onEditTattoo?: () => void;
   onDeleteTattoo?: () => void;
   publicationId?: string;
+  ownerId?: string;
+  showBlockSheet?: () => void;
 }
 
 const ImageActionsBottomSheet = ({
@@ -24,6 +27,8 @@ const ImageActionsBottomSheet = ({
   onEditTattoo,
   onDeleteTattoo,
   publicationId,
+  ownerId,
+  showBlockSheet,
 }: bottomSheetProps) => {
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -125,6 +130,25 @@ const ImageActionsBottomSheet = ({
               Report
             </Text>
           </TouchableOpacity>
+          {ownerId && ownerId !== currentUserId && showBlockSheet && (
+            <TouchableOpacity
+              onPress={() => {
+                loggedInUser
+                  ? (hideImageActionsSheet(), showBlockSheet())
+                  : (hideImageActionsSheet(), showLoggingInBottomSheet());
+              }}
+              style={styles.drawerItem}
+            >
+              <MaterialCommunityIcons
+                name="account-cancel-outline"
+                size={24}
+                color="#A7A7A7"
+              />
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                Block user
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             onPress={() => {
               loggedInUser

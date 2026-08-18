@@ -2,16 +2,16 @@ import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import React from "react";
 import Text from "./Text";
 import { useSelector } from "react-redux";
-import { router } from "expo-router";
+import type { UserFirestore } from "@/types/user";
 
-interface Review {
+interface ReviewProps {
   rating?: any;
   tattooFeedback?: any;
   tattooImage?: any;
   isShownOnProfile?: boolean;
 }
 
-const Review: React.FC<Review> = ({
+const Review: React.FC<ReviewProps> = ({
   rating,
   tattooFeedback,
   tattooImage,

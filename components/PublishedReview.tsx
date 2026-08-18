@@ -4,9 +4,12 @@ import Text from "./Text";
 import { formatDistanceToNow } from "date-fns"; // Import date-fns
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
+import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import LoginBottomSheet from "./BottomSheets/LoginBottomSheet";
 import { useSelector } from "react-redux";
 import ProfilePicturePreview from "./ProfilePicturePreview";
+import useSafety from "@/hooks/useSafety";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface Review {
   artistId: string;
@@ -35,6 +38,11 @@ const PublishedReview = ({ review }: { review: Review }) => {
   const reviewDate = new Date(review.date.seconds * 1000);
   const timeAgo = formatDistanceToNow(reviewDate, { addSuffix: true });
   const loggedInUser = useSelector((state: any) => state?.user?.user);
+  const {
+    currentUserId,
+    blockedUserIds,
+    reportedReviewIds,
+  } = useSafety();
 
   const {
     BottomSheet: ReportSheet,
@@ -43,20 +51,91 @@ const PublishedReview = ({ review }: { review: Review }) => {
   } = useBottomSheet();
 
   const {
+    BottomSheet: BlockSheet,
+    show: showBlockSheet,
+    hide: hideBlockSheet,
+  } = useBottomSheet();
+
+  const {
+    BottomSheet: SafetyActionsSheet,
+    show: showSafetyActionsSheet,
+    hide: hideSafetyActionsSheet,
+  } = useBottomSheet();
+
+  const {
     BottomSheet: LoggingInBottomSheet,
     show: showLoggingInBottomSheet,
     hide: hideLoggingInBottomSheet,
   } = useBottomSheet();
 
+  const isHidden =
+    reportedReviewIds.includes(review.id) ||
+    blockedUserIds.includes(review.user);
+
+  if (isHidden) return null;
+
   return (
     <>
+      <SafetyActionsSheet
+        InsideComponent={
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => {
+                hideSafetyActionsSheet();
+                showReportSheet();
+              }}
+            >
+              <Image
+                style={styles.actionIcon}
+                source={require("../assets/images/report-flag.png")}
+              />
+              <Text size="h4" weight="normal" color="#FBF6FA">
+                Report review
+              </Text>
+            </TouchableOpacity>
+            {review.user && review.user !== currentUserId && (
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={() => {
+                  hideSafetyActionsSheet();
+                  showBlockSheet();
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="account-cancel-outline"
+                  size={24}
+                  color="#A7A7A7"
+                />
+                <Text size="h4" weight="normal" color="#FBF6FA">
+                  Block user
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+      />
       <ReportSheet
         InsideComponent={
           <ReportBottomSheet
             hideReportSheet={hideReportSheet}
             title="Review"
+            type="review"
             options={options}
             reportItem={review?.id}
+            targetOwnerId={review?.user}
+          />
+        }
+      />
+      <BlockSheet
+        InsideComponent={
+          <BlockUserBottomSheet
+            hideBlockSheet={hideBlockSheet}
+            blockedUserId={review.user}
+            blockedUserName={review.userName}
+            blockedUserProfilePicture={review.userProfilePicture}
+            sourceType="review"
+            sourceId={review.id}
           />
         }
       />
@@ -104,7 +183,7 @@ const PublishedReview = ({ review }: { review: Review }) => {
           <TouchableOpacity
             onPress={() => {
               if (loggedInUser) {
-                showReportSheet();
+                showSafetyActionsSheet();
               } else {
                 showLoggingInBottomSheet();
               }
@@ -180,6 +259,22 @@ export default PublishedReview;
 
 const styles = StyleSheet.create({
   container: {},
+  actionsContainer: {
+    backgroundColor: "#080808",
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+  },
+  actionIcon: {
+    height: 24,
+    width: 24,
+    resizeMode: "contain",
+  },
   icon: {
     height: 20,
     width: 20,

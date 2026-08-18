@@ -1,0 +1,457 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(userId) {
+      return /databases/$(database)/documents/Users/$(userId);
+    }
+
+    function activeBlock(blockerId, blockedUserId) {
+      let blockPath = /databases/$(database)/documents/BlockedUsers/$(blockerId + "__" + blockedUserId);
+      return exists(blockPath) && get(blockPath).data.active == true;
+    }
+
+    function validLegalConsent(consent) {
+      return consent is map &&
+        consent.keys().hasOnly([
+          "termsVersion", "privacyPolicyVersion", "acceptedAt"
+        ]) &&
+        consent.termsVersion == "1.1.0" &&
+        consent.privacyPolicyVersion == "1.1.0" &&
+        consent.acceptedAt == request.time;
+    }
+
+    function validLegalConsentChange() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(["legalConsent"]) ||
+        validLegalConsent(request.resource.data.legalConsent);
+    }
+
+    function validOwnUserCreate(userId) {
+      let data = request.resource.data;
+      return signedIn() && request.auth.uid == userId &&
+        data.uid == request.auth.uid &&
+        (!data.keys().hasAny(["createdAt"]) || data.createdAt == request.time) &&
+        (!data.keys().hasAny(["legalConsent"]) || validLegalConsent(data.legalConsent)) &&
+        (!data.keys().hasAny(["followedArtists"]) || data.followedArtists == []) &&
+        (!data.keys().hasAny(["likedItems"]) || data.likedItems == []) &&
+        (!data.keys().hasAny(["likedTattoos"]) || data.likedTattoos == []) &&
+        (!data.keys().hasAny(["followersCount"]) || data.followersCount == 0) &&
+        !data.keys().hasAny([
+          "reviewsCount", "totalRating", "rating", "ratingCategories",
+          "latestReview", "originalArtistNumber"
+        ]);
+    }
+
+    function validOwnUserUpdate(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let uidIsValid = !resource.data.keys().hasAny(["uid"])
+        ? (!request.resource.data.keys().hasAny(["uid"]) || request.resource.data.uid == userId)
+        : request.resource.data.uid == resource.data.uid && resource.data.uid == userId;
+      let createdAtIsValid = !changed.hasAny(["createdAt"]) ||
+        (!resource.data.keys().hasAny(["createdAt"]) &&
+          request.resource.data.createdAt == request.time);
+      let initialFollowerCountIsValid = !changed.hasAny(["followersCount"]) ||
+        ((!resource.data.keys().hasAny(["followersCount"]) ||
+            resource.data.followersCount == 0) &&
+          request.resource.data.followersCount == 0);
+      return signedIn() && request.auth.uid == userId && uidIsValid &&
+        createdAtIsValid && validLegalConsentChange() &&
+        initialFollowerCountIsValid &&
+        !changed.hasAny([
+          "reviewsCount", "totalRating", "rating", "ratingCategories",
+          "latestReview", "originalArtistNumber"
+        ]);
+    }
+
+    function validFollowerCountUpdate(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let oldCount = resource.data.get("followersCount", 0);
+      let newCount = request.resource.data.followersCount;
+      let ownBefore = get(userPath(request.auth.uid)).data.get("followedArtists", []);
+      let ownAfter = getAfter(userPath(request.auth.uid)).data.get("followedArtists", []);
+      return signedIn() && request.auth.uid != userId &&
+        changed.hasOnly(["followersCount"]) &&
+        oldCount is int && newCount is int && newCount >= 0 &&
+        ((newCount == oldCount + 1 &&
+            !(userId in ownBefore) && userId in ownAfter) ||
+          (newCount == oldCount - 1 &&
+            userId in ownBefore && !(userId in ownAfter)));
+    }
+
+    function validReviewAggregateUpdate(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let oldReviewCount = resource.data.get("reviewsCount", 0);
+      let oldTotalRating = resource.data.get("totalRating", 0);
+      let latest = request.resource.data.latestReview;
+      return signedIn() && request.auth.uid != userId &&
+        changed.hasOnly([
+          "reviewsCount", "totalRating", "rating", "ratingCategories", "latestReview"
+        ]) &&
+        oldReviewCount is int && request.resource.data.reviewsCount is int &&
+        request.resource.data.reviewsCount == oldReviewCount + 1 &&
+        oldTotalRating is number && request.resource.data.totalRating is number &&
+        request.resource.data.totalRating > oldTotalRating &&
+        request.resource.data.totalRating <= oldTotalRating + 5 &&
+        request.resource.data.rating is number &&
+        request.resource.data.rating >= 0 && request.resource.data.rating <= 5 &&
+        request.resource.data.ratingCategories is map &&
+        latest is map && latest.reviewerId == request.auth.uid;
+    }
+
+    function validOriginalArtistAssignment(userId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let configurationPath = /databases/$(database)/documents/Configurations/OriginalArtists;
+      return signedIn() && request.auth.uid == userId &&
+        changed.hasOnly(["originalArtistNumber"]) &&
+        request.resource.data.originalArtistNumber is int &&
+        request.resource.data.originalArtistNumber > 0 &&
+        (!resource.data.keys().hasAny(["originalArtistNumber"]) ||
+          resource.data.originalArtistNumber == null) &&
+        getAfter(configurationPath).data.currentCount ==
+          request.resource.data.originalArtistNumber &&
+        getAfter(configurationPath).data.currentCount ==
+          get(configurationPath).data.currentCount + 1;
+    }
+
+    match /Users/{userId} {
+      // Public artist discovery currently reads this document. Sensitive user
+      // fields should be migrated to a private subdocument in a later schema migration.
+      allow read: if true;
+      allow create: if validOwnUserCreate(userId);
+      allow update: if validOwnUserUpdate(userId) ||
+        validFollowerCountUpdate(userId) ||
+        validReviewAggregateUpdate(userId) ||
+        validOriginalArtistAssignment(userId);
+      allow delete: if false;
+    }
+
+    function validImageUrls(urls) {
+      return urls is map &&
+        urls.keys().hasOnly(["small", "medium", "high", "veryHigh"]) &&
+        urls.small is string && urls.medium is string &&
+        urls.high is string && urls.veryHigh is string;
+    }
+
+    function validPublication(data) {
+      return data.userId is string && data.userId.size() > 0 &&
+        data.caption is string && data.caption.size() <= 5000 &&
+        data.styles is list && data.styles.size() <= 100 &&
+        validImageUrls(data.downloadUrls) && validImageUrls(data.deleteUrls);
+    }
+
+    function validLikeUpdate(publicationId) {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let oldLikes = resource.data.get("likes", 0);
+      let newLikes = request.resource.data.likes;
+      let ownBefore = get(userPath(request.auth.uid)).data.get("likedItems", []);
+      let ownAfter = getAfter(userPath(request.auth.uid)).data.get("likedItems", []);
+      return signedIn() && changed.hasOnly(["likes"]) &&
+        oldLikes is int && newLikes is int && newLikes >= 0 &&
+        ((newLikes == oldLikes + 1 &&
+            !(publicationId in ownBefore) && publicationId in ownAfter) ||
+          (newLikes == oldLikes - 1 &&
+            publicationId in ownBefore && !(publicationId in ownAfter)));
+    }
+
+    match /publications/{publicationId} {
+      allow read: if true;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "userId", "timestamp", "caption", "styles", "downloadUrls", "deleteUrls"
+        ]) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.timestamp == request.time &&
+        validPublication(request.resource.data);
+      allow update: if signedIn() &&
+        ((resource.data.userId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "caption", "styles", "downloadUrls", "deleteUrls"
+          ]) && validPublication(request.resource.data)) ||
+          validLikeUpdate(publicationId));
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function validReview(data) {
+      return data.artistId is string && data.artistId.size() > 0 &&
+        data.user is string && data.user.size() > 0 &&
+        data.date is timestamp &&
+        data.feedback is string && data.feedback.size() <= 5000 &&
+        ((data.rating is number && data.rating >= 0 && data.rating <= 5) ||
+          (data.rating is string && data.rating.size() > 0 && data.rating.size() <= 8)) &&
+        data.imageUrl is string && data.largeImageUrl is string;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "artistId", "date", "feedback", "rating", "user", "imageUrl", "largeImageUrl"
+        ]) &&
+        request.resource.data.user == request.auth.uid &&
+        request.resource.data.artistId != request.auth.uid &&
+        exists(userPath(request.resource.data.artistId)) &&
+        validReview(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /Configurations/{configurationId} {
+      allow read: if true;
+      allow create, delete: if false;
+      allow update: if signedIn() && configurationId == "OriginalArtists" &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentCount"]) &&
+        resource.data.currentCount is int && resource.data.maxCount is int &&
+        request.resource.data.currentCount == resource.data.currentCount + 1 &&
+        request.resource.data.currentCount <= resource.data.maxCount &&
+        getAfter(userPath(request.auth.uid)).data.originalArtistNumber ==
+          request.resource.data.currentCount;
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "feedbackType", "date", "feedback", "user", "imageUrl", "hasAttachment"
+        ]) &&
+        request.resource.data.feedbackType in ["idea", "bug"] &&
+        request.resource.data.date is timestamp &&
+        request.resource.data.feedback is string &&
+        request.resource.data.feedback.size() > 0 &&
+        request.resource.data.feedback.size() <= 5000 &&
+        request.resource.data.user == request.auth.uid &&
+        request.resource.data.imageUrl == null &&
+        request.resource.data.hasAttachment is bool;
+      allow read, update, delete: if false;
+    }
+
+    match /app_content/moderation {
+      allow read, write: if false;
+    }
+
+    match /app_content/{contentId} {
+      allow read: if contentId != "moderation";
+      allow write: if false;
+    }
+
+    function validReportTarget(data) {
+      let publicationPath = /databases/$(database)/documents/publications/$(data.targetId);
+      let reviewPath = /databases/$(database)/documents/reviews/$(data.targetId);
+      return (data.type == "publication" && exists(publicationPath) &&
+          get(publicationPath).data.userId == data.targetOwnerId) ||
+        (data.type == "review" && exists(reviewPath) &&
+          get(reviewPath).data.user == data.targetOwnerId) ||
+        (data.type == "user" && data.targetId == data.targetOwnerId &&
+          exists(userPath(data.targetId)));
+    }
+
+    match /ReportedItems/{reportId} {
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "reportedBy", "type", "targetId", "targetOwnerId", "reason", "createdAt"
+        ]) &&
+        request.resource.data.reportedBy == request.auth.uid &&
+        request.resource.data.type in ["publication", "review", "user"] &&
+        request.resource.data.targetId is string &&
+        request.resource.data.targetId.size() > 0 &&
+        request.resource.data.targetId.size() <= 1500 &&
+        request.resource.data.targetOwnerId is string &&
+        request.resource.data.targetOwnerId.size() > 0 &&
+        request.resource.data.targetOwnerId.size() <= 1500 &&
+        request.resource.data.reason is string &&
+        request.resource.data.reason.size() > 0 &&
+        request.resource.data.reason.size() <= 500 &&
+        request.resource.data.createdAt == request.time &&
+        validReportTarget(request.resource.data);
+      allow read: if signedIn() && resource.data.reportedBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /BlockedUsers/{blockId} {
+      function validIdentity(data) {
+        return data.blockerId is string && data.blockedUserId is string &&
+          data.blockerId.size() > 0 && data.blockedUserId.size() > 0 &&
+          data.blockerId != data.blockedUserId &&
+          blockId == data.blockerId + "__" + data.blockedUserId;
+      }
+
+      function validBlockReasonAndSource(data) {
+        return data.reason in [
+            "harassment", "inappropriate_content", "spam", "impersonation", "other"
+          ] &&
+          data.sourceType in ["profile", "publication", "review", "chat"] &&
+          (data.sourceId == null ||
+            (data.sourceId is string && data.sourceId.size() <= 1500));
+      }
+
+      function validBlockedUserSnapshot(snapshot) {
+        return snapshot is map &&
+          snapshot.keys().hasOnly(["name", "profilePicture"]) &&
+          snapshot.name is string && snapshot.name.size() > 0 &&
+          snapshot.name.size() <= 200 &&
+          snapshot.profilePicture is string &&
+          snapshot.profilePicture.size() <= 3000;
+      }
+
+      function validBlockSource(data) {
+        return (data.sourceType == "profile" &&
+            (data.sourceId == null || data.sourceId == data.blockedUserId)) ||
+          (data.sourceType == "publication" && data.sourceId is string &&
+            exists(/databases/$(database)/documents/publications/$(data.sourceId)) &&
+            get(/databases/$(database)/documents/publications/$(data.sourceId)).data.userId ==
+              data.blockedUserId) ||
+          (data.sourceType == "review" && data.sourceId is string &&
+            exists(/databases/$(database)/documents/reviews/$(data.sourceId)) &&
+            get(/databases/$(database)/documents/reviews/$(data.sourceId)).data.user ==
+              data.blockedUserId) ||
+          (data.sourceType == "chat" &&
+            (data.sourceId == null ||
+              (data.sourceId is string &&
+                exists(/databases/$(database)/documents/Chats/$(data.sourceId)) &&
+                data.blockerId in
+                  get(/databases/$(database)/documents/Chats/$(data.sourceId)).data.participants &&
+                data.blockedUserId in
+                  get(/databases/$(database)/documents/Chats/$(data.sourceId)).data.participants)));
+      }
+
+      allow get: if signedIn() &&
+        (blockId.matches(request.auth.uid + "__.*") ||
+          blockId.matches(".*__" + request.auth.uid));
+      allow list: if signedIn() && resource.data.blockerId == request.auth.uid;
+      allow create: if signedIn() &&
+        request.resource.data.keys().hasOnly([
+          "blockerId", "blockedUserId", "active", "reason", "sourceType", "sourceId",
+          "blockedUserSnapshot", "createdAt", "updatedAt", "unblockedAt",
+          "moderationStatus", "developerNotificationStatus", "developerNotifiedAt"
+        ]) &&
+        validIdentity(request.resource.data) &&
+        request.resource.data.blockerId == request.auth.uid &&
+        exists(userPath(request.resource.data.blockedUserId)) &&
+        request.resource.data.active == true &&
+        validBlockReasonAndSource(request.resource.data) &&
+        validBlockSource(request.resource.data) &&
+        validBlockedUserSnapshot(request.resource.data.blockedUserSnapshot) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time &&
+        request.resource.data.unblockedAt == null &&
+        request.resource.data.moderationStatus == "pending" &&
+        request.resource.data.developerNotificationStatus == "pending" &&
+        request.resource.data.developerNotifiedAt == null;
+      allow update: if signedIn() &&
+        validIdentity(resource.data) && validIdentity(request.resource.data) &&
+        resource.data.blockerId == request.auth.uid &&
+        request.resource.data.blockerId == resource.data.blockerId &&
+        request.resource.data.blockedUserId == resource.data.blockedUserId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        ((resource.data.active == true && request.resource.data.active == false &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              "active", "updatedAt", "unblockedAt"
+            ]) &&
+            request.resource.data.updatedAt == request.time &&
+            request.resource.data.unblockedAt == request.time) ||
+          (resource.data.active == false && request.resource.data.active == true &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              "active", "reason", "sourceType", "sourceId", "blockedUserSnapshot",
+              "updatedAt", "unblockedAt"
+            ]) &&
+            validBlockReasonAndSource(request.resource.data) &&
+            validBlockSource(request.resource.data) &&
+            validBlockedUserSnapshot(request.resource.data.blockedUserSnapshot) &&
+            request.resource.data.updatedAt == request.time &&
+            request.resource.data.unblockedAt == null));
+      allow delete: if false;
+    }
+
+    function validParticipants(chat) {
+      return chat.participants is list && chat.participants.size() == 2 &&
+        chat.participants[0] is string && chat.participants[1] is string &&
+        chat.participants[0] != chat.participants[1];
+    }
+
+    function isParticipant(chat) {
+      return signedIn() && validParticipants(chat) &&
+        request.auth.uid in chat.participants;
+    }
+
+    function otherParticipant(chat) {
+      return chat.participants[0] == request.auth.uid
+        ? chat.participants[1]
+        : chat.participants[0];
+    }
+
+    function chatIsEnabled(chat) {
+      let otherId = otherParticipant(chat);
+      return isParticipant(chat) &&
+        !activeBlock(request.auth.uid, otherId) &&
+        !activeBlock(otherId, request.auth.uid) &&
+        (!chat.keys().hasAny(["disabledParticipants"]) ||
+          !(request.auth.uid in chat.disabledParticipants));
+    }
+
+    function validChatProfile(profile) {
+      return profile is map &&
+        profile.keys().hasOnly(["name", "profilePicture"]) &&
+        profile.name is string && profile.name.size() <= 200 &&
+        profile.profilePicture is string && profile.profilePicture.size() <= 3000;
+    }
+
+    function validChatCreate(chat) {
+      let otherId = otherParticipant(chat);
+      return isParticipant(chat) && chatIsEnabled(chat) &&
+        chat.keys().hasOnly([
+          "createdAt", "participants", request.auth.uid, otherId
+        ]) &&
+        chat.createdAt == request.time &&
+        exists(userPath(request.auth.uid)) && exists(userPath(otherId)) &&
+        validChatProfile(chat[request.auth.uid]) &&
+        validChatProfile(chat[otherId]);
+    }
+
+    function validMessage(data, messageId) {
+      return data.keys().hasAll(["_id", "text", "createdAt", "user"]) &&
+        data.keys().hasOnly([
+          "_id", "text", "createdAt", "user", "image", "pending"
+        ]) &&
+        data._id == messageId && data.text is string && data.text.size() <= 5000 &&
+        data.createdAt is timestamp && data.user is map &&
+        data.user._id == request.auth.uid &&
+        (!data.keys().hasAny(["image"]) ||
+          (data.image is string && data.image.size() <= 5000)) &&
+        (!data.keys().hasAny(["pending"]) || data.pending is bool);
+    }
+
+    match /Chats/{chatId} {
+      allow read: if isParticipant(resource.data);
+      allow create: if validChatCreate(request.resource.data);
+      allow update: if chatIsEnabled(resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "lastMessage", "lastMessageTime"
+        ]) &&
+        request.resource.data.lastMessage is string &&
+        request.resource.data.lastMessage.size() <= 5000 &&
+        request.resource.data.lastMessageTime is timestamp;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function parentChat() {
+          return get(/databases/$(database)/documents/Chats/$(chatId)).data;
+        }
+
+        allow read: if isParticipant(parentChat());
+        allow create: if chatIsEnabled(parentChat()) &&
+          validMessage(request.resource.data, messageId);
+        allow update: if chatIsEnabled(parentChat()) &&
+          resource.data.user._id == request.auth.uid &&
+          request.resource.data.user._id == request.auth.uid &&
+          resource.data.pending == true && request.resource.data.pending == false &&
+          request.resource.data.image is string &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "image", "pending"
+          ]);
+        allow delete: if false;
+      }
+    }
+  }
+}

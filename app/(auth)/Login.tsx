@@ -29,6 +29,7 @@ import { useSignInWithApple } from "@/hooks/useSignInWithApple";
 import { Ionicons } from "@expo/vector-icons";
 import { clearLocalSession } from "@/utils/authSession";
 import { AppDispatch } from "@/redux/store";
+import LegalConsentNotice from "@/components/LegalConsentNotice";
 
 GoogleSignin.configure({
   webClientId:
@@ -48,6 +49,7 @@ const Login = () => {
   const [emailError, setEmailError] = useState<string>(""); // State for email error
   const dispatch = useDispatch<AppDispatch>();
   const signInWithApple = useSignInWithApple();
+
   const validateEmail = (input: string): boolean => {
     // Basic email validation regex
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,6 +144,14 @@ const Login = () => {
   };
 
   const signInWithGoogle = useSignInWithGoogle();
+  const handleGoogleSignIn = async () => {
+    await signInWithGoogle();
+  };
+
+  const handleAppleSignIn = async () => {
+    await signInWithApple();
+  };
+
   const onFacebookButtonPress = async () => {
     try {
       console.log("🔵 Starting Facebook login");
@@ -230,7 +240,9 @@ const Login = () => {
 
         // For Android, fetch additional info from Graph API if needed
         if (Platform.OS === "android") {
-          const getFacebookUserInfo = async (accessToken) => {
+          const getFacebookUserInfo = async (
+            accessToken?: string | null
+          ) => {
             try {
               const response = await fetch(
                 `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
@@ -258,7 +270,7 @@ const Login = () => {
           };
         }
 
-        await userDocRef.set(userData);
+        await userDocRef.set(userData, { merge: true });
         dispatch(setUserFirestoreData(userData));
         console.log("✅ New user added to Firestore");
       } else {
@@ -383,7 +395,7 @@ const Login = () => {
         <ThirdPartyLoginButton
           title="Google"
           icon={require("../../assets/images/Google.png")}
-          onPress={signInWithGoogle}
+          onPress={handleGoogleSignIn}
         />
         {Platform.OS === "ios" && (
           <ThirdPartyLoginButton
@@ -391,7 +403,7 @@ const Login = () => {
             iconElement={
               <Ionicons name="logo-apple" size={20} color="#FBF6FA" />
             }
-            onPress={signInWithApple}
+            onPress={handleAppleSignIn}
           />
         )}
         <ThirdPartyLoginButton
@@ -402,49 +414,25 @@ const Login = () => {
           }}
         />
       </View>
-      <View style={styles.BottomText}>
-        <Text size="small" weight="normal" color="#828282">
-          By clicking continue, you agree to our
-        </Text>
-        <View style={styles.TermsOfServiceContainer}>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/(auth)/TermsOfService");
-            }}
-          >
-            <Text size="small" weight="normal" color="#FBF6FA">
-              Terms of Service
-            </Text>
-          </TouchableOpacity>
-          <Text size="small" weight="normal" color="#828282">
-            {" "}
-            and{" "}
-          </Text>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/(auth)/PrivacyPolicy");
-            }}
-          >
-            <Text size="small" weight="normal" color="#FBF6FA">
-              Privacy Policy.
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          onPress={() => {
-            router.back();
-          }}
+      <TouchableOpacity
+        onPress={() => {
+          router.back();
+        }}
+        style={styles.GuestAction}
+      >
+        <Text
+          size="p"
+          weight="semibold"
+          color="#DAB769"
+          style={{ textAlign: "center" }}
         >
-          <Text
-            size="p"
-            weight="semibold"
-            color="#DAB769"
-            style={{ textAlign: "center", marginTop: 24 }}
-          >
-            Continue as guest
-          </Text>
-        </TouchableOpacity>
-      </View>
+          Continue as guest
+        </Text>
+      </TouchableOpacity>
+      <LegalConsentNotice
+        onOpenTerms={() => router.push("/(auth)/TermsOfService")}
+        onOpenPrivacyPolicy={() => router.push("/(auth)/PrivacyPolicy")}
+      />
     </KeyboardAwareScrollView>
   );
 };
@@ -512,12 +500,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  BottomText: {
+  GuestAction: {
     marginTop: 24,
-  },
-  TermsOfServiceContainer: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
   },
 });

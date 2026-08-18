@@ -54,6 +54,16 @@ import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import { SearchType, addSearch } from "@/redux/slices/recentSearchesSlice";
 import ImageGallery from "@/components/ImageGallery";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectReportedPublicationIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import {
+  filterBlockedArtists,
+  filterHiddenPublications,
+} from "@/utils/safetyFilters";
 
 interface FilterOption {
   title: string;
@@ -78,8 +88,40 @@ export default function SearchAll() {
   const router = useRouter();
   const dispatch = useDispatch();
   const searchAll = useTypesense();
-  const resultsArtists = useSelector((s: any) => s.artist.searchResults);
-  const resultsTattooss = useSelector((s: any) => s.tattoos.searchResults);
+  const resultsArtists: any[] = useSelector(
+    (s: any) => s.artist.searchResults,
+  );
+  const resultsTattooss: TattooSearchResult[] = useSelector(
+    (s: any) => s.tattoos.searchResults,
+  );
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const reportedPublicationIds = useSelector(selectReportedPublicationIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const safetyReady = !currentUserId || safetyHydrated;
+  const visibleArtistResults = useMemo(
+    () =>
+      safetyReady ? filterBlockedArtists(resultsArtists, blockedUserIds) : [],
+    [blockedUserIds, resultsArtists, safetyReady],
+  );
+  const visibleTattooResults = useMemo(
+    () =>
+      safetyReady
+        ? filterHiddenPublications(
+            resultsTattooss,
+            blockedUserIds,
+            reportedPublicationIds,
+          )
+        : [],
+    [
+      blockedUserIds,
+      reportedPublicationIds,
+      resultsTattooss,
+      safetyReady,
+    ],
+  );
   const [searchText, setSearchText] = useState(initialQuery || "");
   const [searchedText, setSearchedText] = useState(initialQuery || "");
   const { width } = Dimensions.get("window");
@@ -479,8 +521,8 @@ export default function SearchAll() {
           <Text size="h4" color="#A7A7A7" style={styles.heading}>
             {searchedText &&
               (selectedFilter === "tattoos" || selectedFilter === null
-                ? `${resultsTattooss?.length} result${resultsTattooss?.length !== 1 ? "s" : ""} for "${searchedText}"`
-                : `${resultsArtists?.length} result${resultsArtists?.length !== 1 ? "s" : ""} for "${searchedText}"`)}
+                ? `${visibleTattooResults.length} result${visibleTattooResults.length !== 1 ? "s" : ""} for "${searchedText}"`
+                : `${visibleArtistResults.length} result${visibleArtistResults.length !== 1 ? "s" : ""} for "${searchedText}"`)}
           </Text>
         )}
         {loading ? (
@@ -495,10 +537,10 @@ export default function SearchAll() {
         ) : (
           <>
             {isTattoos ? (
-              <ImageGallery images={resultsTattooss} />
+              <ImageGallery images={visibleTattooResults} />
             ) : (
               <KeyboardAwareFlatList
-                data={resultsArtists}
+                data={visibleArtistResults}
                 numColumns={3}
                 style={{ backgroundColor: "#000" }}
                 keyExtractor={(item: any) => item.id}

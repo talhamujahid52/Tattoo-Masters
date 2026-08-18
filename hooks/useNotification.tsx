@@ -117,7 +117,6 @@ export const useNotificationListeners = ({
           title,
           body,
           data,
-          android: { channelId: "default" as any },
         });
       } catch (e) {
         // no-op

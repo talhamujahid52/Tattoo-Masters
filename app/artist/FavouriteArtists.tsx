@@ -1,20 +1,43 @@
 import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
-import React from "react";
+import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
-  const allArtists = useSelector((state: any) => state.artist.allArtists);
+  const allArtists: any[] = useSelector(
+    (state: any) => state.artist.allArtists,
+  );
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
 
   // Filter artists to only show favorited ones
-  const favoritedArtists = allArtists.filter((artist: any) =>
-    userFirestore?.followedArtists?.includes(artist.id)
-  );
+  const favoritedArtists = useMemo(() => {
+    if (currentUserId && !safetyHydrated) return [];
+
+    return filterBlockedArtists(allArtists, blockedUserIds).filter(
+      (artist: any) => userFirestore?.followedArtists?.includes(artist.id),
+    );
+  }, [
+    allArtists,
+    blockedUserIds,
+    currentUserId,
+    safetyHydrated,
+    userFirestore?.followedArtists,
+  ]);
 
   return (
     <View style={{ flex: 1, padding: 16 }}>

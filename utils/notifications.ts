@@ -9,7 +9,6 @@ export type ChatNotificationPayload = {
 
 type NotificationRequest = {
   recipientUserId?: string;
-  token?: string;
   title: string;
   body: string;
   data?: Record<string, any>;

@@ -6,16 +6,17 @@ import {
   TouchableOpacity,
   Image,
   Share,
-  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface bottomSheetProps {
   showLoginBottomSheet: () => void;
   hideShareSheet: () => void;
   showReportSheet: () => void;
+  showBlockSheet?: () => void;
   artistId: string;
 }
 
@@ -23,6 +24,7 @@ const ShareArtistProfileBottomSheet = ({
   showLoginBottomSheet,
   hideShareSheet,
   showReportSheet,
+  showBlockSheet,
   artistId,
 }: bottomSheetProps) => {
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
@@ -98,6 +100,29 @@ const ShareArtistProfileBottomSheet = ({
           Report user
         </Text>
       </TouchableOpacity>
+      {artistId !== loggedInUser?.uid && showBlockSheet && (
+        <TouchableOpacity
+          onPress={() => {
+            if (loggedInUser) {
+              hideShareSheet();
+              showBlockSheet();
+            } else {
+              hideShareSheet();
+              showLoginBottomSheet();
+            }
+          }}
+          style={styles.drawerItem}
+        >
+          <MaterialCommunityIcons
+            name="account-cancel-outline"
+            size={24}
+            color="#A7A7A7"
+          />
+          <Text size="h4" weight="normal" color="#FBF6FA">
+            Block user
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

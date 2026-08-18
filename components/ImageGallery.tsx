@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -10,15 +10,34 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
-import { TypesenseResult, Publication } from "@/hooks/useTypesense";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectReportedPublicationIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterHiddenPublications } from "@/utils/safetyFilters";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const NUM_COLUMNS = 3;
 const ITEM_MARGIN = 2;
 const ITEM_SIZE = (SCREEN_WIDTH - ITEM_MARGIN * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
 
+type GalleryPublication = {
+  id: string;
+  caption?: string;
+  deleteUrls?: Record<string, string>;
+  downloadUrls?: Partial<
+    Record<"small" | "medium" | "high" | "veryHigh", string>
+  >;
+  styles?: string[];
+  timestamp?: number;
+  userId?: string;
+};
+
 interface Props {
-  images?: TypesenseResult<Publication>[];
+  images?: { document: GalleryPublication }[];
   imageUris?: {
     uri: string;
     name: string;
@@ -42,9 +61,33 @@ const ImageGallery = ({
   contentContainerStyle,
 }: Props) => {
   const router = useRouter();
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const reportedPublicationIds = useSelector(selectReportedPublicationIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+
+  const visibleImages = useMemo(() => {
+    // Do not briefly render content from another account while the current
+    // account's safety state is still loading.
+    if (currentUserId && !safetyHydrated) return [];
+
+    return filterHiddenPublications(
+      images,
+      blockedUserIds,
+      reportedPublicationIds,
+    );
+  }, [
+    blockedUserIds,
+    currentUserId,
+    images,
+    reportedPublicationIds,
+    safetyHydrated,
+  ]);
 
   const renderTypesenseItem = useCallback(
-    ({ item }: { item: TypesenseResult<Publication> }) => {
+    ({ item }: { item: { document: GalleryPublication } }) => {
       const doc = item.document;
       return (
         <TouchableOpacity
@@ -54,9 +97,9 @@ const ImageGallery = ({
               pathname: "/artist/TattooDetail",
               params: {
                 photoUrlVeryHigh: encodeURIComponent(
-                  doc?.downloadUrls?.veryHigh
+                  doc?.downloadUrls?.veryHigh ?? ""
                 ),
-                photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high),
+                photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high ?? ""),
                 id: doc.id,
                 caption: doc.caption,
                 styles: doc.styles,
@@ -95,15 +138,16 @@ const ImageGallery = ({
     []
   );
 
-  const isTypesense = images.length > 0;
-  const data = isTypesense ? images : imageUris;
+  const isTypesense = visibleImages.length > 0 || imageUris.length === 0;
+  const data = isTypesense ? visibleImages : imageUris;
   const renderItem = isTypesense ? renderTypesenseItem : renderUriItem;
   const keyExtractor = isTypesense
-    ? (item: TypesenseResult<Publication>) => item.document?.id || String(Math.random())
+    ? (item: { document: GalleryPublication }) =>
+        item.document?.id || String(Math.random())
     : (item: { uri: string }, index: number) => item.uri || String(index);
 
   return (
-    <FlatList
+    <FlatList<any>
       data={data}
       renderItem={renderItem as any}
       keyExtractor={keyExtractor as any}

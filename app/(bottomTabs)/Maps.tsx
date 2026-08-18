@@ -42,6 +42,12 @@ import { addSearch } from "@/redux/slices/recentSearchesSlice";
 import { setTattooLoading } from "@/redux/slices/tattooSlice";
 import useTypesense from "@/hooks/useTypesense";
 import { useFocusEffect } from "@react-navigation/native";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const FullScreenMapWithSearch: React.FC = () => {
   const { BottomSheet, show, hide } = useFilterBottomSheet();
@@ -70,7 +76,19 @@ const FullScreenMapWithSearch: React.FC = () => {
   >(Platform.OS === "android" ? "none" : "standard");
 
   const [searchText, setSearchText] = useState("");
-  const artists = useSelector((s: any) => s.artist.searchResults);
+  const artists: any[] = useSelector((s: any) => s.artist.searchResults);
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
+  const visibleArtists = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds),
+    [artists, blockedUserIds, currentUserId, safetyHydrated],
+  );
   const dispatch = useDispatch();
   const mapRef = useRef<MapView>(null);
   const [searchedText, setSearchedText] = useState("");
@@ -448,16 +466,16 @@ const FullScreenMapWithSearch: React.FC = () => {
           if (mapTypeState !== "standard") setMapTypeState("standard");
         }}
       >
-        {artists.map((artist: any, index: number) => {
+        {visibleArtists.map((artist: any, index: number) => {
           const location = artist?.data?.location;
           const profilePic =
             artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
 
-          if (!location[0] || !location[1]) return null;
+          if (!location?.[0] || !location?.[1]) return null;
 
           return (
             <Marker
-              key={index}
+              key={artist?.id ?? index}
               coordinate={{
                 latitude: location[0],
                 longitude: location[1],

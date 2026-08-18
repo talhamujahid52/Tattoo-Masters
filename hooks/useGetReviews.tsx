@@ -1,17 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import firestore from "@react-native-firebase/firestore";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import {
+  selectBlockedUserIds,
+  selectReportedReviewIds,
+  selectSafetyHydrated,
+} from "@/redux/slices/safetySlice";
+import { filterHiddenReviews } from "@/utils/safetyFilters";
 
 const useGetReviews = (artistId: any) => {
-  const [reviews, setReviews] = useState<any>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const currentUserId = useSelector(
+    (state: RootState) => state.user.user?.uid,
+  );
+  const blockedUserIds = useSelector(selectBlockedUserIds);
+  const reportedReviewIds = useSelector(selectReportedReviewIds);
+  const safetyHydrated = useSelector(selectSafetyHydrated);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchReviews = async () => {
-      if (!artistId) return;
+      if (!artistId) {
+        setReviews([]);
+        setLoading(false);
+        return;
+      }
 
       try {
         setReviews([]);
+        setError(null);
         setLoading(true);
 
         // Fetch reviews for the artist
@@ -25,30 +46,37 @@ const useGetReviews = (artistId: any) => {
           ...doc.data(),
         }));
 
-        console.log("Reviews Data: ", reviewsData);
-
         // Extract unique userIds from the reviews
-        const userIds = [
+        const userIds = ([
           ...new Set(reviewsData.map((review: any) => review.user)),
-        ];
+        ] as unknown[]).filter(
+          (userId): userId is string =>
+            typeof userId === "string" && userId.length > 0,
+        );
 
-        console.log("User Ids, ", userIds);
-
-        // Fetch all users in a batch query
-        const usersSnapshot = await firestore()
-          .collection("Users")
-          .where("uid", "in", userIds) // Use 'in' query to fetch all users
-          .get();
+        // Firestore caps `in` queries, so fetch reviewers in safe chunks. An
+        // artist with no reviews skips the query entirely.
+        const chunks: string[][] = [];
+        for (let index = 0; index < userIds.length; index += 10) {
+          chunks.push(userIds.slice(index, index + 10));
+        }
+        const userSnapshots = await Promise.all(
+          chunks.map((userIdChunk) =>
+            firestore()
+              .collection("Users")
+              .where("uid", "in", userIdChunk)
+              .get(),
+          ),
+        );
 
         // Map the user data into an object for quick access by userId
-        const usersData = usersSnapshot.docs.reduce((acc: any, doc: any) => {
-          const user = doc.data();
-          console.log("USer: ", user);
-          acc[user.uid] = user; // Map userId to user data
-          return acc;
-        }, {});
-
-        console.log("UserData: ", usersData);
+        const usersData = userSnapshots
+          .flatMap((snapshot) => snapshot.docs)
+          .reduce((acc: any, doc: any) => {
+            const user = doc.data();
+            acc[user.uid] = user;
+            return acc;
+          }, {});
 
         // Now map the reviews to include the corresponding user data
         const reviewsWithUserData = reviewsData.map((review: any) => ({
@@ -59,18 +87,37 @@ const useGetReviews = (artistId: any) => {
             : usersData[review.user]?.profilePicture,
         }));
 
-        setReviews(reviewsWithUserData);
+        if (!cancelled) setReviews(reviewsWithUserData);
       } catch (err) {
-        setError(err);
+        if (!cancelled) setError(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    fetchReviews();
+    void fetchReviews();
+
+    return () => {
+      cancelled = true;
+    };
   }, [artistId]);
 
-  return { reviews, loading, error };
+  const visibleReviews = useMemo(() => {
+    if (currentUserId && !safetyHydrated) return [];
+    return filterHiddenReviews(
+      reviews,
+      blockedUserIds,
+      reportedReviewIds,
+    );
+  }, [
+    blockedUserIds,
+    currentUserId,
+    reportedReviewIds,
+    reviews,
+    safetyHydrated,
+  ]);
+
+  return { reviews: visibleReviews, loading, error };
 };
 
 export default useGetReviews;
