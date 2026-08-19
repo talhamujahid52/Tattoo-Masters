@@ -2,10 +2,13 @@ import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 export type BlockReason =
   | "harassment"
-  | "inappropriate_content"
-  | "spam"
+  | "inappropriate_account"
+  | "fake_account"
   | "impersonation"
-  | "other";
+  | "other"
+  // Legacy values remain valid for persisted records and older app versions.
+  | "inappropriate_content"
+  | "spam";
 
 export type BlockSourceType = "profile" | "publication" | "review" | "chat";
 
@@ -62,9 +65,9 @@ export const BLOCK_REASON_OPTIONS: {
   label: string;
   value: BlockReason;
 }[] = [
-  { label: "Harassment or bullying", value: "harassment" },
-  { label: "Inappropriate content", value: "inappropriate_content" },
-  { label: "Spam", value: "spam" },
+  { label: "Harassment", value: "harassment" },
+  { label: "Inappropriate account", value: "inappropriate_account" },
   { label: "Impersonation", value: "impersonation" },
+  { label: "Fake account", value: "fake_account" },
   { label: "Other", value: "other" },
 ];

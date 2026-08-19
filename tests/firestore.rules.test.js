@@ -190,6 +190,23 @@ describe("Firestore UGC safety rules", { concurrency: false }, () => {
     );
   });
 
+  it("accepts the account-specific block reasons", async () => {
+    const aliceDb = authenticatedFirestore(ALICE);
+
+    await assertSucceeds(
+      setDoc(
+        doc(aliceDb, `BlockedUsers/${ALICE}__${BOB}`),
+        clientBlock(ALICE, BOB, { reason: "inappropriate_account" }),
+      ),
+    );
+    await assertSucceeds(
+      setDoc(
+        doc(aliceDb, `BlockedUsers/${ALICE}__${MALLORY}`),
+        clientBlock(ALICE, MALLORY, { reason: "fake_account" }),
+      ),
+    );
+  });
+
   it("allows blocking and unfollowing to update both follower records atomically", async () => {
     await seedDocuments([
       [`Users/${ALICE}`, { uid: ALICE, name: "Alice", followedArtists: [BOB] }],

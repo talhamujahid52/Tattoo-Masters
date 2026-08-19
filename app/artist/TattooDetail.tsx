@@ -18,7 +18,6 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
-import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publication,
 // import { doc } from "@react-native-firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
@@ -197,11 +196,6 @@ const TattooDetail: React.FC = () => {
     hide: hideReportSheet,
   } = useBottomSheet();
   const {
-    BottomSheet: BlockSheet,
-    show: showBlockSheet,
-    hide: hideBlockSheet,
-  } = useBottomSheet();
-  const {
     BottomSheet: LoggingInBottomSheet,
     show: showLoggingInBottomSheet,
     hide: hideLoggingInBottomSheet,
@@ -350,8 +344,6 @@ const TattooDetail: React.FC = () => {
             hideImageActionsSheet={hideImageActionsSheet}
             showReportSheet={showReportSheet}
             showLoggingInBottomSheet={showLoggingInBottomSheet}
-            ownerId={userId}
-            showBlockSheet={showBlockSheet}
             isOwner={Boolean(
               currentUserId && userId && currentUserId === userId
             )}
@@ -434,23 +426,6 @@ const TattooDetail: React.FC = () => {
           />
         }
       />
-      {userId && userId !== currentUserId && (
-        <BlockSheet
-          InsideComponent={
-            <BlockUserBottomSheet
-              hideBlockSheet={hideBlockSheet}
-              blockedUserId={userId}
-              blockedUserName={userDetails?.name}
-              blockedUserProfilePicture={
-                userDetails?.profilePictureSmall ?? userDetails?.profilePicture
-              }
-              sourceType="publication"
-              sourceId={id}
-              onBlocked={() => router.back()}
-            />
-          }
-        />
-      )}
       <LoggingInBottomSheet
         InsideComponent={
           <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />

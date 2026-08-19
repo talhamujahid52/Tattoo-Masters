@@ -279,7 +279,9 @@ service cloud.firestore {
 
       function validBlockReasonAndSource(data) {
         return data.reason in [
-            "harassment", "inappropriate_content", "spam", "impersonation", "other"
+            "harassment", "inappropriate_account", "impersonation", "fake_account", "other",
+            // Legacy reasons remain valid for older clients and persisted records.
+            "inappropriate_content", "spam"
           ] &&
           data.sourceType in ["profile", "publication", "review", "chat"] &&
           (data.sourceId == null ||

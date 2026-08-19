@@ -96,10 +96,9 @@ const BlockedUsers = () => {
       profile?.name || record.blockedUserSnapshot?.name || "this user";
 
     Alert.alert(
-      "Unblock user?",
-      `${name}'s profile, content, and conversation may become visible again. Separately reported content will remain hidden.`,
+      "Unblock User",
+      `${name}’s content will become visible. You will become able to contact this user again.`,
       [
-        { text: "Cancel", style: "cancel" },
         {
           text: "Unblock",
           onPress: async () => {
@@ -119,6 +118,7 @@ const BlockedUsers = () => {
             }
           },
         },
+        { text: "Cancel", style: "cancel" },
       ],
     );
   };

@@ -168,7 +168,7 @@ const ReviewOnProfile: React.FC<ReviewOnProfileProps> = ({
           </>
         ) : (
           <Text size="p" weight="normal" color="#A7A7A7">
-            No reviews to show.
+            The tattoo artist has no reiews yet
           </Text>
         )}
         {totalVisibleReviews > 0 && (

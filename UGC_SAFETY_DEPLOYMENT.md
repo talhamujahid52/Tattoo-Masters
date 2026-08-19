@@ -82,7 +82,7 @@ Record one continuous, readable video on a physical iPhone or iPad showing:
 1. Login or registration is stopped while consent is unchecked.
 2. Terms of Use and Privacy Policy open before authentication and contain the zero-tolerance, reporting, and blocking language.
 3. Reporting a tattoo or review removes that item immediately.
-4. Blocking from content removes the account, all of its content, and the blocker-side chat.
+4. Blocking from a user profile removes the account, all of its content, and the blocker-side chat.
 5. The blocked account's existing chat is read-only and displays the unavailable-conversation message.
 6. **Settings > Blocked users > Unblock** restores eligible content and chat.
 7. The moderation push arrives on the moderator device.
