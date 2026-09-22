@@ -16,7 +16,9 @@ import {
   GooglePlaceData,
   GooglePlaceDetail,
   GooglePlacesAutocomplete,
+  GooglePlacesAutocompleteRef,
 } from "react-native-google-places-autocomplete";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
@@ -77,9 +79,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
   const [searchText, setSearchText] = useState("");
   const artists: any[] = useSelector((s: any) => s.artist.searchResults);
-  const currentUserId = useSelector(
-    (state: RootState) => state.user.user?.uid,
-  );
+  const currentUserId = useSelector((state: RootState) => state.user.user?.uid);
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
   const visibleArtists = useMemo(
@@ -87,11 +87,17 @@ const FullScreenMapWithSearch: React.FC = () => {
       currentUserId && !safetyHydrated
         ? []
         : filterBlockedArtists(artists, blockedUserIds),
-    [artists, blockedUserIds, currentUserId, safetyHydrated],
+    [artists, blockedUserIds, currentUserId, safetyHydrated]
   );
   const dispatch = useDispatch();
   const mapRef = useRef<MapView>(null);
+  const placesRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const insets = useSafeAreaInsets();
   const [searchedText, setSearchedText] = useState("");
+  const dismissSearch = () => {
+    placesRef.current?.blur();
+    Keyboard.dismiss();
+  };
   const zoomIn = () => {
     mapRef.current?.animateToRegion({
       ...region,
@@ -320,11 +326,14 @@ const FullScreenMapWithSearch: React.FC = () => {
       />
 
       {/* Search & Filter */}
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { top: insets.top + 10 }]}>
         <View style={{ width: "85%" }}>
           <GooglePlacesAutocomplete
             placeholder="Search by location"
             fetchDetails
+            ref={placesRef}
+            keyboardShouldPersistTaps="always"
+            enablePoweredByContainer={false}
             onPress={(
               data: GooglePlaceData,
               details: GooglePlaceDetail | null
@@ -385,8 +394,10 @@ const FullScreenMapWithSearch: React.FC = () => {
             textInputProps={{
               placeholderTextColor: "#FBF6FA",
               selectionColor: "#fff",
-              value: searchText,
-              onChangeText: setSearchText,
+              // value: searchText,
+              onChangeText: (text: string) => {
+                setSearchText(text);
+              },
               returnKeyType: "search",
               onSubmitEditing: () => {
                 Keyboard.dismiss();
@@ -455,9 +466,12 @@ const FullScreenMapWithSearch: React.FC = () => {
         // initialRegion={region}
         mapType={mapTypeState}
         showsMyLocationButton
+        mapPadding={{ top: insets.top + 60, right: 10, bottom: 0, left: 0 }}
         showsUserLocation
         zoomEnabled
         ref={mapRef}
+        onPress={dismissSearch}
+        onPanDrag={dismissSearch}
         loadingEnabled
         loadingBackgroundColor="#000"
         loadingIndicatorColor="#fff"
