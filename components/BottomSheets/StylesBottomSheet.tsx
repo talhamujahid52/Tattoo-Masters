@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { StyleSheet, View, TouchableOpacity, ScrollView } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import Text from "../Text";
 import Button from "../Button";
 import Input from "../Input";
@@ -69,7 +70,7 @@ const StylesBottomSheet: React.FC<StylesBottomSheetProps> = ({
         />
       </View>
 
-      <ScrollView
+      <BottomSheetScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.stylesGrid}
         showsVerticalScrollIndicator={false}
@@ -94,7 +95,7 @@ const StylesBottomSheet: React.FC<StylesBottomSheetProps> = ({
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </BottomSheetScrollView>
 
       <Button title="Save" onPress={handleSave} />
     </View>
@@ -105,10 +106,11 @@ export default StylesBottomSheet;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: "#080808",
     paddingHorizontal: 16,
     paddingBottom: 20,
-    maxHeight: "95%",
+    maxHeight: "85%",
   },
   header: {
     paddingBottom: 12,
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   scrollView: {
-    // maxHeight: 300,
+    flex: 1,
     marginBottom: 16,
   },
   stylesGrid: {

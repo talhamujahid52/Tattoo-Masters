@@ -6,6 +6,7 @@ import {
   Switch,
   Alert,
   Linking,
+  ScrollView,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import * as Location from "expo-location";
@@ -204,9 +205,9 @@ const FilterBottomSheet = ({
             </Text>
             <Switch
               style={{ width: 75 }}
-              // trackColor={{ false: "#767577", true: "#44e52c" }}
-              // thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
-              // ios_backgroundColor="#3e3e3e"
+              trackColor={{ false: "#767577", true: "#44e52c" }}
+              thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
               onValueChange={toggleRadius}
               value={radiusEnabled}
             />
@@ -298,7 +299,15 @@ const FilterBottomSheet = ({
             <Text size="h4" weight="semibold" color="#A7A7A7">
               Styles
             </Text>
-            <View style={styles.ratingButtonsRow}>
+            <ScrollView
+              style={{ marginTop: 16 }}
+              contentContainerStyle={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
               {tattooStyles.map((s) => (
                 <TouchableOpacity
                   key={s.value}
@@ -322,7 +331,7 @@ const FilterBottomSheet = ({
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
         </BottomSheetScrollView>
 

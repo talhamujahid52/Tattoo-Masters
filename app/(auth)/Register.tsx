@@ -264,11 +264,7 @@ const Register: React.FC = () => {
   return (
     <SafeAreaView style={styles.Container}>
       <KeyboardAwareScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          alignItems: "center",
-          paddingBottom: 24,
-        }}
+        contentContainerStyle={{ alignItems: "center" }}
         keyboardShouldPersistTaps="handled"
       >
         <Image

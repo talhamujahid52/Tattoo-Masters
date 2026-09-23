@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
   useWindowDimensions,
+  Keyboard,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -66,6 +67,23 @@ const IndividualChat: React.FC = () => {
   } = useLocalSearchParams<any>();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
+  // Only need the bottom safe-area gap (home indicator) when the keyboard is
+  // closed; GiftedChat's own keyboard-avoidance already lifts the toolbar
+  // above the keyboard, so keeping this margin while it's open just pushes
+  // the toolbar back down under the keyboard.
+  // const [keyboardVisible, setKeyboardVisible] = useState(false);
+  // useEffect(() => {
+  //   const show = Keyboard.addListener("keyboardDidShow", () =>
+  //     setKeyboardVisible(true)
+  //   );
+  //   const hide = Keyboard.addListener("keyboardDidHide", () =>
+  //     setKeyboardVisible(false)
+  //   );
+  //   return () => {
+  //     show.remove();
+  //     hide.remove();
+  //   };
+  // }, []);
   const [chatID, setChatID] = useState<any>(existingChatId || undefined);
   const didLeaveForBlockRef = useRef(false);
   const [messageRecieverName, setMessageRecieverName] = useState(
@@ -696,6 +714,8 @@ const IndividualChat: React.FC = () => {
           flexDirection: "row",
           alignItems: "flex-end",
           marginHorizontal: 8,
+          // marginBottom: keyboardVisible ? 10 : insets.bottom + 10,
+          marginBottom: insets.bottom + 10
         }}
       >
         {/* + (Add Image) Button - separate from input box */}
@@ -920,42 +940,31 @@ const IndividualChat: React.FC = () => {
             }
             style={styles.avatar}
           />
-          <View>
-            <Text size="p" weight="normal" color="#FBF6FA">
+          <View style={{ flexShrink: 1, minWidth: 0 }}>
+            <Text
+              size="p"
+              weight="normal"
+              color="#FBF6FA"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {messageRecieverName ? messageRecieverName : ""}
             </Text>
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                columnGap: 4,
-                marginTop: 2,
-              }}
+            <Text
+              size="medium"
+              weight="normal"
+              color="#A7A7A7"
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={{ marginTop: 2 }}
             >
-              <Text size="medium" weight="normal" color="#A7A7A7">
-                {isOnline
-                  ? "Online"
-                  : lastSeen
-                    ? `Last seen ${getTimeAgo(lastSeen)}`
-                    : ""}
-              </Text>
-              {localTime && (
-                <>
-                  <View
-                    style={{
-                      height: 3,
-                      width: 3,
-                      backgroundColor: "#B1AFA4",
-                      borderRadius: 100,
-                    }}
-                  ></View>
-                  <Text size="medium" weight="normal" color="#A7A7A7">
-                    {`Local time ${localTime}`}
-                  </Text>
-                </>
-              )}
-            </View>
+              {isOnline
+                ? "Online"
+                : lastSeen
+                  ? `Last seen ${getTimeAgo(lastSeen)}`
+                  : ""}
+              {localTime ? `  •  Local time ${localTime}` : ""}
+            </Text>
           </View>
         </View>
         <TouchableOpacity
@@ -1016,7 +1025,6 @@ const IndividualChat: React.FC = () => {
         renderAvatar={null}
         alwaysShowSend={true}
         inverted={true}
-        bottomOffset={-25}
         lightboxProps={{
           activeProps: {
             style: {

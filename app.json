@@ -15,7 +15,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ddjn.tattoomasters",
-      "associatedDomains": ["applinks:tattoomasters.app"],
+      "associatedDomains": [
+        "applinks:tattoomasters.app"
+      ],
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -25,7 +27,9 @@
         "NSCameraUsageDescription": "Tattoo Masters uses your camera so you can take and send photos in chats.",
         "NSPhotoLibraryUsageDescription": "Tattoo Masters uses your photo library so you can choose images for profiles, tattoo posts, reviews, and chats.",
         "UIDesignRequiresCompatibility": true,
-        "LSApplicationQueriesSchemes": ["tel"]
+        "LSApplicationQueriesSchemes": [
+          "tel"
+        ]
       },
       "appleTeamId": "UR4D67257L"
     },
@@ -53,7 +57,10 @@
               "pathPrefix": "/artist"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -65,7 +72,10 @@
               "pathPrefix": "/tattoo"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -136,7 +146,8 @@
           }
         }
       ],
-      "./plugin/without-ios-user-tracking.js"
+      "./plugin/without-ios-user-tracking.js",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

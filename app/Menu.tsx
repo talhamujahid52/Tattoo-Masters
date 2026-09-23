@@ -508,7 +508,9 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
   },
-  registerArtistContainer: {},
+  registerArtistContainer: {
+    marginTop: 50,
+  },
   registerArtist: {
     height: "100%",
     width: "100%",

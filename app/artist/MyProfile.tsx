@@ -28,6 +28,10 @@ import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import * as Location from "expo-location";
+import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
+import { isUnsetLocation } from "@/utils/locationHelpers";
 
 interface StyleItem {
   title: string;
@@ -59,9 +63,7 @@ const MyProfile = () => {
   const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
   const [showAllUserStyles, setShowAllUserStyles] = useState(false);
 
-  const content =
-    loggedInUser?.aboutYou ||
-    "There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.";
+  const content = loggedInUser?.aboutYou || "";
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded); // Toggle the state
@@ -172,6 +174,56 @@ const MyProfile = () => {
         doc.document.styles.includes(selectedFilter.title)
     );
   }, [searchResults, styleFilters]);
+
+  const defaultLocation = {
+    latitude: 33.664286,
+    longitude: 73.004291,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  };
+
+  const region = {
+    latitude: loggedInUser?.location?.latitude || defaultLocation.latitude,
+    longitude: loggedInUser?.location?.longitude || defaultLocation.longitude,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  };
+
+  const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Location permission denied");
+        return null;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      return [location.coords.latitude, location.coords.longitude];
+    } catch (error) {
+      console.error("Failed to get coordinates:", error);
+      return null;
+    }
+  };
+
+  const openInGoogleMaps = async () => {
+    const destinationLat =
+      loggedInUser?.location?.latitude || defaultLocation.latitude;
+    const destinationLng =
+      loggedInUser?.location?.longitude || defaultLocation.longitude;
+
+    const currentCoords = await getCurrentCoordinates();
+    if (!currentCoords) {
+      console.warn("Unable to get current coordinates");
+      return;
+    }
+
+    const [originLat, originLng] = currentCoords;
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destinationLat},${destinationLng}`;
+
+    Linking.openURL(url).catch((err) => {
+      console.error("Failed to open Google Maps:", err);
+    });
+  };
 
   const handleOpenLink = async (url: string) => {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -425,6 +477,77 @@ const MyProfile = () => {
               <NoReviewsOnMyProfile />
             )}
 
+            {!isUnsetLocation(loggedInUser?.location) && (
+              <>
+                <View style={{ marginTop: 8 }}>
+                  <Text
+                    size="h4"
+                    weight="semibold"
+                    color="white"
+                    style={{ marginBottom: 10 }}
+                  >
+                    Address
+                  </Text>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: -8,
+                    }}
+                  >
+                    <Text size="large" weight="normal" color="#A7A7A7">
+                      {loggedInUser?.address || ""}
+                    </Text>
+                    <Pressable
+                      onPress={async () => {
+                        try {
+                          await openInGoogleMaps();
+                        } catch (error) {
+                          console.error("Error opening Google Maps:", error);
+                        }
+                      }}
+                    >
+                      <Text size="p" weight="semibold" color="#DAB769">
+                        Directions
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    router.push({
+                      pathname: "/artist/MapDetails",
+                      params: {
+                        location: JSON.stringify([
+                          loggedInUser?.location?.latitude,
+                          loggedInUser?.location?.longitude,
+                        ]),
+                      },
+                    });
+                  }}
+                  style={{
+                    height: 130,
+                    borderRadius: 20,
+                    overflow: "hidden",
+                  }}
+                >
+                  <MapView
+                    provider={PROVIDER_GOOGLE}
+                    customMapStyle={GOOGLE_DARK_MAP_STYLE}
+                    scrollEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    pointerEvents="none"
+                    style={styles.map}
+                    mapType="standard"
+                    region={region}
+                    zoomEnabled={false}
+                  />
+                </Pressable>
+              </>
+            )}
+
             {/* ✅ Horizontal FlatList is now inside a vertical FlatList's header — no conflict */}
             <View style={styles.stylesFilterRow}>
               <FlatList
@@ -514,5 +637,8 @@ const styles = StyleSheet.create({
   stylesFilterRow: {
     marginTop: 8,
     marginBottom: 16,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

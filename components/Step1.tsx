@@ -4,16 +4,14 @@ import {
   View,
   Image,
   TouchableOpacity,
-  Switch,
   TextInput,
   ScrollView,
 } from "react-native";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
-import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
-import { Asset, launchImageLibrary } from "react-native-image-picker";
+import { launchImageLibrary } from "react-native-image-picker";
 import { router } from "expo-router";
 import { FormContext } from "../context/FormContext";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
@@ -23,6 +21,16 @@ import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import * as Location from "expo-location";
 import useTattooStyles from "@/hooks/useTattooStyles";
+import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
+import { STUDIO_TYPE_OPTIONS } from "@/constants/studioOptions";
+import { isUnsetLocation } from "@/utils/locationHelpers";
+
+const DEFAULT_LOCATION = {
+  latitude: 0,
+  longitude: 0,
+  latitudeDelta: 0.02,
+  longitudeDelta: 0.02,
+};
 
 const Step1: React.FC = () => {
   const {
@@ -34,18 +42,6 @@ const Step1: React.FC = () => {
   const [tattooStyles, setTattooStyles] = useState<
     { title: string; selected: boolean }[]
   >([]);
-  const options = [
-    { label: "Studio", value: "studio" },
-    { label: "Freelancer", value: "freelancer" },
-    { label: "Home artist", value: "homeArtist" },
-  ];
-
-  const defaultLocation = {
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
-  };
 
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -54,9 +50,9 @@ const Step1: React.FC = () => {
     (state: any) => state?.user?.userFirestore
   );
 
-  // Prepopulate the full name field if it is not already set.
+  // Prepopulate name and profile picture from the logged-in user when empty.
   useEffect(() => {
-    if (loggedInUserFirestore?.name && formData?.name == "") {
+    if (loggedInUserFirestore?.name && formData.name === "") {
       setFormData((prev) => ({
         ...prev,
         name: loggedInUserFirestore.name,
@@ -85,16 +81,22 @@ const Step1: React.FC = () => {
 
   const { titles: fetchedStyleTitles } = useTattooStyles();
   useEffect(() => {
-    if (fetchedStyleTitles.length > 0) {
-      setTattooStyles(
-        fetchedStyleTitles.map((title) => ({ title, selected: false }))
-      );
-    }
-  }, [fetchedStyleTitles]);
+    if (fetchedStyleTitles.length === 0) return;
+
+    const selectedTitles = new Set(
+      formData.tattooStyles.map((style) => style.title)
+    );
+    setTattooStyles(
+      fetchedStyleTitles.map((title) => ({
+        title,
+        selected: selectedTitles.has(title),
+      }))
+    );
+  }, [fetchedStyleTitles, formData.tattooStyles]);
 
   const localImage = useMemo(() => {
     const remoteUri =
-      formData?.profilePicture ??
+      formData.profilePicture ??
       loggedInUserFirestore?.profilePictureSmall ??
       loggedInUserFirestore?.profilePicture ??
       loggedInUser?.photoURL;
@@ -103,27 +105,23 @@ const Step1: React.FC = () => {
       return { uri: remoteUri };
     }
 
-    // Fallback to local placeholder image if no image URI is available
     return require("../assets/images/placeholder.png");
-  }, [loggedInUser, loggedInUserFirestore, formData]);
+  }, [formData.profilePicture, loggedInUser, loggedInUserFirestore]);
 
   const [region, setRegion] = useState<Region>({
-    latitude: formData.location?.latitude || defaultLocation.latitude,
-    longitude: formData.location?.longitude || defaultLocation.longitude,
-    latitudeDelta: defaultLocation.latitudeDelta,
-    longitudeDelta: defaultLocation.longitudeDelta,
+    latitude: formData.location?.latitude || DEFAULT_LOCATION.latitude,
+    longitude: formData.location?.longitude || DEFAULT_LOCATION.longitude,
+    latitudeDelta: DEFAULT_LOCATION.latitudeDelta,
+    longitudeDelta: DEFAULT_LOCATION.longitudeDelta,
   });
 
   useEffect(() => {
-    console.log("Use Effect called in Step 1 : ");
+    if (!isUnsetLocation(formData.location)) return;
+
     const getCurrentLocation = async () => {
-      console.log("Setting Region in step 1: ");
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.warn("Permission to access location was denied");
-          return;
-        }
+        if (status !== "granted") return;
 
         const location = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = location.coords;
@@ -135,34 +133,31 @@ const Step1: React.FC = () => {
           longitudeDelta: 0.01,
         };
 
-        console.log("Current Region in step 1: ", currentRegion);
-
         setRegion(currentRegion);
+        setFormData((prev) => ({
+          ...prev,
+          location: { latitude, longitude },
+        }));
       } catch (error) {
-        console.error("Error getting location:", error);
+        if (__DEV__) {
+          console.error("Error getting location:", error);
+        }
       }
     };
 
-    if (formData.location.latitude === 0 && formData.location.longitude === 0) {
-      getCurrentLocation();
-    }
-  }, []);
+    getCurrentLocation();
+  }, [formData.location, setFormData]);
 
   const handleProfilePictureSelection = async () => {
     const result = await launchImageLibrary({
       selectionLimit: 1,
       mediaType: "photo",
-      includeBase64: true,
       quality: 0.4,
     });
     if (!result.didCancel && result.assets && result.assets[0].uri) {
       const selectedImageUri = result.assets[0].uri;
       setFormData((prev) => ({ ...prev, profilePicture: selectedImageUri }));
     }
-  };
-
-  const toggleSwitch = () => {
-    setFormData((prev) => ({ ...prev, showCityOnly: !prev.showCityOnly }));
   };
 
   const toggleTattooStyles = (tattooStyle: {
@@ -190,69 +185,15 @@ const Step1: React.FC = () => {
   };
 
   useEffect(() => {
+    if (isUnsetLocation(formData.location)) return;
+
     setRegion({
-      latitude: formData.location?.latitude || defaultLocation.latitude,
-      longitude: formData.location?.longitude || defaultLocation.longitude,
-      latitudeDelta: defaultLocation.latitudeDelta,
-      longitudeDelta: defaultLocation.longitudeDelta,
+      latitude: formData.location.latitude,
+      longitude: formData.location.longitude,
+      latitudeDelta: DEFAULT_LOCATION.latitudeDelta,
+      longitudeDelta: DEFAULT_LOCATION.longitudeDelta,
     });
   }, [formData.location]);
-
-  const googleDarkModeStyle = [
-    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
-    {
-      featureType: "administrative.country",
-      elementType: "geometry.stroke",
-      stylers: [{ color: "#4b6878" }],
-    },
-    {
-      featureType: "administrative.land_parcel",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#64779e" }],
-    },
-    {
-      featureType: "poi",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#6f9ba5" }],
-    },
-    {
-      featureType: "poi.park",
-      elementType: "geometry.fill",
-      stylers: [{ color: "#023e58" }],
-    },
-    {
-      featureType: "poi.park",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#3C7680" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#304a7d" }],
-    },
-    {
-      featureType: "road",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#98a5be" }],
-    },
-    {
-      featureType: "transit",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#98a5be" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#0e1626" }],
-    },
-    {
-      featureType: "water",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#4e6d70" }],
-    },
-  ];
 
   return (
     <ScrollView style={styles.container}>
@@ -294,7 +235,7 @@ const Step1: React.FC = () => {
       </View>
       <RadioButton
         title="Studio"
-        options={options}
+        options={[...STUDIO_TYPE_OPTIONS]}
         selectedValue={formData.studio}
         inputValue={formData.studioName}
         onSelect={(value) =>
@@ -332,79 +273,44 @@ const Step1: React.FC = () => {
         >
           Pin your location
         </Text>
-        {!formData.showCityOnly && (
-          <TouchableOpacity
-            onPress={() => {
-              router.push({
-                pathname: "/artist/SearchLocation",
-              });
-            }}
-            style={{
-              height: 130,
-              borderRadius: 20,
-              overflow: "hidden",
-              marginTop: 8,
-              marginBottom: 16,
-            }}
-          >
-            <MapView
-              provider={PROVIDER_GOOGLE}
-              style={styles.map}
-              mapType="standard"
-              customMapStyle={googleDarkModeStyle}
-              region={region}
-              scrollEnabled={false}
-            >
-              {/* <Marker coordinate={region} title="Location" />  */}
-            </MapView>
-          </TouchableOpacity>
-        )}
-        {/* <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 10,
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/artist/SearchLocation",
+            });
           }}
+          style={styles.mapPreview}
         >
-          <Text
-            size="h4"
-            weight="normal"
-            color="#FBF6FA"
-            style={{ marginBottom: 10 }}
-          >
-            Show city only
-          </Text>
-          <Switch
-            trackColor={{ false: "#767577", true: "#44e52c" }}
-            thumbColor={formData.showCityOnly ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={formData.showCityOnly}
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            mapType="standard"
+            customMapStyle={GOOGLE_DARK_MAP_STYLE}
+            region={region}
+            scrollEnabled={false}
+            rotateEnabled={false}
+            pitchEnabled={false}
+            pointerEvents="none"
           />
-        </View> */}
+        </TouchableOpacity>
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Styles{" "}
-            {formData?.tattooStyles?.length > 0
-              ? "(" + formData?.tattooStyles?.length + " selected)"
+            {formData.tattooStyles.length > 0
+              ? `(${formData.tattooStyles.length} selected)`
               : ""}
           </Text>
           <View style={styles.ratingButtonsRow}>
-            {tattooStyles.slice(0, 6).map((item, idx) => (
+            {tattooStyles.slice(0, 6).map((item) => (
               <TouchableOpacity
-                key={idx}
-                activeOpacity={1}
-                style={{
-                  height: 33,
-                  paddingHorizontal: 6,
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 6,
-                  backgroundColor: item.selected ? "#DAB769" : "#262526",
-                }}
+                key={item.title}
+                activeOpacity={0.7}
+                style={[
+                  styles.styleChip,
+                  {
+                    backgroundColor: item.selected ? "#DAB769" : "#262526",
+                  },
+                ]}
                 onPress={() => toggleTattooStyles(item)}
               >
                 <Text
@@ -418,22 +324,15 @@ const Step1: React.FC = () => {
             ))}
             {tattooStyles.length > 6 && (
               <TouchableOpacity
-                onPress={() => {
-                  showTattooStylesSheet();
-                }}
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  padding: 6,
-                }}
+                onPress={showTattooStylesSheet}
+                style={styles.seeMoreButton}
               >
                 <Text size="p" weight="normal" color="#FBF6FA">
-                  {"See more"}
+                  See more
                 </Text>
-                <View style={{ width: 24, height: 24 }}>
+                <View style={styles.seeMoreIcon}>
                   <Image
-                    style={{ width: "100%", height: "100%" }}
+                    style={styles.seeMoreIconImage}
                     source={require("../assets/images/arrow_down.png")}
                   />
                 </View>
@@ -441,7 +340,7 @@ const Step1: React.FC = () => {
             )}
           </View>
         </View>
-        <View style={{ marginTop: 16, marginBottom: 16 }}>
+        <View style={styles.aboutSection}>
           <Text
             size="h4"
             weight="semibold"
@@ -466,23 +365,16 @@ const Step1: React.FC = () => {
             size="medium"
             weight="normal"
             color="#A7A7A7"
-            style={{ textAlign: "right", marginTop: 4 }}
+            style={styles.charCount}
           >
             {formData.aboutYou.length} / 500
           </Text>
         </View>
-        <View style={{ marginBottom: 70 }}>
+        <View style={styles.socialSection}>
           <Text size="h4" weight="semibold" color="#A7A7A7">
             Connect your social media accounts
           </Text>
-          <View
-            style={{
-              display: "flex",
-              gap: 10,
-              marginTop: 10,
-              marginBottom: 24,
-            }}
-          >
+          <View style={styles.socialInputs}>
             <Input
               inputMode="text"
               placeholder="Facebook profile"
@@ -561,12 +453,46 @@ const styles = StyleSheet.create({
     borderColor: "#333333",
     backgroundColor: "#202020",
   },
+  mapPreview: {
+    height: 130,
+    borderRadius: 20,
+    overflow: "hidden",
+    marginTop: 8,
+    marginBottom: 16,
+  },
   ratingButtonsRow: {
     marginTop: 16,
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+  },
+  styleChip: {
+    height: 33,
+    paddingHorizontal: 6,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 6,
+  },
+  seeMoreButton: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 6,
+  },
+  seeMoreIcon: {
+    width: 24,
+    height: 24,
+  },
+  seeMoreIconImage: {
+    width: "100%",
+    height: "100%",
+  },
+  aboutSection: {
+    marginTop: 16,
+    marginBottom: 16,
   },
   textArea: {
     height: 100,
@@ -576,6 +502,20 @@ const styles = StyleSheet.create({
     color: "white",
     paddingHorizontal: 16,
     paddingVertical: 12,
+    textAlignVertical: "top",
+  },
+  charCount: {
+    textAlign: "right",
+    marginTop: 4,
+  },
+  socialSection: {
+    marginBottom: 70,
+  },
+  socialInputs: {
+    display: "flex",
+    gap: 10,
+    marginTop: 10,
+    marginBottom: 24,
   },
   map: {
     ...StyleSheet.absoluteFillObject, // Makes the map take up the entire screen

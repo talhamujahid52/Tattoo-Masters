@@ -2,6 +2,7 @@ import React, { useCallback, useRef } from "react";
 import {
   BottomSheetModal,
   BottomSheetView,
+  BottomSheetScrollView,
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
@@ -24,7 +25,7 @@ const useFilterBottomSheet = () => {
         hide();
       }
     },
-    [hide],
+    [hide]
   );
 
   const renderBackdrop = useCallback(
@@ -37,7 +38,7 @@ const useFilterBottomSheet = () => {
         pressBehavior="close"
       />
     ),
-    [],
+    []
   );
 
   const renderHandle = useCallback(
@@ -48,7 +49,7 @@ const useFilterBottomSheet = () => {
         </View>
       </View>
     ),
-    [],
+    []
   );
 
   const BottomSheet = useCallback(
@@ -56,7 +57,7 @@ const useFilterBottomSheet = () => {
       <BottomSheetModal
         ref={bottomSheetRef}
         index={0}
-        snapPoints={["60%"]}
+        snapPoints={["80%"]}
         enableDynamicSizing={false}
         enableOverDrag={false}
         backdropComponent={renderBackdrop}
@@ -65,12 +66,15 @@ const useFilterBottomSheet = () => {
         handleComponent={renderHandle}
         backgroundStyle={styles.sheetBackground}
       >
-        <BottomSheetView style={{ backgroundColor: "#080808", flex: 1 }}>
+        <BottomSheetScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ backgroundColor: "#080808", flex: 1 }}
+        >
           {InsideComponent}
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     ),
-    [hide, handleSheetChanges, renderBackdrop],
+    [hide, handleSheetChanges, renderBackdrop]
   );
 
   return { BottomSheet, show, hide };

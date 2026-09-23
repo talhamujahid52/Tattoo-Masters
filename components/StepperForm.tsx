@@ -24,6 +24,8 @@ import { useRouter } from "expo-router";
 // import { setUserFirestoreData } from "@/redux/slices/userSlice";
 // import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { useDispatch } from "react-redux";
+import { isUnsetLocation } from "@/utils/locationHelpers";
+
 const StepperForm: React.FC = () => {
   const totalSteps = 3;
   const { width } = Dimensions.get("window");
@@ -96,6 +98,15 @@ const StepperForm: React.FC = () => {
         Alert.alert(
           "Address Required",
           "Please enter address to continue."
+        );
+        return;
+      }
+
+      // Location Validation
+      if (isUnsetLocation(formData?.location)) {
+        Alert.alert(
+          "Location Required",
+          "Please pin your location on the map to continue."
         );
         return;
       }

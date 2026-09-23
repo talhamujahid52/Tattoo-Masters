@@ -295,9 +295,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginTop: 10,
+    textAlignVertical: "top",
   },
   footer: {
-    marginTop: "auto", // Pushes the button to the bottom
+    marginTop: 10, // Pushes the button to the bottom
     marginBottom: 16, // Optional: Adds spacing between button and screen's edge
   },
 });

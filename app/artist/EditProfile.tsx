@@ -13,7 +13,10 @@ import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
 import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import Button from "@/components/Button";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import * as Location from "expo-location";
+import { isUnsetLocation } from "@/utils/locationHelpers";
+import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { useSelector } from "react-redux";
@@ -152,6 +155,49 @@ const EditProfile = () => {
     latitudeDelta: defaultLocation.latitudeDelta,
     longitudeDelta: defaultLocation.longitudeDelta,
   });
+  // Location chosen on the SearchLocation screen comes back as params
+  const picked = useLocalSearchParams<{
+    latitude?: string;
+    longitude?: string;
+    city?: string;
+  }>();
+  useEffect(() => {
+    const latitude = Number(picked.latitude);
+    const longitude = Number(picked.longitude);
+    if (!latitude || !longitude) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      location: { latitude, longitude },
+      city: picked.city ?? prev.city,
+    }));
+    setRegion((prev) => ({ ...prev, latitude, longitude }));
+  }, [picked.latitude, picked.longitude, picked.city]);
+
+  // No saved location: centre the map on the user's current position
+  useEffect(() => {
+    if (!isUnsetLocation(formData.location)) return;
+
+    const showCurrentLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+
+        const { coords } = await Location.getCurrentPositionAsync({});
+        setRegion((prev) => ({
+          ...prev,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }));
+      } catch (error) {
+        if (__DEV__) {
+          console.error("Error getting location:", error);
+        }
+      }
+    };
+
+    showCurrentLocation();
+  }, [formData.location]);
   const localImage = useMemo(() => {
     if (!newImage) {
       return {
@@ -245,62 +291,6 @@ const EditProfile = () => {
     );
   };
 
-  const googleDarkModeStyle = [
-    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
-    {
-      featureType: "administrative.country",
-      elementType: "geometry.stroke",
-      stylers: [{ color: "#4b6878" }],
-    },
-    {
-      featureType: "administrative.land_parcel",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#64779e" }],
-    },
-    {
-      featureType: "poi",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#6f9ba5" }],
-    },
-    {
-      featureType: "poi.park",
-      elementType: "geometry.fill",
-      stylers: [{ color: "#023e58" }],
-    },
-    {
-      featureType: "poi.park",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#3C7680" }],
-    },
-    {
-      featureType: "road",
-      elementType: "geometry",
-      stylers: [{ color: "#304a7d" }],
-    },
-    {
-      featureType: "road",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#98a5be" }],
-    },
-    {
-      featureType: "transit",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#98a5be" }],
-    },
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [{ color: "#0e1626" }],
-    },
-    {
-      featureType: "water",
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#4e6d70" }],
-    },
-  ];
-
   return (
     <KeyboardAwareScrollView contentContainerStyle={styles.container}>
       <TattooStylesSheet
@@ -316,9 +306,7 @@ const EditProfile = () => {
       <View style={styles.profilePictureRow}>
         <Image
           style={styles.profilePicture}
-          source={
-            localImage ?? require("../../assets/images/profilePicture.png")
-          }
+          source={localImage ?? require("../../assets/images/placeholder.png")}
         />
         <TouchableOpacity onPress={openImagePicker}>
           <Text size="h4" weight="semibold" color="#DAB769">
@@ -386,7 +374,15 @@ const EditProfile = () => {
         {formData.showCityOnly && (
           <TouchableOpacity
             onPress={() => {
-              router.push({ pathname: "/artist/SearchLocation" });
+              router.push({
+                pathname: "/artist/SearchLocation",
+                params: {
+                  source: "edit",
+                  latitude: formData.location.latitude,
+                  longitude: formData.location.longitude,
+                  city: formData.city,
+                },
+              });
             }}
             style={{
               height: 130,
@@ -399,7 +395,7 @@ const EditProfile = () => {
             <MapView
               provider={PROVIDER_GOOGLE}
               style={styles.map}
-              customMapStyle={googleDarkModeStyle}
+              customMapStyle={GOOGLE_DARK_MAP_STYLE}
               mapType="standard"
               region={region}
               rotateEnabled={false}
@@ -612,6 +608,7 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     width: "100%",
+    textAlignVertical: "top",
     borderRadius: 12,
     backgroundColor: "#FFFFFF1A",
     color: "white",
