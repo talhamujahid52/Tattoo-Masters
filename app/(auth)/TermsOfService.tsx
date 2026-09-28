@@ -1,13 +1,6 @@
 import { StyleSheet, View, ScrollView } from "react-native";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Text from "@/components/Text";
-import firestore from "@react-native-firebase/firestore";
-import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import {
-  LEGAL_LAST_UPDATED_ISO,
-  LEGAL_LAST_UPDATED_LABEL,
-  LEGAL_TERMS_VERSION,
-} from "@/utils/legalConsent";
 
 interface Section {
   id: string;
@@ -17,249 +10,150 @@ interface Section {
   additionalContent?: string;
 }
 
-interface TermsContent {
+interface TermsData {
   title: string;
   sections: Section[];
-}
-
-interface TermsData {
-  version: string;
-  lastUpdated: FirebaseFirestoreTypes.Timestamp;
-  content: TermsContent;
-  isActive: boolean;
   thankyouNote?: string;
 }
 
 const termsData: TermsData = {
-  version: LEGAL_TERMS_VERSION,
-  lastUpdated: firestore.Timestamp.fromDate(
-    new Date(LEGAL_LAST_UPDATED_ISO)
-  ),
-  content: {
-    title: "Terms of Service",
-    sections: [
-      {
-        id: "welcome",
-        title: "",
-        content:
-          'Welcome to Tattoo Masters. These Terms of Service ("Terms") govern your use of the Tattoo Masters mobile application and platform ("App," "Service," or "Platform"), provided by Tattoo Masters ("Company," "we," "us," or "our"). By accessing or using Tattoo Masters, you agree to be bound by these Terms.',
-      },
-      {
-        id: "overview",
-        title: "Overview of Service",
-        content:
-          "Tattoo Masters is a platform designed to connect users with tattoo artists. Tattoo artists can create public profiles, upload photos of their work, share general information, and receive likes, follows, and reviews from other users. Non-artist users can search for artists, follow artists, like content, send messages, search for ideas, and post reviews with photo uploads.",
-      },
-      {
-        id: "eligibility",
-        title: "Eligibility",
-        content:
-          "Tattoo Masters is not intended for children under 13, and users under 13 may not create or use an account. You must also meet any higher minimum age or parental-consent requirement that applies where you live.",
-      },
-      {
-        id: "user_accounts",
-        title: "User Accounts",
-        content:
-          "Users are responsible for maintaining the confidentiality of their login credentials and agree to provide accurate and updated information. Account misuse may result in suspension or termination without advance notice. Tattoo Masters does not guarantee the accuracy of user accounts and is not liable for any interactions or transactions between users and artists.",
-      },
-      {
-        id: "artist_profiles",
-        title: "Tattoo Artist Profiles",
-        content:
-          "Tattoo artists may create professional profiles that include:",
-        bulletPoints: [
-          "Name, location, contact, and general information",
-          "Portfolio photos",
-          "Preferred styles",
-          "Ratings and reviews from platform users",
-        ],
-        additionalContent:
-          "Tattoo Masters does not guarantee the accuracy of artist profiles and is not liable for any interactions or transactions between users and artists.",
-      },
-      {
-        id: "content_guidelines",
-        title: "Content Guidelines",
-        content: "Users agree not to upload, post, or share content that is:",
-        bulletPoints: [
-          "Illegal, hateful, discriminatory, or violent",
-          "Harassing, bullying, threatening, abusive, or intended to intimidate another person",
-          "Pornographic or sexually explicit",
-          "Misleading, spammy, or fraudulent",
-          "In violation of intellectual property rights",
-        ],
-        additionalContent:
-          "Content may include tattoos showcasing nudity but must be respectful. Tattoo Masters reserves the right to remove any content that violates these terms and to suspend or terminate accounts as needed without notice. Tattoo Masters is not liable for any user- or artist-uploaded content.",
-      },
-      {
-        id: "reviews_messaging",
-        title: "User Reviews and Messaging",
-        content:
-          "Users may review tattoo artists and upload related photos. Reviews must be based on genuine experiences. Messaging should be respectful and appropriate.",
-      },
-      {
-        id: "user_safety",
-        title: "Zero-Tolerance Policy, Reporting, and Blocking",
-        content:
-          "Tattoo Masters has zero tolerance for objectionable content or abusive behavior. Reporting a tattoo or review immediately hides that item from the reporting user's view. Reporting an account submits it for moderation but does not by itself block or hide the account. Blocking a user immediately hides that account, its content, and the blocker's conversation, prevents new contact, creates a moderation record, and alerts our moderation team. We review reports and blocks and may remove content or suspend or terminate accounts that violate these Terms.",
-      },
-      {
-        id: "content_license",
-        title: "License to Use Content",
-        content:
-          "By uploading content, you grant Tattoo Masters a worldwide, non-exclusive, royalty-free license to use, display, and distribute your content on the platform and for promotional purposes. You retain ownership of your content.",
-      },
-      {
-        id: "payments",
-        title: "Subscriptions and Payments",
-        content:
-          "Premium features are available through optional subscriptions. Payments are processed via app stores and renew automatically unless canceled. Tattoo Masters does not process tattoo service payments nor take commissions. We are not liable for transactions between users and artists.",
-      },
-      {
-        id: "intellectual_property",
-        title: "Intellectual Property",
-        content:
-          "All branding, names, logos, interface designs, texts, and proprietary content created by Tattoo Masters are the property of the Company. Users may not copy, reuse, or distribute platform content without permission. The functions and general idea of the platform are also the property of the Company.",
-      },
-      {
-        id: "third_party",
-        title: "Third-Party Integrations",
-        content:
-          "Tattoo Masters may include third-party services like maps, analytics, or advertising. We are not responsible for the content or privacy practices of third parties.",
-      },
-      {
-        id: "termination",
-        title: "Termination",
-        content:
-          "We reserve the right to suspend or terminate any account at our discretion, particularly in cases of content abuse or legal violations, without notice. Subscriptions and payments are non-refundable in such cases.",
-      },
-      {
-        id: "liability",
-        title: "Limitation of Liability",
-        content:
-          'Tattoo Masters is provided "as is" and "as available." We do not guarantee uninterrupted access or error-free operation. Our liability is limited to the fullest extent permitted by law.',
-      },
-      {
-        id: "governing_law",
-        title: "Governing Law",
-        content:
-          "These Terms are governed by and construed in accordance with the laws of Finland, unless international law is applicable.",
-      },
-      {
-        id: "updates",
-        title: "Updates to Terms",
-        content:
-          "We may update these Terms periodically. Users will be notified of significant changes within the app.",
-      },
-    ],
-  },
-  isActive: true,
-};
-
-const isValidTermsData = (value: unknown): value is TermsData => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<TermsData>;
-  if (
-    candidate.isActive !== true ||
-    candidate.version !== LEGAL_TERMS_VERSION ||
-    !candidate.content ||
-    typeof candidate.content.title !== "string" ||
-    candidate.content.title.trim().length === 0 ||
-    !Array.isArray(candidate.content.sections) ||
-    candidate.content.sections.length === 0
-  ) {
-    return false;
-  }
-
-  const hasValidSections = candidate.content.sections.every(
-    (section) =>
-      !!section &&
-      typeof section.id === "string" &&
-      typeof section.title === "string" &&
-      typeof section.content === "string" &&
-      section.content.trim().length > 0 &&
-      (section.bulletPoints === undefined ||
-        (Array.isArray(section.bulletPoints) &&
-          section.bulletPoints.every(
-            (point) => typeof point === "string" && point.trim().length > 0,
-          ))) &&
-      (section.additionalContent === undefined ||
-        typeof section.additionalContent === "string")
-  );
-
-  return (
-    hasValidSections &&
-    (candidate.thankyouNote === undefined ||
-      typeof candidate.thankyouNote === "string") &&
-    candidate.content.sections.some((section) => section.id === "user_safety")
-  );
+  title: "Terms of Service",
+  sections: [
+    {
+      id: "welcome",
+      title: "",
+      content:
+        'Welcome to Tattoo Masters. These Terms of Service ("Terms") govern your use of the Tattoo Masters mobile application and platform ("App", "Service" or "Platform"), provided by Purple Moon Productions ("Company", "we", "us" or "our"). By accessing or using Tattoo Masters you agree to be bound by these Terms.',
+    },
+    {
+      id: "overview",
+      title: "1. Overview of Service",
+      content:
+        "Tattoo Masters is a platform designed to connect users with tattoo artists. Tattoo artists can create public profiles, upload photos of their work, share general information and receive likes, follows and reviews from other users. Non-artist users can search for artists, follow artists, like content, send messages, search for ideas and post reviews with photo uploads.",
+    },
+    {
+      id: "eligibility",
+      title: "2. Eligibility",
+      content:
+        "Tattoo Masters is available worldwide and is not intended for children under 13 years of age. Users must comply with the minimum age requirements applicable in their country.",
+    },
+    {
+      id: "user_accounts",
+      title: "3. User Accounts",
+      content:
+        "Users are responsible for maintaining the confidentiality of their login credentials. Users agree to provide accurate and updated information. Account misuse may result in suspension or termination without advance notice. Tattoo Masters does not guarantee the accuracy of user accounts and is not liable for any interactions or transactions between users and artists.",
+    },
+    {
+      id: "artist_profiles",
+      title: "4. Tattoo Artist Profiles",
+      content:
+        "Tattoo artists may create professional profiles that include, but is not limited to:",
+      bulletPoints: [
+        "Name, location, contact and general information",
+        "Portfolio photos",
+        "Preferred styles",
+        "Ratings and reviews from platform users",
+      ],
+      additionalContent:
+        "Account misuse may result in suspension or termination without advance notice. Tattoo Masters does not guarantee the accuracy of artist profiles and is not liable for any interactions or transactions between users and artists.",
+    },
+    {
+      id: "content_guidelines",
+      title: "5. Content Guidelines",
+      content: "Users agree not to upload, post or share content that is:",
+      bulletPoints: [
+        "Illegal, hateful, discriminatory or violent",
+        "Pornographic or sexually explicit",
+        "Misleading, spammy or fraudulent",
+        "Violating intellectual property rights",
+      ],
+      additionalContent:
+        "Content of tattoos may and will contain showcasing nudity within reason but is to follow respectful manners. Respectful manners are to be followed uploading, posting or sharing any borderline content. Users must ensure that uploaded content complies with these Terms. Tattoo Masters reserves the right to remove content that is considered violating these Terms and to suspend or terminate accounts as needed without advance notice. Tattoo Masters is not liable of any content uploaded by users or artists.",
+    },
+    {
+      id: "reviews_messaging",
+      title: "6. User Reviews and Messaging",
+      content:
+        "Users may review tattoo artists and upload related photos. Reviews must be based on genuine experiences and should not contain false, misleading, abusive or defamatory content. Messaging is intended for respectful communication only.",
+    },
+    {
+      id: "reporting_safety",
+      title: "7. Reporting and Safety",
+      content:
+        "Users may report content, profiles or reviews that violates these Terms or community standards. Tattoo Masters may review reported content and take appropriate actions, including removing content or restricting accounts. Users are responsible for using the platform respectfully and safely.",
+    },
+    {
+      id: "license",
+      title: "8. License to Use Content",
+      content:
+        "By uploading content, you grant Tattoo Masters a worldwide, non-exclusive, royalty-free license to use, display and distribute your content on the platform and for promotional purposes. You retain ownership of your content.",
+    },
+    {
+      id: "subscriptions",
+      title: "9. Subscriptions and Payments",
+      content:
+        "Premium features are offered through optional subscriptions. All payments are processed via the respective app stores. Subscriptions renew automatically unless canceled. Subscription prices and available features may change from time to time. Payments of tattoos are not processed via the Tattoo Masters platform nor does Tattoo Masters receive commissions. Tattoo Masters is not liable for any transactions between users and artists.",
+    },
+    {
+      id: "intellectual_property",
+      title: "10. Intellectual Property",
+      content:
+        "All branding, names, logos, interface designs, texts and proprietary content created by Purple Moon Productions are the property of the Company. Users may not copy, reuse or distribute platform content without permission. The functions and general idea of the platform is considered property of the Company and may not be copied or applied without permission.",
+    },
+    {
+      id: "third_party",
+      title: "11. Third-Party Integrations",
+      content:
+        "Tattoo Masters may include third-party links or integrate services such as maps, analytics or advertising. We are not responsible for third-party content or privacy practices.",
+    },
+    {
+      id: "termination",
+      title: "12. Termination",
+      content:
+        "We reserve the right to terminate or suspend any account at our discretion, especially in cases of content abuse or legal violations, without advance notice. In the case of termination, subscriptions and other payments will not be refunded.",
+    },
+    {
+      id: "liability",
+      title: "13. Limitation of Liability",
+      content:
+        'Tattoo Masters is provided "as is" and "as available." We do not guarantee uninterrupted access or error-free operation. Our liability is limited to the fullest extent permitted by law.',
+    },
+    {
+      id: "governing_law",
+      title: "14. Governing Law",
+      content:
+        "These Terms shall be governed by and construed in accordance with the laws of Finland when international law is not applicable.",
+    },
+    {
+      id: "updates",
+      title: "15. Updates to Terms",
+      content:
+        "We may update the Terms periodically. We will notify users of significant changes within the app.",
+    },
+  ],
+  thankyouNote:
+    "We hope you enjoy the Tattoo Masters application and use it in a friendly and respectful manner!",
 };
 
 const TermsOfService = () => {
-  const [terms, setTerms] = useState<TermsData>(termsData);
-
-  // const uploadTermsToFirebase = async () => {
-  //   try {
-  //     await firestore()
-  //       .collection("app_content")
-  //       .doc("terms_of_service")
-  //       .set(termsData);
-
-  //     console.log("Terms uploaded successfully!");
-  //     return { success: true };
-  //   } catch (error: any) {
-  //     console.error("Error uploading terms:", error);
-  //     return { success: false, error: error.message };
-  //   }
-  // };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchTerms = async () => {
-      try {
-        const doc = await firestore()
-          .collection("app_content")
-          .doc("terms_of_service")
-          .get();
-
-        const remoteTerms = doc.data();
-        if (isMounted && doc.exists && isValidTermsData(remoteTerms)) {
-          setTerms(remoteTerms);
-        }
-      } catch (error) {
-        console.error("Using bundled terms after fetch failed:", error);
-      }
-    };
-
-    void fetchTerms();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   return (
     <ScrollView style={styles.container}>
-      <Text size="h1" weight="medium" color="#FBF6FA" style={styles.title}>
-        {terms.content.title}
-      </Text>
-      <Text
-        size="small"
-        weight="normal"
-        color="#A7A7A7"
-        style={styles.metadata}
-      >
-        Version {terms.version} · Last updated {LEGAL_LAST_UPDATED_LABEL}
+      <Text size="h1" weight="medium" color="#FBF6FA" style={styles.heading}>
+        {termsData.title}
       </Text>
 
-      {terms.content.sections.map((section) => (
+      {termsData.sections.map((section) => (
         <View key={section.id} style={styles.section}>
-          <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-            {section.title}
-          </Text>
+          {section.title ? (
+            <Text
+              size="h3"
+              weight="medium"
+              color="#FBF6FA"
+              style={styles.title}
+            >
+              {section.title}
+            </Text>
+          ) : null}
 
           {section.content && (
             <Text size="p" weight="normal" color="#FBF6FA">
@@ -295,14 +189,14 @@ const TermsOfService = () => {
         </View>
       ))}
 
-      {terms.thankyouNote && (
+      {termsData.thankyouNote && (
         <Text
           size="p"
           weight="normal"
           color="#DAB769"
           style={{ marginBottom: 60 }}
         >
-          {terms.thankyouNote}
+          {termsData.thankyouNote}
         </Text>
       )}
     </ScrollView>
@@ -319,11 +213,11 @@ const styles = StyleSheet.create({
     borderTopColor: "#282828",
     borderTopWidth: 0.5,
   },
+  heading: {
+    marginBottom: 24,
+  },
   title: {
     marginBottom: 10,
-  },
-  metadata: {
-    marginBottom: 24,
   },
   section: {
     marginBottom: 24,
