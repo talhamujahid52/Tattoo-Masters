@@ -30,6 +30,7 @@ import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
 import { isUnsetLocation } from "@/utils/locationHelpers";
 
@@ -191,7 +192,7 @@ const MyProfile = () => {
 
   const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await requestForegroundLocationPermission();
       if (status !== "granted") {
         console.warn("Location permission denied");
         return null;

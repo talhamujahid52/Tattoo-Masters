@@ -10,6 +10,8 @@ import {
   Keyboard,
 } from "react-native";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
+import { MaterialIcons } from "@expo/vector-icons";
 import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
 import {
@@ -98,6 +100,11 @@ const FullScreenMapWithSearch: React.FC = () => {
     placesRef.current?.blur();
     Keyboard.dismiss();
   };
+  const openFilters = () => {
+    // The filter sheet has no text input, so drop the search keyboard first.
+    dismissSearch();
+    show();
+  };
   const zoomIn = () => {
     mapRef.current?.animateToRegion({
       ...region,
@@ -133,6 +140,57 @@ const FullScreenMapWithSearch: React.FC = () => {
     currentLocation,
   } = useSelector(selectFilter);
 
+  // The native "my location" button cannot be repositioned (Android pins it to
+  // the top-right), so we hide it on both platforms and render our own below
+  // the zoom controls for a consistent look.
+  const animateToCoords = (latitude: number, longitude: number) => {
+    const newRegion = {
+      latitude,
+      longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    };
+    setRegion(newRegion);
+    mapRef.current?.animateToRegion(newRegion, 800);
+  };
+
+  const goToMyLocation = async () => {
+    // Recenter right away on whatever we already know, then refine.
+    // getCurrentPositionAsync can take a long time (or never resolve) on
+    // Android, so never make the UI wait on it.
+    let centered = false;
+    if (currentLocation) {
+      animateToCoords(currentLocation.latitude, currentLocation.longitude);
+      centered = true;
+    }
+    try {
+      const { status } = await requestForegroundLocationPermission();
+      if (status !== "granted") return;
+
+      if (!centered) {
+        const last = await Location.getLastKnownPositionAsync();
+        if (last) {
+          animateToCoords(last.coords.latitude, last.coords.longitude);
+          centered = true;
+        }
+      }
+
+      const fresh = await Promise.race([
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+      ]);
+      if (fresh) {
+        const { latitude, longitude } = fresh.coords;
+        dispatch(setCurrentLocation({ latitude, longitude }));
+        animateToCoords(latitude, longitude);
+      }
+    } catch (err) {
+      console.warn("Location error:", err);
+    }
+  };
+
   const activeFiltersCount = useMemo(() => {
     let count = 0;
 
@@ -158,7 +216,7 @@ const FullScreenMapWithSearch: React.FC = () => {
 
     (async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status } = await requestForegroundLocationPermission();
 
         if (cancelled) return;
 
@@ -200,7 +258,7 @@ const FullScreenMapWithSearch: React.FC = () => {
       let cancelled = false;
       (async () => {
         try {
-          const { status } = await Location.requestForegroundPermissionsAsync();
+          const { status } = await requestForegroundLocationPermission();
           if (cancelled) return;
           if (status !== "granted") return;
           const {
@@ -301,12 +359,21 @@ const FullScreenMapWithSearch: React.FC = () => {
     }
   };
 
+  // The location often arrives after the radius filter is switched on, so the
+  // search has to re-run with it. Rounded (~100m) so GPS jitter doesn't
+  // trigger new searches.
+  const geoKey =
+    persistedRadiusEnabled && currentLocation
+      ? `${currentLocation.latitude.toFixed(3)},${currentLocation.longitude.toFixed(3)}`
+      : "";
+
   useEffect(() => {
     doSearch(searchedText);
   }, [
     searchedText,
     persistedRadiusEnabled,
     persistedRadiusValue,
+    geoKey,
     persistedRatings,
     persistedStudio,
   ]);
@@ -424,7 +491,7 @@ const FullScreenMapWithSearch: React.FC = () => {
         </View>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={show}
+          onPress={openFilters}
           style={styles.filterButton}
         >
           {activeFiltersCount > 0 && (
@@ -465,7 +532,7 @@ const FullScreenMapWithSearch: React.FC = () => {
         customMapStyle={googleDarkModeStyle}
         // initialRegion={region}
         mapType={mapTypeState}
-        showsMyLocationButton
+        showsMyLocationButton={false}
         mapPadding={{ top: insets.top + 60, right: 10, bottom: 0, left: 0 }}
         showsUserLocation
         zoomEnabled
@@ -530,6 +597,9 @@ const FullScreenMapWithSearch: React.FC = () => {
         <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
           <Text style={styles.zoomText}>−</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.zoomButton} onPress={goToMyLocation}>
+          <MaterialIcons name="my-location" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -582,16 +652,16 @@ const styles = StyleSheet.create({
   },
   zoomButton: {
     backgroundColor: "#242424",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
   },
   zoomText: {
     color: "#fff",
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: "bold",
   },
 });

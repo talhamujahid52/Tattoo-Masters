@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
-  SafeAreaView,
   View,
   Image,
   StyleSheet,
@@ -9,7 +8,6 @@ import {
   Linking,
   Alert,
   useWindowDimensions,
-  Keyboard,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -25,11 +23,13 @@ import {
   Composer,
   Send,
 } from "react-native-gifted-chat";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import uuid from "react-native-uuid";
 import firestore from "@react-native-firebase/firestore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { setCurrentChatId } from "@/utils/NavState";
 import { launchImageLibrary, launchCamera } from "react-native-image-picker";
 import type { Asset, ImagePickerResponse } from "react-native-image-picker";
@@ -47,6 +47,26 @@ const IMAGE_PICKER_OPTIONS = {
   quality: 0.8,
   assetRepresentationMode: "compatible",
 } as const;
+
+/**
+ * GiftedChat avoids the keyboard by translating the whole list + toolbar up
+ * by the keyboard height. The list keeps its full height, so its top
+ * `keyboardHeight - bottomOffset` points slide out of view under the header
+ * and the oldest messages become unreachable. This spacer is rendered as the
+ * list's footer (the visual top of an inverted list) and grows with the
+ * keyboard, so scrolling to the end brings the oldest message back into view.
+ * It must render inside GiftedChat so it reads GiftedChat's own KeyboardProvider.
+ */
+const KeyboardListSpacer: React.FC<{ bottomOffset: number }> = ({
+  bottomOffset,
+}) => {
+  const { height } = useReanimatedKeyboardAnimation();
+  const style = useAnimatedStyle(() => ({
+    // `height` is negative while the keyboard is open.
+    height: Math.max(-height.value - bottomOffset, 0),
+  }));
+  return <Animated.View style={style} />;
+};
 
 const getImageFileName = (asset: Asset) => {
   const fallbackName = `chat-image-${Date.now()}.jpg`;
@@ -67,23 +87,6 @@ const IndividualChat: React.FC = () => {
   } = useLocalSearchParams<any>();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
-  // Only need the bottom safe-area gap (home indicator) when the keyboard is
-  // closed; GiftedChat's own keyboard-avoidance already lifts the toolbar
-  // above the keyboard, so keeping this margin while it's open just pushes
-  // the toolbar back down under the keyboard.
-  // const [keyboardVisible, setKeyboardVisible] = useState(false);
-  // useEffect(() => {
-  //   const show = Keyboard.addListener("keyboardDidShow", () =>
-  //     setKeyboardVisible(true)
-  //   );
-  //   const hide = Keyboard.addListener("keyboardDidHide", () =>
-  //     setKeyboardVisible(false)
-  //   );
-  //   return () => {
-  //     show.remove();
-  //     hide.remove();
-  //   };
-  // }, []);
   const [chatID, setChatID] = useState<any>(existingChatId || undefined);
   const didLeaveForBlockRef = useRef(false);
   const [messageRecieverName, setMessageRecieverName] = useState(
@@ -144,6 +147,30 @@ const IndividualChat: React.FC = () => {
     chatRelationship.loading || chatMetadataLoading || chatLookupLoading;
   const isConversationUnavailable =
     !isConversationLoading && (!chatRelationship.canSend || chatDisabled);
+
+  const navigation = useNavigation();
+  // Only artists have a public profile screen.
+  const canOpenProfile = Boolean(
+    relationshipUserId && (selectedArtistId || otherUserDetails?.isArtist),
+  );
+
+  const openOtherUserProfile = () => {
+    if (!canOpenProfile) return;
+    // Opened from this artist's profile: go back instead of stacking a copy.
+    const routes: any[] = navigation.getState()?.routes ?? [];
+    const previousRoute = routes[routes.length - 2];
+    if (
+      previousRoute?.name === "artist/ArtistProfile" &&
+      String(previousRoute?.params?.artistId ?? "") === relationshipUserId
+    ) {
+      router.back();
+      return;
+    }
+    router.push({
+      pathname: "/artist/ArtistProfile",
+      params: { artistId: relationshipUserId },
+    });
+  };
 
   const leaveBlockedConversation = useCallback(() => {
     if (didLeaveForBlockRef.current) return;
@@ -705,7 +732,11 @@ const IndividualChat: React.FC = () => {
       );
     }
 
-    const height = Math.min(Math.max(composerHeight + 8, 44), 100);
+    // Android reports the input's frame height instead of its content height
+    // when the text is cleared from JS (i.e. on send), and then stays silent
+    // until the next keystroke. An empty composer is always a single line.
+    const contentHeight = props.text ? composerHeight : 0;
+    const height = Math.min(Math.max(contentHeight + 8, 44), 100);
     const isMultiline = height >= 52;
 
     return (
@@ -714,8 +745,7 @@ const IndividualChat: React.FC = () => {
           flexDirection: "row",
           alignItems: "flex-end",
           marginHorizontal: 8,
-          // marginBottom: keyboardVisible ? 10 : insets.bottom + 10,
-          marginBottom: insets.bottom + 10
+          marginBottom: insets.bottom + 10,
         }}
       >
         {/* + (Add Image) Button - separate from input box */}
@@ -865,8 +895,15 @@ const IndividualChat: React.FC = () => {
       } ago`;
   };
 
+  // Spread onto GiftedChat's FlashList. In an inverted list the footer sits
+  // at the visual top. Declared as a variable because GiftedChat types this
+  // prop loosely and rejects extra keys on an inline literal.
+  const listViewProps = {
+    ListFooterComponent: <KeyboardListSpacer bottomOffset={insets.bottom} />,
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ImagePickerSheet
         InsideComponent={
           <ChatImagePickerBottomSheet
@@ -925,7 +962,11 @@ const IndividualChat: React.FC = () => {
             />
           )}
         </TouchableOpacity>
-        <View
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="View profile"
+          onPress={openOtherUserProfile}
+          disabled={!canOpenProfile}
           style={{
             flex: 1,
             flexDirection: "row",
@@ -966,7 +1007,7 @@ const IndividualChat: React.FC = () => {
               {localTime ? `  •  Local time ${localTime}` : ""}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={openDialer}
           disabled={isConversationUnavailable || isConversationLoading}
@@ -1007,35 +1048,50 @@ const IndividualChat: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <GiftedChat
-        messageIdGenerator={() => uuid.v4() as string}
-        messages={
-          chatRelationship.blockedByCurrentUser
-            ? []
-            : messages
-        }
-        onSend={(newMessages) => onSend(newMessages)}
-        user={{
-          _id: loggedInUser?.uid,
-          name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
-        }}
-        renderBubble={renderBubble}
-        renderInputToolbar={renderInputToolbar}
-        dateFormat="MMM DD, YYYY"
-        renderAvatar={null}
-        alwaysShowSend={true}
-        inverted={true}
-        lightboxProps={{
-          activeProps: {
-            style: {
-              flex: 1,
-              resizeMode: 'contain',
-              width
+      {/*
+        overflow hidden clips the part of the list GiftedChat translates up
+        past this container's top while the keyboard is open, so messages do
+        not paint over the header. See KeyboardListSpacer for how the hidden
+        band is kept reachable.
+      */}
+      <View style={styles.chatContainer}>
+        <GiftedChat
+          messageIdGenerator={() => uuid.v4() as string}
+          messages={
+            chatRelationship.blockedByCurrentUser
+              ? []
+              : messages
+          }
+          onSend={(newMessages) => onSend(newMessages)}
+          user={{
+            _id: loggedInUser?.uid,
+            name: loggedInUserFirestore?.name || loggedInUser?.displayName || "",
+          }}
+          renderBubble={renderBubble}
+          renderInputToolbar={renderInputToolbar}
+          dateFormat="MMM DD, YYYY"
+          renderAvatar={null}
+          alwaysShowSend={true}
+          inverted={true}
+          // Cancels the toolbar's own safe-area bottom margin while the
+          // keyboard is open so the composer sits flush above the keyboard.
+          // Negative because GiftedChat adds bottomOffset to the keyboard
+          // height it translates by.
+          bottomOffset={-insets.bottom}
+          keyboardShouldPersistTaps="handled"
+          listViewProps={listViewProps}
+          lightboxProps={{
+            activeProps: {
+              style: {
+                flex: 1,
+                resizeMode: 'contain',
+                width
+              },
             },
-          },
-        }}
-      />
-    </SafeAreaView>
+          }}
+        />
+      </View>
+    </View>
   );
 };
 
@@ -1043,6 +1099,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+  },
+  chatContainer: {
+    flex: 1,
+    overflow: "hidden",
   },
   header: {
     flexDirection: "row",

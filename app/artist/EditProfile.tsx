@@ -15,14 +15,15 @@ import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import Button from "@/components/Button";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
-import { isUnsetLocation } from "@/utils/locationHelpers";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
+import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
 import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { UserFirestore } from "@/types/user";
+import { LocationData, UserFirestore } from "@/types/user";
 import { useDispatch } from "react-redux";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
@@ -35,6 +36,15 @@ type TattooStyle = {
   title: string;
   selected: boolean;
 };
+
+const PIN_DELTA = 0.02;
+
+const toRegion = ({ latitude, longitude }: LocationData): Region => ({
+  latitude,
+  longitude,
+  latitudeDelta: PIN_DELTA,
+  longitudeDelta: PIN_DELTA,
+});
 
 const EditProfile = () => {
   const {
@@ -142,19 +152,12 @@ const EditProfile = () => {
   };
 
   const [newImage, setNewImage] = useState<Asset>();
-  const defaultLocation = {
-    latitude: 33.664286,
-    longitude: 73.004291,
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
-  };
   const [loading, setLoading] = useState(false);
-  const [region, setRegion] = useState<Region>({
-    latitude: formData.location.latitude || defaultLocation.latitude,
-    longitude: formData.location.longitude || defaultLocation.longitude,
-    latitudeDelta: defaultLocation.latitudeDelta,
-    longitudeDelta: defaultLocation.longitudeDelta,
-  });
+  const [region, setRegion] = useState<Region>(
+    isUnsetLocation(formData.location)
+      ? FINLAND_REGION
+      : toRegion(formData.location)
+  );
   // Location chosen on the SearchLocation screen comes back as params
   const picked = useLocalSearchParams<{
     latitude?: string;
@@ -171,24 +174,31 @@ const EditProfile = () => {
       location: { latitude, longitude },
       city: picked.city ?? prev.city,
     }));
-    setRegion((prev) => ({ ...prev, latitude, longitude }));
+    setRegion(toRegion({ latitude, longitude }));
   }, [picked.latitude, picked.longitude, picked.city]);
 
-  // No saved location: centre the map on the user's current position
+  // No saved location: ask for the user's current position and centre the map
+  // on it. Without permission the map stays on Finland.
   useEffect(() => {
     if (!isUnsetLocation(formData.location)) return;
 
+    // Set once a location is picked, so a late fix does not move the map back
+    let cancelled = false;
+
     const showCurrentLocation = async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status } = await requestForegroundLocationPermission();
         if (status !== "granted") return;
 
-        const { coords } = await Location.getCurrentPositionAsync({});
-        setRegion((prev) => ({
-          ...prev,
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-        }));
+        // getCurrentPositionAsync can take a long time on Android, so show
+        // the last known position while waiting for it
+        const last = await Location.getLastKnownPositionAsync();
+        if (last && !cancelled) setRegion(toRegion(last.coords));
+
+        const { coords } = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        if (!cancelled) setRegion(toRegion(coords));
       } catch (error) {
         if (__DEV__) {
           console.error("Error getting location:", error);
@@ -197,6 +207,9 @@ const EditProfile = () => {
     };
 
     showCurrentLocation();
+    return () => {
+      cancelled = true;
+    };
   }, [formData.location]);
   const localImage = useMemo(() => {
     if (!newImage) {

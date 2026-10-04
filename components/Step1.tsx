@@ -20,10 +20,11 @@ import { useSelector } from "react-redux";
 import StylesBottomSheet from "./BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import useTattooStyles from "@/hooks/useTattooStyles";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
 import { STUDIO_TYPE_OPTIONS } from "@/constants/studioOptions";
-import { isUnsetLocation } from "@/utils/locationHelpers";
+import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
 
 const DEFAULT_LOCATION = {
   latitude: 0,
@@ -108,19 +109,24 @@ const Step1: React.FC = () => {
     return require("../assets/images/placeholder.png");
   }, [formData.profilePicture, loggedInUser, loggedInUserFirestore]);
 
-  const [region, setRegion] = useState<Region>({
-    latitude: formData.location?.latitude || DEFAULT_LOCATION.latitude,
-    longitude: formData.location?.longitude || DEFAULT_LOCATION.longitude,
-    latitudeDelta: DEFAULT_LOCATION.latitudeDelta,
-    longitudeDelta: DEFAULT_LOCATION.longitudeDelta,
-  });
+  // Finland until the user shares their position or pins a place
+  const [region, setRegion] = useState<Region>(
+    isUnsetLocation(formData.location)
+      ? FINLAND_REGION
+      : {
+          latitude: formData.location.latitude,
+          longitude: formData.location.longitude,
+          latitudeDelta: DEFAULT_LOCATION.latitudeDelta,
+          longitudeDelta: DEFAULT_LOCATION.longitudeDelta,
+        }
+  );
 
   useEffect(() => {
     if (!isUnsetLocation(formData.location)) return;
 
     const getCurrentLocation = async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status } = await requestForegroundLocationPermission();
         if (status !== "granted") return;
 
         const location = await Location.getCurrentPositionAsync({});

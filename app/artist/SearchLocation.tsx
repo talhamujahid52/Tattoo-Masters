@@ -12,8 +12,14 @@ import {
   Image,
   Pressable,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
-import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, {
+  Marker,
+  Region,
+  Details,
+  PROVIDER_GOOGLE,
+} from "react-native-maps";
 import {
   GooglePlaceData,
   GooglePlaceDetail,
@@ -22,12 +28,13 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
 import { FormContext } from "@/context/FormContext";
 import { GOOGLE_MAPS_API_KEY } from "@/constants/Config";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
-import { isUnsetLocation } from "@/utils/locationHelpers";
+import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
 import { LocationData } from "@/types/user";
 import type { RootState } from "@/redux/store";
 import {
@@ -37,6 +44,7 @@ import {
 import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const DELTA = 0.02;
+const FRESH_FIX_TIMEOUT_MS = 6000;
 const PLACES_QUERY = { key: GOOGLE_MAPS_API_KEY, language: "en" };
 
 const toRegion = ({ latitude, longitude }: LocationData): Region => ({
@@ -51,8 +59,8 @@ const toRegion = ({ latitude, longitude }: LocationData): Region => ({
  *  - registration (Step1): reads/writes the shared FormContext
  *  - EditProfile: receives `latitude`, `longitude`, `city` as params and
  *    returns the chosen values as params (EditProfile keeps its own state)
- * In both cases the saved location is shown if present, otherwise the
- * user's current location.
+ * In both cases the saved location is shown if present and valid, otherwise
+ * the user's current location, or Finland if they do not share it.
  */
 const SearchLocation: React.FC = () => {
   const router = useRouter();
@@ -69,6 +77,10 @@ const SearchLocation: React.FC = () => {
   );
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
+  // Last position found by the Maps tab, if any
+  const knownLocation = useSelector(
+    (state: RootState) => state.filter.currentLocation,
+  );
   const visibleArtists = useMemo(
     () =>
       currentUserId && !safetyHydrated
@@ -89,10 +101,25 @@ const SearchLocation: React.FC = () => {
       }
     : formData.location;
 
-  const [region, setRegion] = useState<Region>(toRegion(savedLocation));
+  const hasSavedLocation = !isUnsetLocation(savedLocation);
+
+  // Stays null until we know where to open the map, which is not rendered
+  // before that. Otherwise it would open in the middle of the ocean (0,0).
+  const [initialRegion, setInitialRegion] = useState<Region | null>(
+    hasSavedLocation ? toRegion(savedLocation) : null
+  );
+  const [region, setRegion] = useState<Region>(initialRegion ?? FINLAND_REGION);
   const [address, setAddress] = useState<string>(
     (isEdit ? params.city : formData.address) || ""
   );
+  const userMovedMap = useRef(false);
+
+  const moveTo = (location: LocationData) => {
+    const newRegion = toRegion(location);
+    setRegion(newRegion);
+    setInitialRegion((prev) => prev ?? newRegion);
+    mapRef.current?.animateToRegion(newRegion, 800);
+  };
 
   // The fixed pin shifts when the keyboard resizes the screen, so hide it then
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -109,27 +136,52 @@ const SearchLocation: React.FC = () => {
     };
   }, []);
 
-  // No saved location: fall back to the user's current position
-  useEffect(() => {
-    if (!isUnsetLocation(savedLocation)) return;
+  // Centres on the best position we already know, then refines it.
+  // getCurrentPositionAsync can take a long time (or never resolve) on
+  // Android, so the map never waits on it.
+  const goToMyLocation = async (isInitial = false) => {
+    let centered = false;
+    if (!isUnsetLocation(knownLocation)) {
+      moveTo(knownLocation!);
+      centered = true;
+    }
+    try {
+      const { status } = await requestForegroundLocationPermission();
+      if (status !== "granted") return;
 
-    const showCurrentLocation = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") return;
-
-        const { coords } = await Location.getCurrentPositionAsync({});
-        const currentRegion = toRegion(coords);
-        setRegion(currentRegion);
-        mapRef.current?.animateToRegion(currentRegion, 1000);
-      } catch (error) {
-        if (__DEV__) {
-          console.error("Error getting current location:", error);
+      if (!centered) {
+        const last = await Location.getLastKnownPositionAsync();
+        if (last) {
+          moveTo(last.coords);
+          centered = true;
         }
       }
-    };
 
-    showCurrentLocation();
+      const fresh = await Promise.race([
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }),
+        new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), FRESH_FIX_TIMEOUT_MS)
+        ),
+      ]);
+      // Don't pull the map away once the user has started picking a place
+      if (fresh && !(isInitial && userMovedMap.current)) {
+        moveTo(fresh.coords);
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.error("Error getting current location:", error);
+      }
+    } finally {
+      // Permission denied or no position found: open on Finland
+      setInitialRegion((prev) => prev ?? FINLAND_REGION);
+    }
+  };
+
+  // No (valid) saved location: fall back to the user's current position
+  useEffect(() => {
+    if (!hasSavedLocation) goToMyLocation(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,18 +206,18 @@ const SearchLocation: React.FC = () => {
       getComponent("administrative_area_level_1");
     const country = getComponent("country");
 
+    userMovedMap.current = true;
     setAddress([city, country].filter(Boolean).join(", "));
     setRegion(newRegion);
+    setInitialRegion((prev) => prev ?? newRegion);
     mapRef.current?.animateToRegion(newRegion, 1000);
   };
 
-  const handleRegionChangeComplete = async (newRegion: Region) => {
-    setRegion(newRegion);
-
+  const updateAddress = async ({ latitude, longitude }: LocationData) => {
     try {
       const [place] = await Location.reverseGeocodeAsync({
-        latitude: newRegion.latitude,
-        longitude: newRegion.longitude,
+        latitude,
+        longitude,
       });
 
       if (place) {
@@ -177,6 +229,12 @@ const SearchLocation: React.FC = () => {
         console.error("Error during reverse geocoding:", error);
       }
     }
+  };
+
+  const handleRegionChangeComplete = (newRegion: Region, details: Details) => {
+    if (details?.isGesture) userMovedMap.current = true;
+    setRegion(newRegion);
+    updateAddress(newRegion);
   };
 
   const handleConfirm = () => {
@@ -250,50 +308,68 @@ const SearchLocation: React.FC = () => {
         />
       </View>
 
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        customMapStyle={GOOGLE_DARK_MAP_STYLE}
-        onPress={dismissSearch}
-        onPanDrag={dismissSearch}
-        initialRegion={region}
-        onRegionChangeComplete={handleRegionChangeComplete}
-        mapType="standard"
-        zoomEnabled
-      >
-        {visibleArtists.map((artist: any, index: number) => {
-          const location = artist?.data?.location;
-          const profilePic =
-            artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
+      {initialRegion ? (
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          customMapStyle={GOOGLE_DARK_MAP_STYLE}
+          onPress={dismissSearch}
+          onPanDrag={dismissSearch}
+          initialRegion={initialRegion}
+          // The map does not always report its first region, so make sure the
+          // opening position gets an address too
+          onMapReady={() => {
+            if (!address && !isUnsetLocation(region)) updateAddress(region);
+          }}
+          onRegionChangeComplete={handleRegionChangeComplete}
+          mapType="standard"
+          zoomEnabled
+        >
+          {visibleArtists.map((artist: any, index: number) => {
+            const location = artist?.data?.location;
+            const profilePic =
+              artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
 
-          if (!location?.[0] || !location?.[1]) return null;
+            if (!location?.[0] || !location?.[1]) return null;
 
-          return (
-            <Marker
-              key={artist?.id ?? index}
-              coordinate={{ latitude: location[0], longitude: location[1] }}
-            >
-              <Pressable style={{ alignItems: "center" }}>
-                <Image
-                  source={
-                    profilePic
-                      ? { uri: profilePic }
-                      : require("../../assets/images/placeholder.png")
-                  }
-                  style={styles.artistMarker}
-                />
-              </Pressable>
-            </Marker>
-          );
-        })}
-      </MapView>
+            return (
+              <Marker
+                key={artist?.id ?? index}
+                coordinate={{ latitude: location[0], longitude: location[1] }}
+              >
+                <Pressable style={{ alignItems: "center" }}>
+                  <Image
+                    source={
+                      profilePic
+                        ? { uri: profilePic }
+                        : require("../../assets/images/placeholder.png")
+                    }
+                    style={styles.artistMarker}
+                  />
+                </Pressable>
+              </Marker>
+            );
+          })}
+        </MapView>
+      ) : (
+        <View style={styles.locating}>
+          <ActivityIndicator color="#fff" />
+        </View>
+      )}
 
-      {!keyboardVisible && (
+      {initialRegion && !keyboardVisible && (
         <View style={styles.markerFixed} pointerEvents="none">
           <MaterialIcons name="location-pin" size={42} color="red" />
         </View>
       )}
+
+      <TouchableOpacity
+        style={styles.myLocationButton}
+        onPress={() => goToMyLocation()}
+      >
+        <MaterialIcons name="my-location" size={24} color="#fff" />
+      </TouchableOpacity>
 
       <View style={styles.confirmContainer}>
         <TouchableOpacity style={styles.button} onPress={handleConfirm}>
@@ -328,6 +404,12 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
+  locating: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   artistMarker: {
     width: 48,
     height: 48,
@@ -343,6 +425,19 @@ const styles = StyleSheet.create({
     marginLeft: -15,
     marginTop: -30,
     zIndex: 1,
+  },
+  // Same look as the button on the Maps tab, sitting above "Confirm location"
+  myLocationButton: {
+    position: "absolute",
+    right: 18,
+    bottom: 104,
+    backgroundColor: "#242424",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
   },
   confirmContainer: {
     position: "absolute",

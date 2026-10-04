@@ -33,7 +33,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#000000"
       },
       "package": "com.ddjn.tattoomasters",
       "permissions": [
@@ -87,6 +87,20 @@
       "./plugin/with-facebook-fbsdk-next.js",
       "./plugin/with-facebook-fbsdk-next-ios.js",
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#000000",
+          "android": {
+            "imageWidth": 192
+          },
+          "ios": {
+            "enableFullScreenImage_legacy": true
+          }
+        }
+      ],
       [
         "react-native-maps-expo-plugin",
         {

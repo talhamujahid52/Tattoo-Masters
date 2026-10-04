@@ -23,7 +23,7 @@ import Input from "@/components/Input";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 import { useDispatch, useSelector } from "react-redux";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
 import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
 import { addSearch, clearSearches } from "@/redux/slices/recentSearchesSlice";
@@ -42,6 +42,21 @@ const Search: React.FC = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
+  const { focusSearch } = useLocalSearchParams<{ focusSearch?: string }>();
+  const handledFocusSearchRef = useRef<string | undefined>(undefined);
+
+  // focus the field when arriving from the Home search bar; the param is a
+  // fresh timestamp per tap, so plain tab switches don't reopen the keyboard
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusSearch || handledFocusSearchRef.current === focusSearch) return;
+      const timeout = setTimeout(() => {
+        handledFocusSearchRef.current = focusSearch;
+        searchInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timeout);
+    }, [focusSearch]),
+  );
 
   const dispatch = useDispatch();
   const artistsTs = useTypesense();

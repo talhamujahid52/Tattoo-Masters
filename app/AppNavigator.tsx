@@ -7,11 +7,12 @@ import { clearLocalSession } from "@/utils/authSession";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import messaging from "@react-native-firebase/messaging";
-import { SplashScreen, Stack, useRouter, usePathname } from "expo-router";
+import { Stack, useRouter, usePathname } from "expo-router";
+import { hideSplash } from "@/utils/splash";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
-import { TouchableOpacity, Image } from "react-native";
+import { TouchableOpacity, Image, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -24,6 +25,38 @@ import { getCurrentChatId } from "@/utils/NavState";
 import { getChatAccess, getChatRelationship } from "@/hooks/useChat";
 import { useSafetyHydration } from "@/hooks/useSafety";
 import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
+
+// iOS 26+ wraps native header items in a glass button that is at least 44pt
+// and pads the item by 4pt on each side, anchoring it to the top-left. A 36pt
+// item therefore fills a round 44pt button exactly, with its icon centered.
+const usesGlassHeaderItems =
+  Platform.OS === "ios" && parseInt(String(Platform.Version), 10) >= 26;
+
+const HeaderCloseButton = () => {
+  const router = useRouter();
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        router.back();
+      }}
+      hitSlop={20}
+      style={
+        usesGlassHeaderItems && {
+          width: 36,
+          height: 36,
+          alignItems: "center",
+          justifyContent: "center",
+        }
+      }
+    >
+      <Image
+        source={require("../assets/images/close.png")}
+        resizeMode="cover"
+        style={{ height: 13, width: 13 }}
+      />
+    </TouchableOpacity>
+  );
+};
 
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -281,7 +314,7 @@ const AppNavigator = () => {
   useEffect(() => {
     if (!initializing) {
       setTimeout(async () => {
-        await SplashScreen.hideAsync();
+        await hideSplash();
       }, 1000);
     }
   }, [initializing]);
@@ -616,19 +649,7 @@ const AppNavigator = () => {
               headerStyle: { backgroundColor: "#000" },
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
-              headerLeft: () => (
-                <TouchableOpacity
-                  onPress={() => {
-                    router.back();
-                  }}
-                >
-                  <Image
-                    source={require("../assets/images/close.png")}
-                    resizeMode="cover"
-                    style={{ height: 13, width: 13 }}
-                  />
-                </TouchableOpacity>
-              ),
+              headerLeft: () => <HeaderCloseButton />,
             }}
           />
           <Stack.Screen
@@ -696,20 +717,7 @@ const AppNavigator = () => {
               headerBackButtonMenuEnabled: false,
               headerTintColor: "#fff",
               headerTitleAlign: "center",
-              headerLeft: () => (
-                <TouchableOpacity
-                  onPress={() => {
-                    router.back();
-                  }}
-                  hitSlop={20}
-                >
-                  <Image
-                    source={require("../assets/images/close.png")}
-                    resizeMode="cover"
-                    style={{ height: 13, width: 13 }}
-                  />
-                </TouchableOpacity>
-              ),
+              headerLeft: () => <HeaderCloseButton />,
             }}
           />
           <Stack.Screen

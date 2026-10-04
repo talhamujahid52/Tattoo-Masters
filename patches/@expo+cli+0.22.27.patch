@@ -1,3 +1,33 @@
+diff --git a/node_modules/@expo/cli/build/src/run/ios/appleDevice/ClientManager.js b/node_modules/@expo/cli/build/src/run/ios/appleDevice/ClientManager.js
+index 999df52..165d7ab 100644
+--- a/node_modules/@expo/cli/build/src/run/ios/appleDevice/ClientManager.js
++++ b/node_modules/@expo/cli/build/src/run/ios/appleDevice/ClientManager.js
+@@ -83,12 +83,19 @@ class ClientManager {
+     }
+     static async create(udid) {
+         const usbmuxClient = new _usbmuxdClient.UsbmuxdClient(_usbmuxdClient.UsbmuxdClient.connectUsbmuxdSocket());
+-        const device = await usbmuxClient.getDevice(udid);
+-        const pairRecord = await usbmuxClient.readPairRecord(device.Properties.SerialNumber);
+-        const lockdownSocket = await usbmuxClient.connect(device, 62078);
+-        const lockdownClient = new _lockdowndClient.LockdowndClient(lockdownSocket);
+-        await lockdownClient.doHandshake(pairRecord);
+-        return new ClientManager(pairRecord, device, lockdownClient);
++        try {
++            const device = await usbmuxClient.getDevice(udid);
++            const pairRecord = await usbmuxClient.readPairRecord(device.Properties.SerialNumber);
++            const lockdownSocket = await usbmuxClient.connect(device, 62078);
++            const lockdownClient = new _lockdowndClient.LockdowndClient(lockdownSocket);
++            await lockdownClient.doHandshake(pairRecord);
++            return new ClientManager(pairRecord, device, lockdownClient);
++        } catch (error) {
++            // Wi-Fi only devices are not listed by usbmuxd and fall back to devicectl.
++            // Close the socket, otherwise it keeps `expo run:ios --no-bundler` alive forever.
++            usbmuxClient.socket.destroy();
++            throw error;
++        }
+     }
+     async getUsbmuxdClient() {
+         const usbmuxClient = new _usbmuxdClient.UsbmuxdClient(_usbmuxdClient.UsbmuxdClient.connectUsbmuxdSocket());
 diff --git a/node_modules/@expo/cli/build/src/start/doctor/apple/SimulatorAppPrerequisite.js b/node_modules/@expo/cli/build/src/start/doctor/apple/SimulatorAppPrerequisite.js
 index 2ff180f..6e1d3d9 100644
 --- a/node_modules/@expo/cli/build/src/start/doctor/apple/SimulatorAppPrerequisite.js
@@ -57,6 +87,20 @@ index 2367d39..189d7c6 100644
      }
      getExpoGoAppId() {
          return EXPO_GO_BUNDLE_IDENTIFIER;
+diff --git a/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js b/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
+index 042adc9..fc7b2ef 100644
+--- a/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
++++ b/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
+@@ -251,6 +251,9 @@ async function installAppWithDeviceCtlAsync(uuid, bundleIdOrAppPath, onProgress)
+         childProcess.on("close", (code)=>{
+             debug("[close]: " + code);
+             if (code === 0) {
++                // devicectl in Xcode 27 no longer prints percentage progress when piped,
++                // so complete the progress here or the spinner never stops.
++                updateProgress(100);
+                 resolve();
+             } else {
+                 const stderr = childProcess.stderr.read();
 diff --git a/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js b/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js
 index 2e729f3..8bab7c0 100644
 --- a/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js

@@ -1,14 +1,12 @@
 import Button from "@/components/Button";
 import React from "react";
-import { Dimensions, StyleSheet, View, Image } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Text from "@/components/Text";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
-
-const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 const SubscriptionInfo = () => {
   const insets = useSafeAreaInsets();
@@ -31,8 +29,6 @@ const SubscriptionInfo = () => {
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
         backgroundColor: "#23221F",
       }}
     >
@@ -55,21 +51,21 @@ const SubscriptionInfo = () => {
         locations={[0, 0.17, 0.89]}
         colors={["rgba(25, 25, 23, 0.2)", "rgba(25, 25, 23, 0.3)", "#171715"]}
       />
-      <Image
-        source={require("../../assets/images/logo.png")}
-        style={styles.logo}
-        resizeMode="cover"
-      />
+      {/* Fills the space above the plan card so the logo can never sit behind it */}
+      <View style={[styles.logoContainer, { paddingTop: insets.top + 16 }]}>
+        <Image
+          source={require("../../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="cover"
+        />
+      </View>
 
       <LinearGradient
         colors={["#403622", "#080808", "#080808"]}
         locations={[0, 0.4423, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={[
-          styles.buttonContainer,
-          { bottom: 0, paddingBottom: insets.bottom },
-        ]}
+        style={[styles.buttonContainer, { paddingBottom: insets.bottom }]}
       >
         <Text
           size="h2"
@@ -162,23 +158,28 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   backgroundImage: {
+    position: "absolute",
     height: "100%",
     width: "100%",
     resizeMode: "contain",
   },
-  logo: {
-    position: "absolute",
-    width: 253,
-    height: 218,
-    top: SCREEN_HEIGHT * 0.2,
+  logoContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 16,
     zIndex: 1,
+  },
+  logo: {
+    height: 218,
+    aspectRatio: 253 / 218,
+    flexShrink: 1,
   },
   buttonContainer: {
     paddingTop: 32,
     paddingHorizontal: 24,
     zIndex: 1,
     width: "100%",
-    position: "absolute",
     borderRadius: 20,
   },
 });

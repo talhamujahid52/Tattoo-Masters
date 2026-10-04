@@ -5,6 +5,7 @@ import PhoneInput, {
   getAllCountries,
 } from "react-native-international-phone-number";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { UserFirestore } from "@/types/user";
 import { useSelector } from "react-redux";
 
@@ -35,7 +36,7 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
   // Step 1: Get current coordinates
   const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await requestForegroundLocationPermission();
       if (status !== "granted") {
         console.warn("Location permission denied");
         return null;

@@ -246,7 +246,12 @@ const Home = () => {
           backgroundColour="#151515"
         />
         <Pressable
-          onPress={() => router.push("/Search")}
+          onPress={() =>
+            router.push({
+              pathname: "/Search",
+              params: { focusSearch: String(Date.now()) },
+            })
+          }
           style={{
             position: "absolute",
             top: 0,

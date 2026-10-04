@@ -1,9 +1,4 @@
-import {
-  StyleSheet,
-  View,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, View, Alert, ActivityIndicator } from "react-native";
 import Text from "../Text";
 import React, { useState } from "react";
 import RadioButton from "@/components/RadioButton";
@@ -74,7 +69,7 @@ const ReportBottomSheet = ({
       onReported?.(reportType, targetId);
 
       Alert.alert(
-        "Report submitted",
+        "Report Submitted",
         reportType === "user"
           ? "Your report has been submitted successfully."
           : "Your report has been submitted and this content is now hidden.",

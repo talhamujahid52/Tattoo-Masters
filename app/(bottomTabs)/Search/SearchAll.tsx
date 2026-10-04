@@ -20,6 +20,7 @@ import {
 } from "react-native";
 
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -305,13 +306,22 @@ export default function SearchAll() {
     const q =
       (searchedText || "").trim() === "" ? "*" : (searchedText || "").trim();
     const radius = persistedRadiusEnabled ? `R${persistedRadiusValue}` : "R0";
+    // The location usually arrives after the radius filter is switched on, so
+    // it has to be part of the signature for the search to re-run with it.
+    // Rounded (~100m) so GPS jitter doesn't trigger new searches. Tattoo
+    // searches are not location based.
     const type = selectedFilter ?? "tattoos";
-    return [type, q, radius, ratingsSel, studioSel, stylesSel].join("|");
+    const geo =
+      persistedRadiusEnabled && currentLocation && type !== "tattoos"
+        ? `${currentLocation.latitude.toFixed(3)},${currentLocation.longitude.toFixed(3)}`
+        : "";
+    return [type, q, radius, geo, ratingsSel, studioSel, stylesSel].join("|");
   }, [
     selectedFilter,
     searchedText,
     persistedRadiusEnabled,
     persistedRadiusValue,
+    currentLocation,
     persistedRatings,
     persistedStudio,
     persistedStyles,
@@ -367,7 +377,7 @@ export default function SearchAll() {
 
     (async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status } = await requestForegroundLocationPermission();
         if (cancelled) return;
         if (status !== "granted") return;
 

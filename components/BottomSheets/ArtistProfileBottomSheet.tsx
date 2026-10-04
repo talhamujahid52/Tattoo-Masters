@@ -43,9 +43,7 @@ const ArtistProfileBottomSheet = ({
     currentArtistId && blockedUserIds.includes(currentArtistId),
   );
 
-  const content = currentArtist?.aboutYou
-    ? currentArtist.aboutYou
-    : "No description available.";
+  const content = currentArtist?.aboutYou ? currentArtist.aboutYou : "";
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);
@@ -85,8 +83,8 @@ const ArtistProfileBottomSheet = ({
     return profileSmall
       ? { uri: profileSmall }
       : profileDefault
-      ? { uri: profileDefault }
-      : require("../../assets/images/Artist.png");
+        ? { uri: profileDefault }
+        : require("../../assets/images/Artist.png");
   }, [currentArtist]);
 
   const handleOpenLink = async (url: string) => {
@@ -132,8 +130,8 @@ const ArtistProfileBottomSheet = ({
               {currentArtist?.studio === "studio"
                 ? currentArtist?.studioName
                 : currentArtist?.studio === "freelancer"
-                ? "Freelancer"
-                : "Home artist"}
+                  ? "Freelancer"
+                  : "Home artist"}
             </Text>
             <Text size="p" weight="normal" color="#A7A7A7">
               {currentArtist?.city ? currentArtist.city : ""}
@@ -166,10 +164,7 @@ const ArtistProfileBottomSheet = ({
           />
           <Text size="p" weight="normal" color="#DAB769">
             Original artist{" "}
-            {String(currentArtist?.originalArtistNumber).padStart(
-              3,
-              "0"
-            )}
+            {String(currentArtist?.originalArtistNumber).padStart(3, "0")}
             /250
           </Text>
         </View>
@@ -177,9 +172,7 @@ const ArtistProfileBottomSheet = ({
       <View style={styles.userSocialsRow}>
         {currentArtist?.facebookProfile && (
           <TouchableOpacity
-            onPress={() =>
-              handleOpenLink(currentArtist?.facebookProfile)
-            }
+            onPress={() => handleOpenLink(currentArtist?.facebookProfile)}
           >
             <Image
               style={styles.icon}
@@ -190,9 +183,7 @@ const ArtistProfileBottomSheet = ({
 
         {currentArtist?.instagramProfile && (
           <TouchableOpacity
-            onPress={() =>
-              handleOpenLink(currentArtist?.instagramProfile)
-            }
+            onPress={() => handleOpenLink(currentArtist?.instagramProfile)}
           >
             <Image
               style={styles.icon}
@@ -202,9 +193,7 @@ const ArtistProfileBottomSheet = ({
         )}
         {currentArtist?.twitterProfile && (
           <TouchableOpacity
-            onPress={() =>
-              handleOpenLink(currentArtist?.twitterProfile)
-            }
+            onPress={() => handleOpenLink(currentArtist?.twitterProfile)}
           >
             <Image
               style={styles.icon}

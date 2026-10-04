@@ -11,7 +11,10 @@ interface ChatListCellProps {
 const getLastMessagePreview = (message: unknown) => {
   if (typeof message !== "string") return "";
 
-  return /^[^a-zA-Z]*image$/i.test(message.trim()) ? "Image" : message;
+  if (/^[^a-zA-Z]*image$/i.test(message.trim())) return "Image";
+
+  // Line breaks would end the single-line preview at the first line.
+  return message.replace(/\s+/g, " ").trim();
 };
 
 const ChatListCell = ({ chat }: ChatListCellProps) => {
@@ -152,14 +155,20 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
       </View>
       <View style={styles.messageContainer}>
         <View style={styles.row1}>
-          <Text size="p" weight="semibold" color="#ffffff">
+          <Text
+            size="p"
+            weight="semibold"
+            color="#ffffff"
+            numberOfLines={1}
+            style={styles.name}
+          >
             {otherUserName ? otherUserName : ""}
           </Text>
           <Text size="p" weight="normal" color="#B2B2B2">
             {date ? formatMessageDate(date) : ""}
           </Text>
         </View>
-        <Text size="p" weight="normal" color="#B2B2B2">
+        <Text size="p" weight="normal" color="#B2B2B2" numberOfLines={1}>
           {lastMessagePreview}
         </Text>
       </View>
@@ -190,6 +199,10 @@ const styles = StyleSheet.create({
   row1: {
     justifyContent: "space-between",
     flexDirection: "row",
+    gap: 8,
+  },
+  name: {
+    flexShrink: 1,
   },
   divider: {
     backgroundColor: "rgba(255, 255, 255, 0.3)",

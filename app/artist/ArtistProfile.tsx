@@ -29,6 +29,7 @@ import useFollowArtist from "@/hooks/useFollowArtist";
 import { useSelector, useDispatch } from "react-redux";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { updateSingleArtist } from "@/redux/slices/artistSlice";
 import firestore from "@react-native-firebase/firestore";
@@ -356,7 +357,7 @@ const ArtistProfile = () => {
 
   const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await requestForegroundLocationPermission();
       if (status !== "granted") {
         console.warn("Location permission denied");
         return null;

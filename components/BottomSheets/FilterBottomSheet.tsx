@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import Slider from "@react-native-community/slider";
-import * as Location from "expo-location";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { useSelector, useDispatch } from "react-redux";
 import {
   selectFilter,
@@ -58,6 +58,10 @@ const FilterBottomSheet = ({
     persistedRadiusEnabled,
   );
   const [radiusValue, setRadiusValueLocal] = useState(persistedRadiusValue);
+  // Value handed to the native slider. Only changed on external resets
+  // (sync from redux, clear all, toggle) — never while dragging — so the
+  // slider stays uncontrolled and doesn't fight its own thumb position.
+  const [sliderInitial, setSliderInitial] = useState(persistedRadiusValue);
   const [ratings, setRatingsLocal] = useState(persistedRatings);
   const [studio, setStudioLocal] = useState(persistedStudio);
   const [tattooStyles, setStylesLocal] = useState(persistedStyles);
@@ -85,6 +89,7 @@ const FilterBottomSheet = ({
   useEffect(() => {
     setRadiusEnabledLocal(persistedRadiusEnabled);
     setRadiusValueLocal(persistedRadiusValue);
+    setSliderInitial(persistedRadiusValue);
     setRatingsLocal(persistedRatings);
     setStudioLocal(persistedStudio);
     setStylesLocal(persistedStyles);
@@ -101,7 +106,7 @@ const FilterBottomSheet = ({
    *  ────────────────────────── */
   const toggleRadius = async () => {
     if (!radiusEnabled) {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await requestForegroundLocationPermission();
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
@@ -114,6 +119,8 @@ const FilterBottomSheet = ({
         return;
       }
     }
+    // Slider remounts on toggle; make sure it starts at the current draft value
+    setSliderInitial(radiusValue);
     setRadiusEnabledLocal(!radiusEnabled);
   };
 
@@ -160,6 +167,7 @@ const FilterBottomSheet = ({
     // reset local
     setRadiusEnabledLocal(false);
     setRadiusValueLocal(50);
+    setSliderInitial(50);
     setRatingsLocal(resetRatings);
     setStudioLocal(resetStudio);
     setStylesLocal(resetStyles);
@@ -204,10 +212,9 @@ const FilterBottomSheet = ({
               Within your radius
             </Text>
             <Switch
-              style={{ width: 75 }}
               trackColor={{ false: "#767577", true: "#44e52c" }}
               thumbColor={radiusEnabled ? "#fff" : "#f4f3f4"}
-              ios_backgroundColor="#3e3e3e"
+              // ios_backgroundColor="#3e3e3e"
               onValueChange={toggleRadius}
               value={radiusEnabled}
             />
@@ -221,8 +228,10 @@ const FilterBottomSheet = ({
                   width: "80%",
                   height: 40,
                 }}
-                value={radiusValue}
+                value={sliderInitial}
+                step={1}
                 onValueChange={setRadiusValueLocal}
+                onSlidingComplete={setRadiusValueLocal}
                 minimumValue={0}
                 maximumValue={100}
                 minimumTrackTintColor="#F2D189"
@@ -373,6 +382,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 24,
+    paddingRight: 20,
     marginBottom: 20,
   },
   sliderRow: {

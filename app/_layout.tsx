@@ -14,6 +14,8 @@ import { LogBox, View } from "react-native";
 import Text from "@/components/Text";
 import { Try } from "expo-router/build/views/Try";
 import UploadProgressIndicator from "@/components/UploadProgressIndicator";
+import AppSplash from "@/components/AppSplash";
+import AndroidNavigationBarInset from "@/components/AndroidNavigationBarInset";
 import { ThemeProvider, DarkTheme } from "@react-navigation/native";
 // import { useRouter } from "expo-router";
 
@@ -43,16 +45,19 @@ export default function RootLayout() {
             <GestureHandlerRootView
               style={{ flex: 1, backgroundColor: "#000" }}
             >
-              <BottomSheetModalProvider>
-                <FormProvider>
-                  <AppNavigator />
-                  {/* <UploadProgressIndicator /> */}
-                </FormProvider>
-              </BottomSheetModalProvider>
+              <AndroidNavigationBarInset>
+                <BottomSheetModalProvider>
+                  <FormProvider>
+                    <AppNavigator />
+                    {/* <UploadProgressIndicator /> */}
+                  </FormProvider>
+                </BottomSheetModalProvider>
+              </AndroidNavigationBarInset>
             </GestureHandlerRootView>
           </ThemeProvider>
         </PersistGate>
       </Provider>
+      <AppSplash />
     </>
   );
 }
