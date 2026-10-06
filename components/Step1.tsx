@@ -5,8 +5,8 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
-  ScrollView,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import RadioButton from "@/components/RadioButton";
@@ -202,7 +202,11 @@ const Step1: React.FC = () => {
   }, [formData.location]);
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      bottomOffset={24}
+      keyboardShouldPersistTaps="handled"
+    >
       <TattooStylesSheet
         snapPoints={["90%"]}
         InsideComponent={
@@ -431,7 +435,7 @@ const Step1: React.FC = () => {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

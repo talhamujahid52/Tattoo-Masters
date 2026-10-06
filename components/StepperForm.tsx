@@ -17,6 +17,8 @@ import { useSelector } from "react-redux";
 import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 // import { getFileName } from "@/utils/helperFunctions";
 import { useRouter } from "expo-router";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // import { updateProfile } from "@react-native-firebase/auth";
 // import { updateUserProfile } from "@/utils/firebase/userFunctions";
 // import { UserProfileFormData } from "@/types/user";
@@ -33,6 +35,7 @@ const StepperForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const userFirestore = useSelector((state: any) => state?.user?.userFirestore);
@@ -270,50 +273,57 @@ const StepperForm: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={{ paddingVertical: 24 }}>{renderStepIndicator()}</View>
+    <KeyboardProvider>
+      <View style={styles.container}>
+        <View style={{ paddingVertical: 24 }}>{renderStepIndicator()}</View>
 
-      <View style={styles.contentContainer}>
-        {step === 1 && <Step1 />}
-        {step === 2 && <Step2 />}
-        {step === 3 && <Step3 />}
-      </View>
+        <View style={styles.contentContainer}>
+          {step === 1 && <Step1 />}
+          {step === 2 && <Step2 />}
+          {step === 3 && <Step3 />}
+        </View>
 
-      <View style={styles.buttonContainer}>
-        {step > 1 ? (
-          <TouchableOpacity
-            style={{
-              width: 52,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onPress={handlePrevious}
-          >
-            <Image
-              style={{ height: 13, width: 20 }}
-              source={require("../assets/images/back-arrow.png")}
-            />
-          </TouchableOpacity>
-        ) : (
-          <View></View>
-        )}
-        {step < totalSteps ? (
-          <View style={{ width: 84 }}>
-            <Button title="Next" onPress={handleNext} />
-          </View>
-        ) : (
-          <View style={{ width: 84 }}>
-            <Button
-              loading={loading}
-              title="Next"
-              onPress={() => {
-                router.push("/artist/CreateReviewPassword");
+        <View
+          style={[
+            styles.buttonContainer,
+            { paddingBottom: 24 + insets.bottom },
+          ]}
+        >
+          {step > 1 ? (
+            <TouchableOpacity
+              style={{
+                width: 52,
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            />
-          </View>
-        )}
+              onPress={handlePrevious}
+            >
+              <Image
+                style={{ height: 13, width: 20 }}
+                source={require("../assets/images/back-arrow.png")}
+              />
+            </TouchableOpacity>
+          ) : (
+            <View></View>
+          )}
+          {step < totalSteps ? (
+            <View style={{ width: 84 }}>
+              <Button title="Next" onPress={handleNext} />
+            </View>
+          ) : (
+            <View style={{ width: 84 }}>
+              <Button
+                loading={loading}
+                title="Next"
+                onPress={() => {
+                  router.push("/artist/CreateReviewPassword");
+                }}
+              />
+            </View>
+          )}
+        </View>
       </View>
-    </View>
+    </KeyboardProvider>
   );
 };
 

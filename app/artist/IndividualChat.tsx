@@ -7,6 +7,7 @@ import {
   Platform,
   Linking,
   Alert,
+  Keyboard,
   useWindowDimensions,
 } from "react-native";
 import { useSelector } from "react-redux";
@@ -588,6 +589,7 @@ const IndividualChat: React.FC = () => {
       Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
       return;
     }
+    Keyboard.dismiss();
     showImagePickerSheet();
   }, [
     isSelectingImage,
@@ -597,7 +599,14 @@ const IndividualChat: React.FC = () => {
   ]);
 
   const onSend = useCallback(
-    async (newMessages: IMessage[]) => {
+    async (messagesToSend: IMessage[]) => {
+      // GiftedChat's Send trims the text but still fires for whitespace-only
+      // input, so drop anything that ends up empty.
+      const newMessages = messagesToSend.filter(
+        (message) => !!message.text?.trim(),
+      );
+      if (newMessages.length === 0) return;
+
       if (isConversationLoading || isConversationUnavailable) {
         Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
         return;
@@ -814,6 +823,7 @@ const IndividualChat: React.FC = () => {
 
           <Send
             {...props}
+            disabled={!props.text?.trim()}
             containerStyle={{
               width: 44,
               height: 44,
@@ -822,7 +832,13 @@ const IndividualChat: React.FC = () => {
               alignSelf: isMultiline ? "flex-end" : "center",
             }}
           >
-            <View style={{ width: 32, height: 32 }}>
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                opacity: props.text?.trim() ? 1 : 0.4,
+              }}
+            >
               <Image
                 style={{ height: "100%", width: "100%" }}
                 source={require("../../assets/images/sendMessage.png")}
