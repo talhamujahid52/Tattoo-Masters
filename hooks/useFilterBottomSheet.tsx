@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import {
   BottomSheetModal,
-  BottomSheetView,
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
@@ -71,13 +70,15 @@ const useFilterBottomSheet = () => {
         handleComponent={renderHandle}
         backgroundStyle={styles.sheetBackground}
       >
-        {/* Plain view here: FilterBottomSheet owns the single scrollable
-            (its inner BottomSheetScrollView) so its title row and Apply
-            footer stay pinned. Nesting two scrollables doubled the gesture
-            layers for nothing. */}
-        <BottomSheetView style={{ backgroundColor: "#080808", flex: 1 }}>
+        {/* Plain RN View on purpose. FilterBottomSheet owns the single
+            scrollable (its BottomSheetScrollView) so its title row and Apply
+            footer stay pinned. Do not use BottomSheetView here: its mount
+            effect runs after the child's and re-registers the sheet content
+            as a non-scrollable VIEW, which makes the sheet pan swallow every
+            vertical drag and the inner list stops scrolling. */}
+        <View style={{ backgroundColor: "#080808", flex: 1 }}>
           {InsideComponent}
-        </BottomSheetView>
+        </View>
       </BottomSheetModal>
     ),
     [hide, handleSheetChanges, renderBackdrop]
