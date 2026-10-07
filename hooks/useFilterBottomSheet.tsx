@@ -2,7 +2,6 @@ import React, { useCallback, useRef } from "react";
 import {
   BottomSheetModal,
   BottomSheetView,
-  BottomSheetScrollView,
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
@@ -60,18 +59,25 @@ const useFilterBottomSheet = () => {
         snapPoints={["80%"]}
         enableDynamicSizing={false}
         enableOverDrag={false}
+        // Only activate the content pan on vertical movement and fail it on
+        // horizontal movement, so the native radius Slider (a plain Android
+        // SeekBar with no gesture-handler wrapper) keeps its drag instead of
+        // being cancelled by the sheet's pan.
+        activeOffsetY={[-10, 10]}
+        failOffsetX={[-10, 10]}
         backdropComponent={renderBackdrop}
         onDismiss={hide}
         onChange={handleSheetChanges}
         handleComponent={renderHandle}
         backgroundStyle={styles.sheetBackground}
       >
-        <BottomSheetScrollView
-          showsVerticalScrollIndicator={false}
-          style={{ backgroundColor: "#080808", flex: 1 }}
-        >
+        {/* Plain view here: FilterBottomSheet owns the single scrollable
+            (its inner BottomSheetScrollView) so its title row and Apply
+            footer stay pinned. Nesting two scrollables doubled the gesture
+            layers for nothing. */}
+        <BottomSheetView style={{ backgroundColor: "#080808", flex: 1 }}>
           {InsideComponent}
-        </BottomSheetScrollView>
+        </BottomSheetView>
       </BottomSheetModal>
     ),
     [hide, handleSheetChanges, renderBackdrop]
