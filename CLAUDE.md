@@ -71,6 +71,9 @@ All slices except `uploadQueueSlice` are persisted to AsyncStorage via redux-per
 - `cleanupUserData.ts` — User data cleanup
 - `deleteUserAccount.ts` — Account deletion
 
+### Forked Firebase Extensions (`kits/`)
+Firebase Extensions shut down March 31, 2027. The Resize Images, Delete User Data and Typesense search extensions are vendored as separate functions codebases under `kits/` (see `kits/README.md`). Config is in each kit's `.env`; deploy with `firebase deploy --only functions:<codebase>`.
+
 ## TypeScript
 
 Strict mode enabled. Path alias `@/*` maps to project root. Types are in `types/user.ts` (UserFirestore, UserProfileFormData, etc.).
