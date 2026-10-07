@@ -1,6 +1,6 @@
 import React, { useState, useContext, useMemo } from "react";
 import { StyleSheet, View, Image, Pressable } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
 import Button from "@/components/Button";

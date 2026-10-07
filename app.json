@@ -25,6 +25,7 @@
         "NSCameraUsageDescription": "Tattoo Masters uses your camera so you can take and send photos in chats.",
         "NSPhotoLibraryUsageDescription": "Tattoo Masters uses your photo library so you can choose images for profiles, tattoo posts, reviews, and chats.",
         "UIDesignRequiresCompatibility": true,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "LSApplicationQueriesSchemes": ["tel"]
       },
       "appleTeamId": "UR4D67257L"
@@ -152,6 +153,7 @@
       ],
       "./plugin/without-ios-user-tracking.js",
       "./plugin/with-min-pod-deployment-target.js",
+    "./plugin/with-ios-scene-delegate.js",
       "expo-asset"
     ],
     "experiments": {

@@ -16,7 +16,6 @@ import {
   Keyboard,
   Image,
   ActivityIndicator,
-  StatusBar,
 } from "react-native";
 
 import * as Location from "expo-location";
@@ -430,7 +429,6 @@ export default function SearchAll() {
   }, [searchSignature]);
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
       {isSheetReady && (
         <BottomSheet
           InsideComponent={

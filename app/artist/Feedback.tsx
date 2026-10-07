@@ -16,7 +16,7 @@ import useBackgroundUpload from "@/hooks/useBackgroundUpload";
 import { firebase } from "@react-native-firebase/firestore";
 import firestore from "@react-native-firebase/firestore";
 import { router } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 
 const Feedback = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null); // Track the selected option
@@ -99,151 +99,153 @@ const Feedback = () => {
   const canSubmit = loading || selectedOption !== null;
 
   return (
-    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
-      <Text size="h4" weight="semibold" color="#A7A7A7">
-        Feedback type
-      </Text>
+    <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.container}>
+        <Text size="h4" weight="semibold" color="#A7A7A7">
+          Feedback type
+        </Text>
 
-      <View style={styles.optionContainer}>
-        {/* Share an idea option */}
-        <Pressable
-          style={[
-            styles.optionCard,
-            selectedOption === "idea" && styles.selectedOption, // Apply selected styles
-          ]}
-          onPress={() => handleSelection("idea")}
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              style={styles.image}
-              source={require("../../assets/images/lightbulb.png")}
-            />
-          </View>
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Share an idea
+        <View style={styles.optionContainer}>
+          {/* Share an idea option */}
+          <Pressable
+            style={[
+              styles.optionCard,
+              selectedOption === "idea" && styles.selectedOption, // Apply selected styles
+            ]}
+            onPress={() => handleSelection("idea")}
+          >
+            <View style={styles.imageContainer}>
+              <Image
+                style={styles.image}
+                source={require("../../assets/images/lightbulb.png")}
+              />
+            </View>
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Share an idea
+            </Text>
+            <Text
+              size="medium"
+              weight="normal"
+              color="#A7A7A7"
+              style={{ textAlign: "center" }}
+            >
+              I have a suggestion{"\n"} or feature request.
+            </Text>
+          </Pressable>
+
+          {/* Report a bug option */}
+          <Pressable
+            style={[
+              styles.optionCard,
+              selectedOption === "bug" && styles.selectedOption, // Apply selected styles
+            ]}
+            onPress={() => handleSelection("bug")}
+          >
+            <View style={styles.imageContainer}>
+              <Image
+                style={styles.image}
+                source={require("../../assets/images/bug_report.png")}
+              />
+            </View>
+            <Text size="h4" weight="normal" color="#FBF6FA">
+              Report a bug
+            </Text>
+            <Text
+              size="medium"
+              weight="normal"
+              color="#A7A7A7"
+              style={{ textAlign: "center" }}
+            >
+              Something isn't working as expected.
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={{ paddingTop: 16 }}>
+          <Text size="h4" weight="semibold" color="#A7A7A7">
+            Feedback
           </Text>
+          <TextInput
+            selectionColor="#A29F93"
+            placeholderTextColor="#A29F93"
+            placeholder="Enter message"
+            multiline
+            value={content}
+            style={styles.textArea}
+            maxLength={500}
+            onChangeText={(text) => {
+              setContent(text);
+            }}
+          />
           <Text
             size="medium"
             weight="normal"
             color="#A7A7A7"
-            style={{ textAlign: "center" }}
+            style={{ textAlign: "right", marginTop: 4 }}
           >
-            I have a suggestion{"\n"} or feature request.
+            {content.length} / 500
           </Text>
-        </Pressable>
+        </View>
 
-        {/* Report a bug option */}
-        <Pressable
-          style={[
-            styles.optionCard,
-            selectedOption === "bug" && styles.selectedOption, // Apply selected styles
-          ]}
-          onPress={() => handleSelection("bug")}
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              style={styles.image}
-              source={require("../../assets/images/bug_report.png")}
-            />
-          </View>
-          <Text size="h4" weight="normal" color="#FBF6FA">
-            Report a bug
+        <View>
+          <Text size="h4" weight="semibold" color="#A7A7A7">
+            Attachment {}
+            <Text size="medium" weight="normal" color="#A7A7A7">
+              (optional)
+            </Text>
           </Text>
-          <Text
-            size="medium"
-            weight="normal"
-            color="#A7A7A7"
-            style={{ textAlign: "center" }}
+          <TouchableOpacity
+            style={{
+              height: 150,
+              width: "100%",
+              borderWidth: 1,
+              borderColor: "#2D2D2D",
+              borderRadius: 12,
+              marginTop: 16,
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              rowGap: 5,
+              overflow: "hidden",
+            }}
+            onPress={handleSelectImage} // Trigger the image selection
           >
-            Something isn't working as expected.
-          </Text>
-        </Pressable>
-      </View>
-
-      <View style={{ paddingTop: 16 }}>
-        <Text size="h4" weight="semibold" color="#A7A7A7">
-          Feedback
-        </Text>
-        <TextInput
-          selectionColor="#A29F93"
-          placeholderTextColor="#A29F93"
-          placeholder="Enter message"
-          multiline
-          value={content}
-          style={styles.textArea}
-          maxLength={500}
-          onChangeText={(text) => {
-            setContent(text);
-          }}
-        />
-        <Text
-          size="medium"
-          weight="normal"
-          color="#A7A7A7"
-          style={{ textAlign: "right", marginTop: 4 }}
-        >
-          {content.length} / 500
-        </Text>
-      </View>
-
-      <View>
-        <Text size="h4" weight="semibold" color="#A7A7A7">
-          Attachment {}
-          <Text size="medium" weight="normal" color="#A7A7A7">
-            (optional)
-          </Text>
-        </Text>
-        <TouchableOpacity
-          style={{
-            height: 150,
-            width: "100%",
-            borderWidth: 1,
-            borderColor: "#2D2D2D",
-            borderRadius: 12,
-            marginTop: 16,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            rowGap: 5,
-            overflow: "hidden",
-          }}
-          onPress={handleSelectImage} // Trigger the image selection
-        >
-          {attachment ? (
-            <Image
-              style={{ height: "100%", width: "100%" }}
-              source={{ uri: attachment }}
-            />
-          ) : (
-            <>
-              <View style={{ height: 18, width: 18 }}>
-                <Image
-                  style={{ height: "100%", width: "100%" }}
-                  source={require("../../assets/images/add_photo_white.png")}
-                />
-              </View>
-              <Text size="p" weight="normal" color="#D7D7C9">
-                Add photo
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Button fixed at the bottom */}
-      <View style={styles.footer}>
-        <Button
-          title={
-            loading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
+            {attachment ? (
+              <Image
+                style={{ height: "100%", width: "100%" }}
+                source={{ uri: attachment }}
+              />
             ) : (
-              "Submit"
-            )
-          }
-          onPress={handleSubmitFeedback}
-          disabled={!canSubmit}
-          variant={selectedOption ? "primary" : "secondary"}
-        />
+              <>
+                <View style={{ height: 18, width: 18 }}>
+                  <Image
+                    style={{ height: "100%", width: "100%" }}
+                    source={require("../../assets/images/add_photo_white.png")}
+                  />
+                </View>
+                <Text size="p" weight="normal" color="#D7D7C9">
+                  Add photo
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Button fixed at the bottom */}
+        <View style={styles.footer}>
+          <Button
+            title={
+              loading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                "Submit"
+              )
+            }
+            onPress={handleSubmitFeedback}
+            disabled={!canSubmit}
+            variant={selectedOption ? "primary" : "secondary"}
+          />
+        </View>
       </View>
     </KeyboardAwareScrollView>
   );
@@ -252,6 +254,9 @@ const Feedback = () => {
 export default Feedback;
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 16,

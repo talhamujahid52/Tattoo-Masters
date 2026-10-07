@@ -1,4 +1,4 @@
-import { Image, StatusBar, Pressable } from "react-native";
+import { Image, Pressable } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
@@ -24,7 +24,6 @@ const BottomTabsLayout = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
       <BottomSheet
         InsideComponent={<LoginBottomSheet hideLoginBottomSheet={hide} />}
       />

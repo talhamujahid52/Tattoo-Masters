@@ -12,7 +12,7 @@ import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { firebase } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 
 const ReviewPassword = () => {
   const [newReviewPassword, setNewReviewPassword] = useState("");
@@ -126,7 +126,7 @@ export default ReviewPassword;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",

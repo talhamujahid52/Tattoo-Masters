@@ -3,7 +3,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  ScrollView,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import Text from "@/components/Text";
@@ -20,6 +19,7 @@ import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import PhoneInput from "@/components/PhoneCustomInput";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 
 const EditProfile = () => {
   // Get auth and firestore user data from redux
@@ -167,62 +167,63 @@ const EditProfile = () => {
   };
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       contentContainerStyle={{
-        justifyContent: "space-between",
         paddingBottom: insets.bottom,
-        flex: 1,
+        flexGrow: 1,
       }}
       style={styles.container}
     >
-      <View>
-        <View style={styles.profilePictureRow}>
-          <Image style={styles.profilePicture} source={localImage} />
-          <TouchableOpacity
-            hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
-            onPress={openImagePicker}
-          >
-            <Text size="h4" weight="semibold" color="#DAB769">
-              Change photo
+      <View style={{ flexGrow: 1, justifyContent: "space-between" }}>
+        <View>
+          <View style={styles.profilePictureRow}>
+            <Image style={styles.profilePicture} source={localImage} />
+            <TouchableOpacity
+              hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
+              onPress={openImagePicker}
+            >
+              <Text size="h4" weight="semibold" color="#DAB769">
+                Change photo
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ marginBottom: 16 }}>
+            <Text
+              size="h4"
+              weight="semibold"
+              color="#A7A7A7"
+              style={{ marginBottom: 10 }}
+            >
+              Full name
             </Text>
-          </TouchableOpacity>
+            <Input
+              inputMode="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+          </View>
+          <View style={{ marginBottom: 16 }}>
+            <Text
+              size="h4"
+              weight="semibold"
+              color="#A7A7A7"
+              style={{ marginBottom: 10 }}
+            >
+              Phone number
+            </Text>
+            <PhoneInput
+              value={phoneNumber}
+              onChange={(phoneNumber, code) => {
+                setPhoneNumber(phoneNumber);
+                setCountryCode(code);
+              }}
+            />
+          </View>
         </View>
-        <View style={{ marginBottom: 16 }}>
-          <Text
-            size="h4"
-            weight="semibold"
-            color="#A7A7A7"
-            style={{ marginBottom: 10 }}
-          >
-            Full name
-          </Text>
-          <Input
-            inputMode="text"
-            placeholder="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
-          />
-        </View>
-        <View style={{ marginBottom: 16 }}>
-          <Text
-            size="h4"
-            weight="semibold"
-            color="#A7A7A7"
-            style={{ marginBottom: 10 }}
-          >
-            Phone number
-          </Text>
-          <PhoneInput
-            value={phoneNumber}
-            onChange={(phoneNumber, code) => {
-              setPhoneNumber(phoneNumber);
-              setCountryCode(code);
-            }}
-          />
-        </View>
+        <Button onPress={updateProfile} loading={loading} title="Save" />
       </View>
-      <Button onPress={updateProfile} loading={loading} title="Save" />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

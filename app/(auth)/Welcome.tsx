@@ -4,7 +4,6 @@ import { Dimensions, StyleSheet, View, Image } from "react-native";
 import { Redirect, SplashScreen, router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import OnboardingComponent from "@/components/OnboardingComponent";
-import { StatusBar } from "expo-status-bar";
 import { useDispatch, useSelector } from "react-redux";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { AppDispatch, RootState } from "@/redux/store";

@@ -25,7 +25,7 @@ import ArtistSearchCard from "@/components/ArtistSearchCard";
 import { useDispatch, useSelector } from "react-redux";
 import { router, useLocalSearchParams } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
-import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
+import { setAllArtists } from "@/redux/slices/artistSlice";
 import { addSearch, clearSearches } from "@/redux/slices/recentSearchesSlice";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
@@ -87,9 +87,8 @@ const Search: React.FC = () => {
         filterBy: "isArtist:=true",
       });
       const docs = hits.map((h: any) => h.document);
-      dispatch(resetAllArtists());
       dispatch(
-        updateAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
+        setAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
       );
     } catch (err) {
       console.error("Error fetching users:", err);

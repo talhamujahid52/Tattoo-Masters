@@ -16,7 +16,7 @@ import Button from "@/components/Button";
 import { useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
 import StylesBottomSheet from "@/components/BottomSheets/StylesBottomSheet";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import Input from "@/components/Input";
 import firestore from "@react-native-firebase/firestore";
 import useBottomSheet from "@/hooks/useBottomSheet";

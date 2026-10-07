@@ -5,7 +5,7 @@ import Text from "@/components/Text";
 import Button from "@/components/Button";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { router } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import { useSelector } from "react-redux";
 
 const ChangePassword = () => {

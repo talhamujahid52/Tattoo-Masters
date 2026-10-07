@@ -165,6 +165,7 @@ const ImageGallery = ({
             onRefresh={onRefresh}
             tintColor="#fff"
             colors={["#fff"]}
+            progressBackgroundColor="#1C1C1C"
           />
         ) : undefined
       }

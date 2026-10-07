@@ -12,7 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import ArtistProfileCard from "@/components/ArtistProfileCard";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
-import { updateAllArtists, resetAllArtists } from "@/redux/slices/artistSlice";
+import { setAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
 import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
@@ -89,9 +89,8 @@ const Home = () => {
       });
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
 
-      dispatch(resetAllArtists());
       dispatch(
-        updateAllArtists(
+        setAllArtists(
           fetchedArtists.map(({ id, ...data }) => ({
             data,
             id,

@@ -41,6 +41,18 @@ const artistSlice = createSlice({
       state.allArtists = [];
     },
 
+    // Replace the whole list in one dispatch. Dispatching reset + update
+    // separately renders an empty list in between, which unmounts every
+    // card and makes the images reload (visible flash).
+    setAllArtists: (state, action: PayloadAction<any[]>) => {
+      const seen = new Set<string>();
+      state.allArtists = action.payload.filter((item) => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    },
+
     // ── NEW reducers for search ─────────────────────────────────
     updateSearchResults: (state, action: PayloadAction<any[]>) => {
       state.searchResults = action.payload;
@@ -56,6 +68,7 @@ export const {
   updateAllArtists,
   updateSingleArtist,
   resetAllArtists,
+  setAllArtists,
   updateSearchResults, // ← new
   resetSearchResults, // ← new
 } = artistSlice.actions;

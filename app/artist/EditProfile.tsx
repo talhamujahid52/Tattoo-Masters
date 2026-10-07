@@ -30,7 +30,7 @@ import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
 import StylesBottomSheet from "../../components/BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 
 type TattooStyle = {
   title: string;

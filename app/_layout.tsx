@@ -3,7 +3,6 @@ import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import "react-native-get-random-values";
-import { StatusBar } from "expo-status-bar";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "@/redux/store";
@@ -40,7 +39,6 @@ export default function RootLayout() {
     <>
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          <StatusBar style="light" />
           <ThemeProvider value={DarkTheme}>
             <GestureHandlerRootView
               style={{ flex: 1, backgroundColor: "#000" }}

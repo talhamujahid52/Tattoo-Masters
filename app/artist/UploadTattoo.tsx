@@ -13,7 +13,7 @@ import { launchImageLibrary } from "react-native-image-picker";
 import Button from "@/components/Button";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import { FormContext } from "../../context/FormContext";
 import { getFileName } from "@/utils/helperFunctions";
 import firestore from "@react-native-firebase/firestore";

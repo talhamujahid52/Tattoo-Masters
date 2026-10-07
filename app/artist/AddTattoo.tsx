@@ -5,6 +5,7 @@ import {
   Image,
   TextInput,
   Alert,
+  Dimensions,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import Text from "@/components/Text";
@@ -15,10 +16,11 @@ import { useSelector } from "react-redux";
 import { getFileName } from "@/utils/helperFunctions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import firestore from "@react-native-firebase/firestore";
 import StylesBottomSheet from "@/components/BottomSheets/StylesBottomSheet";
 import useBottomSheet from "@/hooks/useBottomSheet";
+const IMAGE_PICKER_HEIGHT = Dimensions.get("screen").height * 0.35;
 
 const AddTattoo = () => {
   const [attachment, setAttachment] = useState<string | null>("");
@@ -138,129 +140,132 @@ const AddTattoo = () => {
     setSelectedTattooStyles(selected);
   };
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
-    >
-      <TattooStylesSheet
-        snapPoints={["90%"]}
-        InsideComponent={
-          <StylesBottomSheet
-            tattooStyles={tattooStyles}
-            setSelectedTattooStyles={setSelectedTattooStylesinBottomSheet}
-            hideTattooStylesSheet={hideTattooStylesSheet}
-          />
-        }
-      />
-      <TouchableOpacity
-        style={{
-          height: "50%",
-          width: "100%",
-          borderWidth: 1,
-          borderColor: "#262626",
-          borderRadius: 12,
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          rowGap: 5,
-          overflow: "hidden",
-        }}
-        onPress={handleSelectImage} // Trigger the image selection
+    <View style={styles.screen}>
+      <KeyboardAwareScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top }]}
       >
-        {attachment ? (
-          <Image
-            style={{ height: "100%", width: "100%", resizeMode: "contain" }} // Set image height to 40%
-            source={{ uri: attachment }}
-          />
-        ) : (
-          <>
-            <View style={{ height: 24, width: 24 }}>
-              <Image
-                style={{ height: "100%", width: "100%", resizeMode: "cover" }}
-                source={require("../../assets/images/add_photo_alternate-2.png")}
-              />
-            </View>
-            <Text size="h4" weight="medium" color="#D7D7C9">
-              Add tattoo
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      <View>
-        <TextInput
-          selectionColor="#A29F93"
-          placeholderTextColor="#A29F93"
-          placeholder="Write caption"
-          multiline
-          value={caption}
-          style={styles.textArea}
-          maxLength={500}
-          onChangeText={(text) => {
-            setCaption(text);
-          }}
+        <TattooStylesSheet
+          snapPoints={["90%"]}
+          InsideComponent={
+            <StylesBottomSheet
+              tattooStyles={tattooStyles}
+              setSelectedTattooStyles={setSelectedTattooStylesinBottomSheet}
+              hideTattooStylesSheet={hideTattooStylesSheet}
+            />
+          }
         />
-        <Text
-          size="medium"
-          weight="normal"
-          color="#A7A7A7"
-          style={{ textAlign: "right", marginTop: 4 }}
+        <TouchableOpacity
+          style={{
+            height: IMAGE_PICKER_HEIGHT,
+            width: "100%",
+            borderWidth: 1,
+            borderColor: "#262626",
+            borderRadius: 12,
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            rowGap: 5,
+            overflow: "hidden",
+          }}
+          onPress={handleSelectImage} // Trigger the image selection
         >
-          {caption.length} / 500
-        </Text>
-      </View>
-
-      <View>
-        <Text size="h4" weight="semibold" color="#A7A7A7">
-          Styles{" "}
-          {selectedTattooStyles?.length > 0
-            ? "(" + selectedTattooStyles?.length + " selected)"
-            : ""}
-        </Text>
-        <View style={styles.stylesRow}>
-          {tattooStyles.slice(0, 6).map((item, idx) => (
-            <TouchableOpacity
-              key={idx}
-              activeOpacity={1}
-              style={[
-                styles.styleButton,
-                { backgroundColor: item.selected ? "#DAB769" : "#22221F" },
-              ]}
-              onPress={() => toggleTattooStyles(item)}
-            >
-              <Text
-                size="p"
-                weight="normal"
-                color={item.selected ? "#22221F" : "#A7A7A7"}
-              >
-                {item.title}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          {tattooStyles.length > 6 && (
-            <TouchableOpacity
-              onPress={() => {
-                showTattooStylesSheet();
-              }}
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                padding: 6,
-              }}
-            >
-              <Text size="p" weight="normal" color="#FBF6FA">
-                {"See more"}
-              </Text>
-              <View style={{ width: 24, height: 24 }}>
+          {attachment ? (
+            <Image
+              style={{ height: "100%", width: "100%", resizeMode: "contain" }} // Set image height to 40%
+              source={{ uri: attachment }}
+            />
+          ) : (
+            <>
+              <View style={{ height: 24, width: 24 }}>
                 <Image
-                  style={{ width: "100%", height: "100%" }}
-                  source={require("../../assets/images/arrow_down.png")}
+                  style={{ height: "100%", width: "100%", resizeMode: "cover" }}
+                  source={require("../../assets/images/add_photo_alternate-2.png")}
                 />
               </View>
-            </TouchableOpacity>
+              <Text size="h4" weight="medium" color="#D7D7C9">
+                Add tattoo
+              </Text>
+            </>
           )}
+        </TouchableOpacity>
+
+        <View>
+          <TextInput
+            selectionColor="#A29F93"
+            placeholderTextColor="#A29F93"
+            placeholder="Write caption"
+            multiline
+            value={caption}
+            style={styles.textArea}
+            maxLength={500}
+            onChangeText={(text) => {
+              setCaption(text);
+            }}
+          />
+          <Text
+            size="medium"
+            weight="normal"
+            color="#A7A7A7"
+            style={{ textAlign: "right", marginTop: 4 }}
+          >
+            {caption.length} / 500
+          </Text>
         </View>
-      </View>
+
+        <View>
+          <Text size="h4" weight="semibold" color="#A7A7A7">
+            Styles{" "}
+            {selectedTattooStyles?.length > 0
+              ? "(" + selectedTattooStyles?.length + " selected)"
+              : ""}
+          </Text>
+          <View style={styles.stylesRow}>
+            {tattooStyles.slice(0, 6).map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={1}
+                style={[
+                  styles.styleButton,
+                  { backgroundColor: item.selected ? "#DAB769" : "#22221F" },
+                ]}
+                onPress={() => toggleTattooStyles(item)}
+              >
+                <Text
+                  size="p"
+                  weight="normal"
+                  color={item.selected ? "#22221F" : "#A7A7A7"}
+                >
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {tattooStyles.length > 6 && (
+              <TouchableOpacity
+                onPress={() => {
+                  showTattooStylesSheet();
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 6,
+                }}
+              >
+                <Text size="p" weight="normal" color="#FBF6FA">
+                  {"See more"}
+                </Text>
+                <View style={{ width: 24, height: 24 }}>
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../../assets/images/arrow_down.png")}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
 
       <View
         style={[styles.fixedButtonContainer, { marginBottom: insets.bottom }]}
@@ -273,16 +278,18 @@ const AddTattoo = () => {
           title="Publish"
         />
       </View>
-    </KeyboardAwareScrollView>
+    </View>
   );
 };
 
 export default AddTattoo;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     padding: 16,
-    flex: 1, // Allow the container to take full screen height
   },
   textArea: {
     width: "100%",
@@ -300,10 +307,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   fixedButtonContainer: {
-    position: "absolute", // Fix the button at the bottom
-    bottom: 10, // Adjust the distance from the bottom
-    left: 16,
-    right: 16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: "#000",
   },
   styleButton: {
     height: 33,

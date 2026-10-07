@@ -46,6 +46,14 @@ export const unsupportedType = (
   );
 };
 
+export const heifConverting = (path: string) => {
+  logger.log(`Converting HEIF image to PNG before resizing: '${path}'`);
+};
+
+export const heifConverted = (path: string) => {
+  logger.log(`Converted HEIF image to PNG: '${path}'`);
+};
+
 export const error = (err: Error) => {
   logger.error("Error when resizing image", err);
 };

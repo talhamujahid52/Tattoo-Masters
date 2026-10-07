@@ -27,6 +27,9 @@ export const supportedContentTypes = [
   "image/webp",
   "image/gif",
   "image/avif",
+  // Fork addition: decoded by heif.ts before resizing.
+  "image/heic",
+  "image/heif",
 ];
 
 export const supportedImageContentTypeMap = {
@@ -39,6 +42,8 @@ export const supportedImageContentTypeMap = {
   gif: "image/gif",
   avif: "image/avif",
   jfif: "image/jpeg",
+  heic: "image/heic",
+  heif: "image/heif",
 };
 
 export const supportedExtensions = Object.keys(

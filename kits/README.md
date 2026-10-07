@@ -22,6 +22,9 @@ Every fork keeps the upstream source byte-for-byte except:
   `extension.yaml`). `config.ts` gained `functionMemory()` and falls back to
   `GCLOUD_PROJECT` for the project id. Upstream's Eventarc "extension events"
   code is still there but is a no-op because `EVENTARC_CHANNEL` is unset.
+  `heif.ts` (new) adds HEIC/HEIF support: sharp has no HEVC decoder, so those
+  uploads used to be skipped as an unsupported type. They are now decoded with
+  `heic-decode` and resized like any other image (`global.ts` lists the types).
 - **delete-user-data** — `index.ts` imports `firebase-functions/v1` (v6 defaults
   to v2) and sets region/memory. `config.ts` names the Pub/Sub topics
   `<TOPIC_PREFIX>-discovery|deletion` because `EXT_*` env vars are reserved.

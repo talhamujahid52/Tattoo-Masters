@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import auth from "@react-native-firebase/auth";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import { useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { clearLocalSession } from "@/utils/authSession";

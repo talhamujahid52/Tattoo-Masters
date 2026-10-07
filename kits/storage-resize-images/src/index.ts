@@ -30,6 +30,7 @@ import * as events from "./events";
 import { convertToObjectMetadata } from "./util";
 import { checkImageContent } from "./content-filter";
 import { replacePlaceholder } from "./placeholder";
+import { convertHeifToPng } from "./heif";
 import {
   deleteRemoteFile,
   deleteTempFile,
@@ -78,6 +79,9 @@ export const generateResizedImageHandler = async (
       filePath,
       verbose
     );
+
+    // Fork addition: sharp cannot decode HEIC/HEIF, so convert it first.
+    await convertHeifToPng(localOriginalFile);
 
     let blockedByFilter = false;
     let filterErrored = false;

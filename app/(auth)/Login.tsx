@@ -7,7 +7,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import ThirdPartyLoginButton from "@/components/ThirdPartyLoginButton";

@@ -16,7 +16,7 @@ import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "@/utils/firebase/userFunctions";
 import firestore from "@react-native-firebase/firestore";
 import { useSignInWithGoogle } from "@/hooks/useSignInWithGoogle";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import auth from "@react-native-firebase/auth";
 import { sha256 } from "react-native-sha256";

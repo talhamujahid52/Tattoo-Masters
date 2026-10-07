@@ -5,7 +5,7 @@ import Text from "@/components/Text";
 import Button from "@/components/Button";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useGetArtist from "@/hooks/useGetArtist";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import KeyboardAwareScrollView from "@/components/KeyboardAwareScrollView";
 
 const VerifyReviewPassword = () => {
   const router = useRouter();
@@ -71,7 +71,7 @@ export default VerifyReviewPassword;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",

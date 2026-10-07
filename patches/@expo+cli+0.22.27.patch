@@ -88,10 +88,24 @@ index 2367d39..189d7c6 100644
      getExpoGoAppId() {
          return EXPO_GO_BUNDLE_IDENTIFIER;
 diff --git a/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js b/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
-index 042adc9..fc7b2ef 100644
+index 042adc9..5c3122d 100644
 --- a/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
 +++ b/node_modules/@expo/cli/build/src/start/platforms/ios/devicectl.js
-@@ -251,6 +251,9 @@ async function installAppWithDeviceCtlAsync(uuid, bundleIdOrAppPath, onProgress)
+@@ -179,7 +179,12 @@ async function getConnectedAppleDevicesAsync() {
+         _log.warn("Unexpected devicectl JSON version output from devicectl. Connecting to physical Apple devices may not work as expected.");
+     }
+     assertDevicesJson(devicesJson);
+-    return devicesJson.result.devices;
++    // devicectl in Xcode 27 also lists CoreSimulator devices (reality: "simulated").
++    // Those are handled by simctl; treating them as physical devices breaks install/launch.
++    return devicesJson.result.devices.filter((device)=>{
++        var ref, ref1;
++        return ((ref = device.hardwareProperties) == null ? void 0 : ref.reality) !== "simulated" && ((ref1 = device.deviceProperties) == null ? void 0 : ref1.provider) !== "com.apple.CoreSimulator.SimulatorCoreDevicePlugin" && device.visibilityClass !== "simulators";
++    });
+ }
+ function assertDevicesJson(results) {
+     var ref;
+@@ -251,10 +256,13 @@ async function installAppWithDeviceCtlAsync(uuid, bundleIdOrAppPath, onProgress)
          childProcess.on("close", (code)=>{
              debug("[close]: " + code);
              if (code === 0) {
@@ -101,6 +115,11 @@ index 042adc9..fc7b2ef 100644
                  resolve();
              } else {
                  const stderr = childProcess.stderr.read();
+-                const err = new Error(stderr);
++                const err = new Error((stderr == null ? void 0 : stderr.toString().trim()) || `xcrun devicectl device install app exited with code ${code}`);
+                 err.code = code;
+                 detach(err);
+             }
 diff --git a/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js b/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js
 index 2e729f3..8bab7c0 100644
 --- a/node_modules/@expo/cli/build/src/start/platforms/ios/ensureSimulatorAppRunning.js

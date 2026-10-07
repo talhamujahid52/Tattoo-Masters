@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  StatusBar,
   Pressable,
   ImageStyle,
   StyleProp,
@@ -52,8 +51,6 @@ const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
           style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         >
-          <StatusBar barStyle="light-content" />
-
           {/* Close Button */}
           <TouchableOpacity
             style={styles.closeButton}
