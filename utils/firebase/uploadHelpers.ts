@@ -32,16 +32,8 @@ export const keepTrying = async (
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const downloadURL = await storage().ref(imagePath).getDownloadURL();
-      // console.log(
-      //   `Successfully got URL for ${imagePath} on attempt ${attempt}`
-      // );
       return downloadURL;
     } catch (error) {
-      // console.log(
-      //   `Attempt ${attempt}/${maxAttempts} failed for ${imagePath}:`,
-      //   error,
-      // );
-
       if (attempt === maxAttempts) {
         throw new Error(
           `Failed to get download URL for ${imagePath} after ${maxAttempts} attempts`,

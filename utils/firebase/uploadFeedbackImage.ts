@@ -24,8 +24,6 @@ export const uploadFeedbackImage = async (
       contentType: 'image/jpeg',
       cacheControl: 'public,max-age=31536000',
     });
-    
-    console.log("Original review image uploaded at:", basePath);
 
     const smallImagePath = basePath.replace(
       fileName,
@@ -42,8 +40,8 @@ export const uploadFeedbackImage = async (
     let downloadUrlLarge: string | undefined;
     try {
       downloadUrlLarge = await storage().ref(largeImagePath).getDownloadURL();
-    } catch (error) {
-      console.log("Large image not ready yet, continuing without it");
+    } catch {
+      // Large image not ready yet, continuing without it
     }
 
     return {

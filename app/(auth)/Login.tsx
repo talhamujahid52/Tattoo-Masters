@@ -83,7 +83,6 @@ const Login = () => {
 
     try {
       const userCredential = await signInWithEmailAndPassword(email, password); // Use user input for login
-      console.log("userCredential : ", userCredential);
       const user = userCredential.user;
 
       const userDocRef = firestore().collection("Users").doc(user.uid);
@@ -101,14 +100,11 @@ const Login = () => {
         if (token) {
           await saveFcmTokenToFirestore(user.uid, token);
         }
-
-        console.log("User signed in!");
       } else {
         Alert.alert(
           "Action Required",
           "Please verify your email address by clicking the link in the email you received."
         );
-        console.log("Email is not verified.");
         try {
           const uid = auth().currentUser?.uid;
           if (uid) {
@@ -126,19 +122,15 @@ const Login = () => {
           "Unsuccessful",
           "No user found with provided email address."
         );
-        console.log("No user found with provided email address.");
       } else if (error.code === "auth/wrong-password") {
         Alert.alert("Unsuccessful", "Incorrect password.");
-        console.log("Incorrect password.");
       } else if (error.code === "auth/invalid-credential") {
         Alert.alert(
           "Unsuccessful",
           "Incorrect email address or password. Please try again."
         );
-        console.log(error);
       } else {
         Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
-        console.log(error);
       }
     }
   };
@@ -154,8 +146,6 @@ const Login = () => {
 
   const onFacebookButtonPress = async () => {
     try {
-      console.log("🔵 Starting Facebook login");
-
       let facebookCredential;
       let androidAccessToken = null; // Store for reuse
 
@@ -213,20 +203,16 @@ const Login = () => {
         );
       }
 
-      console.log("🔵 Signing in to Firebase...");
       const userCredential = await auth().signInWithCredential(
         facebookCredential
       );
       const user = userCredential.user;
-      console.log("✅ Firebase sign-in complete. User:", user);
 
       // Check if user exists in Firestore
       const userDocRef = firestore().collection("Users").doc(user.uid);
       const userDoc = await userDocRef.get();
 
       if (!userDoc.exists) {
-        console.log("👤 New user. Creating user document...");
-
         let userData = {
           uid: user.uid,
           name: user.displayName,
@@ -248,13 +234,11 @@ const Login = () => {
                 `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
               );
               const userInfo = await response.json();
-              console.log("📘 Facebook userInfo:", userInfo);
               return {
                 email: userInfo.email || null,
                 profilePicture: userInfo.picture?.data?.url || null,
               };
             } catch (error) {
-              console.log("❌ Error fetching Facebook user info:", error);
               return { email: null, profilePicture: null };
             }
           };
@@ -272,19 +256,14 @@ const Login = () => {
 
         await userDocRef.set(userData, { merge: true });
         dispatch(setUserFirestoreData(userData));
-        console.log("✅ New user added to Firestore");
       } else {
-        console.log("👤 Existing user found in Firestore");
         dispatch(setUser(userDoc.data()));
       }
 
       const fcmToken = await getFcmToken();
       if (fcmToken) {
         await saveFcmTokenToFirestore(user.uid, fcmToken);
-        console.log("📲 FCM token saved to Firestore");
       }
-
-      console.log("🎉 Facebook login flow complete!");
     } catch (error) {
       console.error("❌ Facebook login error:", error);
       // alert(error?.message || error);

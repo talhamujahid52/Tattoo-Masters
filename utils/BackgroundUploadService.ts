@@ -34,10 +34,8 @@ class BackgroundUploadService {
   private handleAppStateChange = (nextAppState: AppStateStatus) => {
     // Continue processing uploads even when app goes to background
     if (nextAppState === "background" || nextAppState === "inactive") {
-      console.log("App went to background, continuing uploads...");
       // We keep the service running in background for a limited time
     } else if (nextAppState === "active") {
-      console.log("App became active, ensuring upload service is running...");
       this.start();
     }
   };
@@ -46,7 +44,6 @@ class BackgroundUploadService {
     if (this.isRunning) return;
 
     this.isRunning = true;
-    console.log("Background upload service started");
 
     // Clean up old uploads on start
     store.dispatch(cleanupOldUploads());
@@ -64,7 +61,6 @@ class BackgroundUploadService {
     if (!this.isRunning) return;
 
     this.isRunning = false;
-    console.log("Background upload service stopped");
 
     if (this.processingInterval) {
       clearInterval(this.processingInterval);
@@ -97,8 +93,8 @@ class BackgroundUploadService {
       this.cancelledUploadIds.add(item.id);
       try {
         this.activeChatUploads.get(item.id)?.cancel?.();
-      } catch (error) {
-        console.log("Unable to cancel active chat upload:", error);
+      } catch {
+        // Unable to cancel active chat upload
       }
       store.dispatch(
         updateUploadStatus({
@@ -116,7 +112,6 @@ class BackgroundUploadService {
 
     // Don't start new processing if already processing
     if (isProcessing) {
-      // console.log("Already processing uploads, skipping...");
       return;
     }
 
@@ -127,18 +122,13 @@ class BackgroundUploadService {
       return;
     }
 
-    // console.log(
-    //   `Found ${pendingUploads.length} pending uploads out of ${queue.length} total`,
-    // );
     //
-    // console.log(`Processing ${pendingUploads.length} pending uploads...`);
     store.dispatch(setProcessing(true));
 
     // Process uploads one by one to avoid overwhelming Firebase
     for (const uploadItem of pendingUploads) {
       try {
         await this.processUploadItem(uploadItem);
-        // console.log(`Successfully processed upload: ${uploadItem.id}`);
       } catch (error) {
         console.error(`Error processing upload ${uploadItem.id}:`, error);
 
@@ -152,7 +142,6 @@ class BackgroundUploadService {
           errorMessage.includes("File no longer exists") ||
           errorMessage.includes("File not found")
         ) {
-          console.log(`Removing missing file from queue: ${uploadItem.id}`);
           // Mark as failed with clear message, don't retry missing files
           store.dispatch(
             updateUploadStatus({
@@ -194,15 +183,12 @@ class BackgroundUploadService {
       const response = await fetch(uri, { method: "HEAD" });
       return response.ok;
     } catch (error) {
-      console.log(`File existence check failed for ${uri}:`, error);
       // Be lenient and allow upload attempt; Firebase SDK will surface a clear error if missing
       return true;
     }
   }
 
   private async processUploadItem(item: UploadItem): Promise<void> {
-    console.log(`Starting upload for ${item.id}...`);
-
     if (this.cancelledUploadIds.has(item.id)) {
       throw new Error("Conversation is unavailable");
     }
@@ -278,8 +264,6 @@ class BackgroundUploadService {
 
     const dateConst = Date.now().toString();
     const filePath = `chatImages/${item.chatId}${dateConst}/${item.name}`;
-
-    console.log(`Uploading chat image to: ${filePath}`);
 
     const reference = storage().ref(filePath);
 
@@ -401,8 +385,6 @@ class BackgroundUploadService {
         progress: 100,
       }),
     );
-
-    console.log(`Chat image upload completed: ${item.id}`);
   }
 
   private async assertChatImageAllowed(item: UploadItem): Promise<void> {
@@ -576,8 +558,6 @@ class BackgroundUploadService {
     const dateConst = Date.now().toString();
     const filePath = `publications/${item.userId}${dateConst}/${item.name}`;
 
-    console.log(`Uploading publication to: ${filePath}`);
-
     const reference = storage().ref(filePath);
 
     // Upload with progress tracking
@@ -681,8 +661,6 @@ class BackgroundUploadService {
         progress: 100,
       }),
     );
-
-    console.log(`Publication upload completed: ${item.id}`);
   }
 
   private async uploadReview(item: UploadItem): Promise<void> {
@@ -709,8 +687,6 @@ class BackgroundUploadService {
 
     await uploadTask;
 
-    console.log("Review image uploaded at:", basePath);
-
     const smallImagePath = basePath.replace(
       item.name,
       resizedName(item.name, "400x400"),
@@ -728,8 +704,8 @@ class BackgroundUploadService {
     let downloadUrlLarge: string | undefined;
     try {
       downloadUrlLarge = await storage().ref(largeImagePath).getDownloadURL();
-    } catch (error) {
-      console.log("Large image not ready yet, continuing without it");
+    } catch {
+      // Large image not ready yet, continuing without it
     }
 
     const firebaseImageData = {
@@ -756,8 +732,6 @@ class BackgroundUploadService {
         progress: 100,
       }),
     );
-
-    console.log(`Review upload completed: ${item.id}`);
   }
 
   private async uploadFeedback(item: UploadItem): Promise<void> {
@@ -801,8 +775,8 @@ class BackgroundUploadService {
     let downloadUrlLarge: string | undefined;
     try {
       downloadUrlLarge = await storage().ref(largeImagePath).getDownloadURL();
-    } catch (error) {
-      console.log("Large image not ready yet, continuing without it");
+    } catch {
+      // Large image not ready yet, continuing without it
     }
 
     const firebaseImageData = {
@@ -829,8 +803,6 @@ class BackgroundUploadService {
         progress: 100,
       }),
     );
-
-    console.log(`Feedback upload completed: ${item.id}`);
   }
 
   private async uploadProfile(item: UploadItem): Promise<void> {
@@ -840,8 +812,6 @@ class BackgroundUploadService {
 
     const timestamp = Date.now();
     const newFilePath = `profilePictures/${item.userId}/${timestamp}_${item.name}`;
-
-    console.log("Profile upload path:", newFilePath);
 
     const reference = storage().ref(newFilePath);
 
@@ -933,8 +903,6 @@ class BackgroundUploadService {
         progress: 100,
       }),
     );
-
-    console.log(`Profile upload completed: ${item.id}`);
   }
 
   // Retry failed uploads
@@ -943,8 +911,6 @@ class BackgroundUploadService {
     const failedUploads = state.uploadQueue.queue.filter(
       (item) => item.status === "failed" && item.retryCount < 3,
     );
-
-    console.log(`Retrying ${failedUploads.length} failed uploads...`);
 
     for (const item of failedUploads) {
       store.dispatch(

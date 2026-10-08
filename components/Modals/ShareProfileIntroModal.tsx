@@ -40,7 +40,6 @@ const ShareProfileIntroModal: React.FC<Props> = ({ onClose }) => {
     };
   }, [loggedInUser, loggedInUserFirestore, formData]);
 
-  console.log("ProfileImage: ", profileImage);
   return (
     <View style={styles.modalContent}>
       <Image

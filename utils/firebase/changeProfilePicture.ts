@@ -37,18 +37,13 @@ export const changeProfilePicture = async (
     // Delete previously stored resized images (if any).
 
     if (userDoc.exists) {
-      console.log("user exists...");
       const userData = userDoc.data();
       if (userData?.profilePictureDeleteUrls) {
-        console.log("user has profile picture already uploaded...");
         const deleteUrls = userData.profilePictureDeleteUrls;
         for (const key in deleteUrls) {
           if (deleteUrls.hasOwnProperty(key) && deleteUrls[key]) {
             try {
               await storage().ref(deleteUrls[key]).delete();
-              console.log(
-                `Previous profile picture (${key}) deleted successfully.`,
-              );
             } catch (error) {
               console.warn(
                 `Error deleting previous profile picture (${key}):`,
@@ -57,20 +52,16 @@ export const changeProfilePicture = async (
             }
           }
         }
-      } else {
-        console.log("user is uploading for the first time...");
       }
     }
 
     // Create a unique file path for the new original image upload.
     const timestamp = Date.now();
     const newFilePath = `profilePictures/${uid}/${timestamp}_${fileName}`;
-    console.log("newFilePath", newFilePath);
 
     // Upload the original image (which triggers the resizing process).
     const reference = storage().ref(newFilePath);
     await reference.putFile(imageUri);
-    console.log("Original profile picture uploaded at:", newFilePath);
 
     // Generate storage paths for the resized images.
     const smallImagePath = newFilePath.replace(
@@ -95,10 +86,6 @@ export const changeProfilePicture = async (
     const downloadUrlMedium = await keepTrying(mediumImagePath);
     const downloadUrlHigh = await keepTrying(highImagePath);
     const downloadUrlVeryHigh = await keepTrying(veryHighImagePath);
-    console.log("downloadUrlSmall", downloadUrlSmall);
-    console.log("downloadUrlMedium", downloadUrlMedium);
-    console.log("downloadUrlHigh", downloadUrlHigh);
-    console.log("downloadUrlVeryHigh", downloadUrlVeryHigh);
 
     // Update the user's Firestore document with the resized images' download URLs and deletion paths.
     await userDocRef.set(
@@ -117,7 +104,6 @@ export const changeProfilePicture = async (
       { merge: true },
     );
 
-    console.log("User document updated with new profile picture data.");
     return {
       downloadUrlSmall,
       downloadUrlMedium,

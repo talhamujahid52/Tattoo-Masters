@@ -64,7 +64,6 @@ const CreateReviewPassword = () => {
     setError("");
     submitForm();
     // Proceed with account creation logic here
-    console.log("Account created with password:", reviewPassword);
   };
 
   const submitForm = async () => {
@@ -85,11 +84,7 @@ const CreateReviewPassword = () => {
       const imagesToUpload = imgs;
 
       if (imagesToUpload.length > 0) {
-        console.log(
-          `Queueing ${imagesToUpload.length} images (first 4) for background upload`
-        );
         const failures: string[] = [];
-        let passed = 0;
         for (let i = 0; i < imagesToUpload.length; i++) {
           const img: any = imagesToUpload[i];
           const baseName = img?.name || getFileName(img.uri) || "image.jpg";
@@ -97,7 +92,6 @@ const CreateReviewPassword = () => {
           const ext = matchExt ? matchExt[1] : "";
           const stem = ext ? baseName.slice(0, -ext.length) : baseName;
           const name = `${stem}_slot${i + 1}${ext}`;
-          console.log(`Queueing image ${i + 1}/4`, { uri: img.uri, name });
           const ok = await queueUpload({
             uri: img.uri,
             userId: currentUserId,
@@ -108,11 +102,8 @@ const CreateReviewPassword = () => {
           });
           if (!ok) {
             failures.push(name || img.uri);
-          } else {
-            passed++;
           }
         }
-        console.log(`Queued images successfully: ${passed}/4`);
         if (failures.length) {
           console.warn("Some images failed to queue:", failures);
           // Surface a gentle warning; uploads for the rest will continue
@@ -149,7 +140,6 @@ const CreateReviewPassword = () => {
 
       const updatedUser = await getUpdatedUser(currentUserId);
       dispatch(setUserFirestoreData(updatedUser));
-      console.log("profile updated successfully");
       if (originalArtistNumber) {
         router.push({
           pathname: "/artist/OriginalArtistInfoScreen",
@@ -160,8 +150,8 @@ const CreateReviewPassword = () => {
       } else {
         router.push("/artist/SubscriptionInfo");
       }
-    } catch (error) {
-      console.log("error", error);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }

@@ -22,9 +22,6 @@ const ReviewPassword = () => {
   const router = useRouter();
 
   const handleConfirm = async () => {
-    console.log("newReviewPassword: ", newReviewPassword);
-    console.log("confirmNewReviewPassword: ", confirmNewReviewPassword);
-
     setIsLoading(true);
 
     // Check if passwords are not empty and meet the length requirement

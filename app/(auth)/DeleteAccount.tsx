@@ -16,8 +16,6 @@ const DeleteAccount = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  const providerId = auth().currentUser?.providerData;
-  console.log("Provider: ", providerId);
   const handleDelete = async () => {
     if (password !== confirmPassword) {
       Alert.alert("Unsuccessful", "Passwords do not match.");

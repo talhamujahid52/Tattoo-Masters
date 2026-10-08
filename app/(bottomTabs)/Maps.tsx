@@ -69,7 +69,6 @@ const FullScreenMapWithSearch: React.FC = () => {
   // const artists = useSelector((state: any) => state.artist.allArtists);
 
   const searchAll = useTypesense();
-  // console.log("Artists: ", artists);
   // const [selectedArtistId, setSelectedArtistId] = useState("");
 
   const [region, setRegion] = useState<Region>({

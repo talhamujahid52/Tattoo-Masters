@@ -401,8 +401,8 @@ const useChats = (userId?: string) => {
               url: `/artist/IndividualChat?existingChatId=${currentChatID}&otherUserId=${senderId}`,
             },
           );
-        } catch (notificationError) {
-          console.log("Failed to send chat push notification", notificationError);
+        } catch {
+          // Failed to send chat push notification
         }
       }
     },

@@ -54,9 +54,6 @@ const MyProfile = () => {
 
   const myId = loggedInUser?.uid;
 
-  // console.log("My Profile : ", loggedInUser);
-  // console.log("LoggedIn User Id: ", loggedInUser?.uid);
-
   const dispatch = useDispatch();
   const [refreshing, setRefreshing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);

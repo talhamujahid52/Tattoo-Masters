@@ -128,7 +128,6 @@ export const useBackgroundUpload = (): UseBackgroundUploadReturn => {
         })
       );
 
-      console.log(`Queued ${type} upload for user ${userId}: ${fileName}`);
       return true;
     } catch (error) {
       console.error(`Error queuing upload for ${fileName}:`, error);

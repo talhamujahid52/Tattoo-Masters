@@ -33,16 +33,13 @@ export const getFcmToken = async (): Promise<string | null> => {
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
   if (!enabled) {
-    console.log("FCM permission not granted");
     return null;
   }
 
   try {
     const token = await messaging().getToken();
-    console.log("FCM Token:", token);
     return token;
   } catch (error) {
-    console.log("Failed to get FCM token", error);
     return null;
   }
 };
@@ -71,14 +68,13 @@ export const removeFcmTokenFromFirestore = async (
     await userRef.update({
       fcmTokens: firestore.FieldValue.arrayRemove(token),
     });
-  } catch (err) {
-    console.log("Failed to remove FCM token from Firestore", err);
+  } catch {
+    // Failed to remove FCM token from Firestore
   }
 };
 
 const listenForTokenRefresh = (userId: string) => {
   return messaging().onTokenRefresh(async (newToken) => {
-    console.log("FCM token refreshed:", newToken);
     await saveFcmTokenToFirestore(userId, newToken);
   });
 };
@@ -180,11 +176,10 @@ export const clearFcmTokenOnLogout = async (userId?: string) => {
     // Invalidate token on device
     try {
       await messaging().deleteToken();
-      console.log("FCM token deleted on device");
-    } catch (e) {
-      console.log("Failed to delete FCM token on device", e);
+    } catch {
+      // Failed to delete FCM token on device
     }
-  } catch (err) {
-    console.log("Error during FCM logout cleanup", err);
+  } catch {
+    // Error during FCM logout cleanup
   }
 };

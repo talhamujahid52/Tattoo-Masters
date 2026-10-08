@@ -72,15 +72,9 @@ const AppNavigator = () => {
   useNotification(userId); // Handles token, saving, etc.
 
   useNotificationListeners({
-    onReceive: (notification) => {
-      console.log("Received notification in foreground:", notification);
-    },
+    onReceive: () => {},
     onRespond: (response) => {
       // Navigation is handled centrally in useNotificationObserver
-      console.log(
-        "User tapped notification",
-        response?.notification?.request?.identifier
-      );
     },
     showForegroundAlert: false, // We'll manage foreground presentation conditionally below
   });
@@ -255,7 +249,6 @@ const AppNavigator = () => {
 
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
-    // console.log("App Navigator : ", user);
     if (user) {
       dispatch(setUser(user));
     } else {
@@ -292,7 +285,6 @@ const AppNavigator = () => {
   useEffect(() => {
     if (userId) {
       getUpdatedUser(userId).then((updatedUser) => {
-        // console.log("updatedUser", updatedUser);
         dispatch(setUserFirestoreData(updatedUser));
       });
     }
@@ -301,8 +293,6 @@ const AppNavigator = () => {
   // Initialize background upload service when user is authenticated
   useEffect(() => {
     if (userId && !initializing) {
-      console.log("Initializing background upload service for user:", userId);
-
       // Reset any stuck upload states from previous app sessions
       dispatch(resetUploadingStates());
 

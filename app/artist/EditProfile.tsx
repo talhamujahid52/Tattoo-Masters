@@ -238,12 +238,10 @@ const EditProfile = () => {
       const fileName = "profile.jpeg";
 
       // Race between changeProfilePicture and the timeout
-      const profilePictureUrls = await Promise.race([
+      await Promise.race([
         changeProfilePicture(currentUserId, newImageUri, fileName),
         timeoutPromise,
       ]);
-
-      console.log("New resized profile picture URLs:", profilePictureUrls);
     } catch (error) {
       console.error("Failed to update profile picture:", error);
     }
@@ -290,9 +288,8 @@ const EditProfile = () => {
         quality: 1,
       },
       (response) => {
-        if (response.didCancel) {
-          console.log("User cancelled image picker");
-        } else if (response.errorCode) {
+        if (response.didCancel) return;
+        if (response.errorCode) {
           console.error("ImagePicker Error: ", response.errorMessage);
         } else if (response.assets && response.assets.length > 0) {
           const asset = response.assets[0];

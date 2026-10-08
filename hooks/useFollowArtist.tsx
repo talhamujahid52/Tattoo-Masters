@@ -74,8 +74,8 @@ const useFollowArtist = () => {
             type: "favorite",
             followerId: userFirestore.uid,
           });
-        } catch (notifyError) {
-          console.log("Failed to send favorites notification", notifyError);
+        } catch {
+          // Failed to send favorites notification
         }
       }
 

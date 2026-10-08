@@ -139,7 +139,6 @@ const FAQScreen = () => {
 
     try {
       await firestore().collection("app_content").doc("faqs").set(data);
-      console.log("FAQs uploaded successfully.");
     } catch (error) {
       console.error("Failed to upload FAQs:", error);
     }

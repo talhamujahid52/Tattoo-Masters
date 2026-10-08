@@ -30,7 +30,6 @@ export const copyFileToAppDirectory = async (
     } catch (e) {
       // If copy fails (e.g., ph:// on iOS), fall back to original URI
       // We'll still attempt upload from the original URI
-      console.log("copyAsync failed; falling back to original URI", e);
     }
 
     // Validate the file exists via HEAD where possible; otherwise trust OS URIs
@@ -73,7 +72,6 @@ export const validateFileAccess = async (uri: string): Promise<boolean> => {
     const response = await fetch(uri, { method: "HEAD" });
     return response.ok;
   } catch (error) {
-    console.log(`File validation failed for ${uri}:`, error);
     return false;
   }
 };
@@ -87,7 +85,6 @@ export const getFileSize = async (uri: string): Promise<number> => {
     const contentLength = response.headers.get("content-length");
     return contentLength ? parseInt(contentLength, 10) : 0;
   } catch (error) {
-    console.log(`Could not get file size for ${uri}:`, error);
     return 0;
   }
 };
@@ -99,7 +96,6 @@ export const cleanupOldUploadFiles = async (): Promise<void> => {
   try {
     // Future enhancement: Clean up old upload files to free space
     // This would require react-native-fs or similar file system access
-    console.log("Cleanup of old upload files would happen here");
   } catch (error) {
     console.error("Error cleaning up old upload files:", error);
   }

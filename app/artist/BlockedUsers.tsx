@@ -72,7 +72,6 @@ const BlockedUsers = () => {
               },
             ] as const;
           } catch (error) {
-            console.log("Could not refresh blocked-user profile:", error);
             return [record.blockedUserId, fallback] as const;
           }
         }),

@@ -29,12 +29,10 @@ export const useSignInWithGoogle = () => {
       }
 
       const user = userCredential.user;
-      console.log("Signed In User : ", user);
 
       // Check if user exists in Firestore (in "users" collection)
       const userDocRef = firestore().collection("Users").doc(user.uid);
       const userDoc = await userDocRef.get();
-      console.log("User Doc: ", userDoc.data());
 
       let userData;
       if (!userDoc.exists) {
@@ -52,9 +50,7 @@ export const useSignInWithGoogle = () => {
           },
           { merge: true },
         );
-        console.log("User added to Firestore!");
       } else {
-        console.log("User already exists in Firestore");
         dispatch(setUser(userDoc.data()));
       }
 
@@ -64,11 +60,9 @@ export const useSignInWithGoogle = () => {
         await saveFcmTokenToFirestore(user.uid, token);
       }
 
-      console.log("User signed in and data saved to Firestore!");
       //   return userData;
     } catch (error) {
       // alert(error);
-      console.log("Google Sign-In error:", error);
     }
   };
 

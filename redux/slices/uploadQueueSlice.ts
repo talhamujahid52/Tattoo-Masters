@@ -154,7 +154,6 @@ const uploadQueueSlice = createSlice({
           (item.error.includes("File missing") ||
             item.error.includes("File not found"))
         ) {
-          console.log(`Not retrying missing file: ${item.name}`);
           return;
         }
         item.status = "pending";
@@ -189,7 +188,6 @@ const uploadQueueSlice = createSlice({
       // Remove failed uploads older than 1 hour to prevent persistent failures across app restarts
       state.queue = state.queue.filter((item) => {
         if (item.status === "failed" && item.createdAt < oneHourAgo) {
-          console.log(`Cleaning up old failed upload: ${item.name}`);
           return false;
         }
         return true;
@@ -201,7 +199,6 @@ const uploadQueueSlice = createSlice({
       state.isProcessing = false;
       state.queue = state.queue.map((item) => {
         if (item.status === "uploading") {
-          console.log(`Resetting stuck upload state for: ${item.name}`);
           return {
             ...item,
             status: "pending" as const,

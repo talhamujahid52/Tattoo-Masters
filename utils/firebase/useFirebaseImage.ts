@@ -61,9 +61,6 @@ export const keepTrying = async (
     return url;
   } catch (error: any) {
     if (error.code === "storage/object-not-found") {
-      console.log(
-        `Retrying to fetch URL for ${storagePath} (${triesRemaining} tries left)...`,
-      );
       await delay(4000);
       return keepTrying(storagePath, triesRemaining - 1);
     } else {
@@ -80,13 +77,10 @@ const useFirebaseImage = ({
   // Function to upload images
   const uploadImages = async (arrayImages: ImageItem[]): Promise<void> => {
     const dateConst = Date.now().toString();
-    console.log("arrayImages", arrayImages);
     try {
       const uploadPromises = arrayImages.map(async (item) => {
         const filePath = `publications/${uniqueFilePrefix}${dateConst}/${item.name}`;
-        console.log("filePath", filePath);
         const reference = storage().ref(filePath);
-        console.log("file.uri", item.uri);
         // Upload file directly using putFile
         //
         await reference.putFile(item.uri);

@@ -127,8 +127,6 @@ const ArtistProfile = () => {
     longitudeDelta: 0.02,
   };
 
-  console.log("Artist Profile: ", artist);
-
   const region = {
     latitude: artist?.data?.location?.[0] || defaultLocation.latitude,
     longitude: artist?.data?.location?.[1] || defaultLocation.longitude,
@@ -371,9 +369,6 @@ const ArtistProfile = () => {
       artist?.data?.location?.[0] || defaultLocation.latitude;
     const destinationLng =
       artist?.data?.location?.[1] || defaultLocation.longitude;
-
-    // console.log("destinationLat ", destinationLat);
-    // console.log("destinationLng ", destinationLng);
 
     const currentCoords = await getCurrentCoordinates();
     if (!currentCoords) {
@@ -770,7 +765,6 @@ const ArtistProfile = () => {
             <Pressable
               // onPress={openLocationInGoogleMaps}
               onPress={() => {
-                // console.log("Artist Location: ", artist?.data?.location);
                 router.push({
                   pathname: "/artist/MapDetails",
                   params: {

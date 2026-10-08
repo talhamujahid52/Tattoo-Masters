@@ -173,8 +173,8 @@ export const useSafety = () => {
       try {
         const blockedUserDocument = await blockedUserRef.get();
         blockedUserData = blockedUserDocument.data();
-      } catch (error) {
-        console.log("Could not load blocked-user profile snapshot:", error);
+      } catch {
+        // Could not load blocked-user profile snapshot
       }
 
       const blockedUserSnapshot = resolveBlockedUserSnapshot(

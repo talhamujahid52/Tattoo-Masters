@@ -58,7 +58,6 @@ export const updateUserProfile = async (
       .collection("Users")
       .doc(userId)
       .set(formData, { merge: true });
-    console.log("User updated successfully!");
   } catch (error) {
     console.error("Error updating user profile:", error);
     throw error;
@@ -184,7 +183,6 @@ export const signInWithGoogle = async () => {
   try {
     await GoogleSignin.hasPlayServices();
     const userInfo: any = await GoogleSignin.signIn();
-    console.log("User Info:", userInfo);
 
     const idToken: string = userInfo.data.idToken as string;
     let userCredential;
@@ -201,12 +199,10 @@ export const signInWithGoogle = async () => {
     }
 
     const user = userCredential.user;
-    console.log("User signed in:", user);
 
     // Check if user exists in Firestore (in "users" collection)
     const userDocRef = firestore().collection("Users").doc(user.uid);
     const userDoc = await userDocRef.get();
-    console.log("User Doc: ", userDoc.data());
 
     if (!userDoc.exists) {
       // User does not exist in Firestore, create a new user document
@@ -220,16 +216,10 @@ export const signInWithGoogle = async () => {
         isArtist: false,
         createdAt: firestore.FieldValue.serverTimestamp(), // Add timestamp for user creation
       });
-      console.log("User added to Firestore!");
       return userDoc.data();
-    } else {
-      console.log("User already exists in Firestore");
     }
-
-    console.log("User signed in and data saved to Firestore!");
   } catch (error) {
     alert(error);
-    console.log("Google Sign-In error:", error);
   }
 };
 
@@ -314,8 +304,6 @@ export const toggleLikePublication = async (
       },
     )) as LikeTransactionResult;
 
-    console.log("Publication like toggled successfully.");
-
     if (
       result?.likeAdded &&
       result.ownerId &&
@@ -332,9 +320,8 @@ export const toggleLikePublication = async (
           publicationId,
           url,
         });
-        console.log("sent like notification");
-      } catch (notifyError) {
-        console.log("Failed to send like notification", notifyError);
+      } catch {
+        // Failed to send like notification
       }
     }
   } catch (error) {

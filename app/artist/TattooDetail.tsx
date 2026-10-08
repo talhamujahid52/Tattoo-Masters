@@ -308,7 +308,6 @@ const TattooDetail: React.FC = () => {
       // Revert optimistic update on failure
       setLiked((prev) => !prev);
       setLikesCount((prev) => Math.max(0, (prev ?? 0) + (liked ? -1 : 1)));
-      console.log("failed to like unlike photo");
     } finally {
       setLoading(false);
     }
@@ -318,7 +317,6 @@ const TattooDetail: React.FC = () => {
     if (userId) {
       getDocument({ collection: "Users", documentId: userId })
         .then((doc) => {
-          // console.log("user details", doc);
           setUserDetails(doc);
         })
         .catch((err) =>

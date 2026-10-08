@@ -86,7 +86,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
         latitude,
         longitude,
       });
-      console.log("Result is  : ", result);
       if (result.length > 0) {
         return result[0].isoCountryCode; // e.g. "US"
       }
@@ -112,8 +111,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
 
         if (storedPhoneNumber.includes(" ")) {
           const [code, number] = storedPhoneNumber.split(" ");
-          console.log("code ", code);
-          console.log("number ", number);
 
           // Find country by calling code
           const matchedCountry = countries.find(
@@ -121,7 +118,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
           );
 
           if (matchedCountry) {
-            console.log("Matched country from user data:", matchedCountry.name);
             setSelectedCountry(matchedCountry);
             setInputValue(number);
 
@@ -135,7 +131,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
           // // Notify parent component
           // onChange(storedPhoneNumber, "");
           const coords = await getCurrentCoordinates();
-          console.log("coords: ", coords);
           if (!coords) {
             setIsInitialized(true);
             return;
@@ -158,10 +153,8 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
         }
       } else {
         // If no logged in user data, select country from API
-        console.log("No user data found, detecting location...");
 
         const coords = await getCurrentCoordinates();
-        console.log("coords: ", coords);
         if (!coords) {
           setIsInitialized(true);
           return;
@@ -185,7 +178,6 @@ const PhoneCustomInput: React.FC<PhoneCustomInputProps> = ({
 
       setIsInitialized(true);
     };
-    console.log("loggedInUserFirestore in useeffect ", loggedInUserFirestore);
     initializePhoneData();
   }, [loggedInUserFirestore]); // Only depend on loggedInUserFirestore
 

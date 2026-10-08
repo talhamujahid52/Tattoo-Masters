@@ -42,8 +42,6 @@ const ShareArtistProfileBottomSheet = ({
     }
   };
 
-  console.log("LoggedIn USer, ", loggedInUser);
-
   return (
     <View style={styles.container}>
       <TouchableOpacity

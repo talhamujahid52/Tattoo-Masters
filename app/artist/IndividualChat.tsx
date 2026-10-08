@@ -244,7 +244,6 @@ const IndividualChat: React.FC = () => {
           const userData = userDoc.data();
           setOtherUserDetails(userData);
           // Do whatever you need with userData
-          // console.log("Fetched user data:", userData);
         } else {
           console.warn("User not found with ID:", otherUserId);
         }
@@ -424,7 +423,6 @@ const IndividualChat: React.FC = () => {
           minute: "2-digit",
           hour12: true,
         });
-        console.log("Time: ", timeOnly);
         return timeOnly; // e.g., "03:15 AM"
       } else if (data.status === "ZERO_RESULTS") {
         // Gracefully ignore when API cannot determine a timezone for the given location

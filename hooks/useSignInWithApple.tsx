@@ -111,11 +111,10 @@ export const useSignInWithApple = () => {
         return;
       }
 
-      console.log("Apple Sign-In error:", error);
       try {
         await auth().signOut();
-      } catch (signOutError) {
-        console.log("Apple Sign-In cleanup error:", signOutError);
+      } catch {
+        // Apple Sign-In cleanup error
       }
       await clearLocalSession(dispatch);
       Alert.alert("Unsuccessful", "Apple sign in failed. Please try again.");

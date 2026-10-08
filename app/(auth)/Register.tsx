@@ -66,14 +66,6 @@ const Register: React.FC = () => {
   const handleRegister = async () => {
     const fullPhoneNumber = formatPhoneNumber();
 
-    console.log("Full Name:", fullName);
-    console.log("Email:", email);
-    console.log("Country Code:", countryCode);
-    console.log("Phone:", phone);
-    console.log("Phone Number:", fullPhoneNumber);
-    console.log("Password:", password);
-    console.log("Confirm Password:", confirmPassword);
-
     if (!validateEmail(email)) {
       Alert.alert("Action Required", "Please enter a valid email address.");
       return;
@@ -113,7 +105,6 @@ const Register: React.FC = () => {
       await clearLocalSession(dispatch);
       router.replace({ pathname: "/(auth)/EmailVerification" });
     } catch (error: any) {
-      console.log("error: ", error);
       if (error && error.code && error.message) {
         Alert.alert("Unsuccessful", "Something went wrong. Please try again.");
       } else {
@@ -124,8 +115,6 @@ const Register: React.FC = () => {
 
   const onFacebookButtonPress = async () => {
     try {
-      console.log("🔵 Starting Facebook login");
-
       let facebookCredential;
       let androidAccessToken = null; // Store for reuse
 
@@ -183,20 +172,16 @@ const Register: React.FC = () => {
         );
       }
 
-      console.log("🔵 Signing in to Firebase...");
       const userCredential = await auth().signInWithCredential(
         facebookCredential
       );
       const user = userCredential.user;
-      console.log("✅ Firebase sign-in complete. User:", user);
 
       // Check if user exists in Firestore
       const userDocRef = firestore().collection("Users").doc(user.uid);
       const userDoc = await userDocRef.get();
 
       if (!userDoc.exists) {
-        console.log("👤 New user. Creating user document...");
-
         let userData = {
           uid: user.uid,
           name: user.displayName,
@@ -218,13 +203,11 @@ const Register: React.FC = () => {
                 `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`
               );
               const userInfo = await response.json();
-              console.log("📘 Facebook userInfo:", userInfo);
               return {
                 email: userInfo.email || null,
                 profilePicture: userInfo.picture?.data?.url || null,
               };
             } catch (error) {
-              console.log("❌ Error fetching Facebook user info:", error);
               return { email: null, profilePicture: null };
             }
           };
@@ -242,19 +225,14 @@ const Register: React.FC = () => {
 
         await userDocRef.set(userData, { merge: true });
         dispatch(setUserFirestoreData(userData));
-        console.log("✅ New user added to Firestore");
       } else {
-        console.log("👤 Existing user found in Firestore");
         dispatch(setUser(userDoc.data()));
       }
 
       const fcmToken = await getFcmToken();
       if (fcmToken) {
         await saveFcmTokenToFirestore(user.uid, fcmToken);
-        console.log("📲 FCM token saved to Firestore");
       }
-
-      console.log("🎉 Facebook login flow complete!");
     } catch (error) {
       console.error("❌ Facebook login error:", error);
       // alert(error?.message || error);
