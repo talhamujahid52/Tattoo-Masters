@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 import {
@@ -37,7 +43,13 @@ const DRAG_FADE_DISTANCE = 300;
 
 interface ChatMessageImageProps {
   uri?: string;
+  // True until the upload has replaced the sender's local path with a URL
+  pending?: boolean;
+  // Whether the current user sent the message
+  isOwn?: boolean;
 }
+
+const isRemoteUri = (uri: string) => /^https?:\/\//i.test(uri);
 
 const CloseButton: React.FC<{ onPress: () => void }> = ({ onPress }) => {
   const insets = useSafeAreaInsets();
@@ -151,12 +163,30 @@ const Viewer: React.FC<{ uri: string; onClose: () => void }> = ({
   );
 };
 
-const ChatMessageImage: React.FC<ChatMessageImageProps> = ({ uri }) => {
+const ChatMessageImage: React.FC<ChatMessageImageProps> = ({
+  uri,
+  pending,
+  isOwn,
+}) => {
   const [visible, setVisible] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   if (!uri) return null;
 
   const close = () => setVisible(false);
+
+  // Until the upload finishes, the message holds a path on the sender's
+  // device. The sender can still show it; anyone else gets a placeholder.
+  const remote = isRemoteUri(uri);
+  const canDisplay = remote || (isOwn && !failed);
+
+  if (!canDisplay) {
+    return (
+      <View style={[styles.thumbnail, styles.placeholder]}>
+        <ActivityIndicator color="#fff" />
+      </View>
+    );
+  }
 
   return (
     <View>
@@ -166,7 +196,13 @@ const ChatMessageImage: React.FC<ChatMessageImageProps> = ({ uri }) => {
           source={{ uri }}
           contentFit="cover"
           cachePolicy="memory-disk"
+          onError={() => setFailed(true)}
         />
+        {pending && !remote && (
+          <View style={[styles.thumbnail, styles.uploadingOverlay]}>
+            <ActivityIndicator color="#fff" />
+          </View>
+        )}
       </TouchableOpacity>
 
       <Modal
@@ -194,6 +230,19 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 13,
     margin: 3,
+  },
+  placeholder: {
+    backgroundColor: "#2a2a2a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  uploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   overlay: {
     flex: 1,

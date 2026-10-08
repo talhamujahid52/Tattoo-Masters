@@ -26,8 +26,10 @@ export const resizedName = (originalName: string, size: string): string => {
  */
 export const keepTrying = async (
   imagePath: string,
-  maxAttempts: number = 10,
-  delay: number = 5000,
+  // Polled every second so the URL is picked up soon after the resized image
+  // appears; the total wait stays at 60 seconds
+  maxAttempts: number = 60,
+  delay: number = 1000,
 ): Promise<string> => {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -41,7 +43,7 @@ export const keepTrying = async (
       }
 
       // Wait before next attempt
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 

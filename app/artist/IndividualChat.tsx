@@ -70,7 +70,11 @@ const KeyboardListSpacer: React.FC<{ bottomOffset: number }> = ({
 };
 
 const renderMessageImage = (props: any) => (
-  <ChatMessageImage uri={props.currentMessage?.image} />
+  <ChatMessageImage
+    uri={props.currentMessage?.image}
+    pending={!!props.currentMessage?.pending}
+    isOwn={props.currentMessage?.user?._id === props.user?._id}
+  />
 );
 
 const getImageFileName = (asset: Asset) => {
