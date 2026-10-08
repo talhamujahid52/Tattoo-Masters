@@ -25,7 +25,7 @@ import ArtistSearchCard from "@/components/ArtistSearchCard";
 import { useDispatch, useSelector } from "react-redux";
 import { router, useLocalSearchParams } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
-import { setAllArtists } from "@/redux/slices/artistSlice";
+import { setAllArtists, updateAllArtists } from "@/redux/slices/artistSlice";
 import {
   addSearch,
   clearSearches,
@@ -39,6 +39,8 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+
+const ARTISTS_PER_PAGE = 21;
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
@@ -74,9 +76,17 @@ const Search: React.FC = () => {
   const artistsTs = useTypesense();
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
-  const artists: any[] = useSelector(
+  const cachedArtists: any[] = useSelector(
     (state: any) => state.artist.allArtists,
   );
+  // Pages loaded by this screen. The shared list can't be paged over, since
+  // Home replaces it on refresh.
+  const [loadedArtists, setLoadedArtists] = useState<any[] | null>(null);
+  // Until the first page arrives, show whatever is cached
+  const artists = loadedArtists ?? cachedArtists;
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const loadingRef = useRef(false);
   const currentUserId = useSelector(
     (state: RootState) => state.user.user?.uid,
   );
@@ -90,27 +100,51 @@ const Search: React.FC = () => {
     [artists, blockedUserIds, currentUserId, safetyHydrated],
   );
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     try {
       const hits = await artistsTs.search({
         collection: "Users",
         query: "",
         queryBy: "name,studio,studioName",
         filterBy: "isArtist:=true",
+        page,
+        per_page: ARTISTS_PER_PAGE,
       });
-      const docs = hits.map((h: any) => h.document);
-      dispatch(
-        setAllArtists(docs.map(({ id, ...data }: any) => ({ id, data }))),
-      );
+      const fetched = hits.map(({ document: { id, ...data } }: any) => ({
+        id,
+        data,
+      }));
+      pageRef.current = page;
+      // A short page means the end has been reached
+      hasMoreRef.current = hits.length >= ARTISTS_PER_PAGE;
+      setLoadedArtists((prev) => {
+        if (page === 1 || !prev) return fetched;
+        const loadedIds = new Set(prev.map((artist) => artist.id));
+        return [
+          ...prev,
+          ...fetched.filter((artist: any) => !loadedIds.has(artist.id)),
+        ];
+      });
+      // Artist profiles read from the shared list, so every page goes there too
+      dispatch(page === 1 ? setAllArtists(fetched) : updateAllArtists(fetched));
     } catch (err) {
       console.error("Error fetching users:", err);
+    } finally {
+      loadingRef.current = false;
     }
   };
 
   // initial fetch
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1);
   }, []);
+
+  const handleLoadMore = () => {
+    if (!hasMoreRef.current) return;
+    fetchUsers(pageRef.current + 1);
+  };
 
   // overlay fade (if you re-enable it)
   useEffect(() => {
@@ -281,6 +315,8 @@ const Search: React.FC = () => {
               renderItem={renderArtistItem}
               keyExtractor={(item: any) => item.id}
               numColumns={3}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
             />

@@ -1,0 +1,27 @@
+diff --git a/node_modules/react-native-gifted-chat/lib/Message/index.js b/node_modules/react-native-gifted-chat/lib/Message/index.js
+index f46f708..cea7ee2 100644
+--- a/node_modules/react-native-gifted-chat/lib/Message/index.js
++++ b/node_modules/react-native-gifted-chat/lib/Message/index.js
+@@ -79,7 +79,7 @@ Message = memo(Message, (props, nextProps) => {
+             !isEqual(current, next) ||
+             !isEqual(previousMessage, nextPropsPreviousMessage) ||
+             !isEqual(nextMessage, nextPropsMessage);
+-    return shouldUpdate;
++    return !shouldUpdate;
+ });
+ export default Message;
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-gifted-chat/src/Message/index.tsx b/node_modules/react-native-gifted-chat/src/Message/index.tsx
+index f434294..c0f40d6 100644
+--- a/node_modules/react-native-gifted-chat/src/Message/index.tsx
++++ b/node_modules/react-native-gifted-chat/src/Message/index.tsx
+@@ -129,7 +129,7 @@ Message = memo(Message, (props, nextProps) => {
+     !isEqual(previousMessage, nextPropsPreviousMessage) ||
+     !isEqual(nextMessage, nextPropsMessage)
+ 
+-  return shouldUpdate
++  return !shouldUpdate
+ })
+ 
+ export default Message

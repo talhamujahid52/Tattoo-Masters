@@ -32,20 +32,42 @@ const MapDetails = () => {
   );
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
-  const visibleArtists = useMemo(
-    () =>
-      currentUserId && !safetyHydrated
-        ? []
-        : filterBlockedArtists(artists, blockedUserIds),
-    [artists, blockedUserIds, currentUserId, safetyHydrated],
-  );
-
-  const { location } = useLocalSearchParams();
+  const { location, artistId, profilePicture } = useLocalSearchParams();
   const locationParam = Array.isArray(location) ? location[0] : location;
+  const selectedArtistId = Array.isArray(artistId) ? artistId[0] : artistId;
+  const selectedPicture = Array.isArray(profilePicture)
+    ? profilePicture[0]
+    : profilePicture;
   // Without a usable location the map opens on Finland instead of zooming in
   const selectedLocation = useMemo(
     () => parseLocationParam(locationParam),
     [locationParam],
+  );
+
+  // The artist this screen was opened for always gets a pin, original or not
+  const selectedArtist = useMemo(
+    () =>
+      selectedLocation && {
+        id: selectedArtistId,
+        data: {
+          location: [selectedLocation.latitude, selectedLocation.longitude],
+          profilePictureSmall: selectedPicture || undefined,
+        },
+      },
+    [selectedLocation, selectedArtistId, selectedPicture],
+  );
+
+  // Everyone else only gets a pin as an original artist
+  const visibleArtists = useMemo(
+    () =>
+      currentUserId && !safetyHydrated
+        ? []
+        : filterBlockedArtists(artists, blockedUserIds).filter(
+            (artist: any) =>
+              artist?.data?.originalArtistNumber &&
+              artist?.id !== selectedArtistId,
+          ),
+    [artists, blockedUserIds, currentUserId, safetyHydrated, selectedArtistId],
   );
 
   const [region, setRegion] = useState(
@@ -194,6 +216,7 @@ const MapDetails = () => {
         {visibleArtists.map((artist: any, index: number) => (
           <ArtistMapMarker key={artist?.id ?? index} artist={artist} />
         ))}
+        {selectedArtist && <ArtistMapMarker artist={selectedArtist} />}
       </MapView>
       {/* <View style={styles.zoomControls}>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>

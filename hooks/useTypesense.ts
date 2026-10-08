@@ -100,7 +100,8 @@ const useTypesense = () => {
             q: query ?? "",
             query_by: queryBy ?? "caption,styles",
             filter_by: filterBy, // pass the filterBy parameter here
-            limit: 100, // Adjust limit as needed
+            // Never below per_page, so a larger page size isn't capped at 100
+            limit: Math.max(100, per_page ?? 0),
             page: page ?? 1,
             per_page: per_page ?? 10,
           });

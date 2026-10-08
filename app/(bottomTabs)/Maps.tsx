@@ -17,7 +17,7 @@ import {
 import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { MaterialIcons } from "@expo/vector-icons";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
 import Input from "@/components/Input";
 import {
   GooglePlaceData,
@@ -44,10 +44,6 @@ import {
   setCurrentlyViewingArtist,
 } from "@/redux/slices/filterSlices";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  resetSearchResults,
-  updateSearchResults,
-} from "@/redux/slices/artistSlice";
 import { addSearch } from "@/redux/slices/recentSearchesSlice";
 import { setTattooLoading } from "@/redux/slices/tattooSlice";
 import useTypesense from "@/hooks/useTypesense";
@@ -58,6 +54,48 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+
+// How far past the visible map artists are fetched, as a share of its size,
+// so short pans and zooming in don't need a new search
+const VIEWPORT_OFFSET = 0.5;
+// Wait for the map to settle before searching
+const VIEWPORT_SEARCH_DELAY_MS = 300;
+// Typesense's largest page; a crowded view is read over several of them
+const ARTISTS_PER_PAGE = 250;
+const MAX_ARTIST_PAGES = 4;
+const KM_PER_DEGREE = 111.32;
+const EARTH_RADIUS_KM = 6371;
+// A circle this wide already covers the globe
+const WHOLE_EARTH_RADIUS_KM = 20000;
+
+type SearchArea = { latitude: number; longitude: number; radiusKm: number };
+
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+// The smallest circle that contains the visible map
+const toSearchArea = (region: Region): SearchArea => {
+  const halfHeightKm = (Math.abs(region.latitudeDelta) / 2) * KM_PER_DEGREE;
+  const halfWidthKm =
+    (Math.min(Math.abs(region.longitudeDelta), 360) / 2) *
+    KM_PER_DEGREE *
+    Math.cos(toRadians(region.latitude));
+  return {
+    latitude: region.latitude,
+    longitude: region.longitude,
+    radiusKm: Math.hypot(halfHeightKm, halfWidthKm),
+  };
+};
+
+const distanceKm = (a: SearchArea, b: SearchArea) => {
+  const dLat = toRadians(b.latitude - a.latitude);
+  const dLng = toRadians(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRadians(a.latitude)) *
+      Math.cos(toRadians(b.latitude)) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+};
 
 const FullScreenMapWithSearch: React.FC = () => {
   const { BottomSheet, show, hide } = useFilterBottomSheet();
@@ -78,15 +116,25 @@ const FullScreenMapWithSearch: React.FC = () => {
   >(Platform.OS === "android" ? "none" : "standard");
 
   const [searchText, setSearchText] = useState("");
-  const artists: any[] = useSelector((s: any) => s.artist.searchResults);
+  // Artists found in and around the visible map
+  const [artists, setArtists] = useState<any[]>([]);
+  // What the map currently shows
+  const viewportRef = useRef<SearchArea | null>(null);
+  // The area the loaded pins fully cover; null when unknown or incomplete
+  const fetchedAreaRef = useRef<SearchArea | null>(null);
+  const searchIdRef = useRef(0);
+  const viewportTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const currentUserId = useSelector((state: RootState) => state.user.user?.uid);
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
+  // Only original artists get a pin on the map
   const visibleArtists = useMemo(
     () =>
       currentUserId && !safetyHydrated
         ? []
-        : filterBlockedArtists(artists, blockedUserIds),
+        : filterBlockedArtists(artists, blockedUserIds).filter(
+            (artist: any) => artist?.data?.originalArtistNumber
+          ),
     [artists, blockedUserIds, currentUserId, safetyHydrated]
   );
   const dispatch = useDispatch();
@@ -324,28 +372,53 @@ const FullScreenMapWithSearch: React.FC = () => {
     return facets;
   };
   const searchArtists = async (query: string) => {
+    const viewport = viewportRef.current;
+    // Nothing to search until the map reports what it shows
+    if (!viewport) return;
+    const area: SearchArea = {
+      ...viewport,
+      radiusKm: Math.min(
+        viewport.radiusKm * (1 + VIEWPORT_OFFSET),
+        WHOLE_EARTH_RADIUS_KM
+      ),
+    };
+    const viewportFilter =
+      area.radiusKm < WHOLE_EARTH_RADIUS_KM
+        ? `location:(${area.latitude}, ${area.longitude}, ${area.radiusKm.toFixed(2)} km)`
+        : null;
+    const searchId = ++searchIdRef.current;
     const geoFilter =
       persistedRadiusEnabled && currentLocation
         ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
         : null;
     const filterBy = [
       `isArtist:=${true}`,
+      viewportFilter,
       geoFilter,
       ...buildFacetFilters("artists"),
     ]
       .filter(Boolean)
       .join(" && ");
-    const hits = await searchAll.search({
-      collection: "Users",
-      query,
-      queryBy: "address,city,studioName",
-      filterBy: filterBy,
-    });
-    dispatch(
-      updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document }))
-      )
-    );
+    const found: any[] = [];
+    let complete = false;
+    for (let page = 1; page <= MAX_ARTIST_PAGES && !complete; page++) {
+      const hits = await searchAll.search({
+        collection: "Users",
+        query,
+        queryBy: "address,city,studioName",
+        filterBy: filterBy,
+        page,
+        per_page: ARTISTS_PER_PAGE,
+      });
+      // The map moved on, or the filters changed, while this was loading
+      if (searchId !== searchIdRef.current) return;
+      found.push(
+        ...hits.map((h: any) => ({ id: h.document.id, data: h.document }))
+      );
+      complete = hits.length < ARTISTS_PER_PAGE;
+    }
+    setArtists(found);
+    fetchedAreaRef.current = complete ? area : null;
     dispatch(addSearch({ text: query, type: "artists" }));
   };
 
@@ -356,7 +429,8 @@ const FullScreenMapWithSearch: React.FC = () => {
       await searchArtists(query);
     } catch (err) {
       console.error("Search error:", err);
-      dispatch(resetSearchResults());
+      // Keep the pins already on the map, but search again on the next move
+      fetchedAreaRef.current = null;
     } finally {
       setLoading(false);
     }
@@ -381,6 +455,50 @@ const FullScreenMapWithSearch: React.FC = () => {
     persistedStudio,
     persistedStyles,
   ]);
+
+  // Always the search for the latest text and filters
+  const searchViewportRef = useRef(() => {});
+  searchViewportRef.current = () => doSearch(searchedText);
+
+  const handleRegionChange = (region: Region) => {
+    const viewport = toSearchArea(region);
+    viewportRef.current = viewport;
+    // Debounced: every move cancels the search queued by the one before it
+    clearTimeout(viewportTimerRef.current);
+    const fetched = fetchedAreaRef.current;
+    // The pins for this view are already loaded
+    if (
+      fetched &&
+      distanceKm(fetched, viewport) + viewport.radiusKm <= fetched.radiusKm
+    ) {
+      return;
+    }
+    viewportTimerRef.current = setTimeout(
+      () => searchViewportRef.current(),
+      VIEWPORT_SEARCH_DELAY_MS
+    );
+  };
+
+  useEffect(() => () => clearTimeout(viewportTimerRef.current), []);
+
+  // The map doesn't always report its first region, so ask for it once loaded
+  const readInitialViewport = async () => {
+    if (viewportRef.current) return;
+    try {
+      const bounds = await mapRef.current?.getMapBoundaries();
+      if (!bounds || viewportRef.current) return;
+      const { northEast, southWest } = bounds;
+      // The span is negative when the view crosses the antimeridian
+      const longitudeDelta =
+        (northEast.longitude - southWest.longitude + 360) % 360;
+      handleRegionChange({
+        latitude: (northEast.latitude + southWest.latitude) / 2,
+        longitude: southWest.longitude + longitudeDelta / 2,
+        latitudeDelta: northEast.latitude - southWest.latitude,
+        longitudeDelta,
+      });
+    } catch {}
+  };
 
   return (
     <View style={styles.container}>
@@ -544,9 +662,11 @@ const FullScreenMapWithSearch: React.FC = () => {
         loadingEnabled
         loadingBackgroundColor="#000"
         loadingIndicatorColor="#fff"
+        onRegionChangeComplete={handleRegionChange}
         onMapLoaded={() => {
           setMapReady(true);
           if (mapTypeState !== "standard") setMapTypeState("standard");
+          readInitialViewport();
         }}
       >
         {visibleArtists.map((artist: any, index: number) => (

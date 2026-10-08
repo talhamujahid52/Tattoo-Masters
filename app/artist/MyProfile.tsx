@@ -478,26 +478,19 @@ const MyProfile = () => {
             {!isUnsetLocation(loggedInUser?.location) && (
               <>
                 <View style={{ marginTop: 8 }}>
-                  <Text
-                    size="h4"
-                    weight="semibold"
-                    color="white"
-                    style={{ marginBottom: 10 }}
-                  >
-                    Address
-                  </Text>
                   <View
                     style={{
-                      display: "flex",
                       flexDirection: "row",
                       justifyContent: "space-between",
-                      marginBottom: -8,
+                      alignItems: "center",
+                      marginBottom: 10,
                     }}
                   >
-                    <Text size="large" weight="normal" color="#A7A7A7">
-                      {loggedInUser?.address || ""}
+                    <Text size="h4" weight="semibold" color="white">
+                      Address
                     </Text>
                     <Pressable
+                      hitSlop={12}
                       onPress={async () => {
                         try {
                           await openInGoogleMaps();
@@ -511,6 +504,14 @@ const MyProfile = () => {
                       </Text>
                     </Pressable>
                   </View>
+                  <Text
+                    size="large"
+                    weight="normal"
+                    color="#A7A7A7"
+                    style={{ marginBottom: -8 }}
+                  >
+                    {loggedInUser?.address || ""}
+                  </Text>
                 </View>
                 <Pressable
                   onPress={() => {
@@ -521,6 +522,12 @@ const MyProfile = () => {
                           loggedInUser?.location?.latitude,
                           loggedInUser?.location?.longitude,
                         ]),
+                        artistId: myId,
+                        profilePicture: encodeURIComponent(
+                          loggedInUser?.profilePictureSmall ??
+                            loggedInUser?.profilePicture ??
+                            "",
+                        ),
                       },
                     });
                   }}

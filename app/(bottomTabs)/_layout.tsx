@@ -1,4 +1,4 @@
-import { Image, Pressable } from "react-native";
+import { Image, Platform, Pressable } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
@@ -89,7 +89,9 @@ const BottomTabsLayout = () => {
               ),
             headerStyle: {
               backgroundColor: "#000",
-              height: 55,
+              // The header is empty, so on Android its whole height is blank
+              // space above the search field
+              height: Platform.OS === "android" ? insets.top + 10 : 55,
               shadowOpacity: 0,
             },
           }}
