@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ddjn.tattoomasters",
-      "associatedDomains": ["applinks:tattoomasters.app"],
+      "associatedDomains": [
+        "applinks:www.tattoomasters.app",
+        "applinks:tattoomasters.app"
+      ],
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -51,7 +54,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "tattoomasters.app",
+              "host": "www.tattoomasters.app",
               "pathPrefix": "/artist"
             }
           ],
@@ -63,7 +66,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "tattoomasters.app",
+              "host": "www.tattoomasters.app",
               "pathPrefix": "/tattoo"
             }
           ],

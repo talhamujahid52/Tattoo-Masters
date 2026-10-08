@@ -39,7 +39,7 @@ const ShareReviewPasswordBottomSheet = ({
   const myProfileId = loggedInUserFirestore?.uid;
   const onShare = async () => {
     try {
-      const link = `https://tattoomasters.app/artist/${myProfileId}`;
+      const link = `https://www.tattoomasters.app/artist/${myProfileId}`;
       const message = `Hey! Here's my review password for the new Tattoo Masters app.\nPassword: ${loggedInUserFirestore?.reviewPassword}\n${link}\nI would appreciate a great review to help me grow my profile.`;
 
       await Share.share({ message });

@@ -13,6 +13,7 @@ import Text from "@/components/Text";
 import IconButton from "@/components/IconButton";
 import ReviewOnProfile from "@/components/ReviewOnProfile";
 import ImageGallery from "@/components/ImageGallery";
+import ArtistProfileSkeleton from "@/components/ArtistProfileSkeleton";
 import ShareArtistProfileBottomSheet from "@/components/BottomSheets/ShareArtistProfileBottomSheet";
 import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
@@ -78,7 +79,14 @@ const ArtistProfile = () => {
   const { artistId } = useLocalSearchParams<any>();
   const reduxArtist = useGetArtist(artistId);
   const [firestoreArtist, setFirestoreArtist] = useState<any>(null);
+  // Outcome of the Firestore fallback, used when the artist is not in the
+  // store (profiles opened from a shared link)
+  const [artistFetch, setArtistFetch] = useState<
+    "pending" | "done" | "missing"
+  >("pending");
   const artist = reduxArtist ?? firestoreArtist;
+  const isLoadingArtist = !artist && !!artistId && artistFetch === "pending";
+  const isMissingArtist = !artist && (!artistId || artistFetch === "missing");
 
   useEffect(() => {
     if (reduxArtist || !artistId) return;
@@ -88,10 +96,18 @@ const ArtistProfile = () => {
       .doc(artistId)
       .get()
       .then((snap) => {
-        if (cancelled || !snap.exists) return;
+        if (cancelled) return;
+        if (!snap.exists) {
+          setArtistFetch("missing");
+          return;
+        }
         setFirestoreArtist({ id: snap.id, data: snap.data() });
+        setArtistFetch("done");
       })
-      .catch((err) => console.error("Firestore artist fallback error:", err));
+      .catch((err) => {
+        console.error("Firestore artist fallback error:", err);
+        if (!cancelled) setArtistFetch("missing");
+      });
     return () => {
       cancelled = true;
     };
@@ -147,9 +163,11 @@ const ArtistProfile = () => {
 
   const publicationsTs = useTypesense();
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [publicationsLoading, setPublicationsLoading] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState("All");
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPublications = async () => {
       try {
         const response = await publicationsTs.search({
@@ -157,13 +175,19 @@ const ArtistProfile = () => {
           query: artistId,
           queryBy: "userId",
         });
-        setSearchResults(response || []);
+        if (!cancelled) setSearchResults(response || []);
       } catch (error) {
         console.error("Error fetching publications:", error);
+      } finally {
+        if (!cancelled) setPublicationsLoading(false);
       }
     };
 
+    setPublicationsLoading(true);
     fetchPublications();
+    return () => {
+      cancelled = true;
+    };
   }, [artistId]);
 
   // Derived during render (not in an effect) so the chips appear in the same
@@ -422,7 +446,7 @@ const ArtistProfile = () => {
     );
   }
 
-  if (isBlockedArtist) {
+  if (isBlockedArtist || isMissingArtist) {
     return (
       <View style={styles.safetyStateContainer}>
         <Text size="h4" weight="semibold" color="#FBF6FA">
@@ -437,12 +461,27 @@ const ArtistProfile = () => {
     );
   }
 
+  // Same gallery as below so the list survives the swap to the real header
+  if (isLoadingArtist) {
+    return (
+      <View style={styles.container}>
+        <ImageGallery
+          images={[]}
+          loading
+          contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
+          ListHeaderComponent={<ArtistProfileSkeleton />}
+        />
+      </View>
+    );
+  }
+
   // The profile is the gallery's list header (as in MyProfile) so there is a
   // single scroll container; a FlatList nested in a ScrollView flickers.
   return (
     <View style={styles.container}>
       <ImageGallery
         images={filteredResults}
+        loading={publicationsLoading}
         onRefresh={onRefresh}
         refreshing={refreshing}
         contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}

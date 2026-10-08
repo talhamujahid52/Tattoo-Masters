@@ -12,7 +12,7 @@ import { hideSplash } from "@/utils/splash";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
-import { TouchableOpacity, Image, Platform } from "react-native";
+import { TouchableOpacity, Image, Platform, NativeModules } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -32,6 +32,45 @@ import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
 // item therefore fills a round 44pt button exactly, with its icon centered.
 const usesGlassHeaderItems =
   Platform.OS === "ios" && parseInt(String(Platform.Version), 10) >= 26;
+
+// The URL the app was launched with, if any. Under the iOS UIScene lifecycle
+// React Native's Linking.getInitialURL() comes back empty because launch URLs
+// no longer arrive in launchOptions; plugin/with-ios-scene-delegate.js keeps
+// them in the SceneLaunchURL module instead.
+const getLaunchURL = async (): Promise<string | null> => {
+  const url = await Linking.getInitialURL();
+  if (url) return url;
+  const sceneLaunchURL = NativeModules.SceneLaunchURL;
+  if (sceneLaunchURL?.getInitialURL) {
+    return (await sceneLaunchURL.getInitialURL()) ?? null;
+  }
+  return null;
+};
+
+// Maps a shared link (https://tattoomasters.app/artist/<id>, /tattoo/<id>, or
+// the same paths on the custom scheme) to the route that shows it.
+const routeFromLaunchURL = (
+  url: string,
+): { pathname: string; params: Record<string, string> } | null => {
+  try {
+    const { scheme, hostname, path, queryParams } = Linking.parse(url);
+    // On the custom scheme (myapp://artist/<id>) the first segment parses as
+    // the hostname, so put it back in front of the path.
+    const isWebLink = scheme === "https" || scheme === "http";
+    const fullPath = isWebLink
+      ? path
+      : [hostname, path].filter(Boolean).join("/");
+    const match = fullPath?.match(/^\/?(artist|tattoo)\/([^/?#]+)\/?$/);
+    if (!match) return null;
+    const params: Record<string, string> = {};
+    Object.entries(queryParams ?? {}).forEach(([key, value]) => {
+      if (typeof value === "string") params[key] = value;
+    });
+    return { pathname: `/${match[1]}/${match[2]}`, params };
+  } catch {
+    return null;
+  }
+};
 
 const HeaderCloseButton = () => {
   const router = useRouter();
@@ -62,6 +101,9 @@ const HeaderCloseButton = () => {
 const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
   const skipInitialHomeRef = React.useRef(false);
+  const launchRouteRef = React.useRef<ReturnType<typeof routeFromLaunchURL>>(
+    null,
+  );
   const [initializing, setInitializing] = useState(true);
   const [initialUrlChecked, setInitialUrlChecked] = useState(false);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
@@ -264,12 +306,14 @@ const AppNavigator = () => {
   // No manual link handling needed.
 
   // On cold start via a deep link, tell the redirect logic to stand down
-  // so Expo Router can resolve the URL to the correct route.
+  // so Expo Router can resolve the URL to the correct route, and keep the
+  // route in case Expo Router does not (see below).
   useEffect(() => {
-    Linking.getInitialURL()
+    getLaunchURL()
       .then((url) => {
         if (url) {
           skipInitialHomeRef.current = true;
+          launchRouteRef.current = routeFromLaunchURL(url);
         }
       })
       .catch(() => {})
@@ -318,6 +362,20 @@ const AppNavigator = () => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   useEffect(() => {
     if (initializing || !initialUrlChecked) {
+      return;
+    }
+    const launchRoute = launchRouteRef.current;
+    if (launchRoute) {
+      launchRouteRef.current = null;
+      if (pathname !== launchRoute.pathname) {
+        // Expo Router missed the launch URL: it gives the native lookup only
+        // 150ms, and on iOS the URL is not in launchOptions at all under the
+        // scene lifecycle. Open the linked screen over Home ourselves.
+        if (loggedInUser?.emailVerified === true && pathname !== "/Home") {
+          router.replace("/(bottomTabs)/Home");
+        }
+        router.push(launchRoute as any);
+      }
       return;
     }
     if (

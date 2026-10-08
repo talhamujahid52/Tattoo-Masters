@@ -21,7 +21,7 @@ const ShareProfileBottomSheet = ({ hide, myId }: bottomSheetProps) => {
   const router = useRouter();
   const shareArtistProfile = async (myId: any) => {
     try {
-      const link = `https://tattoomasters.app/artist/${myId}`;
+      const link = `https://www.tattoomasters.app/artist/${myId}`;
       const message = `Hey there! Check out my profile on the new Tattoo Masters app.\n${link}\nIt's an all new app for all tattoo artists and tattoo enthusiasts.`;
 
       await Share.share({ message });
