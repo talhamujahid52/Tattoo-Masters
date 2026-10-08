@@ -10,9 +10,19 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+import { FINLAND_REGION, toLocationData } from "@/utils/locationHelpers";
 
 const SELECTED_LOCATION_ZOOM_DELTA = 0.003;
 const SELECTED_LOCATION_CAMERA_ZOOM = 16.5;
+
+// Null when the param is missing, malformed or not a usable position
+const parseLocationParam = (param?: string) => {
+  try {
+    return toLocationData(JSON.parse(param ?? ""));
+  } catch {
+    return null;
+  }
+};
 
 const MapDetails = () => {
   const mapRef = useRef<MapView>(null);
@@ -32,24 +42,30 @@ const MapDetails = () => {
 
   const { location } = useLocalSearchParams();
   const locationParam = Array.isArray(location) ? location[0] : location;
-  const parsedLocation = JSON.parse(locationParam ?? "[0,0]"); // [lat, lng]
+  // Without a usable location the map opens on Finland instead of zooming in
+  const selectedLocation = useMemo(
+    () => parseLocationParam(locationParam),
+    [locationParam],
+  );
 
-  const [region, setRegion] = useState({
-    latitude: parsedLocation[0],
-    longitude: parsedLocation[1],
-    latitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
-    longitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
-  });
+  const [region, setRegion] = useState(
+    selectedLocation
+      ? {
+          ...selectedLocation,
+          latitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
+          longitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
+        }
+      : FINLAND_REGION,
+  );
 
-  const selectedLocationCamera: Camera = {
-    center: {
-      latitude: parsedLocation[0],
-      longitude: parsedLocation[1],
-    },
-    heading: 0,
-    pitch: 0,
-    zoom: SELECTED_LOCATION_CAMERA_ZOOM,
-  };
+  const selectedLocationCamera: Camera | undefined = selectedLocation
+    ? {
+        center: selectedLocation,
+        heading: 0,
+        pitch: 0,
+        zoom: SELECTED_LOCATION_CAMERA_ZOOM,
+      }
+    : undefined;
 
   // const zoomIn = () => {
   //   mapRef.current?.animateToRegion({
@@ -78,10 +94,9 @@ const MapDetails = () => {
   // };
 
   useEffect(() => {
-    if (parsedLocation) {
+    if (selectedLocation && selectedLocationCamera) {
       const newRegion = {
-        latitude: parsedLocation[0],
-        longitude: parsedLocation[1],
+        ...selectedLocation,
         latitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
         longitudeDelta: SELECTED_LOCATION_ZOOM_DELTA,
       };
@@ -152,11 +167,16 @@ const MapDetails = () => {
       <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
+        // Dark from the first frame, instead of white until the tiles load
+        loadingEnabled
+        loadingBackgroundColor="#000"
+        loadingIndicatorColor="#fff"
         style={styles.map}
         customMapStyle={googleDarkModeStyle}
         initialRegion={region}
         initialCamera={selectedLocationCamera}
         onMapReady={() => {
+          if (!selectedLocationCamera) return;
           mapRef.current?.animateCamera(selectedLocationCamera, {
             duration: 300,
           });
@@ -192,6 +212,7 @@ export default MapDetails;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#000",
   },
   map: {
     ...StyleSheet.absoluteFillObject,

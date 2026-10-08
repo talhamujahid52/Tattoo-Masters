@@ -18,6 +18,7 @@ import { changeProfilePicture } from "@/utils/firebase/changeProfilePicture";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import { getFileName } from "@/utils/helperFunctions";
+import { isUnsetLocation } from "@/utils/locationHelpers";
 
 const CreateReviewPassword = () => {
   const [reviewPassword, setReviewPassword] = useState<string>("");
@@ -50,6 +51,14 @@ const CreateReviewPassword = () => {
     const allFourPresent = firstFour.every((img) => img && !!img.uri);
     if (!allFourPresent) {
       setError("Please upload 4 tattoos to continue.");
+      return;
+    }
+    if (!formData?.address?.trim()) {
+      setError("Please enter your address.");
+      return;
+    }
+    if (isUnsetLocation(formData?.location)) {
+      setError("Please pin your location on the map.");
       return;
     }
     if (!reviewPassword || !confirmReviewPassword) {

@@ -46,7 +46,7 @@ const VerifyReviewPassword = () => {
         color="#A7A7A7"
         style={styles.description1}
       >
-        Get the review password from {artist?.data?.name} to leave a review.
+        Get the review password from {artist?.data?.name?.trim()} to leave a review.
         This is to ensure authenticity of reviews.
       </Text>
       <View style={styles.passwordFieldsContainer}>

@@ -28,7 +28,7 @@ import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
@@ -530,18 +530,26 @@ const MyProfile = () => {
                     overflow: "hidden",
                   }}
                 >
-                  <MapView
-                    provider={PROVIDER_GOOGLE}
-                    customMapStyle={GOOGLE_DARK_MAP_STYLE}
-                    scrollEnabled={false}
-                    rotateEnabled={false}
-                    pitchEnabled={false}
-                    pointerEvents="none"
-                    style={styles.map}
-                    mapType="standard"
-                    region={region}
-                    zoomEnabled={false}
-                  />
+                  {/* A still preview: the wrapper keeps every touch off the map, so a
+                      tap anywhere, the pin included, opens the full map */}
+                  <View style={styles.map} pointerEvents="none">
+                    <MapView
+                      provider={PROVIDER_GOOGLE}
+                      // Dark from the first frame, instead of white until the tiles load
+                      loadingBackgroundColor="#000"
+                      customMapStyle={GOOGLE_DARK_MAP_STYLE}
+                      scrollEnabled={false}
+                      rotateEnabled={false}
+                      pitchEnabled={false}
+                      style={styles.map}
+                      mapType="standard"
+                      region={region}
+                      zoomEnabled={false}
+                      toolbarEnabled={false}
+                    >
+                      <Marker coordinate={region} />
+                    </MapView>
+                  </View>
                 </Pressable>
               </>
             )}

@@ -232,6 +232,8 @@ const Step3: React.FC = () => {
           >
             <MapView
               provider={PROVIDER_GOOGLE}
+              // Dark from the first frame, instead of white until the tiles load
+              loadingBackgroundColor="#000"
               style={styles.map}
               customMapStyle={googleDarkModeStyle}
               mapType="standard"

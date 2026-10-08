@@ -1,4 +1,5 @@
 import {
+  Alert,
   StyleSheet,
   View,
   Image,
@@ -10,7 +11,9 @@ import {
 import React, { useMemo, useState, useEffect } from "react";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
+import LocationField, { ResolvedLocation } from "@/components/LocationField";
 import RadioButton from "@/components/RadioButton";
+import StyleChips from "@/components/StyleChips";
 import ConnectSocialMediaButton from "@/components/ConnectSocialMediaButton";
 import Button from "@/components/Button";
 import { router, useLocalSearchParams } from "expo-router";
@@ -18,7 +21,7 @@ import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { Asset, launchImageLibrary } from "react-native-image-picker";
 import { useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
@@ -75,7 +78,9 @@ const EditProfile = () => {
       longitude: loggedInUser?.location?.longitude || 0,
     },
     showCityOnly: true,
-    address: loggedInUser?.address ? loggedInUser?.address : "",
+    // Profiles saved before the address came from the pin may only have a
+    // city, which then stands in for it
+    address: loggedInUser?.address || loggedInUser?.city || "",
     tattooStyles: [] as TattooStyle[],
     aboutYou: loggedInUser?.aboutYou ? loggedInUser?.aboutYou : "",
     facebookProfile: loggedInUser?.facebookProfile
@@ -163,6 +168,10 @@ const EditProfile = () => {
     latitude?: string;
     longitude?: string;
     city?: string;
+    address?: string;
+    // Changes on every pick, so picking the same place again after clearing
+    // the field still counts
+    pickedAt?: string;
   }>();
   useEffect(() => {
     const latitude = Number(picked.latitude);
@@ -173,9 +182,38 @@ const EditProfile = () => {
       ...prev,
       location: { latitude, longitude },
       city: picked.city ?? prev.city,
+      address: picked.address || prev.address,
     }));
     setRegion(toRegion({ latitude, longitude }));
-  }, [picked.latitude, picked.longitude, picked.city]);
+  }, [
+    picked.latitude,
+    picked.longitude,
+    picked.city,
+    picked.address,
+    picked.pickedAt,
+  ]);
+
+  // The pin follows the location field
+  const pinLocation = ({ location, city, address }: ResolvedLocation) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+      city: city || prev.city,
+      address: address || prev.address,
+    }));
+    setRegion(toRegion(location));
+  };
+
+  // The address, city and pin are one thing, so they are cleared together
+  const clearLocation = () => {
+    setFormData((prev) => ({
+      ...prev,
+      address: "",
+      city: "",
+      location: { latitude: 0, longitude: 0 },
+    }));
+    setRegion(FINLAND_REGION);
+  };
 
   // No saved location: ask for the user's current position and centre the map
   // on it. Without permission the map stays on Finland.
@@ -211,6 +249,18 @@ const EditProfile = () => {
       cancelled = true;
     };
   }, [formData.location]);
+  const openLocationPicker = () => {
+    router.push({
+      pathname: "/artist/SearchLocation",
+      params: {
+        source: "edit",
+        latitude: formData.location.latitude,
+        longitude: formData.location.longitude,
+        city: formData.city,
+        address: formData.address,
+      },
+    });
+  };
   const localImage = useMemo(() => {
     if (!newImage) {
       return {
@@ -250,6 +300,22 @@ const EditProfile = () => {
     setFormData((prev) => ({ ...prev, showCityOnly: !prev.showCityOnly }));
   };
   const updateProfile = async () => {
+    // The typed location and its pin are both needed to save
+    if (!formData.address.trim()) {
+      Alert.alert(
+        "Location Required",
+        "Please enter your location to continue."
+      );
+      return;
+    }
+    if (isUnsetLocation(formData.location)) {
+      Alert.alert(
+        "Location Required",
+        "Please pin your location on the map to continue."
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       // Transform the array to include only the titles for which selected is true:
@@ -363,13 +429,14 @@ const EditProfile = () => {
         >
           Location
         </Text>
-        <Input
-          inputMode="text"
+        <LocationField
           placeholder="Location"
-          value={formData.city}
-          onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, city: text }))
+          value={formData.address}
+          onChangeText={(address) =>
+            setFormData((prev) => ({ ...prev, address }))
           }
+          onResolve={pinLocation}
+          onClear={clearLocation}
         />
       </View>
       <View style={{ marginTop: 16 }}>
@@ -383,17 +450,7 @@ const EditProfile = () => {
         </Text>
         {formData.showCityOnly && (
           <TouchableOpacity
-            onPress={() => {
-              router.push({
-                pathname: "/artist/SearchLocation",
-                params: {
-                  source: "edit",
-                  latitude: formData.location.latitude,
-                  longitude: formData.location.longitude,
-                  city: formData.city,
-                },
-              });
-            }}
+            onPress={openLocationPicker}
             style={{
               height: 130,
               borderRadius: 20,
@@ -402,16 +459,28 @@ const EditProfile = () => {
               marginBottom: 16,
             }}
           >
-            <MapView
-              provider={PROVIDER_GOOGLE}
-              style={styles.map}
-              customMapStyle={GOOGLE_DARK_MAP_STYLE}
-              mapType="standard"
-              region={region}
-              rotateEnabled={false}
-              pitchEnabled={false}
-              pointerEvents="none"
-            />
+            {/* A still preview: the wrapper keeps every touch off the map, so
+                a tap anywhere opens the picker */}
+            <View style={styles.map} pointerEvents="none">
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                // Dark from the first frame, instead of white until the tiles load
+                loadingBackgroundColor="#000"
+                style={styles.map}
+                customMapStyle={GOOGLE_DARK_MAP_STYLE}
+                mapType="standard"
+                region={region}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+                toolbarEnabled={false}
+              >
+                {!isUnsetLocation(formData.location) && (
+                  <Marker coordinate={formData.location} />
+                )}
+              </MapView>
+            </View>
           </TouchableOpacity>
         )}
         {/* <View
@@ -444,56 +513,11 @@ const EditProfile = () => {
               ? "(" + formData?.tattooStyles?.length + " selected)"
               : ""}
           </Text>
-          <View style={styles.ratingButtonsRow}>
-            {tattooStyles.slice(0, 6).map((item, idx) => (
-              <TouchableOpacity
-                key={idx}
-                activeOpacity={1}
-                style={{
-                  height: 33,
-                  paddingHorizontal: 6,
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: 6,
-                  backgroundColor: item.selected ? "#DAB769" : "#262526",
-                }}
-                onPress={() => toggleTattooStyles(item)}
-              >
-                <Text
-                  size="p"
-                  weight="normal"
-                  color={item.selected ? "#22221F" : "#A7A7A7"}
-                >
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            {tattooStyles.length > 6 && (
-              <TouchableOpacity
-                onPress={() => {
-                  showTattooStylesSheet();
-                }}
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  padding: 6,
-                }}
-              >
-                <Text size="p" weight="normal" color="#FBF6FA">
-                  {"See more"}
-                </Text>
-                <View style={{ width: 24, height: 24 }}>
-                  <Image
-                    style={{ width: "100%", height: "100%" }}
-                    source={require("../../assets/images/arrow_down.png")}
-                  />
-                </View>
-              </TouchableOpacity>
-            )}
-          </View>
+          <StyleChips
+            styles={tattooStyles}
+            onToggle={toggleTattooStyles}
+            onSeeMore={showTattooStylesSheet}
+          />
         </View>
         <View style={{ marginTop: 16, marginBottom: 16 }}>
           <Text
@@ -608,12 +632,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333333",
     backgroundColor: "#202020",
-  },
-  ratingButtonsRow: {
-    marginTop: 16,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
   },
   textArea: {
     height: 100,

@@ -18,7 +18,7 @@ import ReportBottomSheet from "@/components/BottomSheets/ReportBottomSheet";
 import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import useGetArtist from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
@@ -33,6 +33,7 @@ import { updateSingleArtist } from "@/redux/slices/artistSlice";
 import firestore from "@react-native-firebase/firestore";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
 import useSafety from "@/hooks/useSafety";
+import { toLocationData } from "@/utils/locationHelpers";
 
 interface StyleItem {
   title: string;
@@ -122,16 +123,12 @@ const ArtistProfile = () => {
   );
 
   const insets = useSafeAreaInsets();
-  const defaultLocation = {
-    latitude: 33.664286,
-    longitude: 73.004291,
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
-  };
+  // Null when the artist has no usable position; the map and directions are
+  // hidden then
+  const artistLocation = toLocationData(artist?.data?.location);
 
-  const region = {
-    latitude: artist?.data?.location?.[0] || defaultLocation.latitude,
-    longitude: artist?.data?.location?.[1] || defaultLocation.longitude,
+  const region = artistLocation && {
+    ...artistLocation,
     latitudeDelta: 0.02,
     longitudeDelta: 0.02,
   };
@@ -345,10 +342,9 @@ const ArtistProfile = () => {
   };
 
   const openInGoogleMaps = async () => {
-    const destinationLat =
-      artist?.data?.location?.[0] || defaultLocation.latitude;
-    const destinationLng =
-      artist?.data?.location?.[1] || defaultLocation.longitude;
+    if (!artistLocation) return;
+    const destinationLat = artistLocation.latitude;
+    const destinationLng = artistLocation.longitude;
 
     const currentCoords = await getCurrentCoordinates();
     if (!currentCoords) {
@@ -366,8 +362,8 @@ const ArtistProfile = () => {
     });
   };
   const openLocationInGoogleMaps = () => {
-    const latitude = artist?.data?.location?.[0] || defaultLocation.latitude;
-    const longitude = artist?.data?.location?.[1] || defaultLocation.longitude;
+    if (!artistLocation) return;
+    const { latitude, longitude } = artistLocation;
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
 
     Linking.openURL(url).catch((err) => {
@@ -707,70 +703,87 @@ const ArtistProfile = () => {
               showLoginBottomSheet={showLoggingInBottomSheet}
             />
 
-            <View style={{ marginTop: 8 }}>
-              <Text
-                size="h4"
-                weight="semibold"
-                color="white"
-                style={{ marginBottom: 10 }}
-              >
-                Address
-              </Text>
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: -8,
-                }}
-              >
-                <Text size="large" weight="normal" color="#A7A7A7">
-                  {artist?.data?.address || ""}
+            {(!!artist?.data?.address || artistLocation) && (
+              <View style={{ marginTop: 8 }}>
+                <Text
+                  size="h4"
+                  weight="semibold"
+                  color="white"
+                  style={{ marginBottom: 10 }}
+                >
+                  Address
                 </Text>
-                <Pressable
-                  onPress={async () => {
-                    try {
-                      await openInGoogleMaps();
-                    } catch (error) {
-                      console.error("Error opening Google Maps:", error);
-                    }
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: -8,
                   }}
                 >
-                  <Text size="p" weight="semibold" color="#DAB769">
-                    Directions
+                  <Text size="large" weight="normal" color="#A7A7A7">
+                    {artist?.data?.address || ""}
                   </Text>
-                </Pressable>
+                  {artistLocation && (
+                    <Pressable
+                      onPress={async () => {
+                        try {
+                          await openInGoogleMaps();
+                        } catch (error) {
+                          console.error("Error opening Google Maps:", error);
+                        }
+                      }}
+                    >
+                      <Text size="p" weight="semibold" color="#DAB769">
+                        Directions
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
-            </View>
-            <Pressable
-              // onPress={openLocationInGoogleMaps}
-              onPress={() => {
-                router.push({
-                  pathname: "/artist/MapDetails",
-                  params: {
-                    location: JSON.stringify(artist?.data?.location),
-                  },
-                });
-              }}
-              style={{
-                height: 130,
-                borderRadius: 20,
-                overflow: "hidden",
-              }}
-            >
-              <MapView
-                provider={PROVIDER_GOOGLE}
-                customMapStyle={googleDarkModeStyle}
-                scrollEnabled={false}
-                rotateEnabled={false}
-                pitchEnabled={false}
-                pointerEvents="none"
-                style={styles.map}
-                mapType="standard"
-                region={region}
-                zoomEnabled={false}
-              />
-            </Pressable>
+            )}
+            {artistLocation && region && (
+              <Pressable
+                // onPress={openLocationInGoogleMaps}
+                onPress={() => {
+                  router.push({
+                    pathname: "/artist/MapDetails",
+                    params: {
+                      location: JSON.stringify([
+                        artistLocation.latitude,
+                        artistLocation.longitude,
+                      ]),
+                    },
+                  });
+                }}
+                style={{
+                  height: 130,
+                  borderRadius: 20,
+                  overflow: "hidden",
+                }}
+              >
+                {/* A still preview: the wrapper keeps every touch off the map, so a
+                    tap anywhere, the pin included, opens the full map */}
+                <View style={styles.map} pointerEvents="none">
+                  <MapView
+                    provider={PROVIDER_GOOGLE}
+                    // Dark from the first frame, instead of white until the tiles load
+                    loadingBackgroundColor="#000"
+                    customMapStyle={googleDarkModeStyle}
+                    scrollEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    style={styles.map}
+                    mapType="standard"
+                    region={region}
+                    zoomEnabled={false}
+                    toolbarEnabled={false}
+                  >
+                    <Marker coordinate={artistLocation} />
+                  </MapView>
+                </View>
+              </Pressable>
+            )}
             <Text
               size="h4"
               weight="semibold"

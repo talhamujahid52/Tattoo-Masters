@@ -13,6 +13,7 @@ import {
   Pressable,
   Keyboard,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import MapView, {
   Marker,
@@ -24,6 +25,7 @@ import {
   GooglePlaceData,
   GooglePlaceDetail,
   GooglePlacesAutocomplete,
+  GooglePlacesAutocompleteRef,
 } from "react-native-google-places-autocomplete";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -34,7 +36,13 @@ import Text from "@/components/Text";
 import { FormContext } from "@/context/FormContext";
 import { GOOGLE_MAPS_API_KEY } from "@/constants/Config";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
-import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
+import { toCityLabel } from "@/utils/googlePlaces";
+import {
+  FINLAND_REGION,
+  isUnsetLocation,
+  lookUpPlace,
+  PinnedPlace,
+} from "@/utils/locationHelpers";
 import { LocationData } from "@/types/user";
 import type { RootState } from "@/redux/store";
 import {
@@ -45,6 +53,7 @@ import { filterBlockedArtists } from "@/utils/safetyFilters";
 
 const DELTA = 0.02;
 const FRESH_FIX_TIMEOUT_MS = 6000;
+const ADDRESS_LOOKUP_WAIT_MS = 3000;
 const PLACES_QUERY = { key: GOOGLE_MAPS_API_KEY, language: "en" };
 
 const toRegion = ({ latitude, longitude }: LocationData): Region => ({
@@ -57,8 +66,9 @@ const toRegion = ({ latitude, longitude }: LocationData): Region => ({
 /**
  * Screen for pinning a location. It is opened from two places:
  *  - registration (Step1): reads/writes the shared FormContext
- *  - EditProfile: receives `latitude`, `longitude`, `city` as params and
- *    returns the chosen values as params (EditProfile keeps its own state)
+ *  - EditProfile: receives `latitude`, `longitude`, `city`, `address` as
+ *    params and returns the chosen values as params (EditProfile keeps its
+ *    own state)
  * In both cases the saved location is shown if present and valid, otherwise
  * the user's current location, or Finland if they do not share it.
  */
@@ -69,6 +79,7 @@ const SearchLocation: React.FC = () => {
     latitude?: string;
     longitude?: string;
     city?: string;
+    address?: string;
   }>();
   const { formData, setFormData } = useContext(FormContext)!;
   const artists: any[] = useSelector((s: any) => s.artist.allArtists);
@@ -91,6 +102,28 @@ const SearchLocation: React.FC = () => {
   const dismissSearch = () => {
     Keyboard.dismiss();
   };
+  const placesRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const [searchText, setSearchText] = useState("");
+  // The search box keeps its text and results to itself, so clearing it means
+  // mounting a fresh one. `focus` puts the cursor back if it was there.
+  const [search, setSearch] = useState({ key: 0, focus: false });
+  const clearSearch = () => {
+    setSearchText("");
+    setSearch((prev) => ({
+      key: prev.key + 1,
+      focus: !!placesRef.current?.isFocused(),
+    }));
+  };
+  const searchInputProps = useMemo(
+    () => ({
+      placeholderTextColor: "#FBF6FA",
+      selectionColor: "#fff",
+      autoFocus: search.focus,
+      onChangeText: setSearchText,
+      clearButtonMode: "never" as const, // replaced by the app's own button
+    }),
+    [search.focus],
+  );
   const mapRef = useRef<MapView>(null);
 
   const isEdit = params.source === "edit";
@@ -109,16 +142,27 @@ const SearchLocation: React.FC = () => {
     hasSavedLocation ? toRegion(savedLocation) : null
   );
   const [region, setRegion] = useState<Region>(initialRegion ?? FINLAND_REGION);
-  const [address, setAddress] = useState<string>(
-    (isEdit ? params.city : formData.address) || ""
-  );
+  // What the pinned position resolves to
+  const place = useRef<PinnedPlace>({
+    city: (isEdit ? params.city : formData.city) || "",
+    address: (isEdit ? params.address : formData.address) || "",
+  });
+  // Only the newest lookup may write its result, and Confirm waits for it
+  const lookupId = useRef(0);
+  const pendingLookup = useRef<Promise<void>>(Promise.resolve());
+  const confirming = useRef(false);
   const userMovedMap = useRef(false);
+  // False while the map only shows the Finland fallback, which is not a place
+  // anyone picked and must not be saved as the location
+  const hasPosition = useRef(hasSavedLocation);
 
   const moveTo = (location: LocationData) => {
     const newRegion = toRegion(location);
+    hasPosition.current = true;
     setRegion(newRegion);
     setInitialRegion((prev) => prev ?? newRegion);
     mapRef.current?.animateToRegion(newRegion, 800);
+    updateAddress(location);
   };
 
   // The fixed pin shifts when the keyboard resizes the screen, so hide it then
@@ -194,61 +238,81 @@ const SearchLocation: React.FC = () => {
     const { lat, lng } = details.geometry.location;
     const newRegion = toRegion({ latitude: lat, longitude: lng });
 
-    const getComponent = (
-      type: GooglePlaceDetail["address_components"][number]["types"][number]
-    ) =>
-      details.address_components.find((c) => c.types.includes(type))
-        ?.long_name || null;
-
-    const city =
-      getComponent("locality") ||
-      getComponent("administrative_area_level_2") ||
-      getComponent("administrative_area_level_1");
-    const country = getComponent("country");
-
     userMovedMap.current = true;
-    setAddress([city, country].filter(Boolean).join(", "));
+    hasPosition.current = true;
+    // Drop any lookup still running for the previous position
+    lookupId.current += 1;
+    place.current = {
+      city: toCityLabel(details.address_components),
+      address: details.formatted_address || "",
+    };
     setRegion(newRegion);
     setInitialRegion((prev) => prev ?? newRegion);
     mapRef.current?.animateToRegion(newRegion, 1000);
   };
 
-  const updateAddress = async ({ latitude, longitude }: LocationData) => {
-    try {
-      const [place] = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
+  const updateAddress = ({ latitude, longitude }: LocationData) => {
+    const id = ++lookupId.current;
 
-      if (place) {
-        const city = place.city || place.region || "";
-        setAddress(`${city}, ${place.country}`);
+    pendingLookup.current = (async () => {
+      try {
+        const found = await lookUpPlace({ latitude, longitude });
+        if (found && id === lookupId.current) place.current = found;
+      } catch (error) {
+        if (__DEV__) {
+          console.error("Error during reverse geocoding:", error);
+        }
       }
-    } catch (error) {
-      if (__DEV__) {
-        console.error("Error during reverse geocoding:", error);
-      }
-    }
+    })();
   };
 
+  // Only a drag needs a lookup here: a searched place and the user's own
+  // position are resolved where the map is moved to them
   const handleRegionChangeComplete = (newRegion: Region, details: Details) => {
-    if (details?.isGesture) userMovedMap.current = true;
     setRegion(newRegion);
+    if (!details?.isGesture) return;
+
+    userMovedMap.current = true;
+    hasPosition.current = true;
     updateAddress(newRegion);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (!hasPosition.current) {
+      Alert.alert(
+        "Location Required",
+        "Please search for a place or move the map to pin your location."
+      );
+      return;
+    }
+
+    if (confirming.current) return;
+    confirming.current = true;
+
+    // The address of a pin that was only just dropped may still be on its way
+    await Promise.race([
+      pendingLookup.current,
+      new Promise((resolve) => setTimeout(resolve, ADDRESS_LOOKUP_WAIT_MS)),
+    ]);
+
     const location = { latitude: region.latitude, longitude: region.longitude };
+    const { city, address } = place.current;
 
     if (isEdit) {
       router.dismissTo({
         pathname: "/artist/EditProfile",
-        params: { ...location, city: address },
+        params: { ...location, city, address, pickedAt: Date.now() },
       });
       return;
     }
 
-    setFormData((prev) => ({ ...prev, location, city: address }));
+    // A failed lookup must not wipe an address that was typed in
+    setFormData((prev) => ({
+      ...prev,
+      location,
+      city,
+      address: address || prev.address,
+    }));
     router.back();
   };
 
@@ -256,6 +320,8 @@ const SearchLocation: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <GooglePlacesAutocomplete
+          key={search.key}
+          ref={placesRef}
           placeholder="Search location"
           fetchDetails
           onPress={handleLocationSelect}
@@ -292,10 +358,7 @@ const SearchLocation: React.FC = () => {
               color: "#aaa",
             },
           }}
-          textInputProps={{
-            placeholderTextColor: "#FBF6FA",
-            selectionColor: "#fff",
-          }}
+          textInputProps={searchInputProps}
           renderLeftButton={() => (
             <View style={styles.searchIcon}>
               <Image
@@ -305,6 +368,18 @@ const SearchLocation: React.FC = () => {
               />
             </View>
           )}
+          renderRightButton={
+            searchText
+              ? () => (
+                  <TouchableOpacity
+                    style={styles.searchIcon}
+                    onPress={clearSearch}
+                  >
+                    <MaterialIcons name="cancel" size={24} color="#B1AFA1" />
+                  </TouchableOpacity>
+                )
+              : undefined
+          }
         />
       </View>
 
@@ -312,6 +387,10 @@ const SearchLocation: React.FC = () => {
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
+          // Dark from the first frame, instead of white until the tiles load
+          loadingEnabled
+          loadingBackgroundColor="#000"
+          loadingIndicatorColor="#fff"
           style={styles.map}
           customMapStyle={GOOGLE_DARK_MAP_STYLE}
           onPress={dismissSearch}
@@ -320,7 +399,10 @@ const SearchLocation: React.FC = () => {
           // The map does not always report its first region, so make sure the
           // opening position gets an address too
           onMapReady={() => {
-            if (!address && !isUnsetLocation(region)) updateAddress(region);
+            const { city, address } = place.current;
+            if ((!city || !address) && !isUnsetLocation(region)) {
+              updateAddress(region);
+            }
           }}
           onRegionChangeComplete={handleRegionChangeComplete}
           mapType="standard"
@@ -387,6 +469,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
+    backgroundColor: "#000",
   },
   searchContainer: {
     position: "absolute",

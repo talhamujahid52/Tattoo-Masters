@@ -9,8 +9,10 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Text from "@/components/Text";
 import Input from "@/components/Input";
+import LocationField, { ResolvedLocation } from "@/components/LocationField";
 import RadioButton from "@/components/RadioButton";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import StyleChips from "@/components/StyleChips";
+import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { launchImageLibrary } from "react-native-image-picker";
 import { router } from "expo-router";
 import { FormContext } from "../context/FormContext";
@@ -24,7 +26,11 @@ import { requestForegroundLocationPermission } from "@/utils/locationPermission"
 import useTattooStyles from "@/hooks/useTattooStyles";
 import { GOOGLE_DARK_MAP_STYLE } from "@/constants/mapStyles";
 import { STUDIO_TYPE_OPTIONS } from "@/constants/studioOptions";
-import { FINLAND_REGION, isUnsetLocation } from "@/utils/locationHelpers";
+import {
+  FINLAND_REGION,
+  isUnsetLocation,
+  lookUpPlace,
+} from "@/utils/locationHelpers";
 
 const DEFAULT_LOCATION = {
   latitude: 0,
@@ -121,6 +127,8 @@ const Step1: React.FC = () => {
         }
   );
 
+  // Only when the screen opens: an empty location later on means the user
+  // cleared it, and it must stay cleared
   useEffect(() => {
     if (!isUnsetLocation(formData.location)) return;
 
@@ -140,10 +148,17 @@ const Step1: React.FC = () => {
         };
 
         setRegion(currentRegion);
-        setFormData((prev) => ({
-          ...prev,
-          location: { latitude, longitude },
-        }));
+
+        // The address and city always go with the pin. Skipped if the user
+        // pinned a place or started typing one while this was being looked up.
+        const place = await lookUpPlace({ latitude, longitude }).catch(
+          () => null
+        );
+        setFormData((prev) =>
+          isUnsetLocation(prev.location) && !prev.address
+            ? { ...prev, ...place, location: { latitude, longitude } }
+            : prev
+        );
       } catch (error) {
         if (__DEV__) {
           console.error("Error getting location:", error);
@@ -152,7 +167,29 @@ const Step1: React.FC = () => {
     };
 
     getCurrentLocation();
-  }, [formData.location, setFormData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The pin follows the address field
+  const pinLocation = ({ location, city, address }: ResolvedLocation) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+      city: city || prev.city,
+      address: address || prev.address,
+    }));
+  };
+
+  // The address, city and pin are one thing, so they are cleared together
+  const clearLocation = () => {
+    setFormData((prev) => ({
+      ...prev,
+      address: "",
+      city: "",
+      location: { latitude: 0, longitude: 0 },
+    }));
+    setRegion(FINLAND_REGION);
+  };
 
   const handleProfilePictureSelection = async () => {
     const result = await launchImageLibrary({
@@ -265,13 +302,14 @@ const Step1: React.FC = () => {
         >
           Address
         </Text>
-        <Input
-          inputMode="text"
+        <LocationField
           placeholder="Address"
           value={formData.address}
-          onChangeText={(text) =>
-            setFormData((prev) => ({ ...prev, address: text }))
+          onChangeText={(address) =>
+            setFormData((prev) => ({ ...prev, address }))
           }
+          onResolve={pinLocation}
+          onClear={clearLocation}
         />
       </View>
       <View style={{ marginTop: 16 }}>
@@ -291,17 +329,28 @@ const Step1: React.FC = () => {
           }}
           style={styles.mapPreview}
         >
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            style={styles.map}
-            mapType="standard"
-            customMapStyle={GOOGLE_DARK_MAP_STYLE}
-            region={region}
-            scrollEnabled={false}
-            rotateEnabled={false}
-            pitchEnabled={false}
-            pointerEvents="none"
-          />
+          {/* A still preview: the wrapper keeps every touch off the map, so a
+              tap anywhere opens the picker */}
+          <View style={styles.map} pointerEvents="none">
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              // Dark from the first frame, instead of white until the tiles load
+              loadingBackgroundColor="#000"
+              style={styles.map}
+              mapType="standard"
+              customMapStyle={GOOGLE_DARK_MAP_STYLE}
+              region={region}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              rotateEnabled={false}
+              pitchEnabled={false}
+              toolbarEnabled={false}
+            >
+              {!isUnsetLocation(formData.location) && (
+                <Marker coordinate={formData.location} />
+              )}
+            </MapView>
+          </View>
         </TouchableOpacity>
         <View>
           <Text size="h4" weight="semibold" color="#A7A7A7">
@@ -310,45 +359,11 @@ const Step1: React.FC = () => {
               ? `(${formData.tattooStyles.length} selected)`
               : ""}
           </Text>
-          <View style={styles.ratingButtonsRow}>
-            {tattooStyles.slice(0, 6).map((item) => (
-              <TouchableOpacity
-                key={item.title}
-                activeOpacity={0.7}
-                style={[
-                  styles.styleChip,
-                  {
-                    backgroundColor: item.selected ? "#DAB769" : "#262526",
-                  },
-                ]}
-                onPress={() => toggleTattooStyles(item)}
-              >
-                <Text
-                  size="p"
-                  weight="normal"
-                  color={item.selected ? "#22221F" : "#A7A7A7"}
-                >
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            {tattooStyles.length > 6 && (
-              <TouchableOpacity
-                onPress={showTattooStylesSheet}
-                style={styles.seeMoreButton}
-              >
-                <Text size="p" weight="normal" color="#FBF6FA">
-                  See more
-                </Text>
-                <View style={styles.seeMoreIcon}>
-                  <Image
-                    style={styles.seeMoreIconImage}
-                    source={require("../assets/images/arrow_down.png")}
-                  />
-                </View>
-              </TouchableOpacity>
-            )}
-          </View>
+          <StyleChips
+            styles={tattooStyles}
+            onToggle={toggleTattooStyles}
+            onSeeMore={showTattooStylesSheet}
+          />
         </View>
         <View style={styles.aboutSection}>
           <Text
@@ -469,36 +484,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginTop: 8,
     marginBottom: 16,
-  },
-  ratingButtonsRow: {
-    marginTop: 16,
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  styleChip: {
-    height: 33,
-    paddingHorizontal: 6,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 6,
-  },
-  seeMoreButton: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 6,
-  },
-  seeMoreIcon: {
-    width: 24,
-    height: 24,
-  },
-  seeMoreIconImage: {
-    width: "100%",
-    height: "100%",
   },
   aboutSection: {
     marginTop: 16,
