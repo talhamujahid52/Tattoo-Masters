@@ -128,7 +128,7 @@ const FullScreenMapWithSearch: React.FC = () => {
     radiusValue: persistedRadiusValue,
     ratings: persistedRatings,
     studio: persistedStudio,
-    // styles: persistedStyles,
+    styles: persistedStyles,
     currentLocation,
   } = useSelector(selectFilter);
 
@@ -197,9 +197,15 @@ const FullScreenMapWithSearch: React.FC = () => {
     count += persistedStudio.filter((s) => s.selected).length;
 
     // 4. Style chips
+    count += persistedStyles.filter((s) => s.selected).length;
 
     return count;
-  }, [persistedRadiusEnabled, persistedRatings, persistedStudio]);
+  }, [
+    persistedRadiusEnabled,
+    persistedRatings,
+    persistedStudio,
+    persistedStyles,
+  ]);
   // Removed auto-zoom to artists; we only zoom to user's location.
 
   useEffect(() => {
@@ -304,7 +310,15 @@ const FullScreenMapWithSearch: React.FC = () => {
             studioFilterArr.push(`studio:studio`);
           }
         }
-        facets.push(`${studioFilterArr.join(" || ")}`);
+        facets.push(`(${studioFilterArr.join(" || ")})`);
+      }
+
+      const stylesFiltered = persistedStyles.filter((s) => s.selected);
+      if (stylesFiltered.length) {
+        const stylesFilterArr = stylesFiltered.map(
+          (s) => `tattooStyles:${s.title}`
+        );
+        facets.push(`(${stylesFilterArr.join(" || ")})`);
       }
     }
     return facets;
@@ -365,6 +379,7 @@ const FullScreenMapWithSearch: React.FC = () => {
     geoKey,
     persistedRatings,
     persistedStudio,
+    persistedStyles,
   ]);
 
   return (

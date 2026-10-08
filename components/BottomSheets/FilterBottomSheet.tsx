@@ -126,9 +126,13 @@ const FilterBottomSheet = ({
     setRadiusEnabledLocal(!radiusEnabled);
   };
 
+  // Single choice; tapping the selected rating again clears it
   const selectRating = (value: number) =>
     setRatingsLocal((curr) =>
-      curr.map((r) => ({ ...r, selected: r.value === value })),
+      curr.map((r) => ({
+        ...r,
+        selected: r.value === value ? !r.selected : false,
+      })),
     );
 
   const toggleStudio = (value: number) =>

@@ -1,0 +1,28 @@
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
+index 8c5266f..e2ae38f 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
+@@ -88,6 +88,10 @@ public class MapManager extends ViewGroupManager<MapView> {
+             if (initialProps.hasKey("liteMode")) {
+                 googleMapOptions.liteMode(initialProps.getBoolean("liteMode", false));
+             }
++            // Color shown under tiles that have not loaded yet (defaults to white).
++            if (initialProps.hasKey("loadingBackgroundColor") && !initialProps.isNull("loadingBackgroundColor")) {
++                googleMapOptions.backgroundColor(initialProps.getInt("loadingBackgroundColor", 0xFFFFFFFF));
++            }
+             if (initialProps.hasKey("initialCamera")) {
+                 CameraPosition position = MapView.cameraPositionFromMap(initialProps.getMap("initialCamera"));
+                 if (position != null) {
+diff --git a/node_modules/react-native-maps/lib/MapView.js b/node_modules/react-native-maps/lib/MapView.js
+index 8783539..1ba06bc 100644
+--- a/node_modules/react-native-maps/lib/MapView.js
++++ b/node_modules/react-native-maps/lib/MapView.js
+@@ -334,6 +334,8 @@ class MapView extends React.Component {
+                 googleRenderer: this.props.googleRenderer,
+                 initialRegion: this.props.initialRegion || null,
+                 initialCamera: this.props.initialCamera,
++                // Needed at creation on Android: it becomes the map's base color.
++                loadingBackgroundColor: this.props.loadingBackgroundColor,
+                 ref: this.map,
+                 onChange: this._onChange,
+                 onMapReady: this._onMapReady,

@@ -1,5 +1,12 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet } from "react-native";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Image, Platform, Pressable, StyleSheet } from "react-native";
 import { Marker } from "react-native-maps";
 
 interface ArtistMapMarkerProps {
@@ -16,10 +23,21 @@ const ArtistMapMarker = ({ artist, onPress }: ArtistMapMarkerProps) => {
   // While this is true the map re-snapshots the marker view continuously,
   // which makes the picture flicker. Only track until the image has drawn.
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  const stopTracking = useCallback(() => setTracksViewChanges(false), []);
+  const stopTimer = useRef<ReturnType<typeof setTimeout>>();
+  const stopTracking = useCallback(() => {
+    if (Platform.OS !== "ios") {
+      setTracksViewChanges(false);
+      return;
+    }
+    // iOS keeps whatever was last drawn, and onLoad fires before the image is
+    // painted, so stopping right away freezes the marker without its picture.
+    clearTimeout(stopTimer.current);
+    stopTimer.current = setTimeout(() => setTracksViewChanges(false), 500);
+  }, []);
 
   useEffect(() => {
     setTracksViewChanges(true);
+    return () => clearTimeout(stopTimer.current);
   }, [profilePic]);
 
   const coordinate = useMemo(
