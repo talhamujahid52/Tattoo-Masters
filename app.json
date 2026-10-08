@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tattoo Masters",
     "slug": "Tattoo-Masters",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon-new.png",
     "scheme": "myapp",
@@ -153,7 +153,7 @@
       ],
       "./plugin/without-ios-user-tracking.js",
       "./plugin/with-min-pod-deployment-target.js",
-    "./plugin/with-ios-scene-delegate.js",
+      "./plugin/with-ios-scene-delegate.js",
       "expo-asset"
     ],
     "experiments": {
