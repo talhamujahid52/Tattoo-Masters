@@ -9,7 +9,10 @@ import {
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import ArtistProfileCard from "@/components/ArtistProfileCard";
+import ArtistProfileCard, {
+  ArtistProfileCardSkeletonRow,
+} from "@/components/ArtistProfileCard";
+import { SkeletonReveal } from "@/components/Skeleton";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
 import { setAllArtists } from "@/redux/slices/artistSlice";
@@ -33,6 +36,8 @@ import {
 import { filterBlockedArtists } from "@/utils/safetyFilters";
 import { getChatAccess } from "@/hooks/useChat";
 
+const ARTIST_CARD_GAP = 10;
+
 const Home = () => {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -42,6 +47,10 @@ const Home = () => {
   const artistsTs = useTypesense();
   const publicationsTs = useTypesense();
   const [page, setPage] = useState(1);
+  // Flip once the first request settles, so an empty section can be told
+  // apart from one that is still loading.
+  const [artistsFetched, setArtistsFetched] = useState(false);
+  const [publicationsFetched, setPublicationsFetched] = useState(false);
   const initialNotificationHandledRef = useRef(false);
   const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
@@ -53,6 +62,8 @@ const Home = () => {
   );
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
+  // Content stays hidden until the signed-in user's block list has loaded
+  const awaitingSafety = !!currentUserId && !safetyHydrated;
   const visibleArtists: any[] = useMemo(
     () =>
       currentUserId && !safetyHydrated
@@ -60,6 +71,8 @@ const Home = () => {
         : filterBlockedArtists(artists, blockedUserIds),
     [artists, blockedUserIds, currentUserId, safetyHydrated],
   );
+  const showArtistsSkeleton =
+    visibleArtists.length === 0 && (!artistsFetched || awaitingSafety);
 
   // Upload tracking for auto-refresh
   const { queue, completedCount, failedCount, pendingCount, uploadingCount } =
@@ -99,6 +112,8 @@ const Home = () => {
       );
     } catch (err) {
       console.error("Error fetching users:", err);
+    } finally {
+      setArtistsFetched(true);
     }
   };
 
@@ -115,11 +130,15 @@ const Home = () => {
 
   // Initial publications search on mount
   useEffect(() => {
-    publicationsTs.search({
-      collection: "publications",
-      page: 1,
-      per_page: 21,
-    });
+    publicationsTs
+      .search({
+        collection: "publications",
+        page: 1,
+        per_page: 21,
+      })
+      // The hook already logs the failure
+      .catch(() => {})
+      .finally(() => setPublicationsFetched(true));
   }, [publicationsTs.search]);
 
   const handleLoadMore = () => {
@@ -279,56 +298,61 @@ const Home = () => {
           </TouchableOpacity>
         </View>
         <View style={{ paddingLeft: 16 }}>
-          <FlatList
-            data={visibleArtists}
-            renderItem={({ item }) => <ArtistProfileCard artist={item} />}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 10 }}
-            ListFooterComponent={
-              <TouchableOpacity
-                onPress={() => {
-                  router.push("/(bottomTabs)/Search");
-                }}
-                style={{
-                  width: 170,
-                  height: 170,
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                <Image
-                  source={require("../../../assets/images/searchMoreArtists.png")}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    resizeMode: "cover",
+          <SkeletonReveal
+            loading={showArtistsSkeleton}
+            skeleton={<ArtistProfileCardSkeletonRow gap={ARTIST_CARD_GAP} />}
+          >
+            <FlatList
+              data={visibleArtists}
+              renderItem={({ item }) => <ArtistProfileCard artist={item} />}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: ARTIST_CARD_GAP }}
+              ListFooterComponent={
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/(bottomTabs)/Search");
                   }}
-                />
-                <View
                   style={{
-                    position: "absolute",
-                    top: 40,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    paddingHorizontal: 16,
+                    width: 170,
+                    height: 170,
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    position: "relative",
                   }}
                 >
-                  <Text
-                    size="h4"
-                    weight="semibold"
-                    color="#FBF6FA"
-                    style={{ textAlign: "center" }}
+                  <Image
+                    source={require("../../../assets/images/searchMoreArtists.png")}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      resizeMode: "cover",
+                    }}
+                  />
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 40,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      paddingHorizontal: 16,
+                    }}
                   >
-                    Wanna find more artists?
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            }
-          />
+                    <Text
+                      size="h4"
+                      weight="semibold"
+                      color="#FBF6FA"
+                      style={{ textAlign: "center" }}
+                    >
+                      Wanna find more artists?
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              }
+            />
+          </SkeletonReveal>
         </View>
       </Animated.View>
 
@@ -350,6 +374,7 @@ const Home = () => {
         onEndReached={handleLoadMore}
         onRefresh={onRefresh}
         refreshing={refreshing}
+        loading={!publicationsFetched || awaitingSafety}
         ListHeaderComponent={ListHeader}
       />
     </View>

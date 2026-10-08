@@ -26,7 +26,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { router, useLocalSearchParams } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
 import { setAllArtists } from "@/redux/slices/artistSlice";
-import { addSearch, clearSearches } from "@/redux/slices/recentSearchesSlice";
+import {
+  addSearch,
+  clearSearches,
+  type SearchType,
+} from "@/redux/slices/recentSearchesSlice";
 import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import type { RootState } from "@/redux/store";
@@ -44,17 +48,25 @@ const Search: React.FC = () => {
   const searchInputRef = useRef<TextInput>(null);
   const { focusSearch } = useLocalSearchParams<{ focusSearch?: string }>();
   const handledFocusSearchRef = useRef<string | undefined>(undefined);
+  // what a submitted search looks for: tattoos when the visit started from the
+  // Home search bar, artists when it started on this screen
+  const submitTypeRef = useRef<SearchType>("artists");
 
   // focus the field when arriving from the Home search bar; the param is a
   // fresh timestamp per tap, so plain tab switches don't reopen the keyboard
   useFocusEffect(
     useCallback(() => {
       if (!focusSearch || handledFocusSearchRef.current === focusSearch) return;
+      submitTypeRef.current = "tattoos";
       const timeout = setTimeout(() => {
         handledFocusSearchRef.current = focusSearch;
         searchInputRef.current?.focus();
       }, 100);
-      return () => clearTimeout(timeout);
+      return () => {
+        clearTimeout(timeout);
+        // leaving the screen ends the Home-initiated visit
+        submitTypeRef.current = "artists";
+      };
     }, [focusSearch]),
   );
 
@@ -178,12 +190,13 @@ const Search: React.FC = () => {
               returnKeyLabel="Search"
               returnKeyType="search"
               onSubmitEditing={() => {
+                const type = submitTypeRef.current;
                 router.push({
                   pathname: "/(bottomTabs)/Search/SearchAll",
-                  params: { query: searchText, type: "artists" },
+                  params: { query: searchText, type },
                 });
 
-                dispatch(addSearch({ text: searchText, type: "artists" }));
+                dispatch(addSearch({ text: searchText, type }));
                 setSearchText("");
               }}
               onFocus={() => setIsFocused(true)}

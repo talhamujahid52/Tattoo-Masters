@@ -37,8 +37,8 @@ const ArtistProfileBottomSheet = ({
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
   const { toggleFollow, isFollowing } = useFollowArtist();
-  const [isFollowingLocal, setIsFollowingLocal] = useState(false);
   const currentArtistId = String(currentArtist?.uid ?? currentArtist?.id ?? "");
+  const isFollowingLocal = !!currentArtistId && isFollowing(currentArtistId);
   const isBlocked = Boolean(
     currentArtistId && blockedUserIds.includes(currentArtistId),
   );
@@ -50,31 +50,17 @@ const ArtistProfileBottomSheet = ({
   };
 
   useEffect(() => {
-    if (currentArtistId) {
-      setIsFollowingLocal(isFollowing(currentArtistId));
-    }
-  }, [currentArtistId, isFollowing]);
-
-  useEffect(() => {
     if (safetyHydrated && isBlocked) hideMapProfileBottomSheet();
   }, [hideMapProfileBottomSheet, isBlocked, safetyHydrated]);
 
-  const handleFavoritePress = async () => {
+  const handleFavoritePress = () => {
     if (!currentArtistId || isBlocked) return;
     if (!userFirestore) {
       // No login UI here; do nothing for now
       return;
     }
-    const next = !isFollowingLocal;
-    setIsFollowingLocal(next);
-    try {
-      const result = await toggleFollow(currentArtistId);
-      if (typeof result === "boolean" && result !== next) {
-        setIsFollowingLocal(result);
-      }
-    } catch (e) {
-      setIsFollowingLocal((prev) => !prev);
-    }
+    // The hook flips the button right away and restores it if the sync fails
+    toggleFollow(currentArtistId).catch(() => {});
   };
 
   const profilePicture = useMemo(() => {

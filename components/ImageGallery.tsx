@@ -8,6 +8,8 @@ import {
   Dimensions,
   RefreshControl,
   LayoutChangeEvent,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
@@ -19,6 +21,8 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterHiddenPublications } from "@/utils/safetyFilters";
+import Animated from "react-native-reanimated";
+import { useSkeletonPulse } from "@/components/Skeleton";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const NUM_COLUMNS = 3;
@@ -27,6 +31,26 @@ const ITEM_MARGIN = 2;
 // consumes NUM_COLUMNS * 2 * ITEM_MARGIN of horizontal margin.
 const getItemSize = (containerWidth: number) =>
   Math.floor((containerWidth - ITEM_MARGIN * 2 * NUM_COLUMNS) / NUM_COLUMNS);
+// Seven rows: enough to run past the bottom of the screen under a header.
+const SKELETON_TILES = Array.from({ length: NUM_COLUMNS * 7 }, (_, i) => i);
+
+// Placeholder grid built from the same tile style as the real items, so each
+// image lands exactly on the tile that stood in for it.
+const GallerySkeleton = ({ itemStyle }: { itemStyle: StyleProp<ViewStyle> }) => {
+  const pulseStyle = useSkeletonPulse();
+
+  return (
+    <Animated.View
+      style={[styles.skeletonGrid, pulseStyle]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {SKELETON_TILES.map((tile) => (
+        <View key={tile} style={itemStyle} />
+      ))}
+    </Animated.View>
+  );
+};
 
 type GalleryPublication = {
   id: string;
@@ -51,6 +75,8 @@ interface Props {
   onEndReached?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  // Shows a placeholder grid in place of the images until the first ones arrive
+  loading?: boolean;
   ListHeaderComponent?: React.ReactElement | null;
   contentContainerStyle?: object;
 }
@@ -61,6 +87,7 @@ const ImageGallery = ({
   onEndReached,
   onRefresh,
   refreshing = false,
+  loading = false,
   ListHeaderComponent,
   contentContainerStyle,
 }: Props) => {
@@ -179,6 +206,9 @@ const ImageGallery = ({
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={ListHeaderComponent}
+      ListEmptyComponent={
+        loading ? <GallerySkeleton itemStyle={itemStyle} /> : null
+      }
       refreshControl={
         onRefresh ? (
           <RefreshControl
@@ -213,5 +243,9 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  skeletonGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
 });

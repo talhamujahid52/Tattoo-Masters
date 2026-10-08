@@ -571,10 +571,10 @@ const FullScreenMapWithSearch: React.FC = () => {
       {!mapReady && <View pointerEvents="none" style={styles.mapOverlay} />}
       <View style={styles.zoomControls}>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
-          <Text style={styles.zoomText}>+</Text>
+          <MaterialIcons name="add" size={24} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
-          <Text style={styles.zoomText}>−</Text>
+          <MaterialIcons name="remove" size={24} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.zoomButton} onPress={goToMyLocation}>
           <MaterialIcons name="my-location" size={24} color="#fff" />
@@ -637,11 +637,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
-  },
-  zoomText: {
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "bold",
   },
 });
 

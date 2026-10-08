@@ -116,8 +116,10 @@ const ArtistProfile = () => {
       isUserBlocked(targetArtistUserId),
   );
   const { toggleFollow, isFollowing } = useFollowArtist();
-  const [isFollowingArtist, setIsFollowingArtist] = useState(false);
-  const [followersCount, setFollowersCount] = useState<number>(0);
+  const isFollowingArtist = !!artistId && isFollowing(artistId);
+  const [followersCount, setFollowersCount] = useState<number>(
+    artist?.data?.followersCount ?? 0,
+  );
 
   const insets = useSafeAreaInsets();
   const defaultLocation = {
@@ -307,45 +309,23 @@ const ArtistProfile = () => {
   ];
 
   useEffect(() => {
-    if (artistId) {
-      setIsFollowingArtist(isFollowing(artistId) || false);
-    }
-  }, [artistId, isFollowing]);
-
-  useEffect(() => {
     setFollowersCount(artist?.data?.followersCount ?? 0);
   }, [artist?.data?.followersCount]);
 
-  const handleFollow = async () => {
+  const handleFollow = () => {
     if (!userFirestore) {
       showLoggingInBottomSheet();
       return;
     }
 
-    // Optimistic toggle
-    const wasFollowing = isFollowingArtist;
-    const nextFollowing = !wasFollowing;
-    setIsFollowingArtist(nextFollowing);
+    // The hook flips the button right away; move the count with it
+    const nextFollowing = !isFollowingArtist;
     setFollowersCount((prev) => Math.max(0, prev + (nextFollowing ? 1 : -1)));
 
-    try {
-      const newFollowState = await toggleFollow(artistId);
-      // Ensure UI reflects actual resulting state if backend differs
-      if (typeof newFollowState === "boolean") {
-        setIsFollowingArtist(newFollowState);
-        // Reconcile count if needed
-        if (newFollowState !== nextFollowing) {
-          setFollowersCount((prev) =>
-            Math.max(0, prev + (newFollowState ? 1 : -1))
-          );
-        }
-      }
-    } catch (error) {
-      // Revert on failure
-      setIsFollowingArtist(wasFollowing);
-      setFollowersCount((prev) => Math.max(0, prev + (wasFollowing ? 1 : -1)));
-      console.error("Error following artist:", error);
-    }
+    toggleFollow(artistId).catch(() => {
+      // The hook has restored the button; undo the count change too
+      setFollowersCount((prev) => Math.max(0, prev + (nextFollowing ? -1 : 1)));
+    });
   };
 
   const getCurrentCoordinates = async (): Promise<[number, number] | null> => {
@@ -624,7 +604,7 @@ const ArtistProfile = () => {
             <View style={styles.artistFavoriteRow}>
               <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
               <Text size="p" weight="normal" color="#FBF6FA">
-                {artist?.data?.followersCount || "0"}
+                {followersCount || "0"}
               </Text>
             </View>
             <View style={styles.tattooStylesRow}>
