@@ -13,7 +13,9 @@ import { useLocalSearchParams } from "expo-router";
 
 import { Zoomable, ZoomableRef } from "@likashefqet/react-native-image-zoom";
 import Text from "@/components/Text";
+import Skeleton from "@/components/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import ImageActionsBottomSheet from "@/components/BottomSheets/ImageActionsBottomSheet";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
@@ -22,7 +24,11 @@ import useTypesense from "@/hooks/useTypesense"; // TypesenseResult, // Publicat
 // import { doc } from "@react-native-firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import { UserFirestore } from "@/types/user";
-import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { toggleLikePublication } from "@/utils/firebase/userFunctions";
 import { useSelector } from "react-redux";
@@ -39,6 +45,7 @@ type TattooDetailContent = {
   caption: string;
   photoUrlVeryHigh?: string;
   photoUrlHigh?: string;
+  photoUrlSmall?: string;
   styles: string[];
   stylesJson: string;
   userId?: string;
@@ -89,6 +96,7 @@ const TattooDetail: React.FC = () => {
     [scale]
   );
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const params = useLocalSearchParams<Record<string, string | string[]>>();
 
   const toSingle = (
@@ -102,6 +110,7 @@ const TattooDetail: React.FC = () => {
   const captionFromParams = toSingle(params.caption) ?? "";
   const photoUrlVeryHighFromParams = toSingle(params.photoUrlVeryHigh);
   const photoUrlHighFromParams = toSingle(params.photoUrlHigh);
+  const photoUrlSmallFromParams = toSingle(params.photoUrlSmall);
   const userIdFromParams = toSingle(params.userId);
   const stylesJsonParam = toSingle(params.stylesJson);
   const deleteUrlsJsonParam = toSingle(params.deleteUrlsJson);
@@ -140,6 +149,7 @@ const TattooDetail: React.FC = () => {
       caption: captionFromParams,
       photoUrlVeryHigh: photoUrlVeryHighFromParams,
       photoUrlHigh: photoUrlHighFromParams,
+      photoUrlSmall: photoUrlSmallFromParams,
       userId: userIdFromParams,
       styles: initialStyles,
       stylesJson: stylesJsonParam ?? JSON.stringify(initialStyles),
@@ -151,6 +161,7 @@ const TattooDetail: React.FC = () => {
       captionFromParams,
       photoUrlVeryHighFromParams,
       photoUrlHighFromParams,
+      photoUrlSmallFromParams,
       userIdFromParams,
       initialStyles,
       stylesJsonParam,
@@ -161,7 +172,10 @@ const TattooDetail: React.FC = () => {
 
   const [fetchedDetail, setFetchedDetail] =
     useState<TattooDetailContent | null>(null);
-  const [isFetchingDetail, setIsFetchingDetail] = useState(false);
+  const [isFetchingDetail, setIsFetchingDetail] = useState(
+    () => Boolean(initialDetail.id) && !initialDetail.photoUrlVeryHigh
+  );
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   const detail = fetchedDetail ?? initialDetail;
   const id = detail.id;
@@ -171,6 +185,9 @@ const TattooDetail: React.FC = () => {
   const existingStylesJson = detail.stylesJson ?? "[]";
   const userId = detail.userId;
   const photoUrlVeryHigh = detail.photoUrlVeryHigh || detail.photoUrlHigh;
+  // Already in the disk cache when coming from the gallery grid, so it can
+  // show instantly underneath while the full-size image downloads.
+  const photoUrlSmall = detail.photoUrlSmall || undefined;
   const {
     hydrated: safetyHydrated,
     isUserBlocked,
@@ -230,6 +247,7 @@ const TattooDetail: React.FC = () => {
           caption: data?.caption || "",
           photoUrlVeryHigh: downloadUrls?.veryHigh,
           photoUrlHigh: downloadUrls?.high,
+          photoUrlSmall: downloadUrls?.small,
           userId: data?.userId,
           styles,
           stylesJson: JSON.stringify(styles),
@@ -256,18 +274,20 @@ const TattooDetail: React.FC = () => {
   const { getDocument } = useTypesense();
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<UserFirestore | undefined>();
+  const [userResolved, setUserResolved] = useState(false);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const isLikedFromHook = useIsPublicationLiked(id, currentUserId);
   const totalLikesFromHook = usePublicationLikes(id);
 
   const [liked, setLiked] = useState<boolean>(false);
-  const [likesCount, setLikesCount] = useState<number>(0);
+  const [likesCount, setLikesCount] = useState<number | undefined>();
 
   useEffect(() => {
     setLiked(isLikedFromHook);
   }, [isLikedFromHook]);
 
   useEffect(() => {
-    setLikesCount(totalLikesFromHook ?? 0);
+    setLikesCount(totalLikesFromHook);
   }, [totalLikesFromHook]);
 
   const toggleLikePublicationOnHandle = async () => {
@@ -280,14 +300,14 @@ const TattooDetail: React.FC = () => {
       // Optimistic update
       const nextLiked = !liked;
       setLiked(nextLiked);
-      setLikesCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
+      setLikesCount((prev) => Math.max(0, (prev ?? 0) + (nextLiked ? 1 : -1)));
 
       setLoading(true);
       await toggleLikePublication(id, currentUserId);
     } catch (e) {
       // Revert optimistic update on failure
       setLiked((prev) => !prev);
-      setLikesCount((prev) => Math.max(0, prev + (liked ? -1 : 1)));
+      setLikesCount((prev) => Math.max(0, (prev ?? 0) + (liked ? -1 : 1)));
       console.log("failed to like unlike photo");
     } finally {
       setLoading(false);
@@ -303,9 +323,12 @@ const TattooDetail: React.FC = () => {
         })
         .catch((err) =>
           console.error("Error fetching user details from Typesense:", err)
-        );
+        )
+        .finally(() => setUserResolved(true));
     }
   }, [userId, getDocument]);
+
+  const isUserLoading = !userResolved && (Boolean(userId) || isFetchingDetail);
 
   if (currentUserId && !safetyHydrated) {
     return (
@@ -334,7 +357,6 @@ const TattooDetail: React.FC = () => {
     <View
       style={{
         flex: 1,
-        borderWidth: 2,
         position: "relative",
       }}
     >
@@ -446,15 +468,34 @@ const TattooDetail: React.FC = () => {
           style={animatedStyle}
         >
           {photoUrlVeryHigh ? (
-            <ExpoImage
+            <View
               style={{
                 height: "100%",
                 bottom: insets.bottom,
                 width: "100%",
               }}
-              contentFit="contain"
-              source={{ uri: photoUrlVeryHigh }}
-            />
+            >
+              {/* Rendered as a regular image rather than via `placeholder`:
+                  expo-image on iOS re-downloads remote placeholders instead
+                  of reading them from the cache. */}
+              {photoUrlSmall && (
+                <ExpoImage
+                  style={StyleSheet.absoluteFill}
+                  contentFit="contain"
+                  source={{ uri: photoUrlSmall }}
+                  cachePolicy="memory-disk"
+                />
+              )}
+              <ExpoImage
+                style={StyleSheet.absoluteFill}
+                contentFit="contain"
+                source={{ uri: photoUrlVeryHigh }}
+                cachePolicy="memory-disk"
+                transition={200}
+                onLoadStart={() => setIsImageLoading(true)}
+                onLoadEnd={() => setIsImageLoading(false)}
+              />
+            </View>
           ) : (
             <View
               style={{
@@ -464,9 +505,7 @@ const TattooDetail: React.FC = () => {
                 backgroundColor: "#000",
               }}
             >
-              {isFetchingDetail ? (
-                <ActivityIndicator size="large" color="#fff" />
-              ) : (
+              {!isFetchingDetail && (
                 <Text size="p" weight="normal" color="#FBF6FA">
                   Image unavailable
                 </Text>
@@ -474,6 +513,17 @@ const TattooDetail: React.FC = () => {
             </View>
           )}
         </Zoomable>
+        {(isFetchingDetail ||
+          (photoUrlVeryHigh && !photoUrlSmall && isImageLoading)) && (
+          <View
+            // Offset by the header so the spinner sits at the screen's center,
+            // not the center of the area below the header.
+            style={[styles.loaderOverlay, { paddingBottom: headerHeight }]}
+            pointerEvents="none"
+          >
+            <ActivityIndicator size="large" color="#fff" />
+          </View>
+        )}
       </View>
       <LinearGradient
         colors={["rgba(0, 0, 0, 0.98)", "transparent"]}
@@ -481,10 +531,11 @@ const TattooDetail: React.FC = () => {
         end={{ x: 0.5, y: 0 }}
         id="bottom-container"
         style={{
-          width: "100%",
           padding: 16,
           paddingBottom: insets.bottom + 10,
           position: "absolute",
+          left: 0,
+          right: 0,
           bottom: 0,
         }}
       >
@@ -506,48 +557,58 @@ const TattooDetail: React.FC = () => {
             }}
             style={{ flexDirection: "row", alignItems: "center" }}
           >
-            <Image
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 50,
-                backgroundColor: "white",
-                marginRight: 8,
-              }}
-              source={
-                userDetails?.profilePictureSmall || userDetails?.profilePicture
-                  ? {
-                      uri:
-                        userDetails.profilePictureSmall ??
-                        userDetails.profilePicture,
-                    }
-                  : require("../../assets/images/placeholder.png")
-              }
-            />
+            <View style={styles.avatar}>
+              {!avatarLoaded && <Skeleton style={StyleSheet.absoluteFill} />}
+              {!isUserLoading && (
+                <ExpoImage
+                  style={StyleSheet.absoluteFill}
+                  transition={200}
+                  onLoadEnd={() => setAvatarLoaded(true)}
+                  source={
+                    userDetails?.profilePictureSmall ||
+                    userDetails?.profilePicture
+                      ? {
+                          uri:
+                            userDetails.profilePictureSmall ??
+                            userDetails.profilePicture,
+                        }
+                      : require("../../assets/images/placeholder.png")
+                  }
+                />
+              )}
+            </View>
 
-            <View />
-            <Text
-              size="p"
-              weight="semibold"
-              color="#FFF"
-              style={{ marginRight: 8 }}
-            >
-              {userDetails?.name}
-            </Text>
-            {userDetails?.originalArtistNumber && (
-              <Image
-                style={{
-                  width: 20,
-                  height: 20,
-                }}
-                source={require("../../assets/images/originalArtist.png")}
-              />
+            {isUserLoading ? (
+              <Skeleton style={styles.nameSkeleton} />
+            ) : (
+              <Animated.View
+                entering={FadeIn.duration(250)}
+                style={{ flexDirection: "row", alignItems: "center" }}
+              >
+                <Text
+                  size="p"
+                  weight="semibold"
+                  color="#FFF"
+                  style={{ marginRight: 8 }}
+                >
+                  {userDetails?.name}
+                </Text>
+                {userDetails?.originalArtistNumber && (
+                  <Image
+                    style={{
+                      width: 20,
+                      height: 20,
+                    }}
+                    source={require("../../assets/images/originalArtist.png")}
+                  />
+                )}
+              </Animated.View>
             )}
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity
               onPress={toggleLikePublicationOnHandle}
-              disabled={loading}
+              disabled={loading || likesCount === undefined}
               hitSlop={{ top: 8, left: 8, right: 4, bottom: 8 }}
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
             >
@@ -556,14 +617,17 @@ const TattooDetail: React.FC = () => {
               ) : (
                 <Ionicons name="heart-outline" size={24} color="#fff" />
               )}
-              <Text
-                size="medium"
-                weight="normal"
-                style={{ minWidth: 10 }}
-                color="#fff"
-              >
-                {likesCount ?? 0}
-              </Text>
+              <View style={styles.likesCountSlot}>
+                {likesCount === undefined ? (
+                  <Skeleton style={styles.likesCountSkeleton} />
+                ) : (
+                  <Animated.View entering={FadeIn.duration(250)}>
+                    <Text size="medium" weight="normal" color="#fff">
+                      {likesCount}
+                    </Text>
+                  </Animated.View>
+                )}
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
@@ -588,6 +652,32 @@ const TattooDetail: React.FC = () => {
 export default TattooDetail;
 
 const styles = StyleSheet.create({
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    overflow: "hidden",
+    marginRight: 8,
+  },
+  nameSkeleton: {
+    width: 110,
+    height: 14,
+  },
+  // Fixed slot so the heart doesn't move when the count arrives.
+  likesCountSlot: {
+    minWidth: 22,
+    height: 18,
+    justifyContent: "center",
+  },
+  likesCountSkeleton: {
+    width: 20,
+    height: 12,
+  },
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   safetyStateContainer: {
     flex: 1,
     alignItems: "center",

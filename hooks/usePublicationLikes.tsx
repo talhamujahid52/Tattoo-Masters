@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import firestore from "@react-native-firebase/firestore";
 
-const usePublicationLikes = (publicationId: string): number => {
-  const [likes, setLikes] = useState<number>(0);
+// Returns undefined until the first snapshot arrives.
+const usePublicationLikes = (publicationId: string): number | undefined => {
+  const [likes, setLikes] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const publicationRef = firestore()
@@ -19,6 +20,7 @@ const usePublicationLikes = (publicationId: string): number => {
       },
       (error) => {
         console.error("Error listening for publication likes:", error);
+        setLikes((prev) => prev ?? 0);
       },
     );
     return () => unsubscribe();

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Dimensions,
   RefreshControl,
+  LayoutChangeEvent,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Image as ExpoImage } from "expo-image";
@@ -22,7 +23,10 @@ import { filterHiddenPublications } from "@/utils/safetyFilters";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const NUM_COLUMNS = 3;
 const ITEM_MARGIN = 2;
-const ITEM_SIZE = (SCREEN_WIDTH - ITEM_MARGIN * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
+// Each item has ITEM_MARGIN on both sides, so a row of NUM_COLUMNS items
+// consumes NUM_COLUMNS * 2 * ITEM_MARGIN of horizontal margin.
+const getItemSize = (containerWidth: number) =>
+  Math.floor((containerWidth - ITEM_MARGIN * 2 * NUM_COLUMNS) / NUM_COLUMNS);
 
 type GalleryPublication = {
   id: string;
@@ -68,6 +72,19 @@ const ImageGallery = ({
   const reportedPublicationIds = useSelector(selectReportedPublicationIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
 
+  // Measure the list's actual width so columns stay equal regardless of
+  // the parent's padding (the search screen wraps this in a 16px-padded view).
+  const [containerWidth, setContainerWidth] = useState(SCREEN_WIDTH);
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    const width = e.nativeEvent.layout.width;
+    if (width > 0) setContainerWidth((prev) => (prev === width ? prev : width));
+  }, []);
+  const itemSize = getItemSize(containerWidth);
+  const itemStyle = useMemo(
+    () => [styles.itemContainer, { width: itemSize, height: itemSize }],
+    [itemSize]
+  );
+
   const visibleImages = useMemo(() => {
     // Do not briefly render content from another account while the current
     // account's safety state is still loading.
@@ -91,7 +108,7 @@ const ImageGallery = ({
       const doc = item.document;
       return (
         <TouchableOpacity
-          style={styles.itemContainer}
+          style={itemStyle}
           onPress={() => {
             router.push({
               pathname: "/artist/TattooDetail",
@@ -100,6 +117,9 @@ const ImageGallery = ({
                   doc?.downloadUrls?.veryHigh ?? ""
                 ),
                 photoUrlHigh: encodeURIComponent(doc?.downloadUrls?.high ?? ""),
+                photoUrlSmall: encodeURIComponent(
+                  doc?.downloadUrls?.small ?? ""
+                ),
                 id: doc.id,
                 caption: doc.caption,
                 styles: doc.styles,
@@ -113,20 +133,20 @@ const ImageGallery = ({
         >
           <ExpoImage
             source={{ uri: doc?.downloadUrls?.small }}
-            cachePolicy="disk"
+            cachePolicy="memory-disk"
             style={styles.image}
             contentFit="cover"
           />
         </TouchableOpacity>
       );
     },
-    [router]
+    [router, itemStyle]
   );
 
   const renderUriItem = useCallback(
     ({ item }: { item: { uri: string } }) => {
       return (
-        <View style={styles.itemContainer}>
+        <View style={itemStyle}>
           <Image
             source={{ uri: item.uri }}
             style={styles.image}
@@ -135,7 +155,7 @@ const ImageGallery = ({
         </View>
       );
     },
-    []
+    [itemStyle]
   );
 
   const isTypesense = visibleImages.length > 0 || imageUris.length === 0;
@@ -152,6 +172,7 @@ const ImageGallery = ({
       renderItem={renderItem as any}
       keyExtractor={keyExtractor as any}
       numColumns={NUM_COLUMNS}
+      onLayout={onLayout}
       style={styles.container}
       contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
@@ -184,8 +205,6 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   itemContainer: {
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
     margin: ITEM_MARGIN,
     borderRadius: 4,
     overflow: "hidden",
