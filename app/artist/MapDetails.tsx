@@ -1,10 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
-import { View, StyleSheet, Pressable, Image } from "react-native";
-import MapView, {
-  Camera,
-  Marker,
-  PROVIDER_GOOGLE,
-} from "react-native-maps";
+import { View, StyleSheet } from "react-native";
+import MapView, { Camera, PROVIDER_GOOGLE } from "react-native-maps";
+import ArtistMapMarker from "@/components/ArtistMapMarker";
 import { useLocalSearchParams } from "expo-router";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
@@ -174,41 +171,9 @@ const MapDetails = () => {
         >
           <MaterialIcons name="location-pin" size={42} color="red" />
         </Marker> */}
-        {visibleArtists.map((artist: any, index: number) => {
-          const location = artist?.data?.location;
-          const profilePic =
-            artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
-
-          if (!location?.[0] || !location?.[1]) return null;
-
-          return (
-            <Marker
-              key={artist?.id ?? index}
-              coordinate={{
-                latitude: location[0],
-                longitude: location[1],
-              }}
-            >
-              <Pressable style={{ alignItems: "center" }}>
-                <Image
-                  source={{
-                    uri: profilePic
-                      ? profilePic
-                      : require("../../assets/images/placeholder.png"),
-                  }}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 40,
-                    borderWidth: 1,
-                    borderColor: "#fff",
-                    backgroundColor: "#202020",
-                  }}
-                />
-              </Pressable>
-            </Marker>
-          );
-        })}
+        {visibleArtists.map((artist: any, index: number) => (
+          <ArtistMapMarker key={artist?.id ?? index} artist={artist} />
+        ))}
       </MapView>
       {/* <View style={styles.zoomControls}>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>

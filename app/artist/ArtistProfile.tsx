@@ -1,13 +1,11 @@
 import {
   StyleSheet,
   View,
-  ScrollView,
   TouchableOpacity,
   Image,
   FlatList,
   Pressable,
   Linking,
-  RefreshControl,
   ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -152,7 +150,7 @@ const ArtistProfile = () => {
 
   const publicationsTs = useTypesense();
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [styleFilters, setStyleFilters] = useState<StyleItem[]>([]);
+  const [selectedStyle, setSelectedStyle] = useState("All");
 
   useEffect(() => {
     const fetchPublications = async () => {
@@ -171,11 +169,10 @@ const ArtistProfile = () => {
     fetchPublications();
   }, [artistId]);
 
-  useEffect(() => {
-    if (!searchResults.length) {
-      setStyleFilters([]);
-      return;
-    }
+  // Derived during render (not in an effect) so the chips appear in the same
+  // frame as the gallery instead of pushing it down one frame later.
+  const styleFilters = useMemo<StyleItem[]>(() => {
+    if (!searchResults.length) return [];
 
     const styleCountMap: Record<string, number> = {};
     searchResults.forEach((doc) => {
@@ -186,30 +183,28 @@ const ArtistProfile = () => {
       }
     });
 
-    const stylesArray: StyleItem[] = [
+    const activeStyle = Object.prototype.hasOwnProperty.call(
+      styleCountMap,
+      selectedStyle
+    )
+      ? selectedStyle
+      : "All";
+
+    return [
       {
         title: "All",
         count: searchResults.length,
-        selected: true, // Default selection
+        selected: activeStyle === "All",
       },
       ...Object.entries(styleCountMap).map(([title, count]) => ({
         title,
         count,
-        selected: false,
+        selected: title === activeStyle,
       })),
     ];
+  }, [searchResults, selectedStyle]);
 
-    setStyleFilters(stylesArray);
-  }, [searchResults]);
-
-  const toggleStyleFilter = (title: string) => {
-    setStyleFilters((prevFilters) =>
-      prevFilters.map((item) => ({
-        ...item,
-        selected: item.title === title,
-      }))
-    );
-  };
+  const toggleStyleFilter = (title: string) => setSelectedStyle(title);
 
   const filteredResults = useMemo(() => {
     const selectedFilter = styleFilters.find((item) => item.selected);
@@ -471,363 +466,359 @@ const ArtistProfile = () => {
     );
   }
 
+  // The profile is the gallery's list header (as in MyProfile) so there is a
+  // single scroll container; a FlatList nested in a ScrollView flickers.
   return (
-    <ScrollView
-      contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#fff"
-          colors={["#fff"]}
-          progressBackgroundColor="#1C1C1C"
-        />
-      }
-    >
-      <View style={{ paddingHorizontal: 16, gap: 16 }}>
-        {/* BottomSheets */}
-        <LoggingInBottomSheet
-          InsideComponent={
-            <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
-          }
-        />
-        <ShareSheet
-          InsideComponent={
-            <ShareArtistProfileBottomSheet
-              showLoginBottomSheet={showLoggingInBottomSheet}
-              hideShareSheet={hideShareSheet}
-              showReportSheet={showReportSheet}
-              showBlockSheet={showBlockSheet}
-              artistId={targetArtistUserId}
-            />
-          }
-        />
-        <ReportSheet
-          InsideComponent={
-            <ReportBottomSheet
-              hideReportSheet={hideReportSheet}
-              title="User"
-              type="user"
-              options={options}
-              reportItem={targetArtistUserId}
-              targetOwnerId={targetArtistUserId}
-            />
-          }
-        />
-        <BlockSheet
-          InsideComponent={
-            <BlockUserBottomSheet
-              hideBlockSheet={hideBlockSheet}
-              blockedUserId={targetArtistUserId}
-              blockedUserName={artist?.data?.name}
-              blockedUserProfilePicture={
-                artist?.data?.profilePictureSmall ??
-                artist?.data?.profilePicture
+    <View style={styles.container}>
+      <ImageGallery
+        images={filteredResults}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 10 }}
+        ListHeaderComponent={
+          <View style={{ paddingHorizontal: 16, gap: 16 }}>
+            {/* BottomSheets */}
+            <LoggingInBottomSheet
+              InsideComponent={
+                <LoginBottomSheet hideLoginBottomSheet={hideLoggingInBottomSheet} />
               }
-              sourceType="profile"
-              sourceId={targetArtistUserId}
-              onBlocked={() => router.back()}
             />
-          }
-        />
+            <ShareSheet
+              InsideComponent={
+                <ShareArtistProfileBottomSheet
+                  showLoginBottomSheet={showLoggingInBottomSheet}
+                  hideShareSheet={hideShareSheet}
+                  showReportSheet={showReportSheet}
+                  showBlockSheet={showBlockSheet}
+                  artistId={targetArtistUserId}
+                />
+              }
+            />
+            <ReportSheet
+              InsideComponent={
+                <ReportBottomSheet
+                  hideReportSheet={hideReportSheet}
+                  title="User"
+                  type="user"
+                  options={options}
+                  reportItem={targetArtistUserId}
+                  targetOwnerId={targetArtistUserId}
+                />
+              }
+            />
+            <BlockSheet
+              InsideComponent={
+                <BlockUserBottomSheet
+                  hideBlockSheet={hideBlockSheet}
+                  blockedUserId={targetArtistUserId}
+                  blockedUserName={artist?.data?.name}
+                  blockedUserProfilePicture={
+                    artist?.data?.profilePictureSmall ??
+                    artist?.data?.profilePicture
+                  }
+                  sourceType="profile"
+                  sourceId={targetArtistUserId}
+                  onBlocked={() => router.back()}
+                />
+              }
+            />
 
-        <OriginalArtistBottomSheet InsideComponent={<OriginalArtistNote />} />
-        <View style={styles.userProfileRow}>
-          <View style={styles.pictureAndName}>
-            {/* <Image style={styles.profilePicture} source={profilePicture} /> */}
-            <ProfilePicturePreview
-              imageSource={profilePicture}
-              imageStyle={styles.profilePicture}
-              highResolutionImage={artist?.data?.profilePictureVeryHigh}
-            />
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-around",
-                height: "100%",
-                paddingVertical: 5,
-              }}
-            >
-              <Text size="h3" weight="semibold" color="white">
-                {artist?.data?.name || ""}
-              </Text>
-              <Text size="p" weight="normal" color="#A7A7A7">
-                {artist?.data?.studio === "studio"
-                  ? artist?.data?.studioName
-                  : artist?.data?.studio === "freelancer"
-                  ? "Freelancer"
-                  : "Home artist"}
-              </Text>
-              <Text size="p" weight="normal" color="#A7A7A7">
-                {artist?.data?.city || ""}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={showShareSheet}
-            style={styles.moreIconContainer}
-          >
-            <Image
-              style={styles.icon}
-              source={require("../../assets/images/more_vert.png")}
-            />
-          </TouchableOpacity>
-        </View>
-        {artist?.data?.originalArtistNumber && (
-          <TouchableOpacity
-            onPress={showOriginalArtistBottomSheet}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              columnGap: 8,
-            }}
-          >
-            <Image
-              style={{
-                height: 24,
-                width: 24,
-                resizeMode: "contain",
-              }}
-              source={require("../../assets/images/originalArtist.png")}
-            />
-            <Text size="p" weight="normal" color="#DAB769">
-              Original artist{" "}
-              {String(artist?.data?.originalArtistNumber).padStart(3, "0")}/250
-            </Text>
-          </TouchableOpacity>
-        )}
-        {(artist?.data?.facebookProfile ||
-          artist?.data?.instagramProfile ||
-          artist?.data?.twitterProfile) && (
-          <View style={styles.userSocialsRow}>
-            {artist?.data?.facebookProfile && (
-              <TouchableOpacity
-                onPress={() => handleOpenLink(artist?.data?.facebookProfile)}
-              >
-                <Image
-                  style={styles.icon}
-                  source={require("../../assets/images/facebook_2.png")}
+            <OriginalArtistBottomSheet InsideComponent={<OriginalArtistNote />} />
+            <View style={styles.userProfileRow}>
+              <View style={styles.pictureAndName}>
+                {/* <Image style={styles.profilePicture} source={profilePicture} /> */}
+                <ProfilePicturePreview
+                  imageSource={profilePicture}
+                  imageStyle={styles.profilePicture}
+                  highResolutionImage={artist?.data?.profilePictureVeryHigh}
                 />
-              </TouchableOpacity>
-            )}
-            {artist?.data?.instagramProfile && (
-              <TouchableOpacity
-                onPress={() => handleOpenLink(artist?.data?.instagramProfile)}
-              >
-                <Image
-                  style={styles.icon}
-                  source={require("../../assets/images/instagram.png")}
-                />
-              </TouchableOpacity>
-            )}
-            {artist?.data?.twitterProfile && (
-              <TouchableOpacity
-                onPress={() => handleOpenLink(artist?.data?.twitterProfile)}
-              >
-                <Image
-                  style={styles.icon}
-                  source={require("../../assets/images/twitter.png")}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-        <View style={styles.artistFavoriteRow}>
-          <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
-          <Text size="p" weight="normal" color="#FBF6FA">
-            {artist?.data?.followersCount || "0"}
-          </Text>
-        </View>
-        <View style={styles.tattooStylesRow}>
-          <Image
-            style={styles.icon}
-            source={require("../../assets/images/draw.png")}
-          />
-
-          {/* ✅ Tattoo Styles with See More / See Less logic */}
-          {artist?.data?.tattooStyles && (
-            <>
-              {(showAllStyles
-                ? artist?.data?.tattooStyles
-                : artist?.data?.tattooStyles.slice(0, 6)
-              ).map((item: any, idx: number) => (
                 <View
-                  key={idx}
                   style={{
-                    backgroundColor: "#262526",
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
-                    borderRadius: 6,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-around",
+                    height: "100%",
+                    paddingVertical: 5,
                   }}
                 >
-                  <Text size="p" weight="normal" color="#D7D7C9">
-                    {item}
+                  <Text size="h3" weight="semibold" color="white">
+                    {artist?.data?.name || ""}
+                  </Text>
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    {artist?.data?.studio === "studio"
+                      ? artist?.data?.studioName
+                      : artist?.data?.studio === "freelancer"
+                      ? "Freelancer"
+                      : "Home artist"}
+                  </Text>
+                  <Text size="p" weight="normal" color="#A7A7A7">
+                    {artist?.data?.city || ""}
                   </Text>
                 </View>
-              ))}
-
-              {artist?.data?.tattooStyles?.length > 6 && (
-                <TouchableOpacity
-                  onPress={() => setShowAllStyles((prev) => !prev)}
+              </View>
+              <TouchableOpacity
+                onPress={showShareSheet}
+                style={styles.moreIconContainer}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/images/more_vert.png")}
+                />
+              </TouchableOpacity>
+            </View>
+            {artist?.data?.originalArtistNumber && (
+              <TouchableOpacity
+                onPress={showOriginalArtistBottomSheet}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  columnGap: 8,
+                }}
+              >
+                <Image
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 5,
-                    paddingVertical: 2,
+                    height: 24,
+                    width: 24,
+                    resizeMode: "contain",
                   }}
-                >
-                  <Text size="p" weight="normal" color="#FBF6FA">
-                    {showAllStyles ? "See less" : "See more"}
-                  </Text>
-                  <View style={{ width: 20, height: 20, marginLeft: 4 }}>
+                  source={require("../../assets/images/originalArtist.png")}
+                />
+                <Text size="p" weight="normal" color="#DAB769">
+                  Original artist{" "}
+                  {String(artist?.data?.originalArtistNumber).padStart(3, "0")}/250
+                </Text>
+              </TouchableOpacity>
+            )}
+            {(artist?.data?.facebookProfile ||
+              artist?.data?.instagramProfile ||
+              artist?.data?.twitterProfile) && (
+              <View style={styles.userSocialsRow}>
+                {artist?.data?.facebookProfile && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(artist?.data?.facebookProfile)}
+                  >
                     <Image
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        transform: [
-                          { rotate: showAllStyles ? "180deg" : "0deg" },
-                        ],
-                      }}
-                      source={require("../../assets/images/arrow_down.png")}
+                      style={styles.icon}
+                      source={require("../../assets/images/facebook_2.png")}
                     />
-                  </View>
-                </TouchableOpacity>
-              )}
-            </>
-          )}
-        </View>
-        <Pressable onPress={handleToggle}>
-          <Text size="p" weight="normal" color="#A7A7A7">
-            {isExpanded || content?.length <= 120
-              ? content
-              : `${content?.slice(0, 160)}...`}
-          </Text>
-        </Pressable>
-
-        <View style={styles.buttonRow}>
-          <IconButton
-            title={isFollowingArtist ? "Unfavorite" : "Favorite"}
-            icon={
-              <MaterialCommunityIcons
-                name={isFollowingArtist ? "heart" : "heart-outline"}
-                size={20}
-                color="#22221F"
+                  </TouchableOpacity>
+                )}
+                {artist?.data?.instagramProfile && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(artist?.data?.instagramProfile)}
+                  >
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/instagram.png")}
+                    />
+                  </TouchableOpacity>
+                )}
+                {artist?.data?.twitterProfile && (
+                  <TouchableOpacity
+                    onPress={() => handleOpenLink(artist?.data?.twitterProfile)}
+                  >
+                    <Image
+                      style={styles.icon}
+                      source={require("../../assets/images/twitter.png")}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+            <View style={styles.artistFavoriteRow}>
+              <MaterialCommunityIcons name="heart" size={20} color="#FBF6FA" />
+              <Text size="p" weight="normal" color="#FBF6FA">
+                {artist?.data?.followersCount || "0"}
+              </Text>
+            </View>
+            <View style={styles.tattooStylesRow}>
+              <Image
+                style={styles.icon}
+                source={require("../../assets/images/draw.png")}
               />
-            }
-            variant="Secondary"
-            onPress={handleFollow}
-          />
-          <IconButton
-            title="Message"
-            icon={require("../../assets/images/message.png")}
-            variant="Primary"
-            onPress={() => {
-              if (!userFirestore) {
-                showLoggingInBottomSheet();
-                return;
-              }
-              router.push({
-                pathname: "/artist/IndividualChat",
-                params: { selectedArtistId: artistId },
-              });
-            }}
-          />
-        </View>
-        <ReviewOnProfile
-          ArtistId={artistId}
-          showLoginBottomSheet={showLoggingInBottomSheet}
-        />
 
-        <View style={{ marginTop: 8 }}>
-          <Text
-            size="h4"
-            weight="semibold"
-            color="white"
-            style={{ marginBottom: 10 }}
-          >
-            Address
-          </Text>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: -8,
-            }}
-          >
-            <Text size="large" weight="normal" color="#A7A7A7">
-              {artist?.data?.address || ""}
-            </Text>
-            <Pressable
-              onPress={async () => {
-                try {
-                  await openInGoogleMaps();
-                } catch (error) {
-                  console.error("Error opening Google Maps:", error);
-                }
-              }}
-            >
-              <Text size="p" weight="semibold" color="#DAB769">
-                Directions
+              {/* ✅ Tattoo Styles with See More / See Less logic */}
+              {artist?.data?.tattooStyles && (
+                <>
+                  {(showAllStyles
+                    ? artist?.data?.tattooStyles
+                    : artist?.data?.tattooStyles.slice(0, 6)
+                  ).map((item: any, idx: number) => (
+                    <View
+                      key={idx}
+                      style={{
+                        backgroundColor: "#262526",
+                        paddingHorizontal: 5,
+                        paddingVertical: 2,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text size="p" weight="normal" color="#D7D7C9">
+                        {item}
+                      </Text>
+                    </View>
+                  ))}
+
+                  {artist?.data?.tattooStyles?.length > 6 && (
+                    <TouchableOpacity
+                      onPress={() => setShowAllStyles((prev) => !prev)}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 5,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text size="p" weight="normal" color="#FBF6FA">
+                        {showAllStyles ? "See less" : "See more"}
+                      </Text>
+                      <View style={{ width: 20, height: 20, marginLeft: 4 }}>
+                        <Image
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            transform: [
+                              { rotate: showAllStyles ? "180deg" : "0deg" },
+                            ],
+                          }}
+                          source={require("../../assets/images/arrow_down.png")}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
+            <Pressable onPress={handleToggle}>
+              <Text size="p" weight="normal" color="#A7A7A7">
+                {isExpanded || content?.length <= 120
+                  ? content
+                  : `${content?.slice(0, 160)}...`}
               </Text>
             </Pressable>
-          </View>
-        </View>
-        <Pressable
-          // onPress={openLocationInGoogleMaps}
-          onPress={() => {
-            // console.log("Artist Location: ", artist?.data?.location);
-            router.push({
-              pathname: "/artist/MapDetails",
-              params: {
-                location: JSON.stringify(artist?.data?.location),
-              },
-            });
-          }}
-          style={{
-            height: 130,
-            borderRadius: 20,
-            overflow: "hidden",
-          }}
-        >
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            customMapStyle={googleDarkModeStyle}
-            scrollEnabled={false}
-            rotateEnabled={false}
-            pitchEnabled={false}
-            pointerEvents="none"
-            style={styles.map}
-            mapType="standard"
-            region={region}
-            zoomEnabled={false}
-          />
-        </Pressable>
-        <Text
-          size="h4"
-          weight="semibold"
-          color="white"
-          style={{ marginTop: 8 }}
-        >
-          Portfolio
-        </Text>
-        <View style={styles.stylesFilterRow}>
-          <FlatList
-            data={styleFilters}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.title}
-            horizontal={true}
-            contentContainerStyle={{ gap: 10 }}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-      </View>
 
-      <ImageGallery images={filteredResults} />
-    </ScrollView>
+            <View style={styles.buttonRow}>
+              <IconButton
+                title={isFollowingArtist ? "Unfavorite" : "Favorite"}
+                icon={
+                  <MaterialCommunityIcons
+                    name={isFollowingArtist ? "heart" : "heart-outline"}
+                    size={20}
+                    color="#22221F"
+                  />
+                }
+                variant="Secondary"
+                onPress={handleFollow}
+              />
+              <IconButton
+                title="Message"
+                icon={require("../../assets/images/message.png")}
+                variant="Primary"
+                onPress={() => {
+                  if (!userFirestore) {
+                    showLoggingInBottomSheet();
+                    return;
+                  }
+                  router.push({
+                    pathname: "/artist/IndividualChat",
+                    params: { selectedArtistId: artistId },
+                  });
+                }}
+              />
+            </View>
+            <ReviewOnProfile
+              ArtistId={artistId}
+              showLoginBottomSheet={showLoggingInBottomSheet}
+            />
+
+            <View style={{ marginTop: 8 }}>
+              <Text
+                size="h4"
+                weight="semibold"
+                color="white"
+                style={{ marginBottom: 10 }}
+              >
+                Address
+              </Text>
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: -8,
+                }}
+              >
+                <Text size="large" weight="normal" color="#A7A7A7">
+                  {artist?.data?.address || ""}
+                </Text>
+                <Pressable
+                  onPress={async () => {
+                    try {
+                      await openInGoogleMaps();
+                    } catch (error) {
+                      console.error("Error opening Google Maps:", error);
+                    }
+                  }}
+                >
+                  <Text size="p" weight="semibold" color="#DAB769">
+                    Directions
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+            <Pressable
+              // onPress={openLocationInGoogleMaps}
+              onPress={() => {
+                // console.log("Artist Location: ", artist?.data?.location);
+                router.push({
+                  pathname: "/artist/MapDetails",
+                  params: {
+                    location: JSON.stringify(artist?.data?.location),
+                  },
+                });
+              }}
+              style={{
+                height: 130,
+                borderRadius: 20,
+                overflow: "hidden",
+              }}
+            >
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                customMapStyle={googleDarkModeStyle}
+                scrollEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+                pointerEvents="none"
+                style={styles.map}
+                mapType="standard"
+                region={region}
+                zoomEnabled={false}
+              />
+            </Pressable>
+            <Text
+              size="h4"
+              weight="semibold"
+              color="white"
+              style={{ marginTop: 8 }}
+            >
+              Portfolio
+            </Text>
+            <View style={styles.stylesFilterRow}>
+              <FlatList
+                data={styleFilters}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.title}
+                horizontal={true}
+                contentContainerStyle={{ gap: 10 }}
+                showsHorizontalScrollIndicator={false}
+              />
+            </View>
+          </View>
+        }
+      />
+    </View>
   );
 };
 

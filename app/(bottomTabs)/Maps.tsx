@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   View,
   StyleSheet,
@@ -6,13 +12,12 @@ import {
   TouchableOpacity,
   Image,
   Text,
-  Pressable,
   Keyboard,
 } from "react-native";
 import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { MaterialIcons } from "@expo/vector-icons";
-import MapView, { Marker, Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
 import {
   GooglePlaceData,
@@ -25,6 +30,7 @@ import useBottomSheet from "@/hooks/useBottomSheet";
 import useFilterBottomSheet from "@/hooks/useFilterBottomSheet";
 import FilterBottomSheet from "@/components/BottomSheets/FilterBottomSheet";
 import ArtistProfileBottomSheet from "@/components/BottomSheets/ArtistProfileBottomSheet";
+import ArtistMapMarker from "@/components/ArtistMapMarker";
 import { GOOGLE_MAPS_API_KEY } from "../../constants/Config";
 
 import {
@@ -94,6 +100,13 @@ const FullScreenMapWithSearch: React.FC = () => {
   const dispatch = useDispatch();
   const mapRef = useRef<MapView>(null);
   const placesRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const handleMarkerPress = useCallback(
+    (artist: any) => {
+      dispatch(setCurrentlyViewingArtist(artist?.data));
+      showMapProfileBottomSheet();
+    },
+    [dispatch, showMapProfileBottomSheet]
+  );
   const insets = useSafeAreaInsets();
   const [searchedText, setSearchedText] = useState("");
   const dismissSearch = () => {
@@ -547,46 +560,13 @@ const FullScreenMapWithSearch: React.FC = () => {
           if (mapTypeState !== "standard") setMapTypeState("standard");
         }}
       >
-        {visibleArtists.map((artist: any, index: number) => {
-          const location = artist?.data?.location;
-          const profilePic =
-            artist?.data?.profilePictureSmall ?? artist?.data?.profilePicture;
-
-          if (!location?.[0] || !location?.[1]) return null;
-
-          return (
-            <Marker
-              key={artist?.id ?? index}
-              coordinate={{
-                latitude: location[0],
-                longitude: location[1],
-              }}
-              // title={artist?.data?.name || "Artist"}
-              onPress={() => {
-                dispatch(setCurrentlyViewingArtist(artist?.data));
-                showMapProfileBottomSheet();
-              }}
-            >
-              <Pressable style={{ alignItems: "center" }}>
-                <Image
-                  source={{
-                    uri: profilePic
-                      ? profilePic
-                      : require("../../assets/images/placeholder.png"),
-                  }}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 40,
-                    borderWidth: 1,
-                    borderColor: "#fff",
-                    backgroundColor: "#202020",
-                  }}
-                />
-              </Pressable>
-            </Marker>
-          );
-        })}
+        {visibleArtists.map((artist: any, index: number) => (
+          <ArtistMapMarker
+            key={artist?.id ?? index}
+            artist={artist}
+            onPress={handleMarkerPress}
+          />
+        ))}
       </MapView>
       {/* Black overlay placeholder to avoid any white flash before map is ready */}
       {!mapReady && <View pointerEvents="none" style={styles.mapOverlay} />}

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Modal,
   View,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -10,6 +9,7 @@ import {
   ImageStyle,
   StyleProp,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
@@ -28,6 +28,7 @@ const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
   highResolutionImage,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const previewSize = isSquare ? width * 0.95 : width * 0.85;
 
   return (
     <>
@@ -36,7 +37,11 @@ const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
         activeOpacity={0.8}
         onPress={() => setModalVisible(true)}
       >
-        <Image style={imageStyle} source={imageSource} />
+        <ExpoImage
+          style={imageStyle}
+          source={imageSource}
+          cachePolicy="memory-disk"
+        />
       </TouchableOpacity>
 
       {/* Full Screen Preview Modal */}
@@ -67,20 +72,27 @@ const ProfilePicturePreview: React.FC<ProfilePicturePreviewProps> = ({
               overflow: "hidden",
             }}
           >
-            <Pressable onPress={(e) => e.stopPropagation()}>
-              <Image
-                style={{
-                  width: isSquare ? width * 0.95 : width * 0.85,
-                  height: isSquare ? width * 0.95 : width * 0.85,
-                  borderRadius: isSquare ? 0 : (width * 0.85) / 2,
-                }}
-                source={
-                  highResolutionImage
-                    ? { uri: highResolutionImage }
-                    : imageSource
-                }
-                resizeMode="cover"
+            <Pressable
+              style={{ width: previewSize, height: previewSize }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* The small picture is already cached by the thumbnail above,
+                  so it shows instantly while the full-size one downloads. */}
+              <ExpoImage
+                style={StyleSheet.absoluteFill}
+                source={imageSource}
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
+              {highResolutionImage ? (
+                <ExpoImage
+                  style={StyleSheet.absoluteFill}
+                  source={{ uri: highResolutionImage }}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={200}
+                />
+              ) : null}
             </Pressable>
           </View>
         </Pressable>
