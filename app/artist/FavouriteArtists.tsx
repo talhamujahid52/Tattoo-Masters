@@ -1,7 +1,15 @@
-import { StyleSheet, View, FlatList, Dimensions, Platform } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  Dimensions,
+  Platform,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import {
@@ -9,14 +17,12 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+import { useRealtimeDocsByIds } from "@/hooks/useRealtimeDocsByIds";
 
 const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
 
-  const allArtists: any[] = useSelector(
-    (state: any) => state.artist.allArtists,
-  );
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
   const currentUserId = useSelector(
     (state: RootState) => state.user.user?.uid,
@@ -24,20 +30,31 @@ const FavouriteArtists = () => {
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
 
-  // Filter artists to only show favorited ones
+  // Followed artists are loaded by ID, so they show up whether or not
+  // the Home / Search lists happen to have them
+  const {
+    docs: followedArtists,
+    loading: artistsLoading,
+    refresh,
+  } = useRealtimeDocsByIds("Users", userFirestore?.followedArtists);
+
   const favoritedArtists = useMemo(() => {
     if (currentUserId && !safetyHydrated) return [];
 
-    return filterBlockedArtists(allArtists, blockedUserIds).filter(
-      (artist: any) => userFirestore?.followedArtists?.includes(artist.id),
-    );
-  }, [
-    allArtists,
-    blockedUserIds,
-    currentUserId,
-    safetyHydrated,
-    userFirestore?.followedArtists,
-  ]);
+    return filterBlockedArtists(followedArtists, blockedUserIds);
+  }, [blockedUserIds, currentUserId, followedArtists, safetyHydrated]);
+
+  const loading =
+    favoritedArtists.length === 0 &&
+    (artistsLoading || (!!currentUserId && !safetyHydrated));
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
 
   return (
     <View style={{ flex: 1, padding: 16 }}>
@@ -49,45 +66,52 @@ const FavouriteArtists = () => {
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7">
-          {favoritedArtists.length} favorite{" "}
-          {favoritedArtists.length === 1 ? "artist" : "artists"}
+          {loading
+            ? " "
+            : `${favoritedArtists.length} favorite ${
+                favoritedArtists.length === 1 ? "artist" : "artists"
+              }`}
         </Text>
       </View>
-      {favoritedArtists.length > 0 ? (
-        <FlatList
-          showsVerticalScrollIndicator={Platform.OS !== "ios"}
-          data={favoritedArtists}
-          renderItem={({ item, index }) => (
-            <View
-              style={{
-                width: adjustedWidth / 3,
-                marginRight: index % 3 === 0 ? 5 : 0, // Right margin for the 1st column
-                marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
-              }}
-            >
-              <ArtistSearchCard artist={item} />
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-          numColumns={3}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 16 }}
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text size="h4" weight="medium" color="#A7A7A7">
-            You have no favorite artists yet
-          </Text>
-          {/* <Text
-            size="p"
-            weight="normal"
-            color="#A7A7A7"
-            style={styles.emptyText}
+      <FlatList
+        showsVerticalScrollIndicator={Platform.OS !== "ios"}
+        data={favoritedArtists}
+        renderItem={({ item, index }) => (
+          <View
+            style={{
+              width: adjustedWidth / 3,
+              marginRight: index % 3 === 0 ? 5 : 0, // Right margin for the 1st column
+              marginLeft: index % 3 === 2 ? 5 : 0, // Left margin for the 3rd column
+            }}
           >
-            Artists you favorite will appear here
-          </Text> */}
-        </View>
-      )}
+            <ArtistSearchCard artist={item} />
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+        numColumns={3}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 16, flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#fff"
+            colors={["#fff"]}
+            progressBackgroundColor="#1C1C1C"
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            {loading ? (
+              <ActivityIndicator color="#DAB769" />
+            ) : (
+              <Text size="h4" weight="medium" color="#A7A7A7">
+                You have no favorite artists yet
+              </Text>
+            )}
+          </View>
+        }
+      />
     </View>
   );
 };

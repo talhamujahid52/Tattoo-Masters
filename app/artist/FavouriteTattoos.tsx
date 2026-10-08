@@ -1,7 +1,7 @@
-import { StyleSheet, View, FlatList, Dimensions } from "react-native";
+import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
 import Text from "@/components/Text";
 import ImageGallery from "@/components/ImageGallery";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useRealtimeUserLikedPublications } from "@/hooks/useRealtimeLikedPublications";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSelector } from "react-redux";
@@ -38,6 +38,16 @@ const FavouriteTattoos = () => {
     safetyHydrated,
   ]);
   const totalLiked = visibleLikedPublications.length;
+  const loading =
+    likedPublicationsData.loading && visibleLikedPublications.length === 0;
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await likedPublicationsData.refresh();
+    setRefreshing(false);
+  };
 
   return (
     <View style={{ flex: 1, paddingVertical: 16 }}>
@@ -49,19 +59,35 @@ const FavouriteTattoos = () => {
         }}
       >
         <Text size="p" weight="normal" color="#A7A7A7">
-          {totalLiked ?? 0} liked tattoo{totalLiked !== 1 && "s"}
+          {loading
+            ? " "
+            : `${totalLiked} liked tattoo${totalLiked !== 1 ? "s" : ""}`}
         </Text>
       </View>
-      {visibleLikedPublications.length > 0 ? (
+      {visibleLikedPublications.length > 0 || loading ? (
         <ImageGallery
           images={
             visibleLikedPublications.map((item) => ({
               document: item,
             })) as TypesenseResult<Publication>[]
           }
+          loading={loading}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
         ></ImageGallery>
       ) : (
-        <View style={styles.emptyContainer}>
+        <ScrollView
+          contentContainerStyle={styles.emptyContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#fff"
+              colors={["#fff"]}
+              progressBackgroundColor="#1C1C1C"
+            />
+          }
+        >
           <Text size="h4" weight="medium" color="#A7A7A7">
             You have no liked tattoos yet
           </Text>
@@ -73,7 +99,7 @@ const FavouriteTattoos = () => {
           >
             Your favorited tattoos will appear here
           </Text> */}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -83,7 +109,7 @@ export default FavouriteTattoos;
 
 const styles = StyleSheet.create({
   emptyContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     gap: 8,

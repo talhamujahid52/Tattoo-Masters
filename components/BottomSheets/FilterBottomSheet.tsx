@@ -6,7 +6,6 @@ import {
   Switch,
   Alert,
   Linking,
-  ScrollView,
   Platform,
 } from "react-native";
 import Slider from "@react-native-community/slider";
@@ -315,15 +314,9 @@ const FilterBottomSheet = ({
             <Text size="h4" weight="semibold" color="#A7A7A7">
               Styles
             </Text>
-            <ScrollView
-              style={{ marginTop: 16 }}
-              contentContainerStyle={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 10,
-              }}
-              showsVerticalScrollIndicator={false}
-            >
+            {/* Plain View on purpose: a second vertical ScrollView in here
+                takes the drag away from the sheet's own scrollable. */}
+            <View style={styles.ratingButtonsRow}>
               {tattooStyles.map((s) => (
                 <TouchableOpacity
                   key={s.value}
@@ -347,7 +340,7 @@ const FilterBottomSheet = ({
                   </Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </View>
         </BottomSheetScrollView>
 

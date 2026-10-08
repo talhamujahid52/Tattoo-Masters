@@ -8,7 +8,6 @@ import {
   Linking,
   Alert,
   Keyboard,
-  useWindowDimensions,
 } from "react-native";
 import { useSelector } from "react-redux";
 import Text from "@/components/Text";
@@ -42,6 +41,7 @@ import ChatImagePickerBottomSheet from "@/components/BottomSheets/ChatImagePicke
 import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import ChatActionsBottomSheet from "@/components/BottomSheets/ChatActionsBottomSheet";
+import ChatMessageImage from "@/components/ChatMessageImage";
 
 const IMAGE_PICKER_OPTIONS = {
   mediaType: "photo",
@@ -69,6 +69,10 @@ const KeyboardListSpacer: React.FC<{ bottomOffset: number }> = ({
   return <Animated.View style={style} />;
 };
 
+const renderMessageImage = (props: any) => (
+  <ChatMessageImage uri={props.currentMessage?.image} />
+);
+
 const getImageFileName = (asset: Asset) => {
   const fallbackName = `chat-image-${Date.now()}.jpg`;
   if (asset.fileName) return asset.fileName;
@@ -77,7 +81,6 @@ const getImageFileName = (asset: Asset) => {
 };
 
 const IndividualChat: React.FC = () => {
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const {
     selectedArtistId,
@@ -1095,15 +1098,7 @@ const IndividualChat: React.FC = () => {
           bottomOffset={-insets.bottom}
           keyboardShouldPersistTaps="handled"
           listViewProps={listViewProps}
-          lightboxProps={{
-            activeProps: {
-              style: {
-                flex: 1,
-                resizeMode: 'contain',
-                width
-              },
-            },
-          }}
+          renderMessageImage={renderMessageImage}
         />
       </View>
     </View>

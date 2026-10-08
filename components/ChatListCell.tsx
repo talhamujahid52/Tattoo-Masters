@@ -13,6 +13,8 @@ import { useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 interface ChatListCellProps {
   chat: any;
+  // Changes after a pull-to-refresh, so the cell picks up the reloaded profile
+  profilesVersion?: number;
 }
 
 // Profiles already looked up, so a cell that mounts again (scrolling, coming
@@ -22,6 +24,25 @@ const userDetailsCache = new Map<
   string,
   { details: any; fetchedAt: number }
 >();
+
+const fetchUserDetails = async (userId: string) => {
+  const userDoc = await firestore().collection("Users").doc(userId).get();
+  const details = (userDoc.exists && userDoc.data()) || null;
+
+  userDetailsCache.set(userId, { details, fetchedAt: Date.now() });
+  return details;
+};
+
+// Reloads the names and pictures for these users, for pull-to-refresh.
+// A lookup that fails keeps the profile it already had.
+export const refreshUserDetails = (userIds: string[]) =>
+  Promise.all(
+    Array.from(new Set(userIds.filter(Boolean))).map((userId) =>
+      fetchUserDetails(userId).catch((error) =>
+        console.error("Error refreshing user from Firebase:", error)
+      )
+    )
+  );
 
 // Enough rows to run past the bottom of the screen.
 const SKELETON_ROWS = Array.from({ length: 8 }, (_, i) => i);
@@ -90,7 +111,7 @@ const getLastMessagePreview = (message: unknown) => {
   return message.replace(/\s+/g, " ").trim();
 };
 
-const ChatListCell = ({ chat }: ChatListCellProps) => {
+const ChatListCell = ({ chat, profilesVersion }: ChatListCellProps) => {
   const loggedInUser = useSelector((state: any) => state?.user?.user);
   const participants = chat?.participants;
   const otherUserId = participants?.find(
@@ -121,13 +142,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
 
     const fetchUserFromFirebase = async () => {
       try {
-        const userDoc = await firestore()
-          .collection("Users")
-          .doc(otherUserId)
-          .get();
-        const details = (userDoc.exists && userDoc.data()) || null;
-
-        userDetailsCache.set(otherUserId, { details, fetchedAt: Date.now() });
+        const details = await fetchUserDetails(otherUserId);
         if (isActive) {
           setOtherUserDetails(details);
           setHasCheckedUser(true);
@@ -143,7 +158,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     return () => {
       isActive = false;
     };
-  }, [otherUserId]);
+  }, [otherUserId, profilesVersion]);
 
   const otherUserName =
     otherUserDetails?.name ||

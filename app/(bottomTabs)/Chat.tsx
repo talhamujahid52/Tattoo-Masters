@@ -6,13 +6,17 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
 import Animated, { FadeIn } from "react-native-reanimated";
-import ChatListCell, { ChatListSkeleton } from "@/components/ChatListCell";
+import ChatListCell, {
+  ChatListSkeleton,
+  refreshUserDetails,
+} from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
 import useLastSeen from "@/hooks/useLastSeen";
 import {
@@ -71,6 +75,24 @@ const Chat = () => {
     });
   }, [blockedUserIds, chats, loggedInUser?.uid, safetyHydrated, searchText]);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [profilesVersion, setProfilesVersion] = useState(0);
+
+  // Pull-to-refresh handler. The chats themselves are live, so this only
+  // reloads the names and pictures of the people in them.
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshUserDetails(
+      (chats ?? []).flatMap((chat: any) =>
+        (chat?.participants ?? []).filter(
+          (userId: string) => userId !== loggedInUser?.uid,
+        ),
+      ),
+    );
+    setProfilesVersion((version) => version + 1);
+    setRefreshing(false);
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View
@@ -103,15 +125,24 @@ const Chat = () => {
         {loadingChats ? (
           <ChatListSkeleton />
         ) : filteredChats && filteredChats.length > 0 ? (
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            style={{ flex: 1 }}
-          >
+          <Animated.View entering={FadeIn.duration(200)} style={{ flex: 1 }}>
             <FlatList
               showsVerticalScrollIndicator={Platform.OS !== "ios"}
-              data={[...filteredChats, ...filteredChats, ...filteredChats]} // duplicate the data to make it scrollable
-              renderItem={({ item }) => <ChatListCell chat={item} />}
+              data={filteredChats} // duplicate the data to make it scrollable
+              renderItem={({ item }) => (
+                <ChatListCell chat={item} profilesVersion={profilesVersion} />
+              )}
+              extraData={profilesVersion}
               keyExtractor={(item) => item.id.toString()}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#fff"
+                  colors={["#fff"]}
+                  progressBackgroundColor="#1C1C1C"
+                />
+              }
               contentContainerStyle={{ paddingBottom: 30 }}
               keyboardShouldPersistTaps="handled" // ✅ ensure taps dismiss keyboard
             />
