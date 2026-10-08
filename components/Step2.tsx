@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Platform,
 } from "react-native";
 import Text from "@/components/Text";
 import { FormContext } from "../context/FormContext";
@@ -18,7 +19,10 @@ const Step2: React.FC = () => {
   const imageTileWidth = (width - 40) / 2;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={Platform.OS !== "ios"}
+    >
       <Text
         size="p"
         weight="normal"

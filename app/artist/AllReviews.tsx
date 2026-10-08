@@ -1,4 +1,4 @@
-import { StyleSheet, View, FlatList } from "react-native";
+import { StyleSheet, View, FlatList, Platform } from "react-native";
 import Text from "@/components/Text";
 import React from "react";
 import PublishedReview from "@/components/PublishedReview";
@@ -25,6 +25,7 @@ const AllReviews = () => {
 
   return (
     <FlatList
+      showsVerticalScrollIndicator={Platform.OS !== "ios"}
       data={reviews}
       keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={styles.container}

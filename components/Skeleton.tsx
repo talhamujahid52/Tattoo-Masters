@@ -48,6 +48,9 @@ interface SkeletonRevealProps {
   loading: boolean;
   skeleton: React.ReactNode;
   children: React.ReactNode;
+  // Stretches the skeleton over the content's whole box, for a skeleton sized
+  // relative to it. Otherwise it keeps its own size from the top left corner.
+  fill?: boolean;
 }
 
 // Lays `skeleton` over `children` while loading, then cross-fades to the
@@ -57,6 +60,7 @@ export const SkeletonReveal = ({
   loading,
   skeleton,
   children,
+  fill = false,
 }: SkeletonRevealProps) => {
   const reveal = useSharedValue(loading ? 0 : 1);
   const [skeletonMounted, setSkeletonMounted] = useState(loading);
@@ -89,7 +93,7 @@ export const SkeletonReveal = ({
       </Animated.View>
       {skeletonMounted && (
         <Animated.View
-          style={[styles.overlay, skeletonStyle]}
+          style={[styles.overlay, fill && styles.overlayFill, skeletonStyle]}
           pointerEvents="none"
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
@@ -110,5 +114,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
+  },
+  overlayFill: {
+    right: 0,
+    bottom: 0,
   },
 });

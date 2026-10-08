@@ -5,12 +5,14 @@ import {
   FlatList,
   Keyboard,
   TouchableWithoutFeedback,
+  Platform,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import ChatListCell from "@/components/ChatListCell";
+import Animated, { FadeIn } from "react-native-reanimated";
+import ChatListCell, { ChatListSkeleton } from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
 import useLastSeen from "@/hooks/useLastSeen";
 import {
@@ -30,10 +32,17 @@ const Chat = () => {
   const { fetchChats } = useChats(loggedInUser?.uid);
 
   const [searchText, setSearchText] = useState("");
+  const [chatsLoaded, setChatsLoaded] = useState(false);
+  // Chats saved from an earlier visit show at once; otherwise placeholders
+  // stand in until the list is known, rather than a false "no chats yet".
+  const loadingChats =
+    !!loggedInUser?.uid &&
+    (!safetyHydrated || (!chatsLoaded && !chats?.length));
 
   useEffect(() => {
+    setChatsLoaded(false);
     // Get the unsubscribe function
-    const unsubscribe = fetchChats();
+    const unsubscribe = fetchChats(() => setChatsLoaded(true));
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
@@ -51,7 +60,7 @@ const Chat = () => {
 
     return visibleChats?.filter((chat: any) => {
       const otherUserId = chat?.participants?.find(
-        (userId: string) => userId !== loggedInUser?.uid
+        (userId: string) => userId !== loggedInUser?.uid,
       );
       const otherUserName = chat?.[otherUserId]?.name?.toLowerCase() || "";
       const lastMessage = chat?.lastMessage?.toLowerCase() || "";
@@ -60,13 +69,7 @@ const Chat = () => {
         otherUserName.includes(searchLower) || lastMessage.includes(searchLower)
       );
     });
-  }, [
-    blockedUserIds,
-    chats,
-    loggedInUser?.uid,
-    safetyHydrated,
-    searchText,
-  ]);
+  }, [blockedUserIds, chats, loggedInUser?.uid, safetyHydrated, searchText]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -97,16 +100,22 @@ const Chat = () => {
         >
           Conversations
         </Text>
-        {filteredChats && filteredChats.length > 0 ? (
-          <View style={{ height: "auto" }}>
+        {loadingChats ? (
+          <ChatListSkeleton />
+        ) : filteredChats && filteredChats.length > 0 ? (
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            style={{ flex: 1 }}
+          >
             <FlatList
-              data={filteredChats}
+              showsVerticalScrollIndicator={Platform.OS !== "ios"}
+              data={[...filteredChats, ...filteredChats, ...filteredChats]} // duplicate the data to make it scrollable
               renderItem={({ item }) => <ChatListCell chat={item} />}
               keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={{ paddingBottom: 250 }}
+              contentContainerStyle={{ paddingBottom: 30 }}
               keyboardShouldPersistTaps="handled" // ✅ ensure taps dismiss keyboard
             />
-          </View>
+          </Animated.View>
         ) : (
           <View style={styles.emptyContainer} pointerEvents="box-none">
             <Text size="h4" weight="medium" color="#A7A7A7">

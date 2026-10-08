@@ -914,6 +914,7 @@ const IndividualChat: React.FC = () => {
   // prop loosely and rejects extra keys on an inline literal.
   const listViewProps = {
     ListFooterComponent: <KeyboardListSpacer bottomOffset={insets.bottom} />,
+    showsVerticalScrollIndicator: Platform.OS !== "ios",
   };
 
   return (

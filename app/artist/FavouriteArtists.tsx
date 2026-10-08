@@ -1,4 +1,4 @@
-import { StyleSheet, View, FlatList, Dimensions } from "react-native";
+import { StyleSheet, View, FlatList, Dimensions, Platform } from "react-native";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 import React, { useMemo } from "react";
@@ -55,6 +55,7 @@ const FavouriteArtists = () => {
       </View>
       {favoritedArtists.length > 0 ? (
         <FlatList
+          showsVerticalScrollIndicator={Platform.OS !== "ios"}
           data={favoritedArtists}
           renderItem={({ item, index }) => (
             <View

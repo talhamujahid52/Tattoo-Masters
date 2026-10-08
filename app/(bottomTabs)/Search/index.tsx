@@ -284,6 +284,7 @@ const Search: React.FC = () => {
               </TouchableOpacity>
             </View>
             <KeyboardAwareFlatList
+              showsVerticalScrollIndicator={Platform.OS !== "ios"}
               data={recentSearches}
               keyExtractor={(item, i) => `${item}-${i}`}
               renderItem={({ item }) => (
@@ -323,6 +324,7 @@ const Search: React.FC = () => {
               Artists near you
             </Text>
             <KeyboardAwareFlatList
+              showsVerticalScrollIndicator={Platform.OS !== "ios"}
               style={{ backgroundColor: "#000" }}
               data={visibleArtists}
               renderItem={renderArtistItem}

@@ -107,6 +107,7 @@ const Menu = () => {
       </View>
 
       <ScrollView
+        showsVerticalScrollIndicator={Platform.OS !== "ios"}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 20 },

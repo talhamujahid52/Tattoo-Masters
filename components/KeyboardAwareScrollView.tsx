@@ -1,4 +1,5 @@
 import React from "react";
+import { Platform } from "react-native";
 import {
   KeyboardAwareScrollView as ControllerKeyboardAwareScrollView,
   KeyboardAwareScrollViewProps,
@@ -23,6 +24,7 @@ const KeyboardAwareScrollView = ({
     <ControllerKeyboardAwareScrollView
       bottomOffset={24}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={Platform.OS !== "ios"}
       {...rest}
     >
       {children}

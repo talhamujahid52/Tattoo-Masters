@@ -14,6 +14,7 @@ import {
   Keyboard,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import MapView, {
   Marker,
@@ -50,6 +51,12 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+
+// Passed through to the results FlatList. Spread from a variable because the
+// component's types don't list FlatList props.
+const RESULTS_LIST_PROPS = {
+  showsVerticalScrollIndicator: Platform.OS !== "ios",
+};
 
 const DELTA = 0.02;
 const FRESH_FIX_TIMEOUT_MS = 6000;
@@ -320,6 +327,7 @@ const SearchLocation: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <GooglePlacesAutocomplete
+          {...RESULTS_LIST_PROPS}
           key={search.key}
           ref={placesRef}
           placeholder="Search location"

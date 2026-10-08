@@ -186,6 +186,7 @@ const DrawerOverlay: React.FC<DrawerOverlayProps> = ({ visible, onClose }) => {
           </View>
         </View>
         <ScrollView
+          showsVerticalScrollIndicator={Platform.OS !== "ios"}
           contentContainerStyle={{
             minHeight: SCREEN_HEIGHT - insets.top - 20,
             paddingBottom: insets.bottom + 20,

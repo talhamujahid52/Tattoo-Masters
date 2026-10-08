@@ -162,9 +162,11 @@ const useChats = (userId?: string) => {
     [userId],
   );
 
-  const fetchChats = useCallback(() => {
+  // onLoaded fires once the list is known: on every snapshot, and on failure
+  const fetchChats = useCallback((onLoaded?: () => void) => {
     if (!userId) {
       dispatch(updateAllChats([]));
+      onLoaded?.();
       return () => undefined;
     }
 
@@ -184,9 +186,11 @@ const useChats = (userId?: string) => {
             });
 
           dispatch(updateAllChats(chatsList));
+          onLoaded?.();
         },
         (error) => {
           console.error("Error fetching chats: ", error);
+          onLoaded?.();
         },
       );
   }, [userId, dispatch]);

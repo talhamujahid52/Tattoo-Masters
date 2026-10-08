@@ -12,6 +12,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 
 interface BlockedUserProfile {
@@ -133,6 +134,7 @@ const BlockedUsers = () => {
   return (
     <View style={styles.container}>
       <FlatList
+        showsVerticalScrollIndicator={Platform.OS !== "ios"}
         data={records}
         keyExtractor={(item) => item.blockedUserId}
         contentContainerStyle={

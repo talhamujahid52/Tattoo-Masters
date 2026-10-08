@@ -1,12 +1,85 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Image, StyleSheet, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import Animated from "react-native-reanimated";
+import { Image as ExpoImage } from "expo-image";
 import Text from "./Text";
+import {
+  SKELETON_DIM_COLOR,
+  SkeletonReveal,
+  useSkeletonPulse,
+} from "./Skeleton";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 interface ChatListCellProps {
   chat: any;
 }
+
+// Profiles already looked up, so a cell that mounts again (scrolling, coming
+// back to the tab) shows its name and picture straight away.
+const USER_DETAILS_TTL_MS = 5 * 60 * 1000;
+const userDetailsCache = new Map<
+  string,
+  { details: any; fetchedAt: number }
+>();
+
+// Enough rows to run past the bottom of the screen.
+const SKELETON_ROWS = Array.from({ length: 8 }, (_, i) => i);
+
+// One line of placeholder bars. The zero-width character gives it the exact
+// height of a real line of text, so the bars sit where the text will.
+const SkeletonLine = ({ children }: { children: React.ReactNode }) => (
+  <View style={styles.skeletonLine}>
+    <Text size="p">{"\u200B"}</Text>
+    <View style={styles.skeletonBars}>{children}</View>
+  </View>
+);
+
+// Stands in for the name, date and last message of a cell.
+const ChatTextSkeleton = () => (
+  <View style={styles.messageText}>
+    <SkeletonLine>
+      <View style={[styles.skeletonBar, { width: "45%" }]} />
+      <View style={[styles.skeletonBar, { width: 48 }]} />
+    </SkeletonLine>
+    <SkeletonLine>
+      <View style={[styles.skeletonBar, { width: "70%" }]} />
+    </SkeletonLine>
+  </View>
+);
+
+const PulsingChatTextSkeleton = () => {
+  const pulseStyle = useSkeletonPulse();
+
+  return (
+    <Animated.View style={pulseStyle}>
+      <ChatTextSkeleton />
+    </Animated.View>
+  );
+};
+
+// Placeholder list built from the same styles as the real cells, so each chat
+// lands exactly on the row that stood in for it.
+export const ChatListSkeleton = () => {
+  const pulseStyle = useSkeletonPulse();
+
+  return (
+    <Animated.View
+      style={[styles.skeletonList, pulseStyle]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {SKELETON_ROWS.map((row) => (
+        <View key={row} style={styles.skeletonRow}>
+          <View style={styles.profileImage} />
+          <View style={styles.messageContainer}>
+            <ChatTextSkeleton />
+          </View>
+        </View>
+      ))}
+    </Animated.View>
+  );
+};
 
 const getLastMessagePreview = (message: unknown) => {
   if (typeof message !== "string") return "";
@@ -28,43 +101,40 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     [chat, otherUserId]
   );
   const [otherUserDetails, setOtherUserDetails] = useState<any>(
-    embeddedUserData || null
+    () => (otherUserId && userDetailsCache.get(otherUserId)?.details) || null
   );
-  const [hasCheckedUser, setHasCheckedUser] = useState(!otherUserId);
+  const [hasCheckedUser, setHasCheckedUser] = useState(
+    () => !otherUserId || userDetailsCache.has(otherUserId)
+  );
 
+  // Keyed on the user alone: the chat document changes with every message,
+  // and that must not send the cell back to its loading state.
   useEffect(() => {
+    const cached = otherUserId ? userDetailsCache.get(otherUserId) : undefined;
+    setOtherUserDetails(cached?.details ?? null);
+    setHasCheckedUser(!otherUserId || !!cached);
+
+    if (!otherUserId) return;
+    if (cached && Date.now() - cached.fetchedAt < USER_DETAILS_TTL_MS) return;
+
     let isActive = true;
 
-    setOtherUserDetails(embeddedUserData || null);
-    setHasCheckedUser(!otherUserId);
-
     const fetchUserFromFirebase = async () => {
-      if (!otherUserId) return;
-
       try {
         const userDoc = await firestore()
           .collection("Users")
           .doc(otherUserId)
           .get();
+        const details = (userDoc.exists && userDoc.data()) || null;
 
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          if (isActive) {
-            setOtherUserDetails(userData);
-            setHasCheckedUser(true);
-          }
-        } else {
-          if (isActive) {
-            setOtherUserDetails(null);
-            setHasCheckedUser(true);
-          }
+        userDetailsCache.set(otherUserId, { details, fetchedAt: Date.now() });
+        if (isActive) {
+          setOtherUserDetails(details);
+          setHasCheckedUser(true);
         }
       } catch (error) {
         console.error("Error fetching user from Firebase:", error);
-        if (isActive) {
-          setOtherUserDetails(embeddedUserData || null);
-          setHasCheckedUser(true);
-        }
+        if (isActive) setHasCheckedUser(true);
       }
     };
 
@@ -73,7 +143,7 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     return () => {
       isActive = false;
     };
-  }, [embeddedUserData, otherUserId]);
+  }, [otherUserId]);
 
   const otherUserName =
     otherUserDetails?.name ||
@@ -85,6 +155,13 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
     embeddedUserData?.profilePictureSmall ||
     embeddedUserData?.profilePicture ||
     null;
+  // The avatar waits for the profile lookup, so the full-size picture stored
+  // with the chat isn't shown first and then swapped for the small one.
+  const avatarSource = !hasCheckedUser
+    ? null
+    : otherUserProfilePicture
+    ? { uri: otherUserProfilePicture }
+    : require("../assets/images/placeholder.png");
 
   const lastMessage = chat?.lastMessage;
   const lastMessagePreview = getLastMessagePreview(lastMessage);
@@ -136,41 +213,42 @@ const ChatListCell = ({ chat }: ChatListCellProps) => {
       style={styles.chatListCellFlexBox}
     >
       <View style={styles.profileImage}>
-        <Image
-          source={
-            otherUserProfilePicture
-              ? { uri: otherUserProfilePicture }
-              : require("../assets/images/placeholder.png")
-          }
-          style={{
-            height: "100%",
-            width: "100%",
-            borderRadius: 50,
-            borderWidth: 1,
-            borderColor: "#333333",
-            backgroundColor: "#202020",
-          }}
-          resizeMode="cover"
-        />
+        {avatarSource && (
+          <ExpoImage
+            source={avatarSource}
+            style={styles.avatar}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={200}
+          />
+        )}
       </View>
       <View style={styles.messageContainer}>
-        <View style={styles.row1}>
-          <Text
-            size="p"
-            weight="semibold"
-            color="#ffffff"
-            numberOfLines={1}
-            style={styles.name}
-          >
-            {otherUserName ? otherUserName : ""}
-          </Text>
-          <Text size="p" weight="normal" color="#B2B2B2">
-            {date ? formatMessageDate(date) : ""}
-          </Text>
-        </View>
-        <Text size="p" weight="normal" color="#B2B2B2" numberOfLines={1}>
-          {lastMessagePreview}
-        </Text>
+        <SkeletonReveal
+          loading={!otherUserName}
+          skeleton={<PulsingChatTextSkeleton />}
+          fill
+        >
+          <View style={styles.messageText}>
+            <View style={styles.row1}>
+              <Text
+                size="p"
+                weight="semibold"
+                color="#ffffff"
+                numberOfLines={1}
+                style={styles.name}
+              >
+                {otherUserName ? otherUserName : ""}
+              </Text>
+              <Text size="p" weight="normal" color="#B2B2B2">
+                {date ? formatMessageDate(date) : ""}
+              </Text>
+            </View>
+            <Text size="p" weight="normal" color="#B2B2B2" numberOfLines={1}>
+              {lastMessagePreview}
+            </Text>
+          </View>
+        </SkeletonReveal>
       </View>
     </TouchableOpacity>
   );
@@ -187,14 +265,49 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     width: 54,
     height: 54,
+    borderRadius: 27,
+    borderWidth: 1,
+    borderColor: "#333333",
+    backgroundColor: SKELETON_DIM_COLOR,
+    overflow: "hidden",
+  },
+  avatar: {
+    height: "100%",
+    width: "100%",
   },
   messageContainer: {
     flex: 1,
-    gap: 4,
     justifyContent: "center",
     alignSelf: "stretch",
     borderBottomColor: "#525252",
     borderBottomWidth: 0.33,
+  },
+  messageText: {
+    gap: 4,
+  },
+  skeletonList: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  skeletonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  skeletonLine: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  skeletonBars: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  skeletonBar: {
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: SKELETON_DIM_COLOR,
   },
   row1: {
     justifyContent: "space-between",

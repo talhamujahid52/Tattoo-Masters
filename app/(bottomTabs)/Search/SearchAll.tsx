@@ -17,6 +17,7 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
 
 import * as Location from "expo-location";
@@ -636,6 +637,7 @@ export default function SearchAll() {
               />
             ) : (
               <KeyboardAwareFlatList
+                showsVerticalScrollIndicator={Platform.OS !== "ios"}
                 data={visibleArtistResults}
                 numColumns={3}
                 style={{ backgroundColor: "#000" }}

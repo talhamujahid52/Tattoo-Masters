@@ -1,4 +1,4 @@
-import { StyleSheet, View, ScrollView } from "react-native";
+import { StyleSheet, View, ScrollView, Platform } from "react-native";
 import React from "react";
 import Text from "@/components/Text";
 
@@ -137,7 +137,10 @@ const termsData: TermsData = {
 
 const TermsOfService = () => {
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={Platform.OS !== "ios"}
+    >
       <Text size="h1" weight="medium" color="#FBF6FA" style={styles.heading}>
         {termsData.title}
       </Text>

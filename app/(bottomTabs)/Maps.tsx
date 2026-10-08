@@ -55,6 +55,12 @@ import {
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
 
+// Passed through to the results FlatList. Spread from a variable because the
+// component's types don't list FlatList props.
+const RESULTS_LIST_PROPS = {
+  showsVerticalScrollIndicator: Platform.OS !== "ios",
+};
+
 // How far past the visible map artists are fetched, as a share of its size,
 // so short pans and zooming in don't need a new search
 const VIEWPORT_OFFSET = 0.5;
@@ -518,6 +524,7 @@ const FullScreenMapWithSearch: React.FC = () => {
       <View style={[styles.searchContainer, { top: insets.top + 10 }]}>
         <View style={{ width: "85%" }}>
           <GooglePlacesAutocomplete
+            {...RESULTS_LIST_PROPS}
             placeholder="Search by location"
             fetchDetails
             ref={placesRef}

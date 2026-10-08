@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  Platform,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Text from "@/components/Text";
@@ -240,6 +241,7 @@ const Step1: React.FC = () => {
 
   return (
     <KeyboardAwareScrollView
+      showsVerticalScrollIndicator={Platform.OS !== "ios"}
       style={styles.container}
       bottomOffset={24}
       keyboardShouldPersistTaps="handled"

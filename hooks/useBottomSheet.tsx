@@ -5,7 +5,7 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import { ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet, Platform } from "react-native";
 
 // Custom hook to manage the BottomSheet visibility and content
 const useBottomSheet = () => {
@@ -72,7 +72,9 @@ const useBottomSheet = () => {
         backgroundStyle={styles.sheetBackground}
       >
         <BottomSheetView style={{ backgroundColor: "#080808" }}>
-          <ScrollView>{InsideComponent}</ScrollView>
+          <ScrollView showsVerticalScrollIndicator={Platform.OS !== "ios"}>
+            {InsideComponent}
+          </ScrollView>
         </BottomSheetView>
       </BottomSheetModal>
     ),

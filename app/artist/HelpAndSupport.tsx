@@ -6,6 +6,7 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import Collapsible from "react-native-collapsible";
@@ -156,7 +157,10 @@ const FAQScreen = () => {
         paddingBottom: insets.bottom,
       }}
     >
-      <ScrollView style={[styles.container, { paddingBottom: insets.bottom }]}>
+      <ScrollView
+        style={[styles.container, { paddingBottom: insets.bottom }]}
+        showsVerticalScrollIndicator={Platform.OS !== "ios"}
+      >
         {/* Feedback Shortcut */}
         <Pressable
           style={styles.feedbackContainer}
