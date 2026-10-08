@@ -114,6 +114,7 @@
           "googleMapsApiKey": "AIzaSyDsBQLKDuWUVnjHyTQKG1nZI6d0NiSqg-c"
         }
       ],
+      "./plugin/with-android-legacy-back.js",
       [
         "expo-dev-launcher",
         {
