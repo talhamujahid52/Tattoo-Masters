@@ -17,7 +17,7 @@ import {
 import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import { MaterialIcons } from "@expo/vector-icons";
-import MapView, { Region, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import Input from "@/components/Input";
 import {
   GooglePlaceData,
@@ -71,13 +71,6 @@ const FullScreenMapWithSearch: React.FC = () => {
   const searchAll = useTypesense();
   // const [selectedArtistId, setSelectedArtistId] = useState("");
 
-  const [region, setRegion] = useState<Region>({
-    latitude: 33.664286,
-    longitude: 73.004291,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
-
   const [loading, setLoading] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapTypeState, setMapTypeState] = useState<
@@ -117,31 +110,18 @@ const FullScreenMapWithSearch: React.FC = () => {
     dismissSearch();
     show();
   };
-  const zoomIn = () => {
-    mapRef.current?.animateToRegion({
-      ...region,
-      latitudeDelta: region.latitudeDelta / 2,
-      longitudeDelta: region.longitudeDelta / 2,
-    });
-    setRegion((prev) => ({
-      ...prev,
-      latitudeDelta: prev.latitudeDelta / 2,
-      longitudeDelta: prev.longitudeDelta / 2,
-    }));
+  // Zoom from wherever the map currently is, leaving its center alone
+  const zoomBy = async (levels: number) => {
+    try {
+      const camera = await mapRef.current?.getCamera();
+      if (camera?.zoom == null) return;
+      mapRef.current?.animateCamera({ zoom: camera.zoom + levels });
+    } catch {}
   };
 
-  const zoomOut = () => {
-    mapRef.current?.animateToRegion({
-      ...region,
-      latitudeDelta: region.latitudeDelta * 1.5,
-      longitudeDelta: region.longitudeDelta * 1.5,
-    });
-    setRegion((prev) => ({
-      ...prev,
-      latitudeDelta: prev.latitudeDelta * 1.5,
-      longitudeDelta: prev.longitudeDelta * 1.5,
-    }));
-  };
+  // One zoom level halves the visible span; zooming out widens it 1.5x
+  const zoomIn = () => zoomBy(1);
+  const zoomOut = () => zoomBy(-Math.log2(1.5));
 
   const {
     isEnabledRadius: persistedRadiusEnabled,
@@ -162,7 +142,6 @@ const FullScreenMapWithSearch: React.FC = () => {
       latitudeDelta: 0.05,
       longitudeDelta: 0.05,
     };
-    setRegion(newRegion);
     mapRef.current?.animateToRegion(newRegion, 800);
   };
 
@@ -249,7 +228,6 @@ const FullScreenMapWithSearch: React.FC = () => {
             longitudeDelta: 0.05,
           };
           dispatch(setCurrentLocation({ latitude, longitude }));
-          setRegion(newRegion);
           mapRef.current?.animateToRegion(newRegion, 1000); // optional
         }
       } catch (err) {
@@ -286,7 +264,6 @@ const FullScreenMapWithSearch: React.FC = () => {
               longitudeDelta: 0.05,
             };
             dispatch(setCurrentLocation({ latitude, longitude }));
-            setRegion(newRegion);
             mapRef.current?.animateToRegion(newRegion, 800);
           }
         } catch {}
@@ -428,7 +405,6 @@ const FullScreenMapWithSearch: React.FC = () => {
 
                 // Only navigate to the selected location without triggering search
                 mapRef.current?.animateToRegion(newRegion, 1000);
-                setRegion(newRegion);
 
                 // Update the search text for display purposes only
                 setSearchText(data.description);
@@ -542,7 +518,6 @@ const FullScreenMapWithSearch: React.FC = () => {
         provider={PROVIDER_GOOGLE}
         style={[styles.map, !mapReady && { opacity: 0.01 }]}
         customMapStyle={googleDarkModeStyle}
-        // initialRegion={region}
         mapType={mapTypeState}
         showsMyLocationButton={false}
         mapPadding={{ top: insets.top + 60, right: 10, bottom: 0, left: 0 }}

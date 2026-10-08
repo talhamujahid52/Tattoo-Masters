@@ -24,6 +24,7 @@ import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import { getCurrentChatId } from "@/utils/NavState";
 import { getChatAccess, getChatRelationship } from "@/hooks/useChat";
 import { useSafetyHydration } from "@/hooks/useSafety";
+import { prefetchTattooStyles } from "@/hooks/useTattooStyles";
 import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
 
 // iOS 26+ wraps native header items in a glass button that is at least 44pt
@@ -280,6 +281,11 @@ const AppNavigator = () => {
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
+  }, []);
+
+  // Load tattoo styles up front so filters have them on first open
+  useEffect(() => {
+    prefetchTattooStyles(dispatch);
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -48,8 +48,22 @@ const FilterBottomSheet = ({
     styles: persistedStyles,
   } = useSelector(selectFilter);
 
-  // Centralized fetch of style titles
+  // Cached style titles (refreshed from Firestore in the background)
   const { titles: fetchedStyleTitles } = useTattooStyles();
+
+  // Full style list with the persisted selections applied
+  const mergedStyles = useMemo(() => {
+    if (fetchedStyleTitles.length === 0) return persistedStyles;
+
+    const selectedSet = new Set(
+      (persistedStyles || []).filter((s) => s.selected).map((s) => s.title),
+    );
+    return fetchedStyleTitles.map((title, idx) => ({
+      title,
+      value: idx + 1,
+      selected: selectedSet.has(title),
+    }));
+  }, [fetchedStyleTitles, persistedStyles]);
 
   /** ──────────────────────────
    *  2. Local “draft” state
@@ -64,22 +78,12 @@ const FilterBottomSheet = ({
   const [sliderInitial, setSliderInitial] = useState(persistedRadiusValue);
   const [ratings, setRatingsLocal] = useState(persistedRatings);
   const [studio, setStudioLocal] = useState(persistedStudio);
-  const [tattooStyles, setStylesLocal] = useState(persistedStyles);
+  const [tattooStyles, setStylesLocal] = useState(mergedStyles);
 
-  // When fetched titles or persisted selections change, sync local styles list
+  // When the style list or persisted selections change, sync local styles list
   useEffect(() => {
-    if (fetchedStyleTitles.length > 0) {
-      const selectedSet = new Set(
-        (persistedStyles || []).filter((s) => s.selected).map((s) => s.title),
-      );
-      const merged = fetchedStyleTitles.map((title, idx) => ({
-        title,
-        value: idx + 1,
-        selected: selectedSet.has(title),
-      }));
-      setStylesLocal(merged);
-    }
-  }, [fetchedStyleTitles, persistedStyles]);
+    setStylesLocal(mergedStyles);
+  }, [mergedStyles]);
 
   /** ──────────────────────────
    *  3. Sync local state when sheet is reopened
@@ -92,13 +96,11 @@ const FilterBottomSheet = ({
     setSliderInitial(persistedRadiusValue);
     setRatingsLocal(persistedRatings);
     setStudioLocal(persistedStudio);
-    setStylesLocal(persistedStyles);
   }, [
     persistedRadiusEnabled,
     persistedRadiusValue,
     persistedRatings,
     persistedStudio,
-    persistedStyles,
   ]);
 
   /** ──────────────────────────
