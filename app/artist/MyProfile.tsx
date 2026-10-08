@@ -284,7 +284,7 @@ const MyProfile = () => {
                   imageStyle={styles.profilePicture}
                   highResolutionImage={loggedInUser?.profilePictureVeryHigh}
                 />
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text size="h3" weight="semibold" color="white">
                     {loggedInUser?.name ?? ""}
                   </Text>
@@ -594,8 +594,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
   },
   pictureAndName: {
+    flex: 1,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",

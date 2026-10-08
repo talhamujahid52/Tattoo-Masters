@@ -131,7 +131,7 @@ const Menu = () => {
                         : require("../assets/images/placeholder.png")
                     }
                   />
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text size="profileName" weight="semibold" color="white">
                       {name}
                     </Text>
@@ -199,7 +199,7 @@ const Menu = () => {
                       : require("../assets/images/placeholder.png")
                   }
                 />
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text size="profileName" weight="semibold" color="white">
                     {name}
                   </Text>
@@ -473,8 +473,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
   },
   pictureAndName: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },

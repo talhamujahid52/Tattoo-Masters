@@ -79,9 +79,9 @@ const useTypesense = () => {
 
   /**
    * Perform a search on a given collection.
-   * Returns an array of search hits with Publication documents.
+   * Returns the page of hits along with the total number of matches.
    */
-  const search = useCallback(
+  const searchWithCount = useCallback(
     async ({
       collection,
       query,
@@ -90,7 +90,10 @@ const useTypesense = () => {
       page,
       per_page,
       append = false,
-    }: SearchParams): Promise<TypesenseResult<any>[]> => {
+    }: SearchParams): Promise<{
+      hits: TypesenseResult<any>[];
+      found: number;
+    }> => {
       setLoading(true);
       try {
         const response = await client
@@ -112,7 +115,7 @@ const useTypesense = () => {
           setResults(hits);
         }
         setError(null);
-        return hits;
+        return { hits, found: response.found ?? hits.length };
       } catch (err: any) {
         console.error("Typesense search error:", err);
         setError(err);
@@ -123,6 +126,16 @@ const useTypesense = () => {
       }
     },
     [],
+  );
+
+  /**
+   * Perform a search on a given collection.
+   * Returns an array of search hits with Publication documents.
+   */
+  const search = useCallback(
+    async (params: SearchParams): Promise<TypesenseResult<any>[]> =>
+      (await searchWithCount(params)).hits,
+    [searchWithCount],
   );
 
   /**
@@ -150,7 +163,7 @@ const useTypesense = () => {
     [],
   );
 
-  return { results, loading, error, search, getDocument };
+  return { results, loading, error, search, searchWithCount, getDocument };
 };
 
 export default useTypesense;

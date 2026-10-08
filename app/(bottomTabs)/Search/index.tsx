@@ -18,6 +18,7 @@ import {
   Image,
   TextInput,
   Platform,
+  RefreshControl,
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
@@ -87,6 +88,8 @@ const Search: React.FC = () => {
   const pageRef = useRef(0);
   const hasMoreRef = useRef(true);
   const loadingRef = useRef(false);
+  const requestIdRef = useRef(0);
+  const [refreshing, setRefreshing] = useState(false);
   const currentUserId = useSelector(
     (state: RootState) => state.user.user?.uid,
   );
@@ -100,8 +103,9 @@ const Search: React.FC = () => {
     [artists, blockedUserIds, currentUserId, safetyHydrated],
   );
 
-  const fetchUsers = async (page: number) => {
-    if (loadingRef.current) return;
+  const fetchUsers = async (page: number, force = false) => {
+    if (loadingRef.current && !force) return;
+    const requestId = ++requestIdRef.current;
     loadingRef.current = true;
     try {
       const hits = await artistsTs.search({
@@ -116,6 +120,8 @@ const Search: React.FC = () => {
         id,
         data,
       }));
+      // A refresh started while this page was loading; its results win
+      if (requestId !== requestIdRef.current) return;
       pageRef.current = page;
       // A short page means the end has been reached
       hasMoreRef.current = hits.length >= ARTISTS_PER_PAGE;
@@ -132,7 +138,7 @@ const Search: React.FC = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
     } finally {
-      loadingRef.current = false;
+      if (requestId === requestIdRef.current) loadingRef.current = false;
     }
   };
 
@@ -140,6 +146,13 @@ const Search: React.FC = () => {
   useEffect(() => {
     fetchUsers(1);
   }, []);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUsers(1, true);
+    setRefreshing(false);
+  };
 
   const handleLoadMore = () => {
     if (!hasMoreRef.current) return;
@@ -317,8 +330,17 @@ const Search: React.FC = () => {
               numColumns={3}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#fff"
+                  colors={["#fff"]}
+                  progressBackgroundColor="#1C1C1C"
+                />
+              }
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
+              contentContainerStyle={{ paddingBottom: 30, gap: 16 }}
             />
           </View>
         )}

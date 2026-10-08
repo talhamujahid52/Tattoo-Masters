@@ -505,10 +505,11 @@ const ArtistProfile = () => {
                 />
                 <View
                   style={{
+                    flex: 1,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-around",
-                    height: "100%",
+                    alignSelf: "stretch",
                     paddingVertical: 5,
                   }}
                 >
@@ -839,9 +840,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    height: 82,
+    minHeight: 82,
+    gap: 8,
   },
   pictureAndName: {
+    flex: 1,
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -862,7 +865,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   moreIconContainer: {
-    height: "100%",
+    alignSelf: "stretch",
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",

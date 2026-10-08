@@ -16,6 +16,7 @@ import {
   Keyboard,
   Image,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 
 import * as Location from "expo-location";
@@ -64,6 +65,8 @@ import {
   filterBlockedArtists,
   filterHiddenPublications,
 } from "@/utils/safetyFilters";
+
+const RESULTS_PER_PAGE = 20;
 
 interface FilterOption {
   title: string;
@@ -141,6 +144,14 @@ export default function SearchAll() {
   const adjustedWidth = width - 42;
 
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  // Paging for the search currently on screen
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(false);
+  const loadingMoreRef = useRef(false);
+  const requestIdRef = useRef(0);
+  // Matches on the server, not just the pages loaded so far
+  const [totalFound, setTotalFound] = useState(0);
   const { BottomSheet, show, hide } = useFilterBottomSheet();
   const [isSheetReady, setIsSheetReady] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<SearchType | null>(
@@ -201,8 +212,8 @@ export default function SearchAll() {
     return facets;
   };
 
-  // HELPER: perform studios search
-  const searchStudios = async (query: string) => {
+  // HELPER: fetch a page of studios
+  const searchStudios = (query: string, page: number) => {
     const geoFilter =
       persistedRadiusEnabled && currentLocation
         ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
@@ -214,22 +225,18 @@ export default function SearchAll() {
     ]
       .filter(Boolean)
       .join(" && ");
-    const hits = await searchAll.search({
+    return searchAll.searchWithCount({
       collection: "Users",
       query,
       queryBy: "studio,studioName",
       filterBy,
+      page,
+      per_page: RESULTS_PER_PAGE,
     });
-    dispatch(
-      updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
-      ),
-    );
-    dispatch(addSearch({ text: query, type: "studios" }));
   };
 
-  // HELPER: perform artists search
-  const searchArtists = async (query: string) => {
+  // HELPER: fetch a page of artists
+  const searchArtists = (query: string, page: number) => {
     const geoFilter =
       persistedRadiusEnabled && currentLocation
         ? `location:(${currentLocation.latitude}, ${currentLocation.longitude}, ${persistedRadiusValue} km)`
@@ -241,18 +248,14 @@ export default function SearchAll() {
     ]
       .filter(Boolean)
       .join(" && ");
-    const hits = await searchAll.search({
+    return searchAll.searchWithCount({
       collection: "Users",
       query,
       queryBy: "name",
       filterBy: filterBy,
+      page,
+      per_page: RESULTS_PER_PAGE,
     });
-    dispatch(
-      updateSearchResults(
-        hits.map((h: any) => ({ id: h.document.id, data: h.document })),
-      ),
-    );
-    dispatch(addSearch({ text: query, type: "artists" }));
   };
 
   const activeFiltersCount = useMemo(() => {
@@ -325,43 +328,125 @@ export default function SearchAll() {
     persistedStudio,
     persistedStyles,
   ]);
-  // HELPER: perform tattoos search
-  const searchTattoos = async (query: string) => {
-    dispatch(setTattooLoading(true));
+  // HELPER: fetch a page of tattoos
+  const searchTattoos = (query: string, page: number) => {
     const filterBy = buildFacetFilters("tattoos").filter(Boolean).join(" && ");
-    const hits = await searchAll.search({
+    return searchAll.searchWithCount({
       collection: "publications",
       query,
       queryBy: "styles,caption",
       filterBy,
+      page,
+      per_page: RESULTS_PER_PAGE,
     });
-    dispatch(setTattooSearchResults(hits as TattooSearchResult[]));
-    dispatch(addSearch({ text: query, type: "tattoos" }));
+  };
+  const toQuery = (text: string) => (text.trim() === "" ? "*" : text);
+  const fetchPage = (query: string, page: number) => {
+    if (selectedFilter === "studios") return searchStudios(query, page);
+    if (selectedFilter === "artists") return searchArtists(query, page);
+    return searchTattoos(query, page);
+  };
+  // Puts a fetched page in the store, after the loaded ones when appending
+  const storeResults = (hits: any[], append: boolean) => {
+    if (isTattoos) {
+      const prev = append ? resultsTattooss : [];
+      const loadedIds = new Set(prev.map((tattoo) => tattoo.document.id));
+      dispatch(
+        setTattooSearchResults([
+          ...prev,
+          ...(hits as TattooSearchResult[]).filter(
+            (tattoo) => !loadedIds.has(tattoo.document.id),
+          ),
+        ]),
+      );
+    } else {
+      const prev = append ? resultsArtists : [];
+      const loadedIds = new Set(prev.map((artist) => artist.id));
+      dispatch(
+        updateSearchResults([
+          ...prev,
+          ...hits
+            .map((h: any) => ({ id: h.document.id, data: h.document }))
+            .filter((artist) => !loadedIds.has(artist.id)),
+        ]),
+      );
+    }
   };
   // MAIN DO SEARCH
-  const doSearch = async (text: string) => {
+  const doSearch = async (text: string, refresh = false) => {
     // if (!text.trim() && text !== "*") {
     //   dispatch(resetSearchResults());
     //   return;
     // }
-    const query = text.trim() === "" ? "*" : text;
-    setLoading(true);
+    const query = toQuery(text);
+    const requestId = ++requestIdRef.current;
+    const hadMore = hasMoreRef.current;
+    hasMoreRef.current = false;
+    loadingMoreRef.current = false;
+    if (refresh) {
+      // The results stay on screen under the pull-to-refresh spinner
+      setRefreshing(true);
+    } else {
+      setTotalFound(0);
+      setLoading(true);
+      if (isTattoos) dispatch(setTattooLoading(true));
+    }
     try {
-      if (selectedFilter === "studios") {
-        await searchStudios(query);
-      } else if (selectedFilter === "artists") {
-        await searchArtists(query);
-      } else {
-        await searchTattoos(query);
+      const { hits, found } = await fetchPage(query, 1);
+      // A newer search started while this one was loading; its results win
+      if (requestId !== requestIdRef.current) return;
+      pageRef.current = 1;
+      // A short page means the end has been reached
+      hasMoreRef.current = hits.length >= RESULTS_PER_PAGE;
+      setTotalFound(found);
+      storeResults(hits, false);
+      if (!refresh) {
+        dispatch(addSearch({ text: query, type: selectedFilter ?? "tattoos" }));
       }
     } catch (err) {
       console.error("Search error:", err);
-      dispatch(resetSearchResults());
+      if (requestId !== requestIdRef.current) return;
+      // A failed refresh leaves the results on screen as they were
+      if (refresh) hasMoreRef.current = hadMore;
+      else dispatch(resetSearchResults());
     } finally {
-      setLoading(false);
-      dispatch(setTattooLoading(false));
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+        dispatch(setTattooLoading(false));
+      }
     }
   };
+  // Pull-to-refresh handler
+  const onRefresh = () => doSearch(searchedText, true);
+  const handleLoadMore = async () => {
+    if (loading || loadingMoreRef.current || !hasMoreRef.current) return;
+    const requestId = requestIdRef.current;
+    loadingMoreRef.current = true;
+    try {
+      const page = pageRef.current + 1;
+      const { hits } = await fetchPage(toQuery(searchedText), page);
+      // A new search replaced the results this page belonged to
+      if (requestId !== requestIdRef.current) return;
+      pageRef.current = page;
+      hasMoreRef.current = hits.length >= RESULTS_PER_PAGE;
+      storeResults(hits, true);
+    } catch (err) {
+      console.error("Search load more error:", err);
+    } finally {
+      if (requestId === requestIdRef.current) loadingMoreRef.current = false;
+    }
+  };
+  const loadedCount = isTattoos
+    ? resultsTattooss.length
+    : resultsArtists.length;
+  const visibleCount = isTattoos
+    ? visibleTattooResults.length
+    : visibleArtistResults.length;
+  // The server total, less whatever the safety filters hid in the loaded pages
+  const resultCount = safetyReady
+    ? Math.max(totalFound - (loadedCount - visibleCount), visibleCount)
+    : 0;
   const toggleFilter = (value: SearchType) => {
     if (selectedFilter === value) {
       setSelectedFilter(null);
@@ -528,9 +613,7 @@ export default function SearchAll() {
         {searchedText && (
           <Text size="h4" color="#A7A7A7" style={styles.heading}>
             {searchedText &&
-              (selectedFilter === "tattoos" || selectedFilter === null
-                ? `${visibleTattooResults.length} result${visibleTattooResults.length !== 1 ? "s" : ""} for "${searchedText}"`
-                : `${visibleArtistResults.length} result${visibleArtistResults.length !== 1 ? "s" : ""} for "${searchedText}"`)}
+              `${resultCount} result${resultCount !== 1 ? "s" : ""} for "${searchedText}"`}
           </Text>
         )}
         {loading ? (
@@ -545,7 +628,12 @@ export default function SearchAll() {
         ) : (
           <>
             {isTattoos ? (
-              <ImageGallery images={visibleTattooResults} />
+              <ImageGallery
+                images={visibleTattooResults}
+                onEndReached={handleLoadMore}
+                onRefresh={onRefresh}
+                refreshing={refreshing}
+              />
             ) : (
               <KeyboardAwareFlatList
                 data={visibleArtistResults}
@@ -553,8 +641,19 @@ export default function SearchAll() {
                 style={{ backgroundColor: "#000" }}
                 keyExtractor={(item: any) => item.id}
                 renderItem={renderArtistItem}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor="#fff"
+                    colors={["#fff"]}
+                    progressBackgroundColor="#1C1C1C"
+                  />
+                }
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 150, gap: 16 }}
+                contentContainerStyle={{ paddingBottom: 30, gap: 16 }}
                 removeClippedSubviews
                 windowSize={7}
                 initialNumToRender={15}

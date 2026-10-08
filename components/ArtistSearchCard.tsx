@@ -78,11 +78,22 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
           color="#FFFFFF"
           numberOfLines={1}
           ellipsizeMode="tail"
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          style={{ flex: 1 }}
         >
           {artist?.data?.name ?? ""}
         </Text>
       </View>
-      <Text size="medium" weight="normal" color="#A7A7A7">
+      <Text
+        size="medium"
+        weight="normal"
+        color="#A7A7A7"
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {artist?.data?.studio === "studio"
           ? artist?.data?.studioName
           : artist?.data?.studio === "freelancer"

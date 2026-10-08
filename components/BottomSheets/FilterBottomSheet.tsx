@@ -7,6 +7,7 @@ import {
   Alert,
   Linking,
   ScrollView,
+  Platform,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
@@ -210,7 +211,7 @@ const FilterBottomSheet = ({
         <BottomSheetScrollView
           style={styles.scrollArea}
           contentContainerStyle={{ paddingBottom: 72 + insets.bottom }}
-          showsVerticalScrollIndicator={true}
+          showsVerticalScrollIndicator={Platform.OS !== "ios"}
         >
           {/* radius toggle */}
           <View style={styles.toggleButtonRow}>

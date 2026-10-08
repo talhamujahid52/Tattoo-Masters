@@ -33,6 +33,7 @@ const getItemSize = (containerWidth: number) =>
   Math.floor((containerWidth - ITEM_MARGIN * 2 * NUM_COLUMNS) / NUM_COLUMNS);
 // Seven rows: enough to run past the bottom of the screen under a header.
 const SKELETON_TILES = Array.from({ length: NUM_COLUMNS * 7 }, (_, i) => i);
+const NO_ITEMS: never[] = [];
 
 // Placeholder grid built from the same tile style as the real items, so each
 // image lands exactly on the tile that stood in for it.
@@ -101,12 +102,14 @@ const ImageGallery = ({
 
   // Measure the list's actual width so columns stay equal regardless of
   // the parent's padding (the search screen wraps this in a 16px-padded view).
-  const [containerWidth, setContainerWidth] = useState(SCREEN_WIDTH);
+  // No tiles are drawn until it is known, so they never resize after appearing.
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const width = e.nativeEvent.layout.width;
     if (width > 0) setContainerWidth((prev) => (prev === width ? prev : width));
   }, []);
-  const itemSize = getItemSize(containerWidth);
+  const measured = containerWidth !== null;
+  const itemSize = getItemSize(containerWidth ?? SCREEN_WIDTH);
   const itemStyle = useMemo(
     () => [styles.itemContainer, { width: itemSize, height: itemSize }],
     [itemSize]
@@ -195,7 +198,7 @@ const ImageGallery = ({
 
   return (
     <FlatList<any>
-      data={data}
+      data={measured ? data : NO_ITEMS}
       renderItem={renderItem as any}
       keyExtractor={keyExtractor as any}
       numColumns={NUM_COLUMNS}
@@ -207,7 +210,7 @@ const ImageGallery = ({
       onEndReachedThreshold={0.5}
       ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={
-        loading ? <GallerySkeleton itemStyle={itemStyle} /> : null
+        measured && loading ? <GallerySkeleton itemStyle={itemStyle} /> : null
       }
       refreshControl={
         onRefresh ? (
