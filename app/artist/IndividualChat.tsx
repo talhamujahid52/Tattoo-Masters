@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import {
   View,
   Image,
@@ -42,6 +48,14 @@ import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet";
 import ChatActionsBottomSheet from "@/components/BottomSheets/ChatActionsBottomSheet";
 import ChatMessageImage from "@/components/ChatMessageImage";
+import Clipboard from "@react-native-clipboard/clipboard";
+import { useRealtimeDocsByIds } from "@/hooks/useRealtimeDocsByIds";
+import {
+  OWN_LINK_PATTERN,
+  findOwnLinks,
+  parseOwnLink,
+  routeFromLaunchURL,
+} from "@/utils/deepLinks";
 
 const IMAGE_PICKER_OPTIONS = {
   mediaType: "photo",
@@ -95,6 +109,64 @@ const IndividualChat: React.FC = () => {
   } = useLocalSearchParams<any>();
   const [composerHeight, setComposerHeight] = useState(44);
   const [messages, setMessages] = useState<any[]>([]);
+
+  // Artists linked to from message text, so their links can render as
+  // "👤 <name>" instead of the raw URL.
+  const linkedArtistIds = useMemo(() => {
+    const ids = new Set<string>();
+    messages.forEach((message) => {
+      findOwnLinks(message?.text).forEach((link) => {
+        if (link.type === "artist") ids.add(link.id);
+      });
+    });
+    return Array.from(ids);
+  }, [messages]);
+  const { docs: linkedArtistDocs } = useRealtimeDocsByIds(
+    "Users",
+    linkedArtistIds,
+  );
+  const linkedArtistNameById = useMemo(() => {
+    const names: Record<string, string> = {};
+    linkedArtistDocs.forEach((doc) => {
+      if (doc?.data?.name) names[doc.id] = doc.data.name;
+    });
+    return names;
+  }, [linkedArtistDocs]);
+
+  // Own share links show as a hyperlink label; the message text itself keeps
+  // the full URL so copying it works outside the app too.
+  const ownLinkLabel = (url: string) => {
+    const link = parseOwnLink(url);
+    if (!link) return url;
+    if (link.type === "tattoo") return "🖼️ Image";
+    return `👤 ${linkedArtistNameById[link.id] ?? "Artist"}`;
+  };
+  const openOwnLink = (url: string) => {
+    const route = routeFromLaunchURL(url);
+    if (route) {
+      router.push(route as any);
+      return;
+    }
+    Linking.openURL(url).catch(() => {});
+  };
+  const ownLinkParsePatterns = (linkStyle: any) => [
+    {
+      pattern: OWN_LINK_PATTERN,
+      style: [linkStyle, { textDecorationLine: "underline" }],
+      renderText: ownLinkLabel,
+      onPress: openOwnLink,
+    },
+  ];
+  const copyMessageOnLongPress = (context: any, message: any) => {
+    const text = message?.text;
+    if (!text) return;
+    context?.actionSheet?.().showActionSheetWithOptions(
+      { options: ["Copy", "Cancel"], cancelButtonIndex: 1 },
+      (buttonIndex: number) => {
+        if (buttonIndex === 0) Clipboard.setString(text);
+      },
+    );
+  };
   const [chatID, setChatID] = useState<any>(existingChatId || undefined);
   const didLeaveForBlockRef = useRef(false);
   const [messageRecieverName, setMessageRecieverName] = useState(
@@ -675,6 +747,8 @@ const IndividualChat: React.FC = () => {
     return (
       <Bubble
         {...props}
+        parsePatterns={ownLinkParsePatterns}
+        onLongPress={copyMessageOnLongPress}
         wrapperStyle={{
           right: {
             backgroundColor: "#514D33",
@@ -706,7 +780,6 @@ const IndividualChat: React.FC = () => {
         textStyle={{
           right: {
             color: "#FBF6FA",
-            textAlign: "right",
           },
           left: {
             color: "#FBF6FA",
@@ -755,6 +828,7 @@ const IndividualChat: React.FC = () => {
           flexDirection: "row",
           alignItems: "flex-end",
           marginHorizontal: 8,
+          marginTop: 6,
           marginBottom: insets.bottom + 10,
         }}
       >
