@@ -42,11 +42,15 @@ const FavouriteTattoos = () => {
     likedPublicationsData.loading && visibleLikedPublications.length === 0;
   const [refreshing, setRefreshing] = useState(false);
 
-  // Pull-to-refresh handler
+  // Pull-to-refresh: the spinner stays up until the liked list and the
+  // tattoos in it have been re-read
   const onRefresh = async () => {
     setRefreshing(true);
-    await likedPublicationsData.refresh();
-    setRefreshing(false);
+    try {
+      await likedPublicationsData.refresh();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (

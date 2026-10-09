@@ -22,7 +22,9 @@ import {
 } from "react-native";
 import Input from "@/components/Input";
 import Text from "@/components/Text";
-import ArtistSearchCard from "@/components/ArtistSearchCard";
+import ArtistSearchCard, {
+  ArtistSearchCardSkeletonGrid,
+} from "@/components/ArtistSearchCard";
 import { useDispatch, useSelector } from "react-redux";
 import { router, useLocalSearchParams } from "expo-router";
 import useTypesense from "@/hooks/useTypesense";
@@ -40,8 +42,11 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+import { SkeletonReveal } from "@/components/Skeleton";
 
 const ARTISTS_PER_PAGE = 21;
+// Stable empty list, so memoised values don't recompute every render
+const NO_ARTISTS: any[] = [];
 
 const Search: React.FC = () => {
   const [searchText, setSearchText] = useState("");
@@ -77,14 +82,12 @@ const Search: React.FC = () => {
   const artistsTs = useTypesense();
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
-  const cachedArtists: any[] = useSelector(
-    (state: any) => state.artist.allArtists,
-  );
-  // Pages loaded by this screen. The shared list can't be paged over, since
-  // Home replaces it on refresh.
+  // Pages loaded by this screen; Home loads its own row separately
   const [loadedArtists, setLoadedArtists] = useState<any[] | null>(null);
-  // Until the first page arrives, show whatever is cached
-  const artists = loadedArtists ?? cachedArtists;
+  const artists = loadedArtists ?? NO_ARTISTS;
+  // Flips once the first page settles, so the skeleton can be told apart
+  // from an empty result
+  const [artistsFetched, setArtistsFetched] = useState(false);
   const pageRef = useRef(0);
   const hasMoreRef = useRef(true);
   const loadingRef = useRef(false);
@@ -138,7 +141,10 @@ const Search: React.FC = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
     } finally {
-      if (requestId === requestIdRef.current) loadingRef.current = false;
+      if (requestId === requestIdRef.current) {
+        loadingRef.current = false;
+        if (page === 1) setArtistsFetched(true);
+      }
     }
   };
 
@@ -323,27 +329,36 @@ const Search: React.FC = () => {
             >
               Artists near you
             </Text>
-            <KeyboardAwareFlatList
-              showsVerticalScrollIndicator={Platform.OS !== "ios"}
-              style={{ backgroundColor: "#000" }}
-              data={visibleArtists}
-              renderItem={renderArtistItem}
-              keyExtractor={(item: any) => item.id}
-              numColumns={3}
-              onEndReached={handleLoadMore}
-              onEndReachedThreshold={0.5}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor="#fff"
-                  colors={["#fff"]}
-                  progressBackgroundColor="#1C1C1C"
-                />
+            <SkeletonReveal
+              loading={!artistsFetched}
+              skeleton={
+                <ArtistSearchCardSkeletonGrid columnWidth={adjustedWidth / 3} />
               }
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 30, gap: 16 }}
-            />
+              fill
+              style={{ flex: 1 }}
+            >
+              <KeyboardAwareFlatList
+                showsVerticalScrollIndicator={Platform.OS !== "ios"}
+                style={{ backgroundColor: "#000" }}
+                data={visibleArtists}
+                renderItem={renderArtistItem}
+                keyExtractor={(item: any) => item.id}
+                numColumns={3}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor="#fff"
+                    colors={["#fff"]}
+                    progressBackgroundColor="#1C1C1C"
+                  />
+                }
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 30, gap: 16 }}
+              />
+            </SkeletonReveal>
           </View>
         )}
       </View>

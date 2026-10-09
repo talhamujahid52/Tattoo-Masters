@@ -89,10 +89,19 @@ export const useRealtimeDocsByIds = (
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
   }, [collection, idsKey]);
 
-  // Force a read from the server, for pull-to-refresh
-  const refresh = useCallback(async () => {
-    const uniqueIds = idsKey ? idsKey.split("/") : [];
-    if (uniqueIds.length === 0) return;
+  // Force a read from the server, for pull-to-refresh. Pass `ids` when the
+  // caller has just re-read the ID list itself and wants those documents
+  // loaded before it resolves, ahead of the listeners catching up.
+  const refresh = useCallback(async (ids?: string[]) => {
+    const uniqueIds = ids
+      ? Array.from(new Set(ids.filter(Boolean)))
+      : idsKey
+        ? idsKey.split("/")
+        : [];
+    if (uniqueIds.length === 0) {
+      if (ids) setDocsById({});
+      return;
+    }
     try {
       const snapshots = await Promise.all(
         chunkIds(uniqueIds).map((chunk) =>
@@ -100,7 +109,7 @@ export const useRealtimeDocsByIds = (
         ),
       );
       // The IDs changed while this was loading; the new listeners win
-      if (latestIdsKey.current !== idsKey) return;
+      if (!ids && latestIdsKey.current !== idsKey) return;
       setDocsById(
         Object.fromEntries(
           snapshots.flatMap((snapshot) =>

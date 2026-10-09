@@ -15,7 +15,6 @@ import ArtistProfileCard, {
 import { SkeletonReveal } from "@/components/Skeleton";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
-import { setAllArtists } from "@/redux/slices/artistSlice";
 import { useRouter } from "expo-router";
 import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
@@ -53,9 +52,8 @@ const Home = () => {
   const initialNotificationHandledRef = useRef(false);
   const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
-  const artists: any[] = useSelector(
-    (state: any) => state.artist.allArtists,
-  );
+  // Loaded by this screen alone; not shared with the Search tab or Redux
+  const [artists, setArtists] = useState<any[]>([]);
   const currentUserId = useSelector(
     (state: RootState) => state.user.user?.uid,
   );
@@ -90,7 +88,7 @@ const Home = () => {
     };
   });
 
-  // Fetch artists and update Redux state
+  // Fetch the first 10 artists for the row
   const fetchUsers = async () => {
     try {
       const hits = await artistsTs.search({
@@ -98,16 +96,15 @@ const Home = () => {
         query: "*",
         queryBy: "name",
         filterBy: "isArtist:=true",
+        per_page: 10,
       });
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
 
-      dispatch(
-        setAllArtists(
-          fetchedArtists.map(({ id, ...data }) => ({
-            data,
-            id,
-          }))
-        )
+      setArtists(
+        fetchedArtists.map(({ id, ...data }) => ({
+          data,
+          id,
+        }))
       );
     } catch (err) {
       console.error("Error fetching users:", err);

@@ -4,6 +4,8 @@ import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
+import Animated from "react-native-reanimated";
+import { SKELETON_DIM_COLOR, useSkeletonPulse } from "./Skeleton";
 
 interface ArtistSearchCardProps {
   // isActive: boolean;
@@ -106,7 +108,72 @@ const ArtistSearchCard = ({ artist }: ArtistSearchCardProps) => {
 
 export default ArtistSearchCard;
 
+// Same box as the card: the image block, then one bar per text line, each
+// centred on an invisible copy of the real text so nothing shifts when the
+// artist arrives.
+const ArtistSearchCardSkeleton = () => (
+  <View style={styles.card}>
+    <View style={[styles.imageStyle, styles.SkeletonFill]} />
+    <View style={[styles.RatingAndLocation, styles.SkeletonLine]}>
+      <Text size="p" weight="semibold" color="transparent">
+        {" "}
+      </Text>
+      <View style={[styles.SkeletonBar, { width: "70%", height: 12 }]} />
+    </View>
+    <View style={styles.SkeletonLine}>
+      <Text size="medium" weight="normal" color="transparent">
+        {" "}
+      </Text>
+      <View style={[styles.SkeletonBar, { width: "45%", height: 10 }]} />
+    </View>
+  </View>
+);
+
+// Four rows of placeholder cards laid out like the 3-column artist grid.
+// `columnWidth` and the margins match the list's renderItem wrapper.
+export const ArtistSearchCardSkeletonGrid = ({
+  columnWidth,
+}: {
+  columnWidth: number;
+}) => {
+  const pulseStyle = useSkeletonPulse();
+
+  return (
+    <Animated.View style={[styles.SkeletonGrid, pulseStyle]}>
+      {Array.from({ length: 12 }, (_, index) => (
+        <View
+          key={index}
+          style={{
+            width: columnWidth,
+            marginRight: index % 3 === 0 ? 5 : 0,
+            marginLeft: index % 3 === 2 ? 5 : 0,
+          }}
+        >
+          <ArtistSearchCardSkeleton />
+        </View>
+      ))}
+    </Animated.View>
+  );
+};
+
 const styles = StyleSheet.create({
+  SkeletonGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 16,
+  },
+  SkeletonFill: {
+    backgroundColor: SKELETON_DIM_COLOR,
+  },
+  SkeletonLine: {
+    justifyContent: "center",
+  },
+  SkeletonBar: {
+    position: "absolute",
+    left: 0,
+    borderRadius: 4,
+    backgroundColor: SKELETON_DIM_COLOR,
+  },
   card: {
     width: "100%",
     height: 193,

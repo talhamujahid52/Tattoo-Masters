@@ -10,8 +10,10 @@ import {
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
 import React, { useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import { setUserFirestoreData } from "@/redux/slices/userSlice";
+import { getUpdatedUser } from "@/utils/firebase/userFunctions";
 import {
   selectBlockedUserIds,
   selectSafetyHydrated,
@@ -22,6 +24,7 @@ import { useRealtimeDocsByIds } from "@/hooks/useRealtimeDocsByIds";
 const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
+  const dispatch = useDispatch();
 
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
   const currentUserId = useSelector(
@@ -49,11 +52,25 @@ const FavouriteArtists = () => {
     (artistsLoading || (!!currentUserId && !safetyHydrated));
   const [refreshing, setRefreshing] = useState(false);
 
-  // Pull-to-refresh handler
+  // Pull-to-refresh: re-read the followed list, then the artists in it, and
+  // keep the spinner up until both are back
   const onRefresh = async () => {
     setRefreshing(true);
-    await refresh();
-    setRefreshing(false);
+    try {
+      let followed = userFirestore?.followedArtists;
+      if (currentUserId) {
+        const fresh = await getUpdatedUser(currentUserId);
+        if (fresh) {
+          dispatch(setUserFirestoreData(fresh));
+          followed = fresh.followedArtists;
+        }
+      }
+      await refresh(followed ?? []);
+    } catch (err) {
+      console.error("Error refreshing favorite artists:", err);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import firestore from "@react-native-firebase/firestore";
 import { useRealtimeDocsByIds } from "@/hooks/useRealtimeDocsByIds";
 
@@ -75,8 +75,29 @@ export const useRealtimeUserLikedPublications = (userId: string) => {
     docs,
     loading,
     error: publicationsError,
-    refresh,
+    refresh: refreshPublications,
   } = useRealtimeDocsByIds("publications", likedPublicationIds);
+
+  // Pull-to-refresh: re-read the liked IDs from the server, then the
+  // publications themselves, so the caller can wait for the whole load.
+  const refresh = useCallback(async () => {
+    if (!userId) return;
+    let ids: string[] = [];
+    try {
+      const doc = await firestore()
+        .collection("Users")
+        .doc(userId)
+        .get({ source: "server" });
+      ids = doc.exists ? doc.data()?.likedItems ?? [] : [];
+      setLikedPublicationIds(ids);
+      setUserError(null);
+    } catch (err: any) {
+      console.error("Error refreshing liked items:", err);
+      setUserError(err);
+      return;
+    }
+    await refreshPublications(ids);
+  }, [refreshPublications, userId]);
 
   const likedPublications = useMemo(
     () => docs.map(({ id, data }) => ({ id, ...data })) as Publication[],

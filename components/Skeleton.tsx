@@ -51,6 +51,9 @@ interface SkeletonRevealProps {
   // Stretches the skeleton over the content's whole box, for a skeleton sized
   // relative to it. Otherwise it keeps its own size from the top left corner.
   fill?: boolean;
+  // Applied to the wrapper and the content box, e.g. `{ flex: 1 }` so a list
+  // inside keeps filling its parent.
+  style?: StyleProp<ViewStyle>;
 }
 
 // Lays `skeleton` over `children` while loading, then cross-fades to the
@@ -61,6 +64,7 @@ export const SkeletonReveal = ({
   skeleton,
   children,
   fill = false,
+  style,
 }: SkeletonRevealProps) => {
   const reveal = useSharedValue(loading ? 0 : 1);
   const [skeletonMounted, setSkeletonMounted] = useState(loading);
@@ -84,9 +88,9 @@ export const SkeletonReveal = ({
   const skeletonStyle = useAnimatedStyle(() => ({ opacity: 1 - reveal.value }));
 
   return (
-    <View>
+    <View style={style}>
       <Animated.View
-        style={contentStyle}
+        style={[style, contentStyle]}
         pointerEvents={loading ? "none" : "auto"}
       >
         {children}
