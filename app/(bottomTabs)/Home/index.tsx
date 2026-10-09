@@ -34,7 +34,6 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
-import { getChatAccess } from "@/hooks/useChat";
 
 const ARTIST_CARD_GAP = 10;
 
@@ -160,10 +159,7 @@ const Home = () => {
 
   // Cold-start notification handling when arriving to Home
   useEffect(() => {
-    if (
-      initialNotificationHandledRef.current ||
-      (currentUserId && !safetyHydrated)
-    ) {
+    if (initialNotificationHandledRef.current) {
       return;
     }
     initialNotificationHandledRef.current = true;
@@ -174,22 +170,9 @@ const Home = () => {
       const incomingChatId = String(data?.chatId || "");
       const incomingSenderId = String(data?.senderId || "");
       if (incomingSenderId && blockedUserIds.includes(incomingSenderId)) return;
-      if (incomingChatId) {
-        if (!currentUserId) return;
-        try {
-          const access = await getChatAccess(currentUserId, incomingChatId);
-          if (
-            access.hidden ||
-            !access.canSend ||
-            (incomingSenderId && access.otherUserId !== incomingSenderId)
-          ) {
-            return;
-          }
-        } catch (error) {
-          console.error("Unable to verify notification chat access:", error);
-          return;
-        }
-      }
+      // No server-side access check before navigating: the chat screen
+      // verifies the thread itself and backs out if it is unavailable.
+      if (incomingChatId && !currentUserId) return;
       const url = typeof data?.url === "string" ? data.url : "";
       const currentChatId = getCurrentChatId();
       if (url) {
@@ -233,7 +216,7 @@ const Home = () => {
         }
       } catch {}
     })();
-  }, [blockedUserIds, currentUserId, router, safetyHydrated]);
+  }, [blockedUserIds, currentUserId, router]);
 
   // Pull-to-refresh handler
   const onRefresh = async () => {

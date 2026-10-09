@@ -111,6 +111,11 @@ const AppNavigator = () => {
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const pendingNotificationDataRef = React.useRef<any>(null);
   const handledNotificationIdsRef = React.useRef(new Set<string>());
+  // Expo and FCM both report the same tap on iOS, with different ids
+  const lastChatNavigationRef = React.useRef<{ chatId: string; at: number }>({
+    chatId: "",
+    at: 0,
+  });
 
   useNotification(userId); // Handles token, saving, etc.
 
@@ -133,39 +138,27 @@ const AppNavigator = () => {
       const incomingSenderId = String(data.senderId || "");
       const currentChatId = getCurrentChatId();
 
-      if (incomingSenderId) {
-        if (!userId || !safetyHydrated) {
+      if (incomingSenderId || incomingChatId) {
+        if (!userId) {
           pendingNotificationDataRef.current = data;
           return;
         }
-        if (blockedUserIds.includes(incomingSenderId)) return;
-        try {
-          const relationship = await getChatRelationship(
-            userId,
-            incomingSenderId,
-          );
-          if (!relationship.canSend) return;
-        } catch (error) {
-          console.error("Unable to verify notification sender:", error);
+        // Only the synchronous check happens here. Block and chat-access
+        // lookups used to run against the server before navigating, which
+        // held the tap for several seconds while Firestore reconnected after
+        // the app resumed. The chat screen subscribes to the same documents
+        // and leaves on its own when the thread turns out to be unavailable.
+        if (incomingSenderId && blockedUserIds.includes(incomingSenderId)) {
           return;
         }
       }
 
       if (incomingChatId) {
-        if (!userId) return;
-        try {
-          const access = await getChatAccess(userId, incomingChatId);
-          if (
-            access.hidden ||
-            !access.canSend ||
-            (incomingSenderId && access.otherUserId !== incomingSenderId)
-          ) {
-            return;
-          }
-        } catch (error) {
-          console.error("Unable to verify notification chat access:", error);
+        const last = lastChatNavigationRef.current;
+        if (last.chatId === incomingChatId && Date.now() - last.at < 3000) {
           return;
         }
+        lastChatNavigationRef.current = { chatId: incomingChatId, at: Date.now() };
       }
 
       const pushToChat = () => {
@@ -238,7 +231,7 @@ const AppNavigator = () => {
       }
     );
 
-    if (safetyHydrated && pendingNotificationDataRef.current) {
+    if (userId && pendingNotificationDataRef.current) {
       const pendingData = pendingNotificationDataRef.current;
       pendingNotificationDataRef.current = null;
       void navigateFromData(pendingData);
@@ -248,7 +241,7 @@ const AppNavigator = () => {
       sub.remove();
       unsubMsgOpen();
     };
-  }, [router, userId, safetyHydrated, blockedUserIds]);
+  }, [router, userId, blockedUserIds]);
 
   // Foreground: Present banner only if user isn't currently in the same chat
   useEffect(() => {

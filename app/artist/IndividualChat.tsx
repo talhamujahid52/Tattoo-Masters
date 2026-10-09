@@ -242,26 +242,22 @@ const IndividualChat: React.FC = () => {
     backgroundUploadService.cancelChatUploads(String(chatID));
   }, [chatID, isConversationUnavailable]);
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userDocRef = firestore().collection("Users").doc(otherUserId);
-        const userDoc = await userDocRef.get();
-
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          setOtherUserDetails(userData);
-          // Do whatever you need with userData
-        } else {
-          console.warn("User not found with ID:", otherUserId);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    if (otherUserId) {
-      fetchUser();
-    }
+    if (!otherUserId) return;
+    // A listener answers from the local cache right away; a one-off get()
+    // waits for the server, which can hang when the app has just resumed.
+    return firestore()
+      .collection("Users")
+      .doc(otherUserId)
+      .onSnapshot(
+        (userDoc) => {
+          if (userDoc.exists) {
+            setOtherUserDetails(userDoc.data());
+          } else {
+            console.warn("User not found with ID:", otherUserId);
+          }
+        },
+        (error) => console.error("Error fetching user:", error),
+      );
   }, [otherUserId]);
 
   const formatMessages = (msgs: any[]) => {

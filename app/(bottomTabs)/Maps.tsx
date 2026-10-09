@@ -47,7 +47,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { addSearch } from "@/redux/slices/recentSearchesSlice";
 import { setTattooLoading } from "@/redux/slices/tattooSlice";
 import useTypesense from "@/hooks/useTypesense";
-import { useFocusEffect } from "@react-navigation/native";
 import type { RootState } from "@/redux/store";
 import {
   selectBlockedUserIds,
@@ -146,19 +145,22 @@ const FullScreenMapWithSearch: React.FC = () => {
   const dispatch = useDispatch();
   const mapRef = useRef<MapView>(null);
   const placesRef = useRef<GooglePlacesAutocompleteRef>(null);
+  const dismissSearch = useCallback(() => {
+    placesRef.current?.blur();
+    Keyboard.dismiss();
+  }, []);
   const handleMarkerPress = useCallback(
     (artist: any) => {
+      // Tapping a pin doesn't reach the map's onPress, so drop the search
+      // keyboard here before the profile sheet comes up.
+      dismissSearch();
       dispatch(setCurrentlyViewingArtist(artist?.data));
       showMapProfileBottomSheet();
     },
-    [dispatch, showMapProfileBottomSheet]
+    [dismissSearch, dispatch, showMapProfileBottomSheet]
   );
   const insets = useSafeAreaInsets();
   const [searchedText, setSearchedText] = useState("");
-  const dismissSearch = () => {
-    placesRef.current?.blur();
-    Keyboard.dismiss();
-  };
   const openFilters = () => {
     // The filter sheet has no text input, so drop the search keyboard first.
     dismissSearch();
@@ -302,38 +304,9 @@ const FullScreenMapWithSearch: React.FC = () => {
     };
   }, [dispatch]);
 
-  // Also refocus to user's current location whenever the screen gains focus
-  useFocusEffect(
-    React.useCallback(() => {
-      let cancelled = false;
-      (async () => {
-        try {
-          const { status } = await requestForegroundLocationPermission();
-          if (cancelled) return;
-          if (status !== "granted") return;
-          const {
-            coords: { latitude, longitude },
-          } = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
-          });
-          if (!cancelled) {
-            const newRegion = {
-              latitude,
-              longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            };
-            dispatch(setCurrentLocation({ latitude, longitude }));
-            mapRef.current?.animateToRegion(newRegion, 800);
-          }
-        } catch {}
-      })();
-
-      return () => {
-        cancelled = true;
-      };
-    }, [dispatch])
-  );
+  // The map is only centered on the user once, on mount. Coming back from an
+  // artist profile (or another tab) leaves it wherever the user left it; the
+  // my-location button recenters on demand.
   const buildFacetFilters = (type: "tattoos" | "artists"): string[] => {
     const facets: string[] = [];
 
