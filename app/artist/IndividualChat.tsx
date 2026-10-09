@@ -528,7 +528,14 @@ const IndividualChat: React.FC = () => {
         // Ensure chat exists
         let currentChatID = chatID;
         if (!currentChatID) {
-          const newChat = await createChat(selectedArtist, loggedInUser);
+          const newChat = await createChat(selectedArtist, {
+            uid: loggedInUser?.uid,
+            name: loggedInUserFirestore?.name || loggedInUser?.displayName,
+            profilePicture:
+              loggedInUserFirestore?.profilePictureSmall ||
+              loggedInUserFirestore?.profilePicture ||
+              loggedInUser?.photoURL,
+          });
           currentChatID = newChat.id;
           setChatID(currentChatID);
         }
@@ -693,7 +700,14 @@ const IndividualChat: React.FC = () => {
           //     loggedInUserFirestore?.name || loggedInUser?.displayName || "",
           //   profilePicture: loggedInUser?.photoURL || "",
           // };
-          const newChat = await createChat(selectedArtist, loggedInUser);
+          const newChat = await createChat(selectedArtist, {
+            uid: loggedInUser?.uid,
+            name: loggedInUserFirestore?.name || loggedInUser?.displayName,
+            profilePicture:
+              loggedInUserFirestore?.profilePictureSmall ||
+              loggedInUserFirestore?.profilePicture ||
+              loggedInUser?.photoURL,
+          });
           currentChatID = newChat.id;
           setChatID(currentChatID);
         } catch (error) {

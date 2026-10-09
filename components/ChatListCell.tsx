@@ -44,6 +44,23 @@ export const refreshUserDetails = (userIds: string[]) =>
     )
   );
 
+// Fetches only the users not yet cached, so the chat list can search the
+// same names the cells display without re-requesting every profile.
+export const ensureUserDetails = (userIds: string[]) =>
+  Promise.all(
+    Array.from(new Set(userIds.filter(Boolean)))
+      .filter((userId) => !userDetailsCache.has(userId))
+      .map((userId) =>
+        fetchUserDetails(userId).catch((error) =>
+          console.error("Error fetching user from Firebase:", error)
+        )
+      )
+  );
+
+// The name a cell would show for this user, or "" if it isn't known yet.
+export const getCachedUserName = (userId: string | undefined): string =>
+  (userId && userDetailsCache.get(userId)?.details?.name) || "";
+
 // Enough rows to run past the bottom of the screen.
 const SKELETON_ROWS = Array.from({ length: 8 }, (_, i) => i);
 

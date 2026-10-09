@@ -15,6 +15,8 @@ import Text from "@/components/Text";
 import Animated, { FadeIn } from "react-native-reanimated";
 import ChatListCell, {
   ChatListSkeleton,
+  ensureUserDetails,
+  getCachedUserName,
   refreshUserDetails,
 } from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
@@ -52,6 +54,28 @@ const Chat = () => {
     return () => unsubscribe();
   }, [fetchChats]);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [profilesVersion, setProfilesVersion] = useState(0);
+
+  // Load the names of everyone in the list, so search can match on the name
+  // the cell shows rather than the copy saved on the chat when it was created.
+  useEffect(() => {
+    if (!loggedInUser?.uid || !chats?.length) return;
+    let isActive = true;
+    ensureUserDetails(
+      chats.flatMap((chat: any) =>
+        (chat?.participants ?? []).filter(
+          (userId: string) => userId !== loggedInUser.uid,
+        ),
+      ),
+    ).then(() => {
+      if (isActive) setProfilesVersion((version) => version + 1);
+    });
+    return () => {
+      isActive = false;
+    };
+  }, [chats, loggedInUser?.uid]);
+
   const filteredChats = useMemo(() => {
     if (loggedInUser?.uid && !safetyHydrated) return [];
     const visibleChats = loggedInUser?.uid
@@ -66,17 +90,27 @@ const Chat = () => {
       const otherUserId = chat?.participants?.find(
         (userId: string) => userId !== loggedInUser?.uid,
       );
-      const otherUserName = chat?.[otherUserId]?.name?.toLowerCase() || "";
+      const otherUserName = (
+        getCachedUserName(otherUserId) ||
+        chat?.[otherUserId]?.name ||
+        ""
+      ).toLowerCase();
       const lastMessage = chat?.lastMessage?.toLowerCase() || "";
 
       return (
         otherUserName.includes(searchLower) || lastMessage.includes(searchLower)
       );
     });
-  }, [blockedUserIds, chats, loggedInUser?.uid, safetyHydrated, searchText]);
-
-  const [refreshing, setRefreshing] = useState(false);
-  const [profilesVersion, setProfilesVersion] = useState(0);
+    // profilesVersion re-runs this once the names have been fetched.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    blockedUserIds,
+    chats,
+    loggedInUser?.uid,
+    profilesVersion,
+    safetyHydrated,
+    searchText,
+  ]);
 
   // Pull-to-refresh handler. The chats themselves are live, so this only
   // reloads the names and pictures of the people in them.
