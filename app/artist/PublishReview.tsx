@@ -33,7 +33,7 @@ const PublishReview = () => {
     }
 
     return require("../../assets/images/Artist.png");
-  }, [artistId]);
+  }, [artist]);
 
   const handlePublishReview = async () => {
     setLoading(true);

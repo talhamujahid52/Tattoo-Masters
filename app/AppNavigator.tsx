@@ -24,6 +24,7 @@ import { backgroundUploadService } from "@/utils/BackgroundUploadService";
 import { getCurrentChatId } from "@/utils/NavState";
 import { getChatAccess, getChatRelationship } from "@/hooks/useChat";
 import { useSafetyHydration } from "@/hooks/useSafety";
+import useLastSeen from "@/hooks/useLastSeen";
 import { prefetchTattooStyles } from "@/hooks/useTattooStyles";
 import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
 import { routeFromLaunchURL } from "@/utils/deepLinks";
@@ -84,6 +85,7 @@ const AppNavigator = () => {
   const [initialUrlChecked, setInitialUrlChecked] = useState(false);
   const userId = useSelector((state: RootState) => state.user.user?.uid);
   const safetyHydrated = useSafetyHydration(userId ?? null);
+  useLastSeen(userId);
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const pendingNotificationDataRef = React.useRef<any>(null);
   const handledNotificationIdsRef = React.useRef(new Set<string>());

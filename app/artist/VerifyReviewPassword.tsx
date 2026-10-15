@@ -11,10 +11,11 @@ const VerifyReviewPassword = () => {
   const router = useRouter();
   const { artistId } = useLocalSearchParams();
   const artist = useGetArtist(artistId);
+  const artistName = artist?.data?.name?.trim();
   const [inputReviewPassword, setInputReviewPassword] = useState("");
 
   const checkReviewPasswordClick = () => {
-    if (!inputReviewPassword) {
+    if (!inputReviewPassword || !artist) {
       return;
     } else {
       if (inputReviewPassword === artist?.data?.reviewPassword) {
@@ -38,7 +39,9 @@ const VerifyReviewPassword = () => {
         />
       </View>
       <Text size="h3" weight="medium" color="#FBF6FA" style={styles.title}>
-        Enter password to review {artist?.data?.name}
+        {artistName
+          ? `Enter password to review ${artistName}`
+          : "Enter password to review"}
       </Text>
       <Text
         size="p"
@@ -46,8 +49,7 @@ const VerifyReviewPassword = () => {
         color="#A7A7A7"
         style={styles.description1}
       >
-        Get the review password from {artist?.data?.name?.trim()} to leave a review.
-        This is to ensure authenticity of reviews.
+        {`Get the review password from ${artistName || "the artist"} to leave a review. This is to ensure authenticity of reviews.`}
       </Text>
       <View style={styles.passwordFieldsContainer}>
         <Input
@@ -60,7 +62,7 @@ const VerifyReviewPassword = () => {
       <Button
         title="Continue"
         onPress={checkReviewPasswordClick}
-        disabled={!inputReviewPassword}
+        disabled={!inputReviewPassword || !artist}
       />
       {/* </View> */}
     </KeyboardAwareScrollView>

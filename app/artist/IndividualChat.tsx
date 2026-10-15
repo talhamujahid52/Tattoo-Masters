@@ -168,6 +168,9 @@ const IndividualChat: React.FC = () => {
     );
   };
   const [chatID, setChatID] = useState<any>(existingChatId || undefined);
+  // Shared by sends fired before the new chat's id lands in state, so they
+  // all go to the same chat instead of each creating one.
+  const chatCreationRef = useRef<Promise<string> | null>(null);
   const didLeaveForBlockRef = useRef(false);
   const [messageRecieverName, setMessageRecieverName] = useState(
     String(otherUserName || ""),
@@ -223,6 +226,11 @@ const IndividualChat: React.FC = () => {
   const selectedArtist = useGetArtist(selectedArtistId);
   const [otherUserDetails, setOtherUserDetails] = useState<any>();
   const relationshipUserId = String(selectedArtistId || otherUserId || "");
+  // The Redux artist list only holds artists loaded on the Search tab, so the
+  // live Users document is the source of truth for the other participant.
+  const chatPartnerData = otherUserDetails ?? selectedArtist?.data;
+  const partnerLocation = chatPartnerData?.location;
+  const partnerLocationKey = JSON.stringify(partnerLocation ?? null);
   const isConversationLoading =
     chatRelationship.loading || chatMetadataLoading || chatLookupLoading;
   const isConversationUnavailable =
@@ -314,23 +322,26 @@ const IndividualChat: React.FC = () => {
     backgroundUploadService.cancelChatUploads(String(chatID));
   }, [chatID, isConversationUnavailable]);
   useEffect(() => {
-    if (!otherUserId) return;
+    if (!relationshipUserId) return;
     // A listener answers from the local cache right away; a one-off get()
     // waits for the server, which can hang when the app has just resumed.
     return firestore()
       .collection("Users")
-      .doc(otherUserId)
+      .doc(relationshipUserId)
       .onSnapshot(
         (userDoc) => {
           if (userDoc.exists) {
-            setOtherUserDetails(userDoc.data());
+            const data = userDoc.data();
+            setOtherUserDetails(data);
+            setIsOnline(data?.isOnline || false);
+            setLastSeen(data?.lastSeen?.toDate?.() || null);
           } else {
-            console.warn("User not found with ID:", otherUserId);
+            console.warn("User not found with ID:", relationshipUserId);
           }
         },
         (error) => console.error("Error fetching user:", error),
       );
-  }, [otherUserId]);
+  }, [relationshipUserId]);
 
   const formatMessages = (msgs: any[]) => {
     return msgs.map((msg) => {
@@ -359,76 +370,50 @@ const IndividualChat: React.FC = () => {
   };
 
   useEffect(() => {
-    if (selectedArtistId) {
-      setChatLookupLoading(true);
-      const fetchMessagesIfChatExists = async () => {
-        try {
-          const artistChat = await checkIfChatExists(selectedArtistId);
-          if (artistChat?.exists) {
-            setChatMetadataLoading(true);
-            setChatID(artistChat.id);
-            setMessageRecieverName(selectedArtist?.data?.name);
-            setRecieverProfilePicture(
-              selectedArtist?.data?.profilePictureSmall
-                ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture,
-            );
-            if (selectedArtist?.data?.location) {
-              const localTime = await getLocalTimeFromCoordinates(
-                selectedArtist?.data?.location,
-              );
-              if (localTime) setLocalTime(localTime);
-            }
-          } else {
-            setMessageRecieverName(selectedArtist?.data?.name);
-            setRecieverProfilePicture(
-              selectedArtist?.data?.profilePictureSmall
-                ? selectedArtist?.data?.profilePictureSmall
-                : selectedArtist?.data?.profilePicture,
-            );
-            if (selectedArtist?.data?.location) {
-              const localTime = await getLocalTimeFromCoordinates(
-                selectedArtist?.data?.location,
-              );
-              if (localTime) setLocalTime(localTime);
-            }
-          }
-        } catch (error) {
-          console.error("Error checking if chat exists: ", error);
-        } finally {
-          setChatLookupLoading(false);
-        }
-      };
-
-      fetchMessagesIfChatExists();
-    } else if (existingChatId) {
-      const chatExistsAlready = async () => {
-        setChatID(existingChatId);
-        setMessageRecieverName(
-          otherUserDetails?.name || String(otherUserName || ""),
-        );
-        setRecieverProfilePicture(
-          otherUserDetails?.profilePictureSmall
-            ? otherUserDetails?.profilePictureSmall
-            : otherUserDetails?.profilePicture ||
-                String(otherUserProfilePicture || ""),
-        );
-        if (otherUserDetails?.location) {
-          const localTime = await getLocalTimeFromCoordinates(
-            otherUserDetails?.location,
-          );
-          if (localTime) setLocalTime(localTime);
-        }
-      };
-      chatExistsAlready();
+    if (!selectedArtistId) {
+      if (existingChatId) setChatID(existingChatId);
+      return;
     }
+    let cancelled = false;
+    setChatLookupLoading(true);
+    checkIfChatExists(selectedArtistId)
+      .then((artistChat) => {
+        if (cancelled || !artistChat?.exists) return;
+        setChatMetadataLoading(true);
+        setChatID(artistChat.id);
+      })
+      .catch((error) => {
+        console.error("Error checking if chat exists: ", error);
+      })
+      .finally(() => {
+        if (!cancelled) setChatLookupLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedArtistId, existingChatId, checkIfChatExists]);
+
+  useEffect(() => {
+    if (chatPartnerData?.name) setMessageRecieverName(chatPartnerData.name);
+    const picture =
+      chatPartnerData?.profilePictureSmall || chatPartnerData?.profilePicture;
+    if (picture) setRecieverProfilePicture(picture);
   }, [
-    selectedArtistId,
-    existingChatId,
-    otherUserDetails,
-    otherUserName,
-    otherUserProfilePicture,
+    chatPartnerData?.name,
+    chatPartnerData?.profilePictureSmall,
+    chatPartnerData?.profilePicture,
   ]);
+
+  useEffect(() => {
+    if (!partnerLocation) return;
+    let cancelled = false;
+    getLocalTimeFromCoordinates(partnerLocation).then((time) => {
+      if (!cancelled && time) setLocalTime(time);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [partnerLocationKey]);
 
   useEffect(() => {
     if (!chatID) return;
@@ -513,6 +498,41 @@ const IndividualChat: React.FC = () => {
     }
   };
 
+  const ensureChatId = useCallback(async (): Promise<string> => {
+    if (chatID) return String(chatID);
+    if (!chatCreationRef.current) {
+      if (!relationshipUserId || !chatPartnerData) {
+        throw new Error("Unable to create this conversation.");
+      }
+      const creation = createChat(
+        { id: relationshipUserId, data: chatPartnerData },
+        {
+          uid: loggedInUser?.uid,
+          name: loggedInUserFirestore?.name || loggedInUser?.displayName,
+          profilePicture:
+            loggedInUserFirestore?.profilePictureSmall ||
+            loggedInUserFirestore?.profilePicture ||
+            loggedInUser?.photoURL,
+        },
+      ).then((newChat) => {
+        setChatID(newChat.id);
+        return newChat.id;
+      });
+      chatCreationRef.current = creation;
+      creation.catch(() => {
+        chatCreationRef.current = null;
+      });
+    }
+    return chatCreationRef.current;
+  }, [
+    chatID,
+    relationshipUserId,
+    chatPartnerData,
+    createChat,
+    loggedInUser,
+    loggedInUserFirestore,
+  ]);
+
   const sendImageMessage = useCallback(
     async (imageUri: string, fileName?: string) => {
       try {
@@ -525,20 +545,7 @@ const IndividualChat: React.FC = () => {
 
         setIsSelectingImage(true);
 
-        // Ensure chat exists
-        let currentChatID = chatID;
-        if (!currentChatID) {
-          const newChat = await createChat(selectedArtist, {
-            uid: loggedInUser?.uid,
-            name: loggedInUserFirestore?.name || loggedInUser?.displayName,
-            profilePicture:
-              loggedInUserFirestore?.profilePictureSmall ||
-              loggedInUserFirestore?.profilePicture ||
-              loggedInUser?.photoURL,
-          });
-          currentChatID = newChat.id;
-          setChatID(currentChatID);
-        }
+        const currentChatID = await ensureChatId();
 
         // Create message with local image URI
         const messageId = uuid.v4() as string;
@@ -595,14 +602,12 @@ const IndividualChat: React.FC = () => {
       }
     },
     [
-      chatID,
       loggedInUser,
       loggedInUserFirestore,
-      selectedArtist,
       queueUpload,
       isConversationLoading,
       isConversationUnavailable,
-      createChat,
+      ensureChatId,
       addMessageToChat,
     ]
   );
@@ -691,29 +696,18 @@ const IndividualChat: React.FC = () => {
         Alert.alert("Conversation unavailable", CHAT_UNAVAILABLE_MESSAGE);
         return;
       }
-      let currentChatID = chatID;
-      if (!currentChatID) {
-        try {
-          // const normalizedUser = {
-          //   uid: loggedInUser?.uid,
-          //   name:
-          //     loggedInUserFirestore?.name || loggedInUser?.displayName || "",
-          //   profilePicture: loggedInUser?.photoURL || "",
-          // };
-          const newChat = await createChat(selectedArtist, {
-            uid: loggedInUser?.uid,
-            name: loggedInUserFirestore?.name || loggedInUser?.displayName,
-            profilePicture:
-              loggedInUserFirestore?.profilePictureSmall ||
-              loggedInUserFirestore?.profilePicture ||
-              loggedInUser?.photoURL,
-          });
-          currentChatID = newChat.id;
-          setChatID(currentChatID);
-        } catch (error) {
-          console.error("Failed to create chat:", error);
-          return;
-        }
+      let currentChatID: string;
+      try {
+        currentChatID = await ensureChatId();
+      } catch (error) {
+        console.error("Failed to create chat:", error);
+        Alert.alert(
+          "Message not sent",
+          error instanceof Error && error.message === CHAT_UNAVAILABLE_MESSAGE
+            ? CHAT_UNAVAILABLE_MESSAGE
+            : "Couldn't start this conversation. Please try again.",
+        );
+        return;
       }
       try {
         await addMessageToChat(newMessages, currentChatID);
@@ -725,12 +719,9 @@ const IndividualChat: React.FC = () => {
       }
     },
     [
-      chatID,
-      loggedInUser,
-      selectedArtist,
       isConversationLoading,
       isConversationUnavailable,
-      createChat,
+      ensureChatId,
       addMessageToChat,
     ],
   );
@@ -967,23 +958,6 @@ const IndividualChat: React.FC = () => {
       });
   };
 
-  useEffect(() => {
-    const receiverId = selectedArtistId || otherUserId; // adjust if you have direct receiver UID
-
-    const unsubscribe = firestore()
-      .collection("Users")
-      .doc(receiverId)
-      .onSnapshot((doc) => {
-        const data = doc.data();
-        if (data) {
-          setIsOnline(data?.isOnline || false);
-          setLastSeen(data?.lastSeen?.toDate?.() || null);
-        }
-      });
-
-    return () => unsubscribe();
-  }, [selectedArtistId, existingChatId]);
-
   const getTimeAgo = (timestamp: Date): string => {
     const now = new Date();
     const diffInSeconds = Math.floor(
@@ -1105,12 +1079,16 @@ const IndividualChat: React.FC = () => {
               ellipsizeMode="tail"
               style={{ marginTop: 2 }}
             >
-              {isOnline
-                ? "Online"
-                : lastSeen
-                  ? `Last seen ${getTimeAgo(lastSeen)}`
-                  : ""}
-              {localTime ? `  •  Local time ${localTime}` : ""}
+              {[
+                isOnline
+                  ? "Online"
+                  : lastSeen
+                    ? `Last seen ${getTimeAgo(lastSeen)}`
+                    : "",
+                localTime ? `Local time ${localTime}` : "",
+              ]
+                .filter(Boolean)
+                .join("  •  ")}
             </Text>
           </View>
         </TouchableOpacity>

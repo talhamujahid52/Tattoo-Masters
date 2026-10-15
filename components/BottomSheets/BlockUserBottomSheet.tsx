@@ -66,7 +66,7 @@ const BlockUserBottomSheet = ({
       onBlocked?.(blockedUserId);
       Alert.alert(
         "User Blocked",
-        "This user’s content has been hidden. You can unblock users in your settings.",
+        "This users content has been hidden. You can unblock users in your settings.",
         [{ text: "OK", onPress: hideBlockSheet }],
       );
     } catch (error) {
@@ -95,14 +95,9 @@ const BlockUserBottomSheet = ({
         </Text>
       </View>
 
-      <Text
-        size="p"
-        weight="normal"
-        color="#A7A7A7"
-        style={styles.explanation}
-      >
-        Blocking this user hides their profile, tattoos and conversation.
-        Select a reason to continue.
+      <Text size="p" weight="normal" color="#A7A7A7" style={styles.explanation}>
+        Blocking this user hides their profile, tattoos and conversation. Select
+        a reason to continue.
       </Text>
 
       <View style={styles.content}>

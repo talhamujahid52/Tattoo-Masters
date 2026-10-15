@@ -20,7 +20,6 @@ import ChatListCell, {
   refreshUserDetails,
 } from "@/components/ChatListCell";
 import useChats from "@/hooks/useChat";
-import useLastSeen from "@/hooks/useLastSeen";
 import {
   selectBlockedUserIds,
   selectSafetyHydrated,
@@ -34,7 +33,6 @@ const Chat = () => {
   const chats: any[] = useSelector((state: any) => state?.chats?.allChats); // get Chats
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
-  useLastSeen();
   const { fetchChats } = useChats(loggedInUser?.uid);
 
   const [searchText, setSearchText] = useState("");

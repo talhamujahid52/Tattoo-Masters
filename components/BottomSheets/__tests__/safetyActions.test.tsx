@@ -121,7 +121,7 @@ describe("safety actions", () => {
     );
     expect(alertSpy).toHaveBeenCalledWith(
       "User Blocked",
-      "This user’s content has been hidden. You can unblock users in your settings.",
+      "This users content has been hidden. You can unblock users in your settings.",
       [expect.objectContaining({ text: "OK", onPress: hideBlockSheet })],
     );
     act(() => component.unmount());

@@ -161,6 +161,17 @@ const FullScreenMapWithSearch: React.FC = () => {
   );
   const insets = useSafeAreaInsets();
   const [searchedText, setSearchedText] = useState("");
+  // The search box keeps its text and results to itself, so clearing it means
+  // mounting a fresh one. `focus` puts the cursor back if it was there.
+  const [search, setSearch] = useState({ key: 0, focus: false });
+  const clearSearch = () => {
+    setSearchText("");
+    setSearchedText("");
+    setSearch((prev) => ({
+      key: prev.key + 1,
+      focus: !!placesRef.current?.isFocused(),
+    }));
+  };
   const openFilters = () => {
     // The filter sheet has no text input, so drop the search keyboard first.
     dismissSearch();
@@ -498,6 +509,7 @@ const FullScreenMapWithSearch: React.FC = () => {
         <View style={{ width: "85%" }}>
           <GooglePlacesAutocomplete
             {...RESULTS_LIST_PROPS}
+            key={search.key}
             placeholder="Search by location"
             fetchDetails
             ref={placesRef}
@@ -562,6 +574,7 @@ const FullScreenMapWithSearch: React.FC = () => {
             textInputProps={{
               placeholderTextColor: "#FBF6FA",
               selectionColor: "#fff",
+              autoFocus: search.focus,
               // value: searchText,
               onChangeText: (text: string) => {
                 setSearchText(text);
@@ -588,6 +601,18 @@ const FullScreenMapWithSearch: React.FC = () => {
                 />
               </View>
             )}
+            renderRightButton={
+              searchText
+                ? () => (
+                    <TouchableOpacity
+                      style={styles.clearButton}
+                      onPress={clearSearch}
+                    >
+                      <MaterialIcons name="cancel" size={24} color="#B1AFA1" />
+                    </TouchableOpacity>
+                  )
+                : undefined
+            }
           />
         </View>
         <TouchableOpacity
@@ -675,6 +700,11 @@ const FullScreenMapWithSearch: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  clearButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 48,
+  },
   container: {
     flex: 1,
     justifyContent: "flex-start",

@@ -20,7 +20,7 @@ import BlockUserBottomSheet from "@/components/BottomSheets/BlockUserBottomSheet
 import { router, useLocalSearchParams } from "expo-router";
 import useBottomSheet from "@/hooks/useBottomSheet";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import useGetArtist from "@/hooks/useGetArtist";
+import { useArtist } from "@/hooks/useGetArtist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTypesense from "@/hooks/useTypesense";
 import LoginBottomSheet from "@/components/BottomSheets/LoginBottomSheet";
@@ -31,7 +31,6 @@ import * as Location from "expo-location";
 import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 import ProfilePicturePreview from "@/components/ProfilePicturePreview";
 import { updateSingleArtist } from "@/redux/slices/artistSlice";
-import firestore from "@react-native-firebase/firestore";
 import OriginalArtistNote from "@/components/BottomSheets/OriginalArtistNote";
 import useSafety from "@/hooks/useSafety";
 import { toLocationData } from "@/utils/locationHelpers";
@@ -77,41 +76,11 @@ const ArtistProfile = () => {
   } = useBottomSheet();
 
   const { artistId } = useLocalSearchParams<any>();
-  const reduxArtist = useGetArtist(artistId);
-  const [firestoreArtist, setFirestoreArtist] = useState<any>(null);
-  // Outcome of the Firestore fallback, used when the artist is not in the
-  // store (profiles opened from a shared link)
-  const [artistFetch, setArtistFetch] = useState<
-    "pending" | "done" | "missing"
-  >("pending");
-  const artist = reduxArtist ?? firestoreArtist;
-  const isLoadingArtist = !artist && !!artistId && artistFetch === "pending";
-  const isMissingArtist = !artist && (!artistId || artistFetch === "missing");
-
-  useEffect(() => {
-    if (reduxArtist || !artistId) return;
-    let cancelled = false;
-    firestore()
-      .collection("Users")
-      .doc(artistId)
-      .get()
-      .then((snap) => {
-        if (cancelled) return;
-        if (!snap.exists) {
-          setArtistFetch("missing");
-          return;
-        }
-        setFirestoreArtist({ id: snap.id, data: snap.data() });
-        setArtistFetch("done");
-      })
-      .catch((err) => {
-        console.error("Firestore artist fallback error:", err);
-        if (!cancelled) setArtistFetch("missing");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [artistId, reduxArtist]);
+  const {
+    artist,
+    isLoading: isLoadingArtist,
+    isMissing: isMissingArtist,
+  } = useArtist(artistId);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);

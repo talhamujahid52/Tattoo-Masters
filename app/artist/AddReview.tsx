@@ -36,7 +36,7 @@ const AddReview = () => {
     }
 
     return require("../../assets/images/Artist.png");
-  }, [artistId]);
+  }, [artist]);
 
   // State hooks
   const [overallRating, setOverallRating] = useState<number>(0);

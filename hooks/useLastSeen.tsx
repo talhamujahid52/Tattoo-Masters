@@ -1,54 +1,49 @@
 import { useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
-import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 
-const useLastSeen = () => {
+// Keeps the signed-in user's isOnline/lastSeen current. Mounted at the app
+// root so presence is tracked on every screen, not just the Chat tab.
+const useLastSeen = (userId?: string | null) => {
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
-    const user = auth().currentUser;
-    if (!user) return;
+    if (!userId) return;
 
-    const userRef = firestore().collection("Users").doc(user.uid);
+    const userRef = firestore().collection("Users").doc(userId);
 
-    // On mount: set user online
-    userRef.update({ isOnline: true });
+    // lastSeen is written on both transitions so a user who is online right
+    // now still has one once they leave.
+    const setPresence = (isOnline: boolean) =>
+      userRef
+        .update({
+          isOnline,
+          lastSeen: firestore.FieldValue.serverTimestamp(),
+        })
+        .catch((error) => {
+          console.warn("Error updating presence", error);
+        });
 
-    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    if (appState.current === "active") setPresence(true);
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
       const prevState = appState.current;
       appState.current = nextAppState;
 
       if (prevState === "active" && (nextAppState === "background" || nextAppState === "inactive")) {
-        try {
-          await userRef.update({
-            lastSeen: firestore.FieldValue.serverTimestamp(),
-            isOnline: false,
-          });
-        } catch (error) {
-          console.warn("Error updating lastSeen and isOnline", error);
-        }
-      } else if (nextAppState === "active") {
-        try {
-          await userRef.update({ isOnline: true });
-        } catch (error) {
-          console.warn("Error updating isOnline to true", error);
-        }
+        setPresence(false);
+      } else if (nextAppState === "active" && prevState !== "active") {
+        setPresence(true);
       }
     };
 
     const subscription = AppState.addEventListener("change", handleAppStateChange);
 
     return () => {
-      // On unmount: mark user offline
-      userRef.update({
-        lastSeen: firestore.FieldValue.serverTimestamp(),
-        isOnline: false,
-      });
-
       subscription.remove();
+      setPresence(false);
     };
-  }, []);
+  }, [userId]);
 };
 
 export default useLastSeen;

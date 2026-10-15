@@ -191,7 +191,9 @@ const ArtistProfileBottomSheet = ({
 
       <Pressable onPress={handleToggle}>
         <Text size="p" weight="normal" color="#A7A7A7">
-          {isExpanded ? content : `${content?.slice(0, 100)}...`}
+          {isExpanded || !content || content.length <= 100
+            ? content
+            : `${content.slice(0, 100)}...`}
         </Text>
       </Pressable>
 
