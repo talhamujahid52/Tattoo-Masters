@@ -41,9 +41,10 @@ const Welcome = () => {
         <Button
           title="Let's go"
           onPress={() => {
-            router.replace({
-              pathname: "/(bottomTabs)/Home",
-            });
+            // The tabs already sit under Welcome (initialRouteName in
+            // app/_layout.tsx). Go back to them instead of replacing Welcome
+            // with a second copy, which a back swipe would reveal.
+            router.dismissTo("/(bottomTabs)/Home");
           }}
         />
       </View>

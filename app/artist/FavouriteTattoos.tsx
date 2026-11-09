@@ -1,7 +1,14 @@
-import { StyleSheet, View, ScrollView, RefreshControl } from "react-native";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  RefreshControl,
+  FlatList,
+} from "react-native";
 import Text from "@/components/Text";
 import ImageGallery from "@/components/ImageGallery";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { useScrollToTop } from "@react-navigation/native";
 import { useRealtimeUserLikedPublications } from "@/hooks/useRealtimeLikedPublications";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useSelector } from "react-redux";
@@ -18,6 +25,9 @@ const FavouriteTattoos = () => {
     (state: any) => state?.user?.user
   );
   const currentUserId = loggedInUser?.uid;
+  // Tapping the Likes tab while already on it scrolls back to the top
+  const listRef = useRef<FlatList<any>>(null);
+  useScrollToTop(listRef);
   const likedPublicationsData = useRealtimeUserLikedPublications(currentUserId);
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const reportedPublicationIds = useSelector(selectReportedPublicationIds);
@@ -70,6 +80,7 @@ const FavouriteTattoos = () => {
       </View>
       {visibleLikedPublications.length > 0 || loading ? (
         <ImageGallery
+          listRef={listRef}
           images={
             visibleLikedPublications.map((item) => ({
               document: item,

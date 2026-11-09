@@ -421,7 +421,7 @@ const ArtistProfile = () => {
         <Text size="h4" weight="semibold" color="#FBF6FA">
           This profile is unavailable
         </Text>
-        <TouchableOpacity onPress={() => router.replace("/(bottomTabs)/Home")}>
+        <TouchableOpacity onPress={() => router.dismissTo("/(bottomTabs)/Home")}>
           <Text size="p" weight="semibold" color="#DAB769">
             Return to Home
           </Text>

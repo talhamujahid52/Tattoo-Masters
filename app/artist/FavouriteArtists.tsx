@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import Text from "@/components/Text";
 import ArtistSearchCard from "@/components/ArtistSearchCard";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { useScrollToTop } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import { setUserFirestoreData } from "@/redux/slices/userSlice";
@@ -25,6 +26,9 @@ const FavouriteArtists = () => {
   const { width } = Dimensions.get("window");
   const adjustedWidth = width - 42;
   const dispatch = useDispatch();
+  // Tapping the Likes tab while already on it scrolls back to the top
+  const listRef = useRef<FlatList<any>>(null);
+  useScrollToTop(listRef);
 
   const userFirestore = useSelector((state: any) => state.user.userFirestore);
   const currentUserId = useSelector(
@@ -91,6 +95,7 @@ const FavouriteArtists = () => {
         </Text>
       </View>
       <FlatList
+        ref={listRef}
         showsVerticalScrollIndicator={Platform.OS !== "ios"}
         data={favoritedArtists}
         renderItem={({ item, index }) => (

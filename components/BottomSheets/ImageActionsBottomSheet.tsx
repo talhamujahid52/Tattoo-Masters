@@ -4,6 +4,8 @@ import React from "react";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { saveImageToLibrary } from "@/utils/saveImageToLibrary";
 
 interface bottomSheetProps {
   hideImageActionsSheet: () => void;
@@ -14,6 +16,8 @@ interface bottomSheetProps {
   onEditTattoo?: () => void;
   onDeleteTattoo?: () => void;
   publicationId?: string;
+  // Full-resolution image URL, used by "Save image"
+  imageUrl?: string;
 }
 
 const ImageActionsBottomSheet = ({
@@ -24,6 +28,7 @@ const ImageActionsBottomSheet = ({
   onEditTattoo,
   onDeleteTattoo,
   publicationId,
+  imageUrl,
 }: bottomSheetProps) => {
   const loggedInUser: FirebaseAuthTypes.User = useSelector(
     (state: any) => state?.user?.user
@@ -40,6 +45,26 @@ const ImageActionsBottomSheet = ({
       console.error("Error sharing tattoo:", error);
     }
   };
+
+  const saveImageRow = imageUrl ? (
+    <TouchableOpacity
+      onPress={() => {
+        hideImageActionsSheet();
+        saveImageToLibrary(imageUrl);
+      }}
+      style={styles.drawerItem}
+    >
+      {/* Same 50% white as the PNG icons on the other rows */}
+      <MaterialCommunityIcons
+        name="tray-arrow-down"
+        size={24}
+        color="rgba(255, 255, 255, 0.5)"
+      />
+      <Text size={isOwner ? "p" : "h4"} weight="normal" color="#FBF6FA">
+        Save image
+      </Text>
+    </TouchableOpacity>
+  ) : null;
 
   return (
     <View style={styles.container}>
@@ -60,6 +85,7 @@ const ImageActionsBottomSheet = ({
               Share tattoo
             </Text>
           </TouchableOpacity>
+          {saveImageRow}
           <TouchableOpacity
             onPress={() => {
               hideImageActionsSheet();
@@ -108,6 +134,7 @@ const ImageActionsBottomSheet = ({
               Share tattoo
             </Text>
           </TouchableOpacity>
+          {saveImageRow}
           <TouchableOpacity
             onPress={() => {
               loggedInUser

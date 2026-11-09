@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useScrollToTop } from "@react-navigation/native";
 import {
   StyleSheet,
   View,
@@ -54,6 +54,10 @@ const Search: React.FC = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
+  // Tapping the Search tab while already on it scrolls the artists back to
+  // the top. Filled through innerRef, which hands over the inner FlatList.
+  const artistsListRef = useRef<any>(null);
+  useScrollToTop(artistsListRef);
   const { focusSearch } = useLocalSearchParams<{ focusSearch?: string }>();
   const handledFocusSearchRef = useRef<string | undefined>(undefined);
   // what a submitted search looks for: tattoos when the visit started from the
@@ -338,6 +342,9 @@ const Search: React.FC = () => {
               style={{ flex: 1 }}
             >
               <KeyboardAwareFlatList
+                innerRef={(ref: any) => {
+                  artistsListRef.current = ref;
+                }}
                 showsVerticalScrollIndicator={Platform.OS !== "ios"}
                 style={{ backgroundColor: "#000" }}
                 data={visibleArtists}

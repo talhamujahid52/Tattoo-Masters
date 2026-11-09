@@ -342,7 +342,7 @@ const TattooDetail: React.FC = () => {
         <Text size="h4" weight="semibold" color="#FBF6FA">
           This tattoo is unavailable
         </Text>
-        <TouchableOpacity onPress={() => router.replace("/(bottomTabs)/Home")}>
+        <TouchableOpacity onPress={() => router.dismissTo("/(bottomTabs)/Home")}>
           <Text size="p" weight="semibold" color="#DAB769">
             Return to Home
           </Text>
@@ -368,6 +368,7 @@ const TattooDetail: React.FC = () => {
               currentUserId && userId && currentUserId === userId
             )}
             publicationId={id}
+            imageUrl={photoUrlVeryHigh}
             onEditTattoo={() => {
               router.push({
                 pathname: "/artist/UploadTattoo",

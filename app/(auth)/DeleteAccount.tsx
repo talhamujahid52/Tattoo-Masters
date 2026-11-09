@@ -49,7 +49,7 @@ const DeleteAccount = () => {
           {
             text: "OK",
             onPress: () => {
-              router.replace("/(bottomTabs)/Home");
+              router.dismissTo("/(bottomTabs)/Home");
             },
           },
         ],

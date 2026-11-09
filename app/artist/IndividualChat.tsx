@@ -790,6 +790,11 @@ const IndividualChat: React.FC = () => {
             color: "#FBF6FA",
           },
         }}
+        // Gifted-chat's default link colour is black on received messages
+        linkStyle={{
+          right: { color: "#FBF6FA" },
+          left: { color: "#FBF6FA" },
+        }}
         renderTime={() => {
           const time = getTime(props.currentMessage.createdAt);
           return time ? (

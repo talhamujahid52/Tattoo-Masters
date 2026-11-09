@@ -28,6 +28,7 @@ import useLastSeen from "@/hooks/useLastSeen";
 import { prefetchTattooStyles } from "@/hooks/useTattooStyles";
 import { selectBlockedUserIds } from "@/redux/slices/safetySlice";
 import { routeFromLaunchURL } from "@/utils/deepLinks";
+import { ToastHost } from "@/components/Toast";
 
 // iOS 26+ wraps native header items in a glass button that is at least 44pt
 // and pads the item by 4pt on each side, anchoring it to the top-left. A 36pt
@@ -343,7 +344,7 @@ const AppNavigator = () => {
         // 150ms, and on iOS the URL is not in launchOptions at all under the
         // scene lifecycle. Open the linked screen over Home ourselves.
         if (loggedInUser?.emailVerified === true && pathname !== "/Home") {
-          router.replace("/(bottomTabs)/Home");
+          router.dismissTo("/(bottomTabs)/Home");
         }
         router.push(launchRoute as any);
       }
@@ -355,7 +356,9 @@ const AppNavigator = () => {
       loggedInUser?.emailVerified === true
     ) {
       if (!skipInitialHomeRef.current) {
-        router.replace("/(bottomTabs)/Home");
+        // Not replace: the tabs are already at the bottom of the stack
+        // (initialRouteName), and replace would stack a duplicate on top.
+        router.dismissTo("/(bottomTabs)/Home");
       }
     }
     if (pathname == "/Login" && loggedInUser?.emailVerified === true) {
@@ -813,6 +816,8 @@ const AppNavigator = () => {
           />
         </Stack>
       </BottomSheetModalProvider>
+      {/* After the bottom sheets so toasts show above them */}
+      <ToastHost />
     </GestureHandlerRootView>
   );
 };

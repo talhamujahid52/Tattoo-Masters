@@ -49,6 +49,10 @@ interface SearchParams {
    * Optional filter_by parameter (e.g. "isArtist:=true")
    */
   filterBy?: string;
+  /**
+   * Optional sort_by parameter (e.g. "location(48.85, 2.34):asc")
+   */
+  sortBy?: string;
   page?: number;
   per_page?: number;
   append?: boolean;
@@ -87,6 +91,7 @@ const useTypesense = () => {
       query,
       queryBy,
       filterBy,
+      sortBy,
       page,
       per_page,
       append = false,
@@ -103,6 +108,7 @@ const useTypesense = () => {
             q: query ?? "",
             query_by: queryBy ?? "caption,styles",
             filter_by: filterBy, // pass the filterBy parameter here
+            sort_by: sortBy,
             // Never below per_page, so a larger page size isn't capped at 100
             limit: Math.max(100, per_page ?? 0),
             page: page ?? 1,

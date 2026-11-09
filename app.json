@@ -145,6 +145,14 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Tattoo Masters uses your photo library so you can choose images for profiles, tattoo posts, reviews, and chats.",
+          "savePhotosPermission": "Tattoo Masters saves the tattoo images you choose to download to your photo library.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

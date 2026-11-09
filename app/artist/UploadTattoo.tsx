@@ -111,7 +111,7 @@ const UploadTattoo = () => {
             oldDeleteUrls,
           });
 
-          router.replace("/(bottomTabs)/Home");
+          router.dismissTo("/(bottomTabs)/Home");
         } else {
           // Only metadata updated
           await firestore().collection("publications").doc(String(docId)).set(
@@ -121,7 +121,7 @@ const UploadTattoo = () => {
             },
             { merge: true }
           );
-          router.replace("/(bottomTabs)/Home");
+          router.dismissTo("/(bottomTabs)/Home");
         }
       } catch (error) {
         Alert.alert("Unsuccessful", "Something went wrong. Please try again.");

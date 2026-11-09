@@ -80,6 +80,8 @@ interface Props {
   loading?: boolean;
   ListHeaderComponent?: React.ReactElement | null;
   contentContainerStyle?: object;
+  // Lets the screen drive the list, e.g. scroll to top on tab press
+  listRef?: React.Ref<FlatList<any>>;
 }
 
 const ImageGallery = ({
@@ -91,6 +93,7 @@ const ImageGallery = ({
   loading = false,
   ListHeaderComponent,
   contentContainerStyle,
+  listRef,
 }: Props) => {
   const router = useRouter();
   const currentUserId = useSelector(
@@ -198,6 +201,7 @@ const ImageGallery = ({
 
   return (
     <FlatList<any>
+      ref={listRef}
       data={measured ? data : NO_ITEMS}
       renderItem={renderItem as any}
       keyExtractor={keyExtractor as any}

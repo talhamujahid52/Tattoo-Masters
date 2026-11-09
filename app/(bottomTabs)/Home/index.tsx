@@ -16,6 +16,8 @@ import { SkeletonReveal } from "@/components/Skeleton";
 import ImageGallery from "@/components/ImageGallery";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "expo-router";
+import { useScrollToTop } from "@react-navigation/native";
+import * as Location from "expo-location";
 import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
 import { getCurrentChatId } from "@/utils/NavState";
@@ -33,8 +35,13 @@ import {
   selectSafetyHydrated,
 } from "@/redux/slices/safetySlice";
 import { filterBlockedArtists } from "@/utils/safetyFilters";
+import { setCurrentLocation } from "@/redux/slices/filterSlices";
+import { requestForegroundLocationPermission } from "@/utils/locationPermission";
 
 const ARTIST_CARD_GAP = 10;
+const NEARBY_ARTISTS_COUNT = 10;
+// How long to wait for a fresh GPS fix before giving up on it
+const FRESH_LOCATION_TIMEOUT_MS = 6000;
 
 const Home = () => {
   const router = useRouter();
@@ -50,6 +57,9 @@ const Home = () => {
   const [artistsFetched, setArtistsFetched] = useState(false);
   const [publicationsFetched, setPublicationsFetched] = useState(false);
   const initialNotificationHandledRef = useRef(false);
+  // Tapping the Home tab while already on Home scrolls back to the top
+  const galleryRef = useRef<FlatList<any>>(null);
+  useScrollToTop(galleryRef);
   const { queue: uploadQueue, completedUploads } = useBackgroundUpload();
 
   // Loaded by this screen alone; not shared with the Search tab or Redux
@@ -57,6 +67,12 @@ const Home = () => {
   const currentUserId = useSelector(
     (state: RootState) => state.user.user?.uid,
   );
+  const currentLocation = useSelector(
+    (state: RootState) => state.filter.currentLocation,
+  );
+  // True once we know where the user is, or that we can't find out. The
+  // artists row waits for this so it doesn't flash an unsorted list first.
+  const [locationResolved, setLocationResolved] = useState(!!currentLocation);
   const blockedUserIds = useSelector(selectBlockedUserIds);
   const safetyHydrated = useSelector(selectSafetyHydrated);
   // Content stays hidden until the signed-in user's block list has loaded
@@ -88,7 +104,8 @@ const Home = () => {
     };
   });
 
-  // Fetch the first 10 artists for the row
+  // Fetch the artists closest to the user, or any 10 if we don't know where
+  // they are
   const fetchUsers = async () => {
     try {
       const hits = await artistsTs.search({
@@ -96,7 +113,10 @@ const Home = () => {
         query: "*",
         queryBy: "name",
         filterBy: "isArtist:=true",
-        per_page: 10,
+        sortBy: currentLocation
+          ? `location(${currentLocation.latitude}, ${currentLocation.longitude}):asc`
+          : undefined,
+        per_page: NEARBY_ARTISTS_COUNT,
       });
       const fetchedArtists = hits.map((hit) => hit.document) as UserFirestore[];
 
@@ -149,10 +169,56 @@ const Home = () => {
     });
   };
 
-  // Fetch artists on mount or when typesense dependency changes
+  // Find the user's location for the nearby artists row. A saved location
+  // is used right away; the last known and then a fresh fix refine it.
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { status } = await requestForegroundLocationPermission();
+        if (cancelled || status !== "granted") return;
+
+        const last = await Location.getLastKnownPositionAsync();
+        if (cancelled) return;
+        if (last) {
+          const { latitude, longitude } = last.coords;
+          dispatch(setCurrentLocation({ latitude, longitude }));
+          setLocationResolved(true);
+        }
+
+        const fresh = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          new Promise<null>((resolve) =>
+            setTimeout(() => resolve(null), FRESH_LOCATION_TIMEOUT_MS),
+          ),
+        ]);
+        if (!cancelled && fresh) {
+          const { latitude, longitude } = fresh.coords;
+          dispatch(setCurrentLocation({ latitude, longitude }));
+        }
+      } catch (err) {
+        console.warn("Location error:", err);
+      } finally {
+        if (!cancelled) setLocationResolved(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
+
+  // Refetch only when the user has moved about a kilometre, not on every
+  // small GPS update
+  const locationKey = currentLocation
+    ? `${currentLocation.latitude.toFixed(2)},${currentLocation.longitude.toFixed(2)}`
+    : "";
+
+  useEffect(() => {
+    if (!locationResolved) return;
     fetchUsers();
-  }, [artistsTs.search]);
+  }, [artistsTs.search, locationResolved, locationKey]);
 
   // Cold-start notification handling when arriving to Home
   useEffect(() => {
@@ -350,6 +416,7 @@ const Home = () => {
   return (
     <View style={styles.container}>
       <ImageGallery
+        listRef={galleryRef}
         images={publicationsTs.results}
         onEndReached={handleLoadMore}
         onRefresh={onRefresh}

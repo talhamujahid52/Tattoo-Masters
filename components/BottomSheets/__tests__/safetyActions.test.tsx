@@ -17,6 +17,9 @@ jest.mock("@/hooks/useSafety", () => ({
 }));
 jest.mock("react-redux", () => ({ useSelector: jest.fn() }));
 jest.mock("expo-router", () => ({ router: { push: jest.fn() } }));
+jest.mock("@/utils/saveImageToLibrary", () => ({
+  saveImageToLibrary: jest.fn(),
+}));
 jest.mock("@/components/Button", () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {

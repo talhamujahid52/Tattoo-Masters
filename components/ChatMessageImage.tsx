@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Modal,
   StyleSheet,
   TouchableOpacity,
@@ -28,7 +29,16 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
+import { useChatContext } from "react-native-gifted-chat";
+import { saveImageToLibrary } from "@/utils/saveImageToLibrary";
+import { ToastHost } from "@/components/Toast";
 
+// Big enough to see the tattoo in the chat, small enough to leave room for
+// the avatar and bubble margins on narrow phones
+const THUMBNAIL_SIZE = Math.min(
+  240,
+  Math.round(Dimensions.get("window").width * 0.6),
+);
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 5;
 const OPEN_DURATION = 220;
@@ -40,6 +50,9 @@ const DISMISS_VELOCITY = 900;
 const DISMISS_DURATION = 150;
 // Drag distance over which the backdrop fades out completely.
 const DRAG_FADE_DISTANCE = 300;
+// A one-finger drag must move this far before it starts dismissing, which
+// leaves time for a second finger to land and start a pinch instead.
+const DISMISS_ACTIVE_OFFSET = 12;
 
 interface ChatMessageImageProps {
   uri?: string;
@@ -51,29 +64,49 @@ interface ChatMessageImageProps {
 
 const isRemoteUri = (uri: string) => /^https?:\/\//i.test(uri);
 
-const CloseButton: React.FC<{ onPress: () => void }> = ({ onPress }) => {
+const ViewerButtons: React.FC<{
+  onClose: () => void;
+  onSave?: () => void;
+}> = ({ onClose, onSave }) => {
   const insets = useSafeAreaInsets();
   return (
-    <TouchableOpacity
-      style={[styles.closeButton, { top: insets.top + 10 }]}
-      onPress={onPress}
-      activeOpacity={0.8}
-      hitSlop={10}
-    >
-      <MaterialIcons name="close" size={24} color="black" />
-    </TouchableOpacity>
+    <View style={[styles.viewerButtons, { top: insets.top + 10 }]}>
+      {onSave && (
+        <TouchableOpacity
+          style={styles.viewerButton}
+          onPress={onSave}
+          activeOpacity={0.8}
+          hitSlop={10}
+          accessibilityLabel="Save image"
+        >
+          <MaterialIcons name="file-download" size={24} color="black" />
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity
+        style={styles.viewerButton}
+        onPress={onClose}
+        activeOpacity={0.8}
+        hitSlop={10}
+        accessibilityLabel="Close"
+      >
+        <MaterialIcons name="close" size={24} color="black" />
+      </TouchableOpacity>
+    </View>
   );
 };
 
 // Mounted only while the Modal is visible, so the animation replays on every
 // open. The close button just unmounts it; swiping away fades it out first.
-const Viewer: React.FC<{ uri: string; onClose: () => void }> = ({
-  uri,
-  onClose,
-}) => {
+const Viewer: React.FC<{
+  uri: string;
+  onClose: () => void;
+  onSave?: () => void;
+}> = ({ uri, onClose, onSave }) => {
   const progress = useSharedValue(0);
   const dragX = useSharedValue(0);
   const dragY = useSharedValue(0);
+  // Zoom level, shared with Zoomable so swiping away is off while zoomed
+  const zoomScale = useSharedValue(1);
 
   useEffect(() => {
     progress.value = withTiming(1, {
@@ -83,10 +116,16 @@ const Viewer: React.FC<{ uri: string; onClose: () => void }> = ({
   }, [progress]);
 
   // One finger drags the image away; Zoomable only uses two-finger gestures
-  // (pinch + pan), so the two don't compete. A second finger landing cancels
-  // the drag (success === false) and the image snaps back.
+  // (pinch + pan), so the two don't compete. A second finger landing, or the
+  // image being zoomed, cancels the drag and the image snaps back. Like the
+  // tattoo detail page, Zoomable springs back to normal size on release.
   const dismissGesture = Gesture.Pan()
     .maxPointers(1)
+    .activeOffsetX([-DISMISS_ACTIVE_OFFSET, DISMISS_ACTIVE_OFFSET])
+    .activeOffsetY([-DISMISS_ACTIVE_OFFSET, DISMISS_ACTIVE_OFFSET])
+    .onTouchesDown((event, manager) => {
+      if (event.numberOfTouches > 1 || zoomScale.value !== 1) manager.fail();
+    })
     .onUpdate((event) => {
       dragX.value = event.translationX;
       dragY.value = event.translationY;
@@ -148,7 +187,7 @@ const Viewer: React.FC<{ uri: string; onClose: () => void }> = ({
       <Animated.View style={[styles.backdrop, backdropStyle]} />
       <GestureDetector gesture={dismissGesture}>
         <Animated.View style={[styles.content, contentStyle]}>
-          <Zoomable minScale={MIN_SCALE} maxScale={MAX_SCALE}>
+          <Zoomable scale={zoomScale} minScale={MIN_SCALE} maxScale={MAX_SCALE}>
             <ExpoImage
               style={StyleSheet.absoluteFill}
               source={{ uri }}
@@ -158,7 +197,9 @@ const Viewer: React.FC<{ uri: string; onClose: () => void }> = ({
           </Zoomable>
         </Animated.View>
       </GestureDetector>
-      <CloseButton onPress={onClose} />
+      <ViewerButtons onClose={onClose} onSave={onSave} />
+      {/* The Modal is its own window, above the app's root toast host */}
+      <ToastHost />
     </GestureHandlerRootView>
   );
 };
@@ -170,10 +211,21 @@ const ChatMessageImage: React.FC<ChatMessageImageProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [failed, setFailed] = useState(false);
+  const { actionSheet } = useChatContext();
 
   if (!uri) return null;
 
   const close = () => setVisible(false);
+  const save = () => saveImageToLibrary(uri);
+
+  const showImageActions = () => {
+    actionSheet().showActionSheetWithOptions(
+      { options: ["Save image", "Cancel"], cancelButtonIndex: 1 },
+      (buttonIndex) => {
+        if (buttonIndex === 0) save();
+      },
+    );
+  };
 
   // Until the upload finishes, the message holds a path on the sender's
   // device. The sender can still show it; anyone else gets a placeholder.
@@ -190,7 +242,11 @@ const ChatMessageImage: React.FC<ChatMessageImageProps> = ({
 
   return (
     <View>
-      <TouchableOpacity activeOpacity={0.8} onPress={() => setVisible(true)}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => setVisible(true)}
+        onLongPress={remote ? showImageActions : undefined}
+      >
         <ExpoImage
           style={styles.thumbnail}
           source={{ uri }}
@@ -217,7 +273,11 @@ const ChatMessageImage: React.FC<ChatMessageImageProps> = ({
             Seeded with the app's launch metrics so the close button doesn't
             jump once the provider finishes measuring. */}
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <Viewer uri={uri} onClose={close} />
+          <Viewer
+            uri={uri}
+            onClose={close}
+            onSave={remote ? save : undefined}
+          />
         </SafeAreaProvider>
       </Modal>
     </View>
@@ -226,8 +286,8 @@ const ChatMessageImage: React.FC<ChatMessageImageProps> = ({
 
 const styles = StyleSheet.create({
   thumbnail: {
-    width: 150,
-    height: 100,
+    width: THUMBNAIL_SIZE,
+    height: THUMBNAIL_SIZE,
     borderRadius: 13,
     margin: 3,
   },
@@ -254,12 +314,22 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  closeButton: {
+  viewerButtons: {
     position: "absolute",
     right: 20,
+    flexDirection: "row",
+    gap: 12,
+  },
+  viewerButton: {
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 20,
+    // Strong shadow so the buttons stand out on light images too
+    shadowColor: "#000",
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 12,
   },
 });
 

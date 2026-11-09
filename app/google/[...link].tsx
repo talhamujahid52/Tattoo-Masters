@@ -9,7 +9,7 @@ export default function GoogleLinkCatcher() {
 
   useEffect(() => {
     if (user?.uid) {
-      router.replace("/(bottomTabs)/Home");
+      router.dismissTo("/(bottomTabs)/Home");
     } else {
       router.replace("/(auth)/Login");
     }
